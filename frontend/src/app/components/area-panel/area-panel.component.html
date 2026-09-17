@@ -1,0 +1,53 @@
+<div class="panel">
+  <ng-container *ngIf="!slug">
+    <div class="empty-state">
+      <span class="empty-icon">📍</span>
+      <p>Chọn một khu vực trên bản đồ để xem gợi ý loại hình kinh doanh phù hợp trong 3–5 năm tới.</p>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="slug && loading">
+    <div class="empty-state">
+      <p>Đang tải dữ liệu khu vực…</p>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="slug && !loading && area">
+    <header class="panel-header">
+      <h2>{{ area.name }}</h2>
+      <p class="district">{{ area.district }}, {{ area.city }}</p>
+    </header>
+
+    <p class="summary">{{ area.summary }}</p>
+
+    <section class="metrics">
+      <h3>Chỉ số tăng trưởng khu vực</h3>
+      <div class="metric-row" *ngFor="let m of metricEntries()">
+        <span class="metric-label">{{ metricLabels[m[0]] }}</span>
+        <div class="metric-bar">
+          <div class="metric-bar-fill" [style.width.%]="m[1]"></div>
+        </div>
+        <span class="metric-value">{{ m[1] }}</span>
+      </div>
+    </section>
+
+    <section class="opportunities">
+      <h3>Gợi ý loại hình kinh doanh</h3>
+      <div class="opportunity-card" *ngFor="let o of area.opportunities; let i = index" [class.top]="i === 0">
+        <div class="opportunity-rank">#{{ i + 1 }}</div>
+        <div class="opportunity-icon">{{ o.icon }}</div>
+        <div class="opportunity-info">
+          <div class="opportunity-name">{{ o.name }}</div>
+          <div class="opportunity-desc">{{ o.description }}</div>
+          <div class="opportunity-drivers" *ngIf="o.top_drivers.length">
+            Động lực chính: {{ o.top_drivers.join(', ') }}
+          </div>
+        </div>
+        <div class="opportunity-score">
+          <div class="score-value" [style.color]="scoreColor(o.opportunity_score)">{{ o.opportunity_score }}</div>
+          <div class="score-sub">Cạnh tranh: {{ o.competition_index }}</div>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+</div>

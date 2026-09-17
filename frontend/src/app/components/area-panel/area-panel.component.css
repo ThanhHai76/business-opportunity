@@ -1,0 +1,151 @@
+.panel {
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.empty-state {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #6b7280;
+  gap: 12px;
+  padding: 32px;
+}
+
+.empty-icon {
+  font-size: 32px;
+}
+
+.panel-header h2 {
+  margin: 0 0 2px 0;
+  font-size: 20px;
+  color: #111827;
+}
+
+.district {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.summary {
+  margin: 14px 0 20px 0;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.6;
+  background: #f9fafb;
+  border-left: 3px solid #d1d5db;
+  padding: 10px 12px;
+  border-radius: 4px;
+}
+
+h3 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  margin: 0 0 10px 0;
+}
+
+.metrics {
+  margin-bottom: 24px;
+}
+
+.metric-row {
+  display: grid;
+  grid-template-columns: 96px 1fr 32px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.metric-label {
+  color: #374151;
+}
+
+.metric-bar {
+  background: #e5e7eb;
+  border-radius: 6px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.metric-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #60a5fa, #2563eb);
+  border-radius: 6px;
+}
+
+.metric-value {
+  text-align: right;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+}
+
+.opportunity-card {
+  display: grid;
+  grid-template-columns: 28px 34px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 10px;
+  background: #fff;
+}
+
+.opportunity-card.top {
+  border-color: #1a9850;
+  background: #f0fdf4;
+}
+
+.opportunity-rank {
+  color: #9ca3af;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.opportunity-icon {
+  font-size: 22px;
+  text-align: center;
+}
+
+.opportunity-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 14px;
+}
+
+.opportunity-desc {
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: 1px;
+}
+
+.opportunity-drivers {
+  color: #9ca3af;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.opportunity-score {
+  text-align: right;
+}
+
+.score-value {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.score-sub {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-top: 3px;
+}

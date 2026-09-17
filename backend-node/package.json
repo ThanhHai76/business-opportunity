@@ -1,0 +1,14 @@
+{
+  "name": "opportunity-map-backend",
+  "version": "1.0.0",
+  "description": "Node.js/Express API for the Business Opportunity Map (Bản đồ Cơ hội Kinh doanh)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}

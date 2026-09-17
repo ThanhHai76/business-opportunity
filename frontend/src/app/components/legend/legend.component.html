@@ -1,0 +1,7 @@
+<div class="legend">
+  <div class="legend-title">Điểm cơ hội</div>
+  <div class="legend-row" *ngFor="let b of bands">
+    <span class="legend-swatch" [style.background]="b.color"></span>
+    <span class="legend-label">{{ b.label }}</span>
+  </div>
+</div>
