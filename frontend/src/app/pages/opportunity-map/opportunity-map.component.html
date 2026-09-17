@@ -1,0 +1,40 @@
+<div class="app-shell">
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-icon">🗺️</span>
+      <div>
+        <h1>Bản đồ Cơ hội Kinh doanh</h1>
+        <p>Khu vực này 3–5 năm nữa nên kinh doanh gì?</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="city-switch" role="tablist" aria-label="Chọn thành phố">
+        <button
+          type="button"
+          class="city-btn"
+          role="tab"
+          *ngFor="let city of cities"
+          [class.active]="city.id === selectedCity"
+          (click)="onCitySelected(city.id)"
+        >
+          {{ city.label }}
+        </button>
+      </div>
+      <a class="time-machine-link" routerLink="/time-machine">🕰️ Time Machine</a>
+      <div class="brand-tag">Demo · Dữ liệu mô phỏng</div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="map-section">
+      <app-map [city]="selectedCity" (areaSelected)="onAreaSelected($event)"></app-map>
+      <div class="legend-overlay">
+        <app-legend></app-legend>
+      </div>
+    </section>
+
+    <aside class="panel-section">
+      <app-area-panel [slug]="selectedSlug"></app-area-panel>
+    </aside>
+  </main>
+</div>
