@@ -1,0 +1,151 @@
+<div class="ls-page">
+  <header class="top">
+    <div>
+      <h1 class="ls-title">So sánh khu vực</h1>
+      <p class="ls-subtitle">Chọn 2–3 khu vực để so sánh Living Score và từng tiêu chí chi tiết.</p>
+    </div>
+    @if (selection().length) {
+      <button type="button" class="ls-btn ls-btn-ghost ls-btn-sm" (click)="clear()"><ls-icon name="x" [size]="14" /> Bỏ chọn</button>
+    }
+  </header>
+
+  @if (listError()) {
+    <div class="ls-card"><ls-state kind="error" title="Không tải được danh sách khu vực" [message]="listError()" /></div>
+  } @else {
+    <div class="picker" role="group" aria-label="Chọn khu vực để so sánh">
+      @for (area of allAreas(); track area.slug) {
+        <button
+          type="button"
+          class="ls-chip"
+          [class.is-on]="selection().includes(area.slug)"
+          [attr.aria-pressed]="selection().includes(area.slug)"
+          [disabled]="!selection().includes(area.slug) && selection().length >= maxAreas"
+          (click)="toggle(area.slug)"
+        >
+          @if (selection().includes(area.slug)) {
+            <span class="dot" [style.background]="colors[selection().indexOf(area.slug)]"></span>
+          }
+          {{ area.name }}
+        </button>
+      }
+      @if (!allAreas().length) {
+        @for (n of [1, 2, 3, 4, 5, 6]; track n) {
+          <span class="ls-skeleton chip-skel"></span>
+        }
+      }
+    </div>
+
+    @if (selection().length < 2) {
+      <div class="ls-card">
+        <ls-state
+          kind="empty"
+          icon="scale"
+          title="Chọn ít nhất 2 khu vực"
+          message="Bấm vào tên các khu vực phía trên (tối đa 3) để xem bảng và biểu đồ so sánh."
+        />
+      </div>
+    } @else if (errorMessage()) {
+      <div class="ls-card"><ls-state kind="error" title="Không so sánh được" [message]="errorMessage()" actionLabel="Thử lại" (action)="retry()" /></div>
+    } @else {
+     @if (result(); as r) {
+      <div class="scores" [class.is-loading]="loading()">
+        @for (area of r.areas; track area.slug; let i = $index) {
+          <article class="score ls-card" [style.--c]="colors[i]">
+            @if (area.slug === r.bestOverall) {
+              <span class="ls-badge ls-badge--ok best"><ls-icon name="star" [size]="12" /> Điểm cao nhất</span>
+            }
+            <ls-score-ring [score]="area.livingScore" [size]="76" />
+            <h2>{{ area.name }}</h2>
+            <p>Thuê ~{{ area.avgRentVnd | millions }}/tháng</p>
+            <a class="detail" [routerLink]="['/living-score/area', area.slug]">Xem chi tiết <ls-icon name="chevron-right" [size]="14" /></a>
+          </article>
+        }
+      </div>
+
+      @if (r.meta.isPersonalized) {
+        <p class="note"><ls-icon name="sliders" [size]="14" /> Điểm tổng đang dùng trọng số cá nhân hoá của bạn.</p>
+      }
+
+      <div class="charts">
+        <section class="ls-card">
+          <h2 class="ls-section-title">Biểu đồ radar</h2>
+          <ls-radar-chart [axes]="axes()" [series]="series()" />
+          <ul class="legend">
+            @for (s of series(); track s.name) {
+              <li><i [style.background]="s.color"></i>{{ s.name }}</li>
+            }
+          </ul>
+        </section>
+
+        <section class="ls-card">
+          <h2 class="ls-section-title">So sánh theo tiêu chí</h2>
+          <div class="crit">
+            @for (key of criterionKeys; track key) {
+              <div class="crit__row">
+                <div class="crit__label"><ls-icon [name]="icons[key]" [size]="15" /> {{ meta.label(key) }}</div>
+                @for (area of r.areas; track area.slug; let i = $index) {
+                  <div class="crit__bar">
+                    <span class="crit__name">{{ area.name }}</span>
+                    <span class="track"><i [style.width.%]="value(key, area.slug)" [style.background]="colors[i]"></i></span>
+                    <strong [class.best]="isBest(key, area.slug)">{{ value(key, area.slug) }}</strong>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      </div>
+
+      <section class="ls-card table-card">
+        <h2 class="ls-section-title">Bảng so sánh</h2>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Tiêu chí</th>
+                @for (area of r.areas; track area.slug; let i = $index) {
+                  <th scope="col"><i class="dot" [style.background]="colors[i]"></i>{{ area.name }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="total">
+                <th scope="row">Living Score</th>
+                @for (area of r.areas; track area.slug) {
+                  <td [class.best]="area.slug === r.bestOverall">{{ area.livingScore | number: '1.0-1' }}/100</td>
+                }
+              </tr>
+              @for (key of criterionKeys; track key) {
+                <tr>
+                  <th scope="row">{{ meta.label(key) }}</th>
+                  @for (area of r.areas; track area.slug) {
+                    <td [class.best]="isBest(key, area.slug)">{{ value(key, area.slug) }}/100</td>
+                  }
+                </tr>
+              }
+              <tr>
+                <th scope="row">Giá thuê trung bình</th>
+                @for (area of r.areas; track area.slug) {
+                  <td>{{ area.avgRentVnd | millions }}/tháng</td>
+                }
+              </tr>
+              <tr>
+                <th scope="row">Dân số</th>
+                @for (area of r.areas; track area.slug) {
+                  <td>{{ area.population | num }}</td>
+                }
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="foot"><ls-icon name="info" [size]="14" /> {{ bestName() }} có Living Score cao nhất trong nhóm. Dữ liệu minh hoạ (SAMPLE DATA).</p>
+      </section>
+    } @else {
+      <div class="skeletons">
+        <div class="ls-skeleton" style="height: 170px"></div>
+        <div class="ls-skeleton" style="height: 300px"></div>
+      </div>
+    }
+    }
+  }
+</div>

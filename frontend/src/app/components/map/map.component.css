@@ -4,11 +4,146 @@
   min-height: 420px;
 }
 
-::ng-deep .area-emoji-icon {
+/* ---------- area cells ---------- */
+
+::ng-deep .area-cell {
+  --stroke: color-mix(in srgb, var(--cell) 58%, #1a1611);
+  fill: var(--cell);
+  fill-opacity: 0.4;
+  stroke: var(--stroke);
+  stroke-width: 2.25px;
+  stroke-linejoin: round;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 5px color-mix(in srgb, var(--cell) 40%, transparent));
+  transition: fill-opacity 0.18s ease, stroke-width 0.18s ease, filter 0.18s ease;
+}
+
+::ng-deep .area-cell:hover {
+  fill-opacity: 0.62;
+  stroke-width: 3px;
+  filter: drop-shadow(0 3px 9px color-mix(in srgb, var(--cell) 65%, transparent));
+}
+
+::ng-deep .area-cell.is-selected {
+  fill-opacity: 0.74;
+  stroke: var(--app-ink);
+  stroke-width: 3.5px;
+  filter: drop-shadow(0 0 10px var(--cell));
+}
+
+:host-context([data-theme='dark']) ::ng-deep .area-cell {
+  --stroke: color-mix(in srgb, var(--cell) 62%, #ffffff);
+  fill-opacity: 0.34;
+}
+
+:host-context([data-theme='dark']) ::ng-deep .area-cell:hover {
+  fill-opacity: 0.55;
+}
+
+:host-context([data-theme='dark']) ::ng-deep .area-cell.is-selected {
+  fill-opacity: 0.66;
+}
+
+/* ---------- place badge + name ---------- */
+
+::ng-deep .area-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+::ng-deep .area-chip {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  line-height: 1;
+  background: var(--app-surface);
+  border: 2.5px solid var(--cell);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28), 0 0 0 3px color-mix(in srgb, var(--cell) 24%, transparent);
+}
+
+::ng-deep .area-name {
+  margin-top: 4px;
+  max-width: 128px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--app-line);
+  background: var(--app-overlay);
+  color: var(--app-ink);
+  font: 600 11px/1.5 'Manrope', -apple-system, 'Segoe UI', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+::ng-deep .labels-off .area-name {
+  display: none;
+}
+
+::ng-deep .area-tooltip strong {
+  font-weight: 700;
+}
+
+::ng-deep .area-tip {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
-  pointer-events: none;
+  gap: 6px;
+  margin-top: 3px;
+  color: var(--app-ink-dim);
+}
+
+::ng-deep .area-tip i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex: none;
+}
+
+::ng-deep .area-tip b {
+  color: var(--app-ink);
+}
+
+/* Dark theme: invert the OpenStreetMap raster tiles and restyle Leaflet's own chrome. */
+:host-context([data-theme='dark']) ::ng-deep .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.88) saturate(0.7);
+}
+
+:host-context([data-theme='dark']) ::ng-deep .leaflet-container {
+  background: var(--app-bg);
+}
+
+::ng-deep .leaflet-bar a,
+::ng-deep .leaflet-bar a:hover {
+  background-color: var(--app-surface);
+  color: var(--app-ink);
+  border-bottom-color: var(--app-line);
+}
+
+::ng-deep .leaflet-bar {
+  border-color: var(--app-line);
+}
+
+::ng-deep .leaflet-control-attribution {
+  background: var(--app-overlay);
+  color: var(--app-ink-dim);
+}
+
+::ng-deep .leaflet-control-attribution a {
+  color: var(--app-live);
+}
+
+::ng-deep .leaflet-tooltip {
+  background: var(--app-surface);
+  color: var(--app-ink);
+  border-color: var(--app-line);
+  box-shadow: var(--app-shadow);
+}
+
+::ng-deep .leaflet-tooltip-top:before {
+  border-top-color: var(--app-surface);
 }

@@ -1,0 +1,32 @@
+<div class="ls-root" [attr.data-theme]="theme()" [style]="bandVars">
+  <header class="ls-topbar">
+    <a class="ls-brand" routerLink="/living-score" aria-label="Hanoi Living Score — trang giới thiệu">
+      <span class="ls-brand__mark" aria-hidden="true">
+        <ls-icon name="pin" [size]="18" />
+      </span>
+      <span>Living Score</span>
+    </a>
+
+    <nav class="ls-topnav" aria-label="Điều hướng chính">
+      @for (item of nav; track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="is-active">
+          <ls-icon [name]="item.icon" [size]="17" />
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+  </header>
+
+  <main class="ls-main">
+    <router-outlet />
+  </main>
+
+  <nav class="ls-bottomnav" aria-label="Điều hướng chính (di động)">
+    @for (item of nav; track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="is-active">
+        <ls-icon [name]="item.icon" [size]="21" />
+        {{ item.label }}
+      </a>
+    }
+  </nav>
+</div>

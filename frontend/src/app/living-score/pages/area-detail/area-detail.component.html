@@ -1,0 +1,131 @@
+<div class="ls-page ls-page--narrow">
+  <a class="back" routerLink="/living-score/explore"><ls-icon name="arrow-left" [size]="16" /> Quay lại bản đồ</a>
+
+  @switch (state()) {
+    @case ('loading') {
+      <div class="skeletons" aria-label="Đang tải">
+        <div class="ls-skeleton" style="height: 190px"></div>
+        <div class="ls-skeleton" style="height: 260px"></div>
+        <div class="ls-skeleton" style="height: 150px"></div>
+      </div>
+    }
+    @case ('notfound') {
+      <div class="ls-card">
+        <ls-state kind="empty" icon="search" title="Không tìm thấy khu vực" [message]="errorMessage()" />
+        <p class="center"><a class="ls-btn ls-btn-primary" routerLink="/living-score/explore">Về bản đồ</a></p>
+      </div>
+    }
+    @case ('error') {
+      <div class="ls-card">
+        <ls-state kind="error" title="Không tải được khu vực" [message]="errorMessage()" actionLabel="Thử lại" (action)="retry()" />
+      </div>
+    }
+    @default {
+      @if (area(); as a) {
+        <header class="head ls-card">
+          <div class="head__top">
+            <div>
+              <div class="head__title">
+                <h1>{{ a.name }}</h1>
+                <span class="ls-badge ls-badge--sample">SAMPLE DATA</span>
+              </div>
+              <p class="head__en">{{ a.nameEn }} · {{ meta.bandLabel(a.band) }}</p>
+            </div>
+            <div class="head__score">
+              <ls-score-ring [score]="a.livingScore" [size]="96" />
+            </div>
+          </div>
+
+          <p class="head__desc">{{ a.description }}</p>
+
+          @if (a.isPersonalized) {
+            <p class="personal">
+              <ls-icon name="sliders" [size]="15" />
+              Điểm cá nhân hoá <strong>{{ a.livingScore | number: '1.0-0' }}</strong> (điểm mặc định
+              {{ a.defaultLivingScore | number: '1.0-0' }}) — theo trọng số bạn đã chọn trong mục Cá nhân / Khám phá.
+            </p>
+          }
+
+          <dl class="stats">
+            <div><dt>Dân số</dt><dd>{{ a.population | num }}</dd></div>
+            <div><dt>Diện tích</dt><dd>{{ a.areaKm2 | number: '1.0-1' }} km²</dd></div>
+            <div><dt>Giá thuê TB</dt><dd>{{ a.avgRentVnd | vnd }}</dd></div>
+            <div><dt>Giá bán / m²</dt><dd>{{ a.avgPricePerM2Vnd | millions }}</dd></div>
+          </dl>
+
+          <div class="actions">
+            <a class="ls-btn ls-btn-primary" [routerLink]="['/living-score/explore']" [queryParams]="{ area: a.slug }">
+              <ls-icon name="map" [size]="16" /> Xem trên bản đồ
+            </a>
+            <button type="button" class="ls-btn ls-btn-ghost" [disabled]="compareFull()" (click)="toggleCompare()">
+              <ls-icon [name]="inCompare() ? 'check' : 'plus'" [size]="16" />
+              {{ inCompare() ? 'Đã thêm vào so sánh' : compareFull() ? 'So sánh đã đủ 3 khu vực' : 'Thêm vào so sánh' }}
+            </button>
+            <button
+              type="button"
+              class="ls-btn ls-btn-ghost"
+              [class.is-saved]="prefs.isSaved(a.slug)"
+              [attr.aria-pressed]="prefs.isSaved(a.slug)"
+              (click)="prefs.toggleSaved(a.slug)"
+            >
+              <ls-icon name="bookmark" [size]="16" /> {{ prefs.isSaved(a.slug) ? 'Đã lưu' : 'Lưu' }}
+            </button>
+          </div>
+        </header>
+
+        <section class="ls-card block">
+          <h2 class="ls-section-title">Chi tiết điểm theo tiêu chí</h2>
+          <div class="bars">
+            @for (row of a.breakdown; track row.criterion) {
+              <ls-criterion-bar [criterion]="row.criterion" [value]="row.score" [weightPct]="row.weightPct" />
+            }
+          </div>
+        </section>
+
+        <section class="pc">
+          <div class="pc__card pc__card--pro">
+            <h2><ls-icon name="check" [size]="18" /> Ưu điểm</h2>
+            <ul>
+              @for (item of a.pros; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </div>
+          <div class="pc__card pc__card--con">
+            <h2><ls-icon name="alert" [size]="18" /> Nhược điểm</h2>
+            <ul>
+              @for (item of a.cons; track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </div>
+        </section>
+
+        <section class="ls-card block">
+          <div class="block__head">
+            <h2 class="ls-section-title">Tiện ích xung quanh</h2>
+            <span class="ls-badge ls-badge--sample">SAMPLE DATA</span>
+          </div>
+          <div class="amenities">
+            @for (group of a.amenities; track group.type) {
+              <div class="amenity">
+                <h3>
+                  <ls-icon [name]="amenityMeta[group.type].icon" [size]="16" />
+                  {{ amenityMeta[group.type].plural }}
+                  <small>{{ group.count }} địa điểm</small>
+                </h3>
+                <ul>
+                  @for (place of group.top; track place.name) {
+                    <li><span>{{ place.name }}</span><span class="rating">★ {{ place.rating | number: '1.1-1' }}</span></li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+        </section>
+
+        <p class="foot"><ls-icon name="info" [size]="14" /> Dữ liệu minh hoạ (SAMPLE DATA) — không phải số liệu chính thức.</p>
+      }
+    }
+  }
+</div>

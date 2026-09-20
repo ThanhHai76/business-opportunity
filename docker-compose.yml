@@ -1,0 +1,72 @@
+# Full stack: PostgreSQL/PostGIS + Redis + Node API (backend-node) + Angular front-end (nginx).
+#
+#   docker compose up --build
+#
+#   Front-end  http://localhost:8080   (Home, /opportunity-map, /time-machine, /living-score)
+#   API        http://localhost:8000/api/living-score/health
+#
+# The front-end calls the API at http://localhost:8000 (frontend/src/app/config.ts), so the API port is published.
+# Optional: export ANTHROPIC_API_KEY=... before `up` to enable AI-written explanations.
+name: opportunity-map
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: living
+      POSTGRES_PASSWORD: living
+      POSTGRES_DB: living_score
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Schema is applied on the first start (empty volume).
+      - ./backend-node/database/living-score:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U living -d living_score']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend-node
+    environment:
+      NODE_ENV: production
+      PORT: '8000'
+      CORS_ORIGIN: http://localhost:8080
+      DATA_SOURCE: postgres
+      DATABASE_URL: postgres://living:living@db:5432/living_score
+      AUTO_SEED: 'true'
+      REDIS_URL: redis://redis:6379
+      CACHE_TTL_SECONDS: '300'
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-claude-opus-5}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - '8000:8000'
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - '8080:80'
+
+volumes:
+  pgdata:

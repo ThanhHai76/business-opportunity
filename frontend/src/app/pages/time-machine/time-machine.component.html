@@ -19,7 +19,6 @@
         <a class="tm-nav-link" href="#tm-ar">AR</a>
         <a class="tm-nav-link" href="#tm-education">Giáo dục</a>
         <a class="tm-nav-link" href="#tm-museum">Bảo tàng</a>
-        <a class="tm-nav-link" routerLink="/">🗺️ Cơ hội kinh doanh</a>
       </nav>
       <a class="tm-btn tm-btn-primary tm-desktop-only" href="#tm-map">Enter Time Machine</a>
       <button class="tm-nav-toggle" id="tm-navToggle" aria-expanded="false" aria-controls="tm-navMobile" aria-label="Mở menu"><span></span></button>
@@ -31,7 +30,6 @@
       <a href="#tm-ar">AR</a>
       <a href="#tm-education">Giáo dục</a>
       <a href="#tm-museum">Bảo tàng</a>
-      <a routerLink="/">🗺️ Bản đồ cơ hội kinh doanh</a>
       <a class="tm-btn tm-btn-primary" href="#tm-map" style="justify-content:center;margin-top:.4rem;">Enter Time Machine</a>
     </div>
   </header>
@@ -152,6 +150,10 @@
         </div>
 
         <div class="tm-glass tm-map-detail">
+          <figure class="tm-map-photo" id="tm-mapPhotoBox" hidden>
+            <img id="tm-mapPhoto" alt="" decoding="async">
+            <figcaption class="tm-credit" id="tm-mapPhotoCredit"></figcaption>
+          </figure>
           <span class="tm-era-badge" id="tm-mapEraBadge">HIỆN TẠI · 2026</span>
           <div>
             <h3 class="tm-map-detail-name" id="tm-mapName">Hồ Gươm</h3>
@@ -184,8 +186,8 @@
         </div>
 
         <div class="tm-era-content">
-          <div class="tm-era-visual" aria-hidden="true">
-            <svg viewBox="0 0 300 220">
+          <div class="tm-era-visual" id="tm-eraVisual">
+            <svg viewBox="0 0 300 220" aria-hidden="true">
               <defs>
                 <linearGradient id="tm-eraSky" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" style="stop-color:var(--tm-accent-soft)" stop-opacity=".4"/>
@@ -203,6 +205,8 @@
                 <circle cx="233.5" cy="62" r="9" fill="none" stroke="#050403" stroke-width="3"/>
               </g>
             </svg>
+            <img class="tm-era-photo" id="tm-eraPhoto" alt="" hidden decoding="async">
+            <p class="tm-credit" id="tm-eraCredit"></p>
           </div>
           <div>
             <p class="tm-era-year" id="tm-eraYearLabel">2026 · HIỆN TẠI</p>
@@ -400,7 +404,8 @@
         <ul>
           <li><a href="#tm-education">Trường học</a></li>
           <li><a href="#tm-museum">Bảo tàng &amp; di tích</a></li>
-          <li><a routerLink="/">Bản đồ cơ hội kinh doanh</a></li>
+          <li><a routerLink="/opportunity-map">Bản đồ cơ hội kinh doanh</a></li>
+          <li><a routerLink="/">Trang chủ</a></li>
         </ul>
       </div>
     </div>

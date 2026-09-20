@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LANDMARK_PHOTOS, LandmarkPhoto } from './time-machine-photos';
 
 interface Era {
   id: string;
@@ -159,6 +160,7 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
     this.wireSlider();
     this.wirePins();
     this.wireNavToggle();
+    this.wireLocalAnchors();
     this.wireChatForm();
     this.render();
     this.startTicker();
@@ -210,10 +212,64 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
     const eraStoryLabel = this.q('#tm-eraStoryLabel');
     if (eraStoryLabel) eraStoryLabel.textContent = lm.stories[era.id];
 
+    const photo = LANDMARK_PHOTOS[this.state.landmark]?.[era.id];
+    this.showPhoto('#tm-eraPhoto', '#tm-eraCredit', '#tm-eraVisual', photo, era);
+    this.showPhoto('#tm-mapPhoto', '#tm-mapPhotoCredit', '#tm-mapPhotoBox', photo, era);
+
     this.scopeEl.setAttribute('data-era', era.id);
 
     this.qa_('.tm-era-tick').forEach((t, i) => t.classList.toggle('active', i === this.state.eraIndex));
     this.qa_('.tm-pin').forEach((p) => p.classList.toggle('active', p.dataset['landmark'] === this.state.landmark));
+  }
+
+  /**
+   * Shows the real photo of the selected landmark for the current era, with its credit. Without one
+   * the timeline keeps its illustration (labelled as such) and the map thumbnail is hidden.
+   */
+  private showPhoto(imgSel: string, creditSel: string, boxSel: string, photo: LandmarkPhoto | undefined, era: Era): void {
+    const img = this.q<HTMLImageElement>(imgSel);
+    const credit = this.q(creditSel);
+    const box = this.q(boxSel);
+    if (!img || !credit || !box) return;
+    const isMapThumb = boxSel === '#tm-mapPhotoBox';
+
+    credit.replaceChildren();
+    if (!photo) {
+      img.hidden = true;
+      img.removeAttribute('src');
+      img.classList.remove('loaded');
+      box.classList.remove('has-photo');
+      if (isMapThumb) {
+        box.hidden = true;
+      } else {
+        credit.textContent = era.future
+          ? 'Hình minh hoạ kịch bản do AI hình dung — không phải ảnh thật'
+          : 'Chưa có ảnh tư liệu cho mốc này — đang dùng hình minh hoạ';
+      }
+      return;
+    }
+
+    if (!img.getAttribute('src')?.endsWith(photo.src)) {
+      img.classList.remove('loaded');
+      img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+      img.src = photo.src;
+    }
+    img.alt = photo.alt;
+    img.dataset['fit'] = photo.fit ?? 'cover';
+    img.style.objectPosition = photo.position ?? '50% 50%';
+    img.hidden = false;
+    box.hidden = false;
+    box.classList.add('has-photo');
+
+    const cap = document.createElement('span');
+    cap.className = 'tm-credit-cap';
+    cap.textContent = photo.caption;
+    const link = document.createElement('a');
+    link.href = photo.pageUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = `Ảnh: ${photo.author} · ${photo.license}`;
+    credit.append(cap, link);
   }
 
   private buildEraTicks(): void {
@@ -276,6 +332,23 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
       a.addEventListener('click', () => {
         mobile.setAttribute('hidden', '');
         toggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+  }
+
+  // index.html sets <base href="/"> for Angular routing, which makes the
+  // browser resolve a plain href="#tm-map" against "/" instead of the
+  // current "/time-machine" — clicking it jumps to the home route instead
+  // of scrolling. Handling these in-page links ourselves sidesteps that.
+  private wireLocalAnchors(): void {
+    this.qa_<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
+      const id = a.getAttribute('href')?.slice(1);
+      if (!id) return;
+      a.addEventListener('click', (e) => {
+        const target = this.q(`#${id}`);
+        if (!target) return;
+        e.preventDefault();
+        target.scrollIntoView({ behavior: this.reduceMotion ? 'auto' : 'smooth', block: 'start' });
       });
     });
   }

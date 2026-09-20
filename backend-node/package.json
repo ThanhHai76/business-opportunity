@@ -1,14 +1,25 @@
 {
   "name": "opportunity-map-backend",
   "version": "1.0.0",
-  "description": "Node.js/Express API for the Business Opportunity Map (Bản đồ Cơ hội Kinh doanh)",
+  "description": "Node.js/Express API for the Opportunity Map project: Business Opportunity Map + Hanoi Living Score",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "test": "node --test",
+    "seed:living": "node src/living-score/seed/run-seed.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.127.0",
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "ioredis": "^6.0.0",
+    "pg": "^8.23.0",
+    "zod": "^4.6.5"
+  },
+  "engines": {
+    "node": ">=20.12"
   }
 }

@@ -12,3 +12,6 @@ frontend/dist/
 frontend/.angular/
 
 .DS_Store
+
+# Local environment files (copy from .env.example)
+.env

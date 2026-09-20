@@ -1,0 +1,214 @@
+<div class="ls-page ls-page--narrow">
+  <header class="intro">
+    <span class="intro__icon"><ls-icon name="sparkles" [size]="26" /></span>
+    <h1 class="ls-title">AI gợi ý khu vực phù hợp</h1>
+    <p class="ls-subtitle">Cho chúng tôi biết nhu cầu của bạn — hệ thống chấm điểm bằng Scoring Engine rồi giải thích Top 3 khu vực phù hợp nhất.</p>
+  </header>
+
+  <form class="form ls-card" (submit)="$event.preventDefault(); submit()">
+    <div class="field">
+      <label class="ls-field-label" for="ai-budget">Ngân sách thuê nhà hằng tháng</label>
+      <div class="budget">
+        <strong>{{ budget() | vnd }}</strong>
+        <span>≈ {{ budget() | millions }}/tháng</span>
+      </div>
+      <input id="ai-budget" class="ls-range" type="range" min="2000000" max="30000000" step="500000" [value]="budget()" (input)="setBudget($event)" />
+      <div class="quick">
+        @for (step of budgetSteps; track step) {
+          <button type="button" class="ls-chip" [class.is-on]="budget() === step" (click)="budget.set(step)">{{ step | millions }}</button>
+        }
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="ls-field-label" for="ai-work">Nơi làm việc / học tập</label>
+      <select id="ai-work" class="ls-select" [value]="workplace()" (change)="workplace.set($any($event.target).value)">
+        <option value="">Chưa xác định</option>
+        @for (area of areas(); track area.slug) {
+          <option [value]="area.slug" [selected]="workplace() === area.slug">{{ area.name }}</option>
+        }
+      </select>
+      <p class="hint">Dùng để ước lượng khoảng cách di chuyển (đường chim bay) tới từng khu vực.</p>
+    </div>
+
+    <fieldset class="field">
+      <legend class="ls-field-label">Tình trạng gia đình</legend>
+      <div class="seg" role="radiogroup" aria-label="Tình trạng gia đình">
+        @for (option of households; track option.value) {
+          <button
+            type="button"
+            role="radio"
+            class="ls-chip"
+            [class.is-on]="household() === option.value"
+            [attr.aria-checked]="household() === option.value"
+            (click)="household.set(option.value)"
+          >
+            {{ option.label }}
+          </button>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend class="ls-field-label">Sở thích</legend>
+      <div class="seg">
+        @for (option of interestOptions; track option.value) {
+          <button
+            type="button"
+            class="ls-chip"
+            [class.is-on]="interests().includes(option.value)"
+            [attr.aria-pressed]="interests().includes(option.value)"
+            (click)="toggleInterest(option.value)"
+          >
+            {{ option.label }}
+          </button>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset class="field">
+      <div class="field__head">
+        <legend class="ls-field-label">Mức độ ưu tiên từng tiêu chí</legend>
+        <button type="button" class="link" (click)="resetPriorities()"><ls-icon name="refresh" [size]="13" /> Đặt lại</button>
+      </div>
+      <div class="prio">
+        @for (key of criterionKeys; track key) {
+          <div class="prio__row">
+            <label [for]="'p-' + key" class="prio__label">
+              <ls-icon [name]="icons[key]" [size]="15" />
+              {{ meta.label(key) }}
+              <output>{{ priorities()[key] }} · {{ priorityLabel(priorities()[key]) }}</output>
+            </label>
+            <input [id]="'p-' + key" class="ls-range" type="range" min="0" max="5" step="1" [value]="priorities()[key]" (input)="setPriority(key, $event)" />
+          </div>
+        }
+      </div>
+      @if (allZero()) {
+        <p class="warn"><ls-icon name="alert" [size]="14" /> Hãy ưu tiên ít nhất một tiêu chí.</p>
+      }
+    </fieldset>
+
+    <label class="toggle">
+      <input type="checkbox" [checked]="useAi()" (change)="useAi.set($any($event.target).checked)" />
+      <span>Viết lời giải thích bằng AI (dựa trên dữ liệu đã truy xuất) — bỏ chọn để dùng giải thích theo quy tắc</span>
+    </label>
+
+    <button type="submit" class="ls-btn ls-btn-primary submit" [disabled]="allZero() || status() === 'loading'">
+      <ls-icon name="sparkles" [size]="17" />
+      {{ status() === 'loading' ? 'Đang phân tích…' : 'Nhận gợi ý' }}
+    </button>
+  </form>
+
+  <div #results class="results" aria-live="polite">
+    @switch (status()) {
+      @case ('loading') {
+        <div class="skeletons">
+          @for (n of [1, 2, 3]; track n) {
+            <div class="ls-skeleton" style="height: 200px"></div>
+          }
+        </div>
+      }
+      @case ('error') {
+        <div class="ls-card"><ls-state kind="error" title="Chưa có gợi ý" [message]="errorMessage()" actionLabel="Thử lại" (action)="submit()" /></div>
+      }
+      @case ('done') {
+        @if (response(); as r) {
+          <div class="results__head">
+            <h2>Top 3 khu vực phù hợp</h2>
+            @if (r.mode === 'ai') {
+              <span class="ls-badge ls-badge--accent"><ls-icon name="sparkles" [size]="12" /> AI · {{ r.model }} + dữ liệu truy xuất</span>
+            } @else {
+              <span class="ls-badge"><ls-icon name="layers" [size]="12" /> Xếp hạng theo quy tắc</span>
+            }
+          </div>
+          @if (r.notice) {
+            <p class="notice"><ls-icon name="info" [size]="14" /> {{ r.notice }}</p>
+          }
+
+          @for (item of r.results; track item.area.slug) {
+            <article class="result ls-card">
+              <header class="result__head">
+                <span class="rank">#{{ item.rank }}</span>
+                <div class="result__title">
+                  <h3>{{ item.area.name }}</h3>
+                  <p>
+                    Thuê ~{{ item.budget.rentVnd | millions }}/tháng
+                    @if (item.budget.withinBudget) {
+                      <span class="ls-badge ls-badge--ok">Trong ngân sách</span>
+                    } @else {
+                      <span class="ls-badge ls-badge--danger">Vượt ngân sách {{ item.budget.deltaPct }}%</span>
+                    }
+                    @if (item.commute; as c) {
+                      <span class="ls-badge">Cách {{ c.workplaceName }} ~{{ c.km | number: '1.0-1' }} km</span>
+                    }
+                  </p>
+                </div>
+                <div class="result__score">
+                  <ls-score-ring [score]="item.matchScore" [size]="64" [showMax]="false" />
+                  <small>Độ phù hợp</small>
+                </div>
+              </header>
+
+              <p class="result__summary">{{ item.summary }}</p>
+
+              <h4>Lý do lựa chọn</h4>
+              <ul class="reasons">
+                @for (reason of item.reasons; track reason) {
+                  <li><ls-icon name="check" [size]="15" /> {{ reason }}</li>
+                }
+              </ul>
+
+              <div class="pc">
+                <div class="pc__box pc__box--pro">
+                  <h4>Ưu điểm</h4>
+                  <ul>
+                    @for (p of item.pros; track p) {
+                      <li>{{ p }}</li>
+                    }
+                  </ul>
+                </div>
+                <div class="pc__box pc__box--con">
+                  <h4>Nhược điểm</h4>
+                  <ul>
+                    @for (c of item.cons; track c) {
+                      <li>{{ c }}</li>
+                    }
+                  </ul>
+                </div>
+              </div>
+
+              <footer class="result__actions">
+                <span class="muted">Living Score mặc định: <strong>{{ item.area.livingScore | number: '1.0-0' }}</strong> · theo trọng số của bạn: <strong>{{ item.personalizedScore | number: '1.0-0' }}</strong></span>
+                <span class="grow"></span>
+                <a class="ls-btn ls-btn-soft ls-btn-sm" [routerLink]="['/living-score/area', item.area.slug]">Chi tiết</a>
+                <button type="button" class="ls-btn ls-btn-ghost ls-btn-sm" (click)="toggleCompare(item.area.slug)">
+                  <ls-icon [name]="inCompare(item.area.slug) ? 'check' : 'plus'" [size]="14" />
+                  {{ inCompare(item.area.slug) ? 'Đã thêm' : 'So sánh' }}
+                </button>
+                <button
+                  type="button"
+                  class="ls-icon-btn"
+                  [class.is-on]="prefs.isSaved(item.area.slug)"
+                  [attr.aria-pressed]="prefs.isSaved(item.area.slug)"
+                  [attr.aria-label]="'Lưu ' + item.area.name"
+                  (click)="prefs.toggleSaved(item.area.slug)"
+                >
+                  <ls-icon name="bookmark" [size]="16" />
+                </button>
+              </footer>
+            </article>
+          }
+
+          @if (r.results.length > 1) {
+            <p class="compare-cta">
+              <a class="ls-btn ls-btn-ghost" routerLink="/living-score/compare" [queryParams]="{ a: r.results[0].area.slug + ',' + r.results[1].area.slug + (r.results[2] ? ',' + r.results[2].area.slug : '') }">
+                <ls-icon name="scale" [size]="16" /> So sánh cả {{ r.results.length }} khu vực
+              </a>
+            </p>
+          }
+          <p class="foot"><ls-icon name="info" [size]="14" /> Dữ liệu minh hoạ (SAMPLE DATA) — kết quả chỉ mang tính tham khảo, không phải tư vấn chính thức.</p>
+        }
+      }
+    }
+  </div>
+</div>

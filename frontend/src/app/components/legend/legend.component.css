@@ -1,8 +1,9 @@
 .legend {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--app-overlay);
+  border: 1px solid var(--app-line);
   border-radius: 10px;
   padding: 10px 14px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--app-shadow);
   font-size: 12px;
   line-height: 1.6;
 }
@@ -10,7 +11,7 @@
 .legend-title {
   font-weight: 600;
   margin-bottom: 4px;
-  color: #1f2937;
+  color: var(--app-ink);
 }
 
 .legend-row {
@@ -27,6 +28,6 @@
 }
 
 .legend-label {
-  color: #374151;
+  color: var(--app-ink-dim);
   white-space: nowrap;
 }

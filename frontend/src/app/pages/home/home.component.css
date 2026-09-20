@@ -1,0 +1,229 @@
+:host {
+  --bg: var(--app-bg);
+  --surface: var(--app-surface);
+  --ink: var(--app-ink);
+  --ink-dim: var(--app-ink-dim);
+  --ink-faint: var(--app-ink-faint);
+  --line: var(--app-line);
+  --accent-biz: var(--app-biz);
+  --accent-biz-soft: var(--app-biz-soft);
+  --accent-time: var(--app-time);
+  --accent-time-soft: var(--app-time-soft);
+  --accent-live: var(--app-live);
+  --accent-live-soft: var(--app-live-soft);
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Manrope', -apple-system, 'Segoe UI', sans-serif;
+
+  display: block;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 560;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+main {
+  flex: 1;
+}
+
+.hero {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(3.5rem, 9vh, 6rem) clamp(18px, 4vw, 48px) clamp(2rem, 5vh, 3rem);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.eyebrow {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.hero h1 {
+  font-size: clamp(1.9rem, 4.2vw, 2.9rem);
+  line-height: 1.15;
+}
+
+.hero-sub {
+  max-width: 56ch;
+  color: var(--ink-dim);
+  font-size: 1.05rem;
+}
+
+.cards {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(18px, 4vw, 48px) clamp(4rem, 8vh, 6rem);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: clamp(1.6rem, 3vw, 2.2rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  border-top: 3px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px -20px color-mix(in srgb, var(--ink) 35%, transparent);
+}
+
+.card-biz {
+  border-top-color: var(--accent-biz);
+}
+
+.card-time {
+  border-top-color: var(--accent-time);
+}
+
+.card-live {
+  border-top-color: var(--accent-live);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.card-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.card-biz .card-eyebrow {
+  color: var(--accent-biz);
+}
+
+.card-time .card-eyebrow {
+  color: var(--accent-time);
+}
+
+.card-live .card-eyebrow {
+  color: var(--accent-live);
+}
+
+.card-icon {
+  font-size: 1.6rem;
+}
+
+.card h2 {
+  font-size: 1.5rem;
+}
+
+.card-desc {
+  color: var(--ink-dim);
+  font-size: 0.95rem;
+}
+
+.card-meta {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+}
+
+.card-meta li {
+  padding-left: 1.1em;
+  position: relative;
+}
+
+.card-meta li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+.cta {
+  margin-top: auto;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding: 0.7rem 1.1rem;
+  border-radius: 8px;
+  transition: gap 0.2s ease, background 0.2s ease;
+}
+
+.card-biz .cta {
+  background: var(--accent-biz-soft);
+  color: var(--accent-biz);
+}
+
+.card-time .cta {
+  background: var(--accent-time-soft);
+  color: var(--accent-time);
+}
+
+.card-live .cta {
+  background: var(--accent-live-soft);
+  color: var(--accent-live);
+}
+
+.cta:hover {
+  gap: 0.75em;
+}
+
+.footer {
+  border-top: 1px solid var(--line);
+  padding: 1.4rem clamp(18px, 4vw, 48px);
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}

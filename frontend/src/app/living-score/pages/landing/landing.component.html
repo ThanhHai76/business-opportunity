@@ -1,0 +1,86 @@
+<div class="ls-page">
+  <section class="hero">
+    <div class="hero__copy">
+      <span class="ls-badge ls-badge--accent">Modern Urban Intelligence</span>
+      <h1>Tìm nơi sống <em>phù hợp nhất</em> tại Hà Nội</h1>
+      <p>
+        Hanoi Living Score chấm điểm mức độ đáng sống của từng khu vực — giao thông, giáo dục, y tế, không gian xanh,
+        tiện ích, an ninh, môi trường và chi phí — rồi cá nhân hoá theo điều bạn thật sự quan tâm.
+      </p>
+      <div class="hero__cta">
+        <a class="ls-btn ls-btn-primary" routerLink="/living-score/explore">
+          <ls-icon name="map" [size]="17" /> Khám phá bản đồ
+        </a>
+        <a class="ls-btn ls-btn-ghost" routerLink="/living-score/ai">
+          <ls-icon name="sparkles" [size]="17" /> Tìm nơi phù hợp với tôi
+        </a>
+      </div>
+      <p class="hero__note">
+        <ls-icon name="info" [size]="15" />
+        <span>Đây là bản MVP dùng <strong>SAMPLE DATA</strong> (dữ liệu minh hoạ) — chưa phải số liệu chính thức.</span>
+      </p>
+    </div>
+
+    <div class="board ls-card" aria-live="polite">
+      <div class="board__head">
+        <strong>Bảng xếp hạng mẫu</strong>
+        <span class="ls-badge ls-badge--sample">SAMPLE DATA</span>
+      </div>
+      @if (areas(); as list) {
+        <ol class="board__list">
+          @for (area of list.slice(0, 5); track area.slug) {
+            <li>
+              <a [routerLink]="['/living-score/area', area.slug]">
+                <span class="board__rank">{{ $index + 1 }}</span>
+                <span class="board__name">
+                  <strong>{{ area.name }}</strong>
+                  <small>Thuê ~{{ area.avgRentVnd | millions }}/tháng</small>
+                </span>
+                <ls-score-ring [score]="area.livingScore" [size]="46" [showMax]="false" />
+              </a>
+            </li>
+          }
+        </ol>
+        <a class="board__more" routerLink="/living-score/explore">Xem cả {{ list.length }} khu vực trên bản đồ <ls-icon name="arrow-right" [size]="15" /></a>
+      } @else if (error()) {
+        <ls-state kind="error" title="Chưa có dữ liệu" [message]="error()" actionLabel="Thử lại" (action)="load()" />
+      } @else {
+        <div class="board__skeleton" aria-label="Đang tải">
+          @for (n of [1, 2, 3, 4, 5]; track n) {
+            <div class="ls-skeleton"></div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="features" aria-label="Tính năng chính">
+    @for (f of features; track f.title) {
+      <a class="feature ls-card" [routerLink]="f.link">
+        <span class="feature__icon"><ls-icon [name]="f.icon" [size]="22" /></span>
+        <h2>{{ f.title }}</h2>
+        <p>{{ f.text }}</p>
+        <span class="feature__cta">{{ f.cta }} <ls-icon name="arrow-right" [size]="15" /></span>
+      </a>
+    }
+  </section>
+
+  <section class="how ls-card">
+    <div class="how__copy">
+      <h2 class="ls-section-title">Điểm số được tính như thế nào?</h2>
+      <p>
+        Living Score là tổng có trọng số của 8 tiêu chí, do <strong>Scoring Engine</strong> trên máy chủ tính — giao diện
+        và AI chỉ hiển thị, không tự đặt điểm. Bạn có thể đổi trọng số để có <em>Personalized Living Score</em>.
+      </p>
+    </div>
+    <ul class="how__weights">
+      @for (c of meta.criteria(); track c.key) {
+        <li>
+          <span class="how__label"><ls-icon [name]="icons[c.key]" [size]="16" /> {{ c.label }}</span>
+          <span class="how__bar"><i [style.width.%]="c.defaultWeight * 4"></i></span>
+          <strong>{{ c.defaultWeight | number: '1.0-0' }}%</strong>
+        </li>
+      }
+    </ul>
+  </section>
+</div>
