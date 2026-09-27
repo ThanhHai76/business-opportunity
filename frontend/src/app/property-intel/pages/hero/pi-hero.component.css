@@ -1,0 +1,327 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.hero {
+  position: relative;
+  height: 100%;
+  min-height: 600px;
+  overflow: hidden;
+  background: var(--pi-bg);
+}
+
+.hero__map {
+  position: absolute;
+  inset: 0;
+}
+
+/* Keeps the headline readable over the map and fades into the design's diagonal texture. */
+.hero__shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.015) 0 2px, transparent 2px 16px),
+    linear-gradient(90deg, var(--pi-bg) 0%, color-mix(in srgb, var(--pi-bg) 92%, transparent) 34%, color-mix(in srgb, var(--pi-bg) 35%, transparent) 60%, transparent 80%);
+}
+
+.hero__glow {
+  position: absolute;
+  right: 6%;
+  top: 13%;
+  width: 43%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pi-green) 16%, transparent), color-mix(in srgb, var(--pi-cyan) 5%, transparent) 60%, transparent);
+}
+
+.hero__copy {
+  position: absolute;
+  left: clamp(20px, 5vw, 96px);
+  top: 50%;
+  transform: translateY(-52%);
+  z-index: 2;
+  width: min(760px, calc(100% - 40px));
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.hero__kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 13px var(--pi-font-mono);
+  letter-spacing: 0.14em;
+  color: var(--pi-cyan);
+}
+
+.hero__kicker i {
+  width: 24px;
+  height: 1px;
+  background: currentColor;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(44px, 6.2vw, 92px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  color: var(--pi-ink-strong);
+}
+
+.hero__sub {
+  margin: 0;
+  max-width: 620px;
+  font-size: clamp(17px, 1.5vw, 22px);
+  line-height: 1.5;
+  color: var(--pi-ink-3);
+  text-wrap: pretty;
+}
+
+.hero__ask {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(640px, 100%);
+  height: 64px;
+  padding: 0 8px 0 20px;
+  border-radius: 12px;
+  background: var(--pi-glass-ai);
+  backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--pi-violet) 42%, transparent);
+  box-shadow: var(--pi-shadow);
+}
+
+.hero__ask:focus-within {
+  border-color: var(--pi-violet);
+}
+
+.hero__diamond {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  background: var(--pi-violet);
+  transform: rotate(45deg);
+}
+
+.hero__ask input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--pi-ink);
+  font: inherit;
+  font-size: 17px;
+}
+
+.hero__ask input::placeholder {
+  color: var(--pi-ink-2);
+}
+
+.hero__ask-btn {
+  flex: none;
+  padding: 13px 20px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--pi-violet);
+  color: var(--pi-on-violet) !important;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.hero__ask-btn:hover {
+  background: color-mix(in srgb, var(--pi-violet) 88%, white);
+}
+
+.hero__stats {
+  display: flex;
+  gap: 40px;
+  margin-top: 8px;
+}
+
+.hero__stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hero__stats strong {
+  font: 600 30px var(--pi-font-display);
+}
+
+.hero__stats span {
+  font-size: 13px;
+  color: var(--pi-dim);
+}
+
+.hero__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: -8px;
+}
+
+.hero__link {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pi-cyan) !important;
+}
+
+.hero__link--muted {
+  color: var(--pi-ink-3) !important;
+}
+
+.hero__link:hover {
+  text-decoration: underline !important;
+}
+
+.hero__offline {
+  margin: 0;
+  color: var(--pi-red);
+  font-size: 13px;
+}
+
+.hero__tod {
+  position: absolute;
+  z-index: 2;
+  right: clamp(300px, 26vw, 520px);
+  top: 36%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--pi-glass);
+  border: 1px solid color-mix(in srgb, var(--pi-cyan) 40%, transparent);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--pi-cyan);
+}
+
+.hero__card {
+  position: absolute;
+  z-index: 2;
+  right: clamp(24px, 4vw, 80px);
+  top: 52%;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--pi-glass);
+  backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--pi-green) 40%, transparent);
+  box-shadow: var(--pi-shadow);
+  transition: transform 0.2s ease;
+}
+
+.hero__card:hover {
+  transform: translateY(-2px);
+}
+
+.hero__card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.hero__card-head span {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+}
+
+.hero__card-head strong {
+  font-size: 26px;
+  color: var(--pi-green);
+}
+
+.hero__bar {
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--pi-ink-2);
+}
+
+.hero__bar .pi-bar {
+  height: 4px;
+}
+
+.hero__note {
+  position: absolute;
+  left: clamp(20px, 5vw, 96px);
+  bottom: 24px;
+  z-index: 2;
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  :host {
+    overflow-y: auto;
+  }
+
+  .hero {
+    height: auto;
+    min-height: 100%;
+    padding: 56px 20px 120px;
+  }
+
+  .hero__copy {
+    position: relative;
+    left: 0;
+    top: 0;
+    transform: none;
+    width: 100%;
+  }
+
+  .hero__shade {
+    background:
+      repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.015) 0 2px, transparent 2px 16px),
+      linear-gradient(180deg, color-mix(in srgb, var(--pi-bg) 90%, transparent) 0%, color-mix(in srgb, var(--pi-bg) 70%, transparent) 100%);
+  }
+
+  .hero__tod {
+    display: none;
+  }
+
+  .hero__card {
+    position: relative;
+    right: auto;
+    top: auto;
+    margin-top: 40px;
+  }
+
+  .hero__note {
+    left: 20px;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero__ask {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+
+  .hero__ask input {
+    flex-basis: calc(100% - 30px);
+    font-size: 15px;
+  }
+
+  .hero__ask-btn {
+    width: 100%;
+  }
+
+  .hero__stats {
+    gap: 24px;
+  }
+}

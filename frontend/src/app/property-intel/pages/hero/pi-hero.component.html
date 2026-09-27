@@ -1,0 +1,66 @@
+<section class="hero">
+  <div #mapHost class="hero__map" aria-hidden="true"></div>
+  <div class="hero__shade" aria-hidden="true"></div>
+  <div class="hero__glow" aria-hidden="true"></div>
+
+  <div class="hero__copy">
+    <div class="hero__kicker"><i aria-hidden="true"></i>AI PROPERTY INTELLIGENCE · HÀ NỘI</div>
+    <h1 class="pi-display">See the data behind every property.</h1>
+    <p class="hero__sub">Understand where Hanoi is growing, why it is growing, and what it means for property value.</p>
+
+    <form class="hero__ask" (submit)="$event.preventDefault(); ask()">
+      <i class="hero__diamond" aria-hidden="true"></i>
+      <input
+        type="text"
+        maxlength="500"
+        [placeholder]="placeholder()"
+        aria-label="Ask Property AI a question"
+        [value]="question()"
+        (input)="question.set($any($event.target).value)"
+      />
+      <button type="submit" class="hero__ask-btn">Ask Property AI</button>
+    </form>
+
+    <div class="hero__stats">
+      <div>
+        <strong>{{ overview()?.stats?.districts ?? '—' }}</strong>
+        <span>districts scored</span>
+      </div>
+      <div>
+        <strong>{{ overview() ? formatInt(overview()!.stats.projects) : '—' }}</strong>
+        <span>projects tracked</span>
+      </div>
+      <div>
+        <strong>{{ overview()?.stats?.horizon ?? 2045 }}</strong>
+        <span>planning horizon</span>
+      </div>
+    </div>
+
+    <div class="hero__links">
+      <a routerLink="/property-intelligence/map" class="hero__link">Open Map Intelligence →</a>
+      <a routerLink="/property-intelligence/projects/riverside-aurora" class="hero__link hero__link--muted">See a project deep dive →</a>
+    </div>
+
+    @if (offline()) {
+      <p class="hero__offline" role="alert">Không kết nối được máy chủ. Hãy chắc chắn backend-node đang chạy (cổng 8000).</p>
+    }
+  </div>
+
+  @if (overview(); as o) {
+    <div class="hero__tod pi-mono">TOD · +{{ o.featured.topUplift.uplift }}% within 800 m</div>
+    <a class="hero__card" routerLink="/property-intelligence/map">
+      <div class="hero__card-head">
+        <span class="pi-display">{{ o.featured.name.toUpperCase() }}</span>
+        <strong class="pi-display">{{ o.featured.growthScore }}</strong>
+      </div>
+      @for (c of o.featured.criteria; track c.key) {
+        <div class="hero__bar" [class]="'pi-tone-' + c.tone">
+          <span>{{ c.label }}</span>
+          <div class="pi-bar"><i [style.width.%]="c.value"></i></div>
+        </div>
+      }
+    </a>
+  }
+
+  <p class="hero__note pi-sample-note">SAMPLE DATA · scores, prices and projects are illustrative · basemap © Esri / OpenStreetMap</p>
+</section>

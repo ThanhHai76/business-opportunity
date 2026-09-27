@@ -1,5 +1,5 @@
 /**
- * Real photographs of the five landmarks, from Wikimedia Commons (public domain or Creative Commons).
+ * Real photographs of the landmarks, from Wikimedia Commons (public domain or Creative Commons).
  * Files live in public/images/time-machine/<landmark>-<era>.jpg. Every entry keeps the real date of the
  * photo in its caption — a few are from a nearby year rather than the exact era, and say so.
  *
@@ -161,6 +161,128 @@ export const LANDMARK_PHOTOS: Record<string, Record<string, LandmarkPhoto>> = {
       license: 'CC BY 2.0',
       pageUrl: commons('Hanoi Opera House, 24 December 2016.jpg'),
       position: '50% 40%',
+    },
+  },
+
+  'mot-cot': {
+    '2026': {
+      src: src('mot-cot-2026'),
+      alt: 'Chùa Một Cột trên cột đá giữa hồ, bao quanh là cây xanh',
+      caption: 'Chùa Một Cột, 2013',
+      author: 'Staffan Scherz',
+      license: 'CC BY 2.0',
+      pageUrl: commons('One Pillar Pagoda Hanoi.jpg'),
+    },
+  },
+  'hoang-thanh': {
+    '2026': {
+      src: src('hoang-thanh-2026'),
+      alt: 'Cổng Đoan Môn của Hoàng thành Thăng Long nhìn từ vườn cỏ phía trước',
+      caption: 'Đoan Môn, Hoàng thành Thăng Long, 2018',
+      author: 'Christophe95',
+      license: 'CC BY-SA 4.0',
+      pageUrl: commons('Doan Mon Gate 1.jpg'),
+    },
+  },
+  'long-bien': {
+    '1926': {
+      src: src('long-bien-1926'),
+      alt: 'Bưu thiếp cũ chụp cầu Doumer (cầu Long Biên) bắc qua sông Hồng',
+      caption: 'Cầu Doumer (nay là cầu Long Biên) trên bưu thiếp đầu thế kỷ 20',
+      author: 'Bưu thiếp, không rõ tác giả',
+      license: PD,
+      pageUrl: commons('Hanoï - Le Pont Doumer.jpg'),
+    },
+    '2026': {
+      src: src('long-bien-2026'),
+      alt: 'Đường ray và lối đi xe máy giữa những dầm thép cũ trên cầu Long Biên',
+      caption: 'Trên cầu Long Biên, 2014',
+      author: 'Quangpraha',
+      license: 'CC0',
+      pageUrl: commons('Long-bien-bridge-3371617.jpg'),
+    },
+  },
+  'nha-tho-lon': {
+    '1926': {
+      src: src('nha-tho-lon-1926'),
+      alt: 'Bưu thiếp cũ: giáo dân ra về sau thánh lễ trên con phố trước Nhà thờ Lớn Hà Nội',
+      caption: 'Nhà thờ Lớn sau giờ lễ, bưu thiếp đầu thế kỷ 20',
+      author: 'Bưu thiếp P. Dieulefils',
+      license: PD,
+      pageUrl: commons('Hanoï - Cathédrale, sortie de la Messe.jpg'),
+    },
+    '2026': {
+      src: src('nha-tho-lon-2026'),
+      alt: 'Mặt tiền Gothic với hai tháp chuông của Nhà thờ Lớn Hà Nội',
+      caption: 'Nhà thờ Lớn Hà Nội, 2018',
+      author: 'Christophe95',
+      license: 'CC BY-SA 4.0',
+      pageUrl: commons("St. Joseph's Cathedral Hanoi 2.jpg"),
+    },
+  },
+  'tran-quoc': {
+    '2026': {
+      src: src('tran-quoc-2026'),
+      alt: 'Chùa Trấn Quốc bên bờ Hồ Tây với hàng cây cổ thụ',
+      caption: 'Chùa Trấn Quốc bên Hồ Tây, 2024',
+      author: 'Jakub Hałun',
+      license: 'CC BY 4.0',
+      pageUrl: commons('Tran Quoc Pagoda, Hanoi, Vietnam, 20240123 1211c 3302.jpg'),
+    },
+  },
+  'hoa-lo': {
+    '1975': {
+      src: src('hoa-lo-1975'),
+      alt: 'Ảnh đen trắng chụp từ trên cao khu nhà tù Hỏa Lò, có chú thích Hanoi Hilton',
+      caption: 'Ảnh chụp từ trên không nhà tù Hỏa Lò ("Hanoi Hilton"), 1970',
+      author: 'Ảnh tư liệu quân đội Mỹ',
+      license: PD,
+      pageUrl: commons('HanoiHilton.jpg'),
+      fit: 'contain',
+    },
+    '2026': {
+      src: src('hoa-lo-2026'),
+      alt: 'Phòng giam tái hiện với tượng tù nhân bị cùm chân trong di tích Hỏa Lò',
+      caption: 'Phòng giam tái hiện trong di tích Hỏa Lò, 2017',
+      author: 'dronepicr',
+      license: 'CC BY 2.0',
+      pageUrl: commons('Maison Centrale Museum Hanoi (38834658544).jpg'),
+    },
+  },
+  'dong-xuan': {
+    '1926': {
+      src: src('dong-xuan-1926'),
+      alt: 'Bưu thiếp cũ chụp chợ Đồng Xuân với những mái vòm lớn',
+      caption: 'Chợ Đồng Xuân ("Les Halles") trên bưu thiếp đầu thế kỷ 20',
+      author: 'Bưu thiếp P. Dieulefils',
+      license: PD,
+      pageUrl: commons('Hanoï - Les Halles.jpg'),
+    },
+    '2026': {
+      src: src('dong-xuan-2026'),
+      alt: 'Mặt tiền chợ Đồng Xuân với biển tên và dòng xe máy trên phố',
+      caption: 'Chợ Đồng Xuân, 2018',
+      author: 'Christophe95',
+      license: 'CC BY-SA 4.0',
+      pageUrl: commons('Đồng Xuân Market 1.jpg'),
+    },
+  },
+  'ga-ha-noi': {
+    '1926': {
+      src: src('ga-ha-noi-1926'),
+      alt: 'Bưu thiếp cũ chụp mặt tiền nhà ga Hà Nội kiến trúc Pháp với xe kéo phía trước',
+      caption: 'Mặt tiền ga Hà Nội trên bưu thiếp đầu thế kỷ 20',
+      author: 'Bưu thiếp P. Dieulefils',
+      license: PD,
+      pageUrl: commons('Hanoï - Gare, façade extérieure.jpg'),
+    },
+    '2026': {
+      src: src('ga-ha-noi-2026'),
+      alt: 'Ga Hà Nội về đêm: khối giữa hiện đại xây lại năm 1976 giữa hai cánh kiến trúc Pháp',
+      caption: 'Ga Hà Nội về đêm, 2023',
+      author: 'NKSTTSSHNVN',
+      license: 'CC BY-SA 4.0',
+      pageUrl: commons('Ga Hà Nội - NKS.jpg'),
     },
   },
 };

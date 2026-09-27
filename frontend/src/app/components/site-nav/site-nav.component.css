@@ -6,6 +6,8 @@
 }
 
 .site-nav {
+  position: relative;
+  z-index: 2;
   height: var(--site-nav-h, 52px);
   display: flex;
   align-items: center;
@@ -56,16 +58,12 @@ button:focus-visible {
   min-width: 0;
 }
 
+/* ---------- Inline tabs (wide screens) ---------- */
+
 .tabs {
   display: flex;
   gap: 4px;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.tabs::-webkit-scrollbar {
-  display: none;
 }
 
 .tab {
@@ -93,6 +91,8 @@ button:focus-visible {
 }
 
 .dot {
+  display: inline-block;
+  flex: none;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -110,27 +110,63 @@ button:focus-visible {
   display: none;
 }
 
-.theme-toggle {
+/* ---------- Round icon buttons ---------- */
+
+.icon-btn {
   flex: none;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border-radius: 50%;
   border: 1px solid var(--app-line);
   background: transparent;
   color: var(--app-ink-dim);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.theme-toggle:hover {
+.icon-btn:hover,
+.menu-btn[aria-expanded='true'] {
   color: var(--app-ink);
   background: color-mix(in srgb, var(--app-ink) 8%, transparent);
 }
 
-@media (max-width: 760px) {
+/* ---------- Mobile-only pieces (hidden on wide screens) ---------- */
+
+.menu-btn,
+.current,
+.menu,
+.backdrop {
+  display: none;
+}
+
+.current {
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--app-ink);
+  background: color-mix(in srgb, var(--app-ink) 8%, transparent);
+  pointer-events: none;
+}
+
+.current .dot {
+  opacity: 1;
+}
+
+/* ---------- Breakpoints ---------- */
+
+/* Medium: short labels so all six tabs still fit on one line. */
+@media (max-width: 1180px) {
   .label-full {
     display: none;
   }
@@ -140,12 +176,58 @@ button:focus-visible {
   }
 
   .tab {
+    gap: 7px;
     padding: 8px 11px;
     font-size: 13px;
   }
 }
 
-@media (max-width: 560px) {
+/* Narrow (tablets portrait, phones): menu button + drop-down panel. */
+@media (max-width: 920px) {
+  .tabs {
+    display: none;
+  }
+
+  .menu-btn {
+    display: grid;
+  }
+
+  .current.is-here {
+    display: inline-flex;
+  }
+
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: rgba(10, 8, 5, 0.38);
+    animation: fade 0.18s ease;
+  }
+
+  .menu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: absolute;
+    z-index: 1;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: calc(100dvh - var(--site-nav-h, 52px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px max(12px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    background: var(--app-surface);
+    border-bottom: 1px solid var(--app-line);
+    box-shadow: var(--app-shadow);
+    font-family: 'Manrope', -apple-system, 'Segoe UI', sans-serif;
+    color: var(--app-ink);
+    animation: drop 0.2s ease;
+  }
+}
+
+@media (max-width: 480px) {
   .brand-word {
     display: none;
   }
@@ -154,23 +236,96 @@ button:focus-visible {
     gap: 10px;
   }
 
-  .tab {
+  .right {
     gap: 6px;
-    padding: 8px 9px;
   }
 }
 
-@media (max-width: 440px) {
-  .dot {
-    display: none;
-  }
+/* ---------- Drop-down menu items ---------- */
 
-  .tab {
-    padding: 8px 8px;
-    font-size: 12.5px;
-  }
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease;
+}
 
-  .right {
-    gap: 4px;
+.menu-item:hover,
+.menu-item:active {
+  background: color-mix(in srgb, var(--app-ink) 6%, transparent);
+}
+
+.menu-item.active {
+  background: color-mix(in srgb, var(--tab-accent, var(--app-time)) 14%, transparent);
+}
+
+.menu-item.home {
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--app-line-soft);
+  border-radius: 12px 12px 0 0;
+}
+
+.menu-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: var(--app-time);
+  background: color-mix(in srgb, var(--tab-accent, var(--app-time)) 14%, transparent);
+}
+
+.menu-icon .dot {
+  width: 10px;
+  height: 10px;
+  opacity: 1;
+}
+
+.menu-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.menu-label {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.menu-hint {
+  font-size: 12.5px;
+  color: var(--app-ink-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu,
+  .backdrop {
+    animation: none;
   }
 }

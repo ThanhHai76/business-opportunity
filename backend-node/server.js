@@ -4,6 +4,9 @@
  *   /api/cities, /api/business-types, /api/areas ...   "Bản đồ Cơ hội Kinh doanh" — a drop-in
  *       replacement for the FastAPI backend (../backend), same endpoints and response shapes.
  *   /api/living-score/...                              Hanoi Living Score (src/living-score).
+ *   /api/future-map/...                                Hanoi Future Map — scenario layers 2026-2100 (src/future-map).
+ *   /api/business-copilot/...                          Hanoi Business Copilot — location intelligence (src/business-copilot).
+ *   /api/property-intel/...                            AI Property Intelligence — area and project intelligence (src/property-intel).
  *
  * Run this or the Python backend on port 8000, never both at once.
  */
@@ -18,6 +21,9 @@ const cors = require('cors');
 const { CITIES, squarePolygon } = require('./src/data');
 const { BUSINESS_TYPES, scoreArea } = require('./src/scoring');
 const { createLivingScore } = require('./src/living-score');
+const { createFutureMap } = require('./src/future-map');
+const { createBusinessCopilot } = require('./src/business-copilot');
+const { createPropertyIntel } = require('./src/property-intel');
 
 const PORT = process.env.PORT || 8000;
 
@@ -158,6 +164,18 @@ function createApp(options = {}) {
   const living = createLivingScore(options.living);
   app.use('/api/living-score', living.router);
 
+  // Hanoi Future Map (illustrative scenario data; same error format as Living Score).
+  const futureMap = createFutureMap(options.futureMap);
+  app.use('/api/future-map', futureMap.router);
+
+  // Hanoi Business Copilot (demo data; mock AI unless ANTHROPIC_API_KEY / AI_PROVIDER is set).
+  const businessCopilot = createBusinessCopilot(options.businessCopilot);
+  app.use('/api/business-copilot', businessCopilot.router);
+
+  // AI Property Intelligence (sample data; rule-based analyst).
+  const propertyIntel = createPropertyIntel(options.propertyIntel);
+  app.use('/api/property-intel', propertyIntel.router);
+
   // Unmatched routes and uncaught errors still respond with JSON, matching
   // every other endpoint's contract (the frontend never has to special-case
   // an HTML error page).
@@ -180,6 +198,9 @@ async function main() {
     console.log(`Opportunity Map API (Node/Express) listening on http://localhost:${PORT}`);
     console.log(`  Business Opportunity Map  /api/areas, /api/cities, /api/business-types`);
     console.log(`  Hanoi Living Score        /api/living-score  (data source: ${living.config.dataSource})`);
+    console.log('  Hanoi Future Map          /api/future-map    (scenario data)');
+    console.log('  Hanoi Business Copilot    /api/business-copilot (demo data)');
+    console.log('  AI Property Intelligence  /api/property-intel (sample data)');
     if (!living.config.anthropicApiKey) console.log('  ANTHROPIC_API_KEY not set — AI recommendations use rule-based explanations.');
   });
 

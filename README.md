@@ -12,14 +12,14 @@ MVP demo cho ý tưởng **"Google Maps cho cơ hội kinh doanh"**: chọn mộ
 
 ## Điều hướng chung
 
-Cả ba công cụ (Bản đồ Cơ hội Kinh doanh, Hanoi Time Machine, Hanoi Living Score) dùng **một thanh điều hướng chung** `frontend/src/app/components/site-nav/`,
-đặt trong `AppComponent`: logo "Hà Nội 100 năm" (về Trang chủ) và ba tab. Mỗi trang chỉ giữ thanh phụ riêng cho việc của nó
+Cả sáu công cụ (Bản đồ Cơ hội Kinh doanh, Hanoi Time Machine, Hanoi Living Score, Hanoi Future Map, Hanoi Business Copilot, AI Property Intelligence) dùng **một thanh điều hướng chung** `frontend/src/app/components/site-nav/`,
+đặt trong `AppComponent`: logo "Hà Nội 100 năm" (về Trang chủ) và sáu tab. Mỗi trang chỉ giữ thanh phụ riêng cho việc của nó
 (chọn thành phố / mục lục chương / Khám phá · So sánh · AI · Đã lưu · Cá nhân). Chiều cao thanh chung là biến CSS `--site-nav-h` (`styles.css`);
 trang chiếm cả khung nhìn phải trừ biến này thay vì dùng `100vh`.
 
 ### Giao diện sáng / tối
 
-Nút mặt trăng/mặt trời trên thanh chung đổi giao diện cho **toàn bộ** ứng dụng (Trang chủ, Cơ hội Kinh doanh, Time Machine, Living Score).
+Nút mặt trăng/mặt trời trên thanh chung đổi giao diện cho **toàn bộ** ứng dụng (Trang chủ, Cơ hội Kinh doanh, Time Machine, Living Score, Future Map, Business Copilot, Property Intelligence).
 `ThemeService` (`frontend/src/app/services/theme.service.ts`) lưu lựa chọn ở `localStorage` (`hanoi100.theme`: `light` | `dark` | `system`), mặc định theo hệ điều hành,
 và ghi kết quả vào `<html data-theme="light|dark">` (một script nhỏ trong `index.html` áp dụng trước khi vẽ để không bị nháy màu).
 Bộ màu dùng chung là các biến `--app-*` trong `frontend/src/styles.css`; mỗi trang đọc các biến này (Time Machine có bộ token sáng riêng `--tm-*`).
@@ -43,7 +43,10 @@ project/
 │   ├── src/
 │   │   ├── data.js             # CITIES: 10 khu vực TP.HCM + 10 khu vực Hà Nội
 │   │   ├── scoring.js          # Cùng công thức chấm điểm như bản Python
-│   │   └── living-score/       # Hanoi Living Score (/api/living-score/...) — xem mục bên dưới
+│   │   ├── living-score/       # Hanoi Living Score (/api/living-score/...) — xem mục bên dưới
+│   │   ├── future-map/         # Hanoi Future Map (/api/future-map/...) — dữ liệu kịch bản 2026-2100
+│   │   ├── business-copilot/   # Hanoi Business Copilot (/api/business-copilot/...) — dữ liệu demo
+│   │   └── property-intel/     # AI Property Intelligence (/api/property-intel/...) — dữ liệu mẫu
 │   ├── database/living-score/  # 01-schema.sql — schema PostgreSQL/PostGIS
 │   ├── test/                   # node --test: API cơ hội KD + toàn bộ Living Score
 │   ├── Dockerfile · .env.example
@@ -56,6 +59,9 @@ project/
         ├── components/map|area-panel|legend/   # Bản đồ Cơ hội Kinh doanh (Leaflet)
         ├── pages/                  # home, opportunity-map, time-machine
         ├── living-score/           # Hanoi Living Score (lazy route /living-score, MapLibre)
+        ├── future-map/             # Hanoi Future Map (lazy route /future-map, MapLibre)
+        ├── business-copilot/       # Hanoi Business Copilot (lazy route /business-copilot)
+        ├── property-intel/         # AI Property Intelligence (lazy route /property-intelligence, MapLibre)
         └── services/area.service.ts
 ```
 
@@ -156,6 +162,7 @@ Nạp lại từ đầu: `SEED_RESET=true npm run seed:living` (trong `backend-n
 | `ANTHROPIC_API_KEY` | — | Trống = AI dùng giải thích theo quy tắc (`mode: "rules"`) |
 | `LLM_MODEL` | `claude-opus-5` | Model dùng cho lời giải thích |
 | `LLM_TIMEOUT_MS` | `45000` | Timeout gọi LLM |
+| `AI_PROVIDER` | `auto` | Business Copilot: `auto` (Claude nếu có key) hoặc `mock` |
 
 Cấu hình Living Score được validate bằng Zod khi khởi động — sai cấu hình sẽ báo lỗi rõ ràng và dừng ngay.
 
@@ -222,9 +229,114 @@ cd backend-node && npm test      # node --test: scoring, seed, recommendation en
 - Retrieval RAG mới theo chủ đề; nên chuyển sang pgvector khi kho tri thức lớn hơn.
 - Phần PostgreSQL/PostGIS, Redis và Docker chưa được chạy kiểm thử trong môi trường phát triển ban đầu — hãy chạy `docker compose up --build` và xem `/api/living-score/health`.
 
+## Hanoi Future Map (`/future-map`, API `/api/future-map`)
+
+Bản đồ tương lai của Thủ đô trên timeline **2026 → 2030 → 2050 → 2100**: kéo (hoặc bấm ▶ để phát) để xem metro, vành đai, vùng TOD, hành lang xanh, sân bay/logistics và các **cực tăng trưởng** xuất hiện dần.
+
+- **10 lớp bản đồ** bật/tắt độc lập: Metro, Vùng TOD, Khu vực phát triển, Vành đai & cao tốc, Hành lang xanh, Sông Hồng & mặt nước, Sân bay/Logistics, Cực tăng trưởng, Trục phát triển, Ranh giới quy hoạch.
+- **Thẻ cực tăng trưởng** (bấm vào cực trên bản đồ hoặc tìm theo tên): 4 chỉ số (phát triển, TOD, xanh, kết nối), số tuyến metro chạm tới, sân bay/logistics, và bảng điểm qua từng mốc. Điểm TOD và kết nối **tính từ số tuyến metro thật sự chạm tới cực** ở mốc đó nên thay đổi khi kéo timeline.
+- **2D / 3D** (nâng khối khu phát triển theo điểm, nghiêng camera), toàn màn hình, **so sánh 2–3 mốc**, và **hỏi đáp** với 6 câu hỏi có sẵn (TOD cao nhất, xanh nhất, tăng trưởng nhanh nhất, kết nối sân bay, mạng metro, mốc này khác gì mốc trước).
+- Giao diện sáng/tối theo theme chung của ứng dụng.
+
+> ⚠️ **Toàn bộ là dữ liệu KỊCH BẢN minh hoạ** (`backend-node/src/future-map/data.js`): lấy cảm hứng từ các định hướng phát triển đã công bố nhưng **không phải bản đồ quy hoạch chính thức, không phải dự báo**. Vị trí là xấp xỉ; dân số, tỷ lệ xanh và điểm số là giả định của bản demo.
+> Giao diện luôn ghi rõ điều này (chú thích "Kịch bản minh hoạ" và mục "Nguồn dữ liệu"). Câu trả lời ở mục hỏi đáp được **tính bằng quy tắc trên dữ liệu kịch bản, không do mô hình AI viết** — và cũng được ghi rõ như vậy.
+
+API (tiền tố `/api/future-map`, cùng định dạng lỗi với Living Score):
+
+| Method | Đường dẫn | Mô tả |
+|---|---|---|
+| GET | `/timeline` | Các mốc thời gian, chỉ số tổng quan, tâm bản đồ |
+| GET | `/scenario?year=2050` | Toàn bộ lớp bản đồ (GeoJSON) + chỉ số cho một mốc |
+| GET | `/hubs/:slug?year=2050` | Một cực: điểm, số tuyến metro, điểm qua các mốc |
+| GET | `/compare?years=2030,2050,2100` | So sánh 2–3 mốc + mức thay đổi |
+| GET | `/questions` | Danh sách câu hỏi có sẵn |
+| POST | `/ask` | `{ "question": "top-tod", "year": 2050 }` → câu trả lời tính từ dữ liệu |
+
+Frontend nằm ở `frontend/src/app/future-map/` (bản đồ MapLibre với nền OpenStreetMap được làm tối/sáng, lớp phát sáng bằng line-blur, marker HTML cho các cực). Tuyến metro 1, 2, 2A, 3 dùng lại hình học từ dữ liệu mẫu của Living Score. Kiểm thử: `cd backend-node && npm test` (có bộ test riêng `test/future-map.test.js`).
+
+## Hanoi Business Copilot (`/business-copilot`, API `/api/business-copilot`)
+
+Nền tảng location intelligence trả lời câu hỏi **"Tôi nên mở cửa hàng tiếp theo ở đâu tại Hà Nội?"**. Nhập ý tưởng tự nhiên
+(tiếng Việt hoặc tiếng Anh, ví dụ *"I have 500M VND and want to open a coffee shop"* hay *"Tôi có 1,2 tỷ, muốn mở nhà hàng"*) →
+Copilot nhận ra loại hình + ngân sách → xếp hạng **Top 10** khu vực theo Business Score → chi tiết, so sánh, mô phỏng, hỏi AI, xuất báo cáo.
+
+> ⚠️ **Toàn bộ là dữ liệu DEMO / ƯỚC TÍNH** (`backend-node/src/business-copilot/data.js`): dân số, thu nhập, giá thuê, đối thủ, lưu lượng
+> khách, doanh thu, chi phí đều là số minh hoạ — **không phải số liệu thị trường**. Giao diện, API và báo cáo đều ghi nhãn này.
+
+**Các trang** (thanh điều hướng riêng của Copilot): Dashboard · Explore Locations (bản đồ MapLibre 10 lớp: Business Score, heatmap nhu cầu,
+mật độ dân số, đối thủ, metro, trường học, văn phòng, mua sắm, đường chính, vùng phát triển) · Market Data (bảng sắp xếp được) · Competitors ·
+Compare (2–3 khu vực, radar + bảng) · Simulator (form nhập giả định → khu vực đề xuất, chi phí, doanh thu, lợi nhuận, hoà vốn, rủi ro) ·
+Reports (9 mục, lưu trên trình duyệt, **Xuất PDF** qua hộp thoại in) · AI Copilot. Trợ lý Copilot cũng mở được ở mọi trang (nút "Ask AI" / "Copilot").
+
+**Business Score** (`scoring.js`) = trung bình có trọng số của Nhu cầu 26 · Cạnh tranh 16 · Giá thuê 14 · Lưu lượng 14 · Tiếp cận 10 ·
+Tăng trưởng 10 · Phù hợp ngân sách 10, rồi hiệu chỉnh tuyến tính về thang 0–100. Nhu cầu dùng trọng số riêng cho từng loại hình (quán cà phê nặng
+về dân văn phòng/sinh viên, phòng gym nặng về dân cư/thu nhập…). Chi phí, doanh thu 18 tháng và điểm hoà vốn tính từ mô hình chi phí của từng loại hình.
+
+**AI** (`ai-provider.js`): lớp trừu tượng `AIProvider` (`name`, `model`, `explain({ task, question, facts })`). AI **chỉ diễn đạt** — mọi con số do
+engine tính và truyền vào. Mặc định `AI_PROVIDER=auto`: dùng Claude (Anthropic SDK) khi có `ANTHROPIC_API_KEY`, nếu không (hoặc khi lỗi/bị từ chối)
+dùng `MockAIProvider` trả lời theo quy tắc. Thêm OpenAI/Gemini = viết một lớp cùng giao diện và đăng ký trong `PROVIDERS`. Câu trả lời của Copilot
+luôn có cấu trúc **Khuyến nghị → Bằng chứng → Điểm → Rủi ro → Bước tiếp theo**; hiện nhận 6 ý định: gợi ý vị trí, ít cạnh tranh nhất, so sánh,
+cao cấp, "nên kinh doanh gì ở X", phân tích một quận.
+
+| Method | Đường dẫn (tiền tố `/api/business-copilot`) | Mô tả |
+|---|---|---|
+| GET | `/categories` | 6 loại hình |
+| GET | `/locations?category=&budget=` | 10 khu vực xếp hạng |
+| GET | `/locations/:id` · `/locations/:id/business-score` · `/locations/:id/competitors` | Chi tiết / điểm / đối thủ |
+| GET | `/recommendations?category=&budget=&limit=` | Top N + nhận định AI + heatmap cơ hội |
+| GET | `/map/layers?category=&budget=` | 10 lớp GeoJSON |
+| POST | `/analyze` | `{ message }` câu tự nhiên → Top 10 |
+| POST | `/compare` | `{ locations: [2–3 slug], category?, budgetVnd? }` |
+| POST | `/simulate` | `{ category, budgetVnd, sizeM2?, expectedRevenueVnd?, maxRentVnd?, targetCustomers?, districts? }` |
+| POST | `/ai/analyze` | `{ question, context? }` — AI Copilot |
+| POST | `/report` | `{ category?, budgetVnd?, location? }` — báo cáo 9 mục |
+
+Kiểm thử: `cd backend-node && npm test` (bộ `test/business-copilot.test.js`).
+
+**Khác biệt so với đặc tả gốc (cố ý, để khớp kiến trúc đang có của dự án):** backend là module Express trong `backend-node` (không phải NestJS riêng);
+dữ liệu chạy in-memory — chưa có bảng PostgreSQL/PostGIS và Redis cho Copilot (các thực thể trong spec tương ứng với cấu trúc trong `data.js`/`scoring.js`,
+có thể chuyển sang Postgres theo mẫu của Living Score); CSS thuần theo token sáng/tối của app (không dùng Tailwind); biểu đồ SVG tự viết (không dùng ECharts);
+AI provider hiện có mock + Anthropic (chưa có OpenAI/Gemini).
+
+## AI Property Intelligence (`/property-intelligence`, API `/api/property-intel`)
+
+Dựng theo bộ thiết kế *AI Property Intelligence* (3 màn: Main Dashboard · Property Deep Dive · Hero), giao diện tiếng Anh như thiết kế,
+nền tối theo đúng bảng màu thiết kế và có bản sáng dùng chung nút đổi giao diện. Ba trang, chung một thanh sản phẩm (tabs, tìm kiếm ⌘K / Ctrl K
+có breadcrumb, ngày cập nhật dữ liệu, chuyển VND/USD):
+
+- **Overview** (`/property-intelligence`): hero "See the data behind every property", ô hỏi AI, số liệu tổng, thẻ quận nổi bật trên nền bản đồ.
+- **Map Intelligence** (`/property-intelligence/map`): panel lớp bản đồ (quy hoạch, dự án phát triển, metro, TOD, hạ tầng, dự án BĐS,
+  heatmap giá, trường/bệnh viện, mật độ dân số, cây xanh; preset; nền Satellite/Dark/Terrain; mốc quy hoạch 2026/2030/2045), bản đồ MapLibre
+  (bấm quận để chọn, bấm chấm dự án để mở chi tiết, lens Growth/Price/Risk, 3D), khung **Ask Property AI** (⌘J / Ctrl J, 5 nút hành động nhanh),
+  5 biểu đồ (xu hướng giá, tác động hạ tầng, cung–cầu, dân số, dòng thời gian phát triển) và thẻ quận (Growth Score 8 tiêu chí, chỉ số thị trường,
+  dự án đang theo dõi, value chain).
+- **Project deep dive** (`/property-intelligence/projects/:slug`): bản đồ cận cảnh (vòng TOD 800 m quanh ga gần nhất, vùng đi bộ 10 phút / lái xe
+  20 phút, tiện ích, dự án lân cận), giá ước tính, giá/m² so với quận, lịch sử giá 1Y/3Y/5Y, điểm phát triển/rủi ro, khoảng cách tiện ích,
+  hạ tầng sắp tới, dự án lân cận, AI Take; nút **+ Watchlist** và **Generate Investment Report** (hộp thoại báo cáo, in/PDF).
+
+> ⚠️ **Toàn bộ là SAMPLE DATA** (`backend-node/src/property-intel/data.js`): giá, điểm, dự án (tên dự án là hư cấu), kịch bản đều là số minh hoạ.
+> Tuyến metro lấy từ seed của Living Score (gần đúng); cầu, Vành đai 4, vùng quy hoạch và ranh giới quận là phác thảo. Không phải số liệu chính thức,
+> không phải khuyến nghị đầu tư.
+
+**Growth Score** = trung bình có trọng số của Planning 20 · Infrastructure 20 · Price Potential 20 · Connectivity 15 · Demand 15 ·
+Urban Development 5 · Population Growth 5 (Investment Risk hiển thị riêng). Khoảng cách tới ga/tiện ích tính bằng haversine trên toạ độ mẫu.
+**Ask Property AI** (`analyst.js`) là bộ phân tích **theo quy tắc**: nhận diện ý định (analyze / compare / price / future / report / project) và
+quận/dự án được nhắc tới (tiếng Việt có dấu hay không dấu đều được), rồi ghép câu trả lời hoàn toàn từ dữ liệu mẫu — chưa gọi LLM.
+
+| Method | Đường dẫn (tiền tố `/api/property-intel`) | Mô tả |
+|---|---|---|
+| GET | `/overview` | Số liệu hero, quận nổi bật, ngày dữ liệu, tỷ giá mẫu |
+| GET | `/districts` · `/districts/:slug` | 10 quận xếp hạng · chi tiết một quận |
+| GET | `/projects` · `/projects/:slug` | 10 dự án · phân tích sâu một dự án |
+| GET | `/map?horizon=2026\|2030\|2045` | Các lớp GeoJSON theo mốc quy hoạch |
+| GET | `/search?q=` | Tìm quận/dự án (theo đầu từ, bỏ dấu) |
+| POST | `/ask` | `{ question, intent?, district?, project? }` — Ask Property AI |
+
+Kiểm thử: `cd backend-node && npm test` (bộ `test/property-intel.test.js`).
+
 ## Ảnh thật của Hanoi Time Machine
 
-Mục timeline và bảng chi tiết trên bản đồ của Time Machine hiển thị **ảnh thật** của 5 địa danh, lấy từ Wikimedia Commons (phạm vi công cộng hoặc Creative Commons).
+Mục timeline và bảng chi tiết trên bản đồ của Time Machine hiển thị **ảnh thật** của 13 địa danh (Hồ Gươm, Phố Cổ, Ba Đình, Văn Miếu, Nhà Hát Lớn, Chùa Một Cột, Hoàng thành Thăng Long, Cầu Long Biên, Nhà thờ Lớn, Hồ Tây & chùa Trấn Quốc, Nhà tù Hỏa Lò, Chợ Đồng Xuân, Ga Hà Nội), lấy từ Wikimedia Commons (phạm vi công cộng hoặc Creative Commons).
 Ảnh nằm ở `frontend/public/images/time-machine/<địa-danh>-<mốc>.jpg`; danh sách, chú thích, tác giả, giấy phép và liên kết trang gốc nằm trong
 `frontend/src/app/pages/time-machine/time-machine-photos.ts` (mỗi ảnh hiện đủ ghi nguồn và link về trang Commons).
 

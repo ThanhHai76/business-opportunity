@@ -1,0 +1,223 @@
+<div class="db">
+  <!-- ============ LEFT: idea + ranking ============ -->
+  <div class="db-left">
+    <section class="db-hero">
+      <p class="db-hero__kicker"><span class="bc-dot"></span> HANOI BUSINESS COPILOT</p>
+      <h1>Biết nên mở kinh doanh ở đâu.</h1>
+      <p class="db-hero__sub">Phân tích vị trí bằng AI giúp ra quyết định kinh doanh thông minh hơn tại Hà Nội.</p>
+      <p class="db-hero__q">Bạn nên mở cửa hàng tiếp theo ở đâu?</p>
+      <div class="db-prompt">
+        <textarea rows="2" [value]="state.prompt()" (input)="onPrompt($event)" (keydown.enter)="$event.preventDefault(); analyze()" aria-label="Ý tưởng kinh doanh" placeholder="Tôi có 500 triệu, muốn mở quán cà phê ở Hà Nội." maxlength="500"></textarea>
+        <div class="db-prompt__row">
+          <span class="db-tag db-tag--gold">Ngân sách {{ budget() }}</span>
+          <span class="db-tag">{{ categoryLabel() }}</span>
+          <span class="db-tag">10 quận</span>
+          <button type="button" class="db-analyze" (click)="analyze()" [disabled]="analyzing()">
+            @if (analyzing()) { <span class="bc-spinner"></span> Đang phân tích… } @else { Phân tích Hà Nội → }
+          </button>
+        </div>
+      </div>
+      <div class="db-cats" aria-label="Gợi ý loại hình">
+        @for (c of categories; track c.key) {
+          <button type="button" [class.is-on]="state.category() === c.key" (click)="useCategory(c.key, c.prompt)"><ls-icon [name]="c.icon" [size]="13" /> {{ c.label }}</button>
+        }
+      </div>
+      <div class="db-factors">
+        @for (f of factors; track f) { <span>{{ f }}</span> }
+      </div>
+    </section>
+
+    <section class="bc-card db-top">
+      <div class="db-top__head">
+        <div>
+          <p class="bc-eyebrow bc-eyebrow--accent">AI Recommendations</p>
+          <h2>Top 10 khu vực · {{ categoryLabel() }}</h2>
+        </div>
+        <p class="db-top__meta">10 khu vực demo<br />xếp theo Business Score</p>
+      </div>
+      @if (recsError(); as err) {
+        <div class="bc-state bc-state--error" role="alert">
+          <ls-icon name="alert" [size]="22" />
+          <p>{{ err }}</p>
+          <button type="button" class="bc-btn bc-btn--sm" (click)="analyze()">Thử lại</button>
+        </div>
+      } @else if (!recs()) {
+        @for (i of [1, 2, 3, 4, 5]; track i) { <div class="bc-skel db-skel"></div> }
+      } @else {
+        <ol class="db-list">
+          @for (r of recs()!.recommendations; track r.slug) {
+            <li>
+              <button type="button" class="db-item" [class.is-selected]="r.slug === selectedSlug()" (click)="select(r.slug)" [attr.aria-pressed]="r.slug === selectedSlug()">
+                <span class="db-rank" [attr.data-rank]="r.rank">{{ r.rank }}</span>
+                <span class="db-item__body">
+                  <b>{{ r.name }}</b>
+                  <small>{{ r.cluster }}</small>
+                  @if (r.slug === selectedSlug() && r.tags.length) {
+                    <span class="db-item__tags">@for (t of r.tags; track t) { <em>{{ t }}</em> }</span>
+                  }
+                </span>
+                <span class="db-item__bar"><bc-bar [value]="r.businessScore" [color]="r.rank === 1 ? 'var(--bc-accent)' : tone(r.businessScore)" /></span>
+                <b class="db-item__score">{{ r.businessScore }}</b>
+              </button>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+  </div>
+
+  <!-- ============ RIGHT: location intelligence ============ -->
+  <div class="db-right">
+    @if (detail(); as d) {
+      <section class="bc-card db-head" [class.is-loading]="detailLoading()">
+        <bc-ring [score]="d.totalScore" [size]="70" />
+        <div class="db-head__title">
+          <p class="bc-eyebrow bc-eyebrow--accent">AI Business Report · {{ d.category.name }} · {{ budget() }}</p>
+          <h1>{{ d.name }}
+            <span class="bc-pill bc-pill--good">{{ d.fitLabel }}</span>
+            <span class="bc-pill" [class.bc-pill--warn]="d.withinBudget" [class.bc-pill--bad]="!d.withinBudget">{{ d.withinBudget ? 'Trong ngân sách' : 'Vượt ngân sách' }}</span>
+          </h1>
+          <p>{{ d.cluster }} · #{{ d.rank }}/{{ d.rankOf }} · độ tin cậy {{ d.confidence }}</p>
+        </div>
+        <div class="db-head__actions">
+          <button type="button" class="bc-btn bc-btn--ai" (click)="askAbout()">Ask AI</button>
+          <button type="button" class="bc-btn" (click)="goCompare()">So sánh khu vực</button>
+          <button type="button" class="bc-btn" (click)="goSimulate()">Mô phỏng kinh doanh</button>
+          <button type="button" class="bc-btn bc-btn--dark" (click)="goReport()">Tạo báo cáo</button>
+        </div>
+      </section>
+
+      <section class="bc-card db-tiles" aria-label="Chỉ số chính">
+        @for (t of tiles(); track t.label) {
+          <div class="db-tile">
+            <p class="bc-eyebrow">{{ t.label }}</p>
+            <p class="db-tile__v" [class.is-text]="!t.unit">{{ t.value }}<small>{{ t.unit }}</small></p>
+            <bc-bar [value]="t.bar" [color]="t.color ?? null" />
+          </div>
+        }
+      </section>
+
+      <div class="db-grid">
+        <!-- Why -->
+        <section class="bc-card db-why">
+          <div class="bc-card__head"><h3><span class="db-orb"></span> Vì sao chọn khu vực này?</h3><span class="bc-eyebrow bc-eyebrow--accent">AI insight</span></div>
+          <p class="db-why__text">{{ recs()?.insight?.summary }}</p>
+          <ul class="db-checks">@for (e of d.evidence; track e) { <li><ls-icon name="check" [size]="14" /> {{ e }}</li> }</ul>
+          <div class="db-target">
+            <div class="bc-card__head"><h3>Khách hàng mục tiêu</h3><span class="bc-eyebrow">Tỷ trọng nhu cầu</span></div>
+            <div class="db-stack">@for (c of d.targetCustomers; track c.key; let i = $index) { <i [style.width.%]="c.pct" [style.background]="customerColors[i]"></i> }</div>
+            <ul class="db-legend db-legend--one">@for (c of d.targetCustomers; track c.key; let i = $index) { <li><span [style.background]="customerColors[i]"></span>{{ c.label }}<b>{{ c.pct }}%</b></li> }</ul>
+          </div>
+        </section>
+
+        <!-- Revenue -->
+        <section class="bc-card">
+          <div class="bc-card__head"><h3>Doanh thu tiềm năng</h3><span class="bc-eyebrow">18 tháng · tr ₫</span></div>
+          <div class="db-kpis">
+            <div><p class="bc-eyebrow">Ổn định</p><b class="is-good">{{ round(d.revenuePotentialMillions) }}tr</b></div>
+            <div><p class="bc-eyebrow">Biên LN</p><b>{{ d.netMarginPct }}%</b></div>
+            <div><p class="bc-eyebrow">Hoà vốn</p><b class="is-accent">{{ d.breakEvenMonth ? 'T' + d.breakEvenMonth : '>18' }}</b></div>
+          </div>
+          <bc-revenue-chart [series]="d.revenueSeries" [breakEven]="d.breakEvenMonth" />
+          <ul class="db-legend db-legend--row">
+            <li><span style="background: var(--bc-good)"></span>Doanh thu</li>
+            <li><span style="background: var(--bc-warn)"></span>Chi phí tháng</li>
+            <li><span style="background: var(--bc-accent-soft)"></span>Trước hoà vốn</li>
+          </ul>
+        </section>
+
+        <!-- Costs -->
+        <section class="bc-card">
+          <div class="bc-card__head"><h3>Chi phí hằng tháng ước tính</h3><span class="bc-eyebrow">Khi ổn định</span></div>
+          <p class="db-big">{{ round(d.monthlyCosts.totalMillions) }}tr<small>/tháng</small></p>
+          <div class="db-stack db-stack--thin">@for (c of costBar(); track c.key) { <i [style.width.%]="c.pct" [style.background]="c.color"></i> }</div>
+          <ul class="db-costs">@for (c of costBar(); track c.key) { <li><span [style.background]="c.color"></span>{{ c.label }}<b>{{ c.millions | money }}</b></li> }</ul>
+          <div class="db-invest">
+            <div class="bc-card__head"><h3>Vốn đầu tư ban đầu</h3><b class="is-warn">{{ d.initialInvestment.totalMillions | money }}</b></div>
+            <dl>
+              <dt>Thi công</dt><dd>{{ d.initialInvestment.fitOutMillions | money }}</dd>
+              <dt>Thiết bị</dt><dd>{{ d.initialInvestment.equipmentMillions | money }}</dd>
+              <dt>Đặt cọc (3 tháng)</dt><dd>{{ d.initialInvestment.depositMillions | money }}</dd>
+              <dt>Vốn lưu động</dt><dd>{{ d.initialInvestment.workingCapitalMillions | money }}</dd>
+            </dl>
+          </div>
+        </section>
+
+        <!-- Comparison -->
+        <section class="bc-card">
+          <div class="bc-card__head"><h3>So sánh khu vực</h3><span class="bc-eyebrow">Tốt nhất tô xanh</span></div>
+          @if (compare(); as c) {
+            <div class="bc-scroll"><table class="bc-table db-cmp">
+              <thead><tr><th></th>@for (l of c.locations; track l.slug) { <th>{{ l.name }}</th> }</tr></thead>
+              <tbody>
+                @for (row of compareRows; track row.key) {
+                  <tr>
+                    <th scope="row">{{ row.label }}</th>
+                    @for (l of c.locations; track l.slug) { <td [class.is-best]="isBest(row.key, l.slug)">{{ compareValue(row.key, l.slug) }}</td> }
+                  </tr>
+                }
+              </tbody>
+            </table></div>
+            <p class="db-callout">{{ c.summary }}</p>
+          } @else {
+            <div class="bc-skel" style="height: 220px"></div>
+          }
+        </section>
+
+        <!-- Foot traffic -->
+        <section class="bc-card">
+          <div class="bc-card__head"><h3>Bản đồ nhiệt lưu lượng</h3><span class="bc-eyebrow">Bán kính 500 m</span></div>
+          <p class="db-sub">Cao điểm: {{ d.footTraffic.peak.day }} {{ d.footTraffic.peak.from }}–{{ d.footTraffic.peak.to }} · cuối tuần {{ d.footTraffic.weekendChangePct > 0 ? '+' : '' }}{{ d.footTraffic.weekendChangePct }}%</p>
+          <bc-traffic-heat [grid]="d.footTraffic.grid" [days]="d.footTraffic.days" [hours]="d.footTraffic.hours" />
+          <div class="db-scale"><span>Thấp</span><i></i><span>Cao</span></div>
+        </section>
+
+        <!-- Competitors -->
+        <section class="bc-card">
+          <div class="bc-card__head"><h3>Phân tích đối thủ</h3><span class="bc-eyebrow">Bán kính 500 m</span></div>
+          <div class="db-sat">
+            <div><b class="db-big">{{ d.competitors.total }}</b><p class="bc-eyebrow">Đối thủ</p></div>
+            <div class="db-sat__meter">
+              <p><span>Mức bão hoà</span><b [class]="'bc-level--' + d.competitionLabel">{{ d.competitionLabel | level }}</b></p>
+              <span class="db-gauge"><i [style.left.%]="100 - d.scores.competition"></i></span>
+            </div>
+          </div>
+          <ul class="db-comp">
+            @for (s of d.competitors.subtypes; track s.key; let i = $index) {
+              <li>
+                <p><span>{{ s.label }}</span><b>{{ s.count }} · {{ s.reachK }}k</b></p>
+                <bc-bar [value]="(s.count / d.competitors.total) * 100 * 2" [color]="['#ef4444', '#8b5cf6', '#f59e0b', '#94a3b8'][i]" />
+              </li>
+            }
+          </ul>
+          <p class="db-gap"><b>Khoảng trống:</b> {{ d.competitorGap }}</p>
+        </section>
+
+        <!-- Opportunity heatmap -->
+        <section class="bc-card db-dark">
+          <div class="bc-card__head"><h3>Bản đồ cơ hội</h3><span class="bc-eyebrow">Sơ đồ</span></div>
+          <p class="db-sub">Nhu cầu + cạnh tranh theo vùng</p>
+          @if (recs(); as r) {
+            <bc-opportunity [grid]="r.heatmap.grid" [width]="r.heatmap.width" [markers]="r.heatmap.markers" (pick)="select($event)" />
+          }
+          <div class="db-scale db-scale--dark"><span>Thấp</span><i></i><span>Cao</span></div>
+        </section>
+
+        <!-- Risks & growth -->
+        <section class="bc-card db-risks">
+          <div class="bc-card__head"><h3>Rủi ro</h3><span class="bc-eyebrow">Mức độ</span></div>
+          <ul>@for (r of d.risks; track r.text) { <li><span class="bc-dot" style="color: var(--bc-bad)"></span>{{ r.text }}<em class="bc-pill" [class]="severityClass(r.severity)">{{ r.severity | level }}</em></li> }</ul>
+          <div class="bc-card__head db-risks__growth"><h3>Cơ hội tăng trưởng</h3><span class="bc-eyebrow">Thời điểm</span></div>
+          <ul>@for (g of d.growthOpportunities; track g.text) { <li><span class="bc-dot" style="color: var(--bc-good)"></span>{{ g.text }}<em class="bc-pill bc-pill--good">{{ g.timing === 'Now' ? 'Ngay' : g.timing }}</em></li> }</ul>
+          <p class="db-reco"><span class="bc-eyebrow">Khuyến nghị</span> <b>{{ d.recommendation }}</b></p>
+          <a class="bc-btn bc-btn--sm" [routerLink]="['/business-copilot/location', d.slug]">Xem đầy đủ →</a>
+        </section>
+      </div>
+      <p class="bc-note"><ls-icon name="info" [size]="13" /> {{ d.note }}</p>
+    } @else if (!recsError()) {
+      <div class="bc-skel" style="height: 110px"></div>
+      <div class="bc-skel" style="height: 90px; margin-top: 14px"></div>
+      <div class="bc-skel" style="height: 420px; margin-top: 14px"></div>
+    }
+  </div>
+</div>

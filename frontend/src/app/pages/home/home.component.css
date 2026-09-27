@@ -11,6 +11,12 @@
   --accent-time-soft: var(--app-time-soft);
   --accent-live: var(--app-live);
   --accent-live-soft: var(--app-live-soft);
+  --accent-future: var(--app-future);
+  --accent-future-soft: var(--app-future-soft);
+  --accent-copilot: var(--app-copilot);
+  --accent-copilot-soft: var(--app-copilot-soft);
+  --accent-property: var(--app-property);
+  --accent-property-soft: var(--app-property-soft);
   --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-body: 'Manrope', -apple-system, 'Segoe UI', sans-serif;
 
@@ -88,7 +94,7 @@ main {
   margin: 0 auto;
   padding: 0 clamp(18px, 4vw, 48px) clamp(4rem, 8vh, 6rem);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: 1.5rem;
 }
 
@@ -121,6 +127,18 @@ main {
   border-top-color: var(--accent-live);
 }
 
+.card-future {
+  border-top-color: var(--accent-future);
+}
+
+.card-copilot {
+  border-top-color: var(--accent-copilot);
+}
+
+.card-property {
+  border-top-color: var(--accent-property);
+}
+
 .card-top {
   display: flex;
   align-items: center;
@@ -145,6 +163,18 @@ main {
 
 .card-live .card-eyebrow {
   color: var(--accent-live);
+}
+
+.card-future .card-eyebrow {
+  color: var(--accent-future);
+}
+
+.card-copilot .card-eyebrow {
+  color: var(--accent-copilot);
+}
+
+.card-property .card-eyebrow {
+  color: var(--accent-property);
 }
 
 .card-icon {
@@ -214,6 +244,21 @@ main {
 .card-live .cta {
   background: var(--accent-live-soft);
   color: var(--accent-live);
+}
+
+.card-future .cta {
+  background: var(--accent-future-soft);
+  color: var(--accent-future);
+}
+
+.card-copilot .cta {
+  background: var(--accent-copilot-soft);
+  color: var(--accent-copilot);
+}
+
+.card-property .cta {
+  background: var(--accent-property-soft);
+  color: var(--accent-property);
 }
 
 .cta:hover {

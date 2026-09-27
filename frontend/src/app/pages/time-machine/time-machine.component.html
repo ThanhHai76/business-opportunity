@@ -15,6 +15,7 @@
       <nav class="tm-nav-links">
         <a class="tm-nav-link" href="#tm-map">Bản đồ</a>
         <a class="tm-nav-link" href="#tm-timeline">Dòng thời gian</a>
+        <a class="tm-nav-link" href="#tm-compare">Xưa &amp; Nay</a>
         <a class="tm-nav-link" href="#tm-storyteller">AI kể chuyện</a>
         <a class="tm-nav-link" href="#tm-ar">AR</a>
         <a class="tm-nav-link" href="#tm-education">Giáo dục</a>
@@ -26,6 +27,7 @@
     <div class="tm-nav-mobile" id="tm-navMobile" hidden>
       <a href="#tm-map">Bản đồ</a>
       <a href="#tm-timeline">Dòng thời gian</a>
+      <a href="#tm-compare">Xưa &amp; Nay</a>
       <a href="#tm-storyteller">AI kể chuyện</a>
       <a href="#tm-ar">AR</a>
       <a href="#tm-education">Giáo dục</a>
@@ -38,10 +40,11 @@
     <a class="tm-rail-dot" data-target="tm-hero" href="#tm-hero"><span class="tm-rail-label">Mở đầu</span></a>
     <a class="tm-rail-dot" data-target="tm-map" href="#tm-map"><span class="tm-rail-label">01 · Bản đồ</span></a>
     <a class="tm-rail-dot" data-target="tm-timeline" href="#tm-timeline"><span class="tm-rail-label">02 · Thời gian</span></a>
-    <a class="tm-rail-dot" data-target="tm-storyteller" href="#tm-storyteller"><span class="tm-rail-label">03 · AI kể chuyện</span></a>
-    <a class="tm-rail-dot" data-target="tm-ar" href="#tm-ar"><span class="tm-rail-label">04 · AR</span></a>
-    <a class="tm-rail-dot" data-target="tm-education" href="#tm-education"><span class="tm-rail-label">05 · Giáo dục</span></a>
-    <a class="tm-rail-dot" data-target="tm-museum" href="#tm-museum"><span class="tm-rail-label">06 · Bảo tàng</span></a>
+    <a class="tm-rail-dot" data-target="tm-compare" href="#tm-compare"><span class="tm-rail-label">03 · Xưa &amp; Nay</span></a>
+    <a class="tm-rail-dot" data-target="tm-storyteller" href="#tm-storyteller"><span class="tm-rail-label">04 · AI kể chuyện</span></a>
+    <a class="tm-rail-dot" data-target="tm-ar" href="#tm-ar"><span class="tm-rail-label">05 · AR</span></a>
+    <a class="tm-rail-dot" data-target="tm-education" href="#tm-education"><span class="tm-rail-label">06 · Giáo dục</span></a>
+    <a class="tm-rail-dot" data-target="tm-museum" href="#tm-museum"><span class="tm-rail-label">07 · Bảo tàng</span></a>
   </aside>
 
   <main>
@@ -111,12 +114,18 @@
         <div>
           <p class="tm-chapter-kicker">Interactive Map</p>
           <h2 class="tm-chapter-title">Chọn một địa danh của Hà Nội</h2>
-          <p class="tm-chapter-lede">Bản đồ minh hoạ cách điệu khu vực trung tâm — mỗi điểm đánh dấu là một địa danh có thể khám phá qua timeline bên dưới.</p>
+          <p class="tm-chapter-lede">Xem vị trí thật của 13 địa danh trên bản đồ Hà Nội, hoặc chuyển sang bản đồ minh hoạ cách điệu. Chọn một địa danh để đọc câu chuyện, nguồn tham khảo và chỉ đường tới đó.</p>
         </div>
       </div>
 
       <div class="tm-map-layout">
-        <div class="tm-map-canvas" id="tm-mapCanvas">
+        <div class="tm-map-left">
+        <div class="tm-map-mode" role="group" aria-label="Kiểu bản đồ">
+          <button type="button" class="tm-map-mode-btn" data-mode="real" aria-pressed="true">Bản đồ thật</button>
+          <button type="button" class="tm-map-mode-btn" data-mode="illustrated" aria-pressed="false">Bản đồ minh hoạ</button>
+        </div>
+        <div class="tm-real-map" id="tm-realMap" role="region" aria-label="Bản đồ Hà Nội với vị trí các địa danh"></div>
+        <div class="tm-map-canvas" id="tm-mapCanvas" hidden>
           <svg viewBox="0 0 800 560" aria-hidden="true">
             <defs>
               <pattern id="tm-quarterGrid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -140,6 +149,13 @@
             <polygon points="420,292 434,292 427,280" fill="var(--tm-gold)" opacity=".7"/>
             <rect x="515" y="265" width="120" height="100" rx="10" fill="var(--tm-glass-strong)" stroke="var(--tm-line)" stroke-width="1"/>
             <circle cx="575" cy="300" r="12" fill="none" stroke="var(--tm-gold)" stroke-width="1.4" opacity=".6"/>
+            <!-- West Lake, citadel, Long Biên bridge, station -->
+            <ellipse cx="225" cy="100" rx="95" ry="58" fill="var(--tm-water)" opacity=".3" stroke="var(--tm-water)" stroke-width="1"/>
+            <line x1="235" y1="112" x2="300" y2="150" stroke="var(--tm-gold)" stroke-width="1" opacity=".3"/>
+            <rect x="250" y="215" width="70" height="60" rx="4" fill="none" stroke="var(--tm-gold)" stroke-width="1" stroke-dasharray="4 3" opacity=".45"/>
+            <line x1="585" y1="152" x2="720" y2="140" stroke="var(--tm-gold)" stroke-width="2.5" opacity=".55"/>
+            <line x1="585" y1="152" x2="720" y2="140" stroke="var(--tm-bg)" stroke-width="1" stroke-dasharray="3 5" opacity=".6"/>
+            <line x1="305" y1="355" x2="305" y2="395" stroke="var(--tm-gold)" stroke-width="1" opacity=".3"/>
           </svg>
 
           <button class="tm-pin active" style="left:53.7%;top:53.6%;" data-landmark="hoan-kiem" aria-label="Hồ Gươm"><span class="tm-pin-tag">Hồ Gươm</span></button>
@@ -147,6 +163,16 @@
           <button class="tm-pin" style="left:25.6%;top:53.6%;" data-landmark="ba-dinh" aria-label="Ba Đình"><span class="tm-pin-tag">Ba Đình</span></button>
           <button class="tm-pin" style="left:38.1%;top:77.7%;" data-landmark="van-mieu" aria-label="Văn Miếu"><span class="tm-pin-tag">Văn Miếu</span></button>
           <button class="tm-pin" style="left:71.9%;top:56.3%;" data-landmark="opera-house" aria-label="Nhà Hát Lớn"><span class="tm-pin-tag">Nhà Hát Lớn</span></button>
+          <button class="tm-pin" style="left:21.9%;top:61.6%;" data-landmark="mot-cot" aria-label="Chùa Một Cột"><span class="tm-pin-tag">Chùa Một Cột</span></button>
+          <button class="tm-pin" style="left:35.6%;top:43.8%;" data-landmark="hoang-thanh" aria-label="Hoàng thành"><span class="tm-pin-tag">Hoàng thành</span></button>
+          <button class="tm-pin" style="left:81.3%;top:26.8%;" data-landmark="long-bien" aria-label="Cầu Long Biên"><span class="tm-pin-tag">Cầu Long Biên</span></button>
+          <button class="tm-pin" style="left:43.1%;top:58%;" data-landmark="nha-tho-lon" aria-label="Nhà thờ Lớn"><span class="tm-pin-tag">Nhà thờ Lớn</span></button>
+          <button class="tm-pin" style="left:29.4%;top:18.8%;" data-landmark="tran-quoc" aria-label="Hồ Tây"><span class="tm-pin-tag">Hồ Tây</span></button>
+          <button class="tm-pin" style="left:49.4%;top:68.8%;" data-landmark="hoa-lo" aria-label="Hỏa Lò"><span class="tm-pin-tag">Hỏa Lò</span></button>
+          <button class="tm-pin" style="left:56.9%;top:22.9%;" data-landmark="dong-xuan" aria-label="Chợ Đồng Xuân"><span class="tm-pin-tag">Chợ Đồng Xuân</span></button>
+          <button class="tm-pin" style="left:38.1%;top:66.1%;" data-landmark="ga-ha-noi" aria-label="Ga Hà Nội"><span class="tm-pin-tag">Ga Hà Nội</span></button>
+        </div>
+        <div class="tm-lm-list" id="tm-lmList" role="group" aria-label="Chọn địa danh"></div>
         </div>
 
         <div class="tm-glass tm-map-detail">
@@ -161,8 +187,14 @@
           </div>
           <p class="tm-map-detail-story" id="tm-mapStory">Không gian đi bộ quanh hồ cuối tuần thu hút hàng chục nghìn người, xen giữa nhịp sống hiện đại là truyền thuyết vua Lê Lợi trả gươm thần cho rùa vàng vẫn được kể lại mỗi ngày.</p>
           <p class="tm-scenario-note" id="tm-mapScenario">Đây là kịch bản tương lai do AI hình dung — không phải dự đoán chắc chắn.</p>
+          <a class="tm-btn tm-btn-ghost tm-directions" id="tm-mapDirections" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Chỉ đường tới đây ↗</a>
+          <div class="tm-sources">
+            <p class="tm-sources-title">Nguồn tham khảo</p>
+            <ul class="tm-sources-list" id="tm-mapSources"></ul>
+            <p class="tm-sources-note">Câu chuyện 1926 → 2026 được tóm tắt từ các nguồn trên. Mốc 2050 và 2100 là kịch bản, không có nguồn.</p>
+          </div>
           <div class="tm-map-legend">
-            <span class="tm-legend-chip">5 địa danh</span>
+            <span class="tm-legend-chip">13 địa danh</span>
             <span class="tm-legend-chip">Kéo timeline bên dưới để đổi mốc thời gian</span>
           </div>
         </div>
@@ -212,14 +244,40 @@
             <p class="tm-era-year" id="tm-eraYearLabel">2026 · HIỆN TẠI</p>
             <h3 class="tm-era-label" id="tm-eraLandmarkLabel">Hồ Gươm</h3>
             <p class="tm-era-body" id="tm-eraStoryLabel">Không gian đi bộ quanh hồ cuối tuần thu hút hàng chục nghìn người, xen giữa nhịp sống hiện đại là truyền thuyết vua Lê Lợi trả gươm thần cho rùa vàng vẫn được kể lại mỗi ngày.</p>
+            <p class="tm-era-sources" id="tm-eraSources"></p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="tm-chapter tm-wrap tm-reveal" id="tm-storyteller">
+    <section class="tm-chapter tm-wrap tm-reveal" id="tm-compare">
       <div class="tm-chapter-head">
         <span class="tm-chapter-index">03</span>
+        <div>
+          <p class="tm-chapter-kicker">Before / After</p>
+          <h2 class="tm-chapter-title">Xưa &amp; Nay — kéo để so sánh</h2>
+          <p class="tm-chapter-lede">Ảnh tư liệu và ảnh chụp ngày nay của cùng một địa danh, chồng lên nhau. Kéo thanh chia (hoặc dùng phím mũi tên) để thấy nơi ấy đã thay đổi thế nào. Hai ảnh không chụp cùng góc máy nên chỉ khớp tương đối.</p>
+        </div>
+      </div>
+
+      <div class="tm-glass tm-cmp-panel">
+        <div class="tm-cmp-chips" id="tm-cmpChips" role="group" aria-label="Chọn địa danh để so sánh"></div>
+        <div class="tm-cmp" id="tm-cmp" style="--pos:50%">
+          <img class="tm-cmp-img tm-cmp-now" id="tm-cmpNow" alt="" decoding="async">
+          <img class="tm-cmp-img tm-cmp-old" id="tm-cmpOld" alt="" decoding="async">
+          <span class="tm-cmp-label tm-cmp-label-old" id="tm-cmpOldLabel">1926</span>
+          <span class="tm-cmp-label tm-cmp-label-now">2026</span>
+          <span class="tm-cmp-handle" aria-hidden="true"><span class="tm-cmp-knob">⟷</span></span>
+          <input type="range" class="tm-cmp-range" id="tm-cmpRange" min="0" max="100" step="1" value="50" aria-label="Kéo để so sánh ảnh xưa và nay">
+        </div>
+        <p class="tm-cmp-empty" id="tm-cmpEmpty" hidden></p>
+        <div class="tm-cmp-credits" id="tm-cmpCredits"></div>
+      </div>
+    </section>
+
+    <section class="tm-chapter tm-wrap tm-reveal" id="tm-storyteller">
+      <div class="tm-chapter-head">
+        <span class="tm-chapter-index">04</span>
         <div>
           <p class="tm-chapter-kicker">AI Storyteller</p>
           <h2 class="tm-chapter-title">Hỏi AI về bất kỳ mốc thời gian nào</h2>
@@ -238,7 +296,7 @@
 
         <div class="tm-glass tm-chat-panel">
           <div class="tm-chat-log" id="tm-chatLog">
-            <div class="tm-bubble tm-ai">Xin chào! Hỏi tôi về Hồ Gươm, Ba Đình, Phố Cổ… ở bất kỳ mốc thời gian nào từ 1926 đến 2100.</div>
+            <div class="tm-bubble tm-ai">Xin chào! Hỏi tôi về Hồ Gươm, Ba Đình, Phố Cổ, Chùa Một Cột, Cầu Long Biên, Hỏa Lò… ở bất kỳ mốc thời gian nào từ 1926 đến 2100.</div>
           </div>
           <div class="tm-chip-row" id="tm-chatChips"></div>
           <form class="tm-chat-input-row" id="tm-chatForm">
@@ -252,7 +310,7 @@
 
     <section class="tm-chapter tm-wrap tm-reveal" id="tm-ar">
       <div class="tm-chapter-head">
-        <span class="tm-chapter-index">04</span>
+        <span class="tm-chapter-index">05</span>
         <div>
           <p class="tm-chapter-kicker">AR Mode · Ưu tiên trải nghiệm di động</p>
           <h2 class="tm-chapter-title">Đưa quá khứ &amp; tương lai vào không gian thật</h2>
@@ -287,7 +345,7 @@
 
     <section class="tm-chapter tm-wrap tm-reveal" id="tm-education">
       <div class="tm-chapter-head">
-        <span class="tm-chapter-index">05</span>
+        <span class="tm-chapter-index">06</span>
         <div>
           <p class="tm-chapter-kicker">Education Mode</p>
           <h2 class="tm-chapter-title">Dành cho trường học &amp; lớp học lịch sử</h2>
@@ -339,7 +397,7 @@
 
     <section class="tm-chapter tm-wrap tm-reveal" id="tm-museum">
       <div class="tm-chapter-head">
-        <span class="tm-chapter-index">06</span>
+        <span class="tm-chapter-index">07</span>
         <div>
           <p class="tm-chapter-kicker">Tourism / Museum Mode</p>
           <h2 class="tm-chapter-title">Quét mã tại địa điểm để mở Time Machine</h2>

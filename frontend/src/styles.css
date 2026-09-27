@@ -30,6 +30,12 @@
   --app-time-soft: #f6ecd8;
   --app-live: #0f5ff2;
   --app-live-soft: #e8efff;
+  --app-future: #0e7490;
+  --app-future-soft: #dff4f8;
+  --app-copilot: #4f46e5;
+  --app-copilot-soft: #ecebff;
+  --app-property: #7556f0;
+  --app-property-soft: #eee9ff;
 
   color-scheme: light;
 }
@@ -53,6 +59,12 @@
   --app-time-soft: rgba(202, 161, 90, 0.16);
   --app-live: #5b93ff;
   --app-live-soft: #182648;
+  --app-future: #22d3ee;
+  --app-future-soft: rgba(34, 211, 238, 0.14);
+  --app-copilot: #8b8cff;
+  --app-copilot-soft: rgba(139, 140, 255, 0.16);
+  --app-property: #3cc8e8;
+  --app-property-soft: rgba(60, 200, 232, 0.14);
 
   color-scheme: dark;
 }

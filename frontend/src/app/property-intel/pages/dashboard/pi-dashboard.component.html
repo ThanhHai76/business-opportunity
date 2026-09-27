@@ -1,0 +1,326 @@
+<div class="dash" [class.layers-open]="layersOpen()">
+  <!-- ============================== left: map layers -->
+  <aside class="layers" aria-label="Map layers">
+    <div class="layers__head">
+      <span class="pi-kicker layers__title">Map layers</span>
+      <div class="layers__presets">
+        <button type="button" class="layers__link" [attr.aria-expanded]="presetsOpen()" (click)="presetsOpen.set(!presetsOpen())">Presets</button>
+        @if (presetsOpen()) {
+          <div class="layers__menu" role="menu">
+            @for (p of presets; track p.label) {
+              <button type="button" role="menuitem" (click)="applyPreset(p.layers)">{{ p.label }}</button>
+            }
+          </div>
+        }
+      </div>
+      <button type="button" class="layers__close" (click)="layersOpen.set(false)" aria-label="Close layers">×</button>
+    </div>
+
+    @for (g of groups; track g.title) {
+      <div class="layers__group">
+        <div class="layers__group-title">{{ g.title }}</div>
+        @for (row of g.rows; track row.key) {
+          <button type="button" class="layers__row" role="switch" [attr.aria-checked]="state.layers()[row.key]" (click)="toggle(row.key)">
+            <i class="sw" [attr.data-sw]="row.swatch" aria-hidden="true"></i>
+            <span>{{ row.label }}</span>
+            <span class="pi-switch" aria-hidden="true"></span>
+          </button>
+        }
+      </div>
+    }
+
+    <div class="layers__bottom">
+      <div class="layers__group">
+        <div class="layers__group-title">Basemap</div>
+        <div class="pi-seg" role="group" aria-label="Basemap">
+          @for (b of basemaps; track b.value) {
+            <button type="button" [attr.aria-pressed]="state.basemap() === b.value" (click)="state.set('basemap', b.value)">
+              {{ b.value === 'dark' && theme.effective() === 'light' ? 'Light' : b.label }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="layers__group">
+        <div class="layers__group-title">Planning horizon</div>
+        <div class="pi-seg pi-seg--amber" role="group" aria-label="Planning horizon">
+          @for (h of horizons; track h) {
+            <button type="button" class="pi-mono" [attr.aria-pressed]="state.horizon() === h" (click)="state.set('horizon', h)">{{ h }}</button>
+          }
+        </div>
+      </div>
+      <p class="pi-sample-note">SAMPLE DATA · illustrative, not official planning</p>
+    </div>
+  </aside>
+
+  <!-- ============================== centre: map + charts -->
+  <section class="main">
+    <div class="map">
+      <pi-area-map
+        [data]="layerData()"
+        [toggles]="state.layers()"
+        [basemap]="state.basemap()"
+        [lens]="state.lens()"
+        [theme]="theme.effective()"
+        [selected]="state.district()"
+        [rightInset]="rightInset()"
+        [formatPrice]="priceFormatter()"
+        (selectDistrict)="selectDistrict($event)"
+        (selectProject)="openProject($event)"
+      />
+
+      <div class="map__top">
+        <button type="button" class="pi-glass map__pill map__layers-btn" (click)="layersOpen.set(true)">☰ Layers</button>
+        <label class="pi-glass map__pill">
+          <span class="pi-kicker">View</span>
+          <select [value]="state.lens()" (change)="setLens($any($event.target).value)" aria-label="Map lens">
+            @for (l of lenses; track l.value) {
+              <option [value]="l.value">{{ l.label }}</option>
+            }
+          </select>
+        </label>
+        @if (d(); as d) {
+          <div class="pi-glass map__pill"><i class="dot" aria-hidden="true"></i>{{ d.name }} selected · {{ d.areaKm2 }} km²</div>
+        }
+      </div>
+
+      @if (layers().status === 'loading') {
+        <div class="map__status pi-glass">Loading map layers…</div>
+      } @else if (layerError()) {
+        <div class="map__status map__status--error pi-glass" role="alert">{{ layerError() }}</div>
+      }
+
+      @if (state.layers().heatmap) {
+        <div class="legend pi-glass">
+          <div class="legend__row"><span>PRICE · {{ unit() }}</span><span>Q3 2026</span></div>
+          <div class="legend__bar"></div>
+          <div class="legend__row legend__ticks">
+            @for (t of legendTicks(); track $index) {
+              <span>{{ t }}</span>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="zoom" role="group" aria-label="Map controls">
+        <button type="button" class="pi-glass" (click)="zoom(1)" aria-label="Zoom in">+</button>
+        <button type="button" class="pi-glass" (click)="zoom(-1)" aria-label="Zoom out">−</button>
+        <button type="button" class="pi-glass pi-mono" [attr.aria-pressed]="is3d()" (click)="toggle3d()" aria-label="Toggle 3D view">3D</button>
+      </div>
+
+    </div>
+
+    <pi-ai-panel class="ai-slot" [districtName]="d()?.name ?? 'Gia Lâm'" />
+
+    <!-- bottom charts -->
+    <div class="charts">
+      @if (d(); as d) {
+        <div class="chart">
+          <div class="chart__head"><span>Price Trend</span><small>{{ unit() }} · 2020–26</small></div>
+          <div class="chart__big"><strong>{{ d.pricePerM2 | piPerM2: state.currency() : state.vndPerUsd() }}</strong><em class="pi-up">▲ {{ d.priceTrend.change6y }}% 6Y</em></div>
+          @if (priceChart(); as c) {
+            <svg viewBox="0 0 260 110" preserveAspectRatio="none" class="chart__svg" role="img" [attr.aria-label]="d.name + ' price trend vs Hà Nội average'">
+              <line x1="0" y1="30" x2="260" y2="30" class="grid" />
+              <line x1="0" y1="65" x2="260" y2="65" class="grid" />
+              <line x1="0" y1="100" x2="260" y2="100" class="grid" />
+              <polygon [attr.points]="c.area" class="fill-green" />
+              <polyline [attr.points]="c.line" class="stroke-green" vector-effect="non-scaling-stroke" />
+              <polyline [attr.points]="c.city" class="stroke-city" vector-effect="non-scaling-stroke" />
+            </svg>
+          }
+          <div class="chart__legend"><span class="pi-up">— {{ d.name }}</span><span>- - Hà Nội avg</span></div>
+        </div>
+
+        <div class="chart">
+          <div class="chart__head"><span>Infrastructure Impact</span><small>est. uplift</small></div>
+          <div class="impacts">
+            @for (i of d.infraImpacts; track i.name) {
+              <div class="impact" [class]="i.kind === 'metro' ? 'pi-tone-mobility' : 'pi-tone-planning'" [class.is-planned]="i.planned">
+                <div class="impact__row"><span>{{ i.name }}</span><span class="pi-mono">+{{ i.uplift }}%</span></div>
+                <div class="pi-bar"><i [style.width.%]="i.uplift * 5"></i></div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="chart">
+          <div class="chart__head"><span>Supply &amp; Demand</span><small>k units</small></div>
+          <div class="bars" role="img" [attr.aria-label]="'Supply and demand in ' + d.name">
+            @for (s of d.supplyDemand; track s.label) {
+              <div class="bars__pair" [class.is-forecast]="s.forecast" [title]="s.label + ': supply ' + s.supply + 'k, demand ' + s.demand + 'k'">
+                <i class="bars__supply" [style.height.%]="(s.supply / supplyMax()) * 100"></i>
+                <i class="bars__demand" [style.height.%]="(s.demand / supplyMax()) * 100"></i>
+              </div>
+            }
+          </div>
+          <div class="bars__labels">
+            @for (s of d.supplyDemand; track s.label) {
+              <span>{{ s.label }}</span>
+            }
+          </div>
+          <div class="chart__legend"><span class="pi-warn">■ Supply</span><span class="pi-up">■ Demand</span></div>
+        </div>
+
+        <div class="chart">
+          <div class="chart__head"><span>Population Growth</span><small>k residents</small></div>
+          <div class="chart__big"><strong>{{ d.population.now }}k</strong><em class="pi-up">{{ d.population.cagr }}% CAGR</em></div>
+          @if (popChart(); as p) {
+            <svg viewBox="0 0 200 90" preserveAspectRatio="none" class="chart__svg" role="img" [attr.aria-label]="'Population of ' + d.name">
+              <polygon [attr.points]="p.area" class="fill-violet" />
+              <polyline [attr.points]="p.solid" class="stroke-violet" vector-effect="non-scaling-stroke" />
+              <polyline [attr.points]="p.dashed" class="stroke-violet dashed" vector-effect="non-scaling-stroke" />
+            </svg>
+          }
+          <div class="chart__axis">
+            @for (pt of d.population.points; track pt.label) {
+              <span>{{ pt.label }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="chart">
+          <div class="chart__head"><span>Development Timeline</span><small>{{ d.timeline.from }} → {{ d.timeline.to }}</small></div>
+          <div class="tl__cols" [style.--cols]="timelineCols().length">
+            @for (c of timelineCols(); track c) {
+              <span>{{ c }}</span>
+            }
+          </div>
+          <div class="tl" [style.--cols]="timelineCols().length">
+            <i class="tl__now" [style.left.%]="nowPct()" aria-hidden="true"></i>
+            @for (t of d.timeline.items; track t.name) {
+              <div class="tl__row">
+                <div
+                  class="tl__bar"
+                  [attr.data-kind]="t.kind"
+                  [class.is-planned]="t.planned"
+                  [style.grid-column]="t.start - d.timeline.from + 1 + ' / ' + (t.end - d.timeline.from + 2)"
+                  [title]="t.name + ' · ' + t.start + '–' + t.end"
+                >
+                  {{ t.name }}
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      } @else {
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="chart"><div class="pi-skeleton" style="height: 100%"></div></div>
+        }
+      }
+    </div>
+  </section>
+
+  <!-- ============================== right: district intelligence -->
+  <aside class="district" aria-label="District intelligence">
+    @switch (detail().status) {
+      @case ('loading') {
+        <div class="pi-skeleton" style="height: 60px"></div>
+        <div class="pi-skeleton" style="height: 136px"></div>
+        <div class="pi-skeleton" style="height: 220px"></div>
+      }
+      @case ('error') {
+        @if (detail(); as x) {
+          <div class="pi-state pi-state--error" role="alert">
+            {{ x.status === 'error' ? x.message : '' }}
+            <button type="button" class="pi-btn" (click)="selectDistrict(state.district())">Retry</button>
+          </div>
+        }
+      }
+      @default {
+        @if (d(); as d) {
+          <header class="district__head">
+            <span class="pi-kicker">Area intelligence · district</span>
+            <h1 class="pi-display">{{ d.name.toUpperCase() }} — PROPERTY INTELLIGENCE</h1>
+            <p>{{ d.tagline }}</p>
+          </header>
+
+          <div class="score">
+            <div class="score__ring">
+              <svg width="104" height="104" viewBox="0 0 104 104" aria-hidden="true">
+                <circle cx="52" cy="52" r="44" class="score__track" />
+                <circle cx="52" cy="52" r="44" class="score__arc" [attr.stroke-dasharray]="ringDash()" transform="rotate(-90 52 52)" />
+              </svg>
+              <div class="score__num"><strong>{{ d.growthScore }}</strong><span>/100</span></div>
+            </div>
+            <div class="score__text">
+              <strong>Growth Score</strong>
+              <p>
+                Top {{ d.rank }} of {{ d.total }} Hà Nội districts in this sample.
+                @if (d.scoreDelta !== 0) {
+                  {{ d.scoreDelta > 0 ? '+' : '' }}{{ d.scoreDelta }} pts since Q1.
+                }
+              </p>
+              <div class="score__chips">
+                <span class="pi-chip pi-tone-growth">RANK #{{ d.rank }}</span>
+                <span class="pi-chip pi-tone-ai">AI CONF. {{ d.aiConfidence.toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="criteria">
+            @for (c of d.criteria; track c.key) {
+              <div class="criteria__row" [class]="'pi-tone-' + c.tone">
+                <span class="criteria__code">{{ c.code }}</span>
+                <span class="criteria__label">{{ c.label }}</span>
+                <div class="pi-bar"><i [style.width.%]="c.value"></i></div>
+                <span class="criteria__val" [class.pi-down]="c.key === 'risk'">{{ c.value }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="metrics">
+            <div>
+              <span>AVG PRICE / m²</span>
+              <strong>{{ d.metrics.pricePerM2 | piPerM2: state.currency() : state.vndPerUsd() }}</strong>
+              <em class="pi-up">▲ {{ d.metrics.yoy }}% YoY</em>
+            </div>
+            <div>
+              <span>ABSORPTION</span>
+              <strong>{{ d.metrics.absorption }}%</strong>
+              <em [class]="d.metrics.absorptionDeltaQoQ >= 0 ? 'pi-up' : 'pi-down'">
+                {{ d.metrics.absorptionDeltaQoQ >= 0 ? '▲' : '▼' }} {{ d.metrics.absorptionDeltaQoQ < 0 ? -d.metrics.absorptionDeltaQoQ : d.metrics.absorptionDeltaQoQ }} pts QoQ
+              </em>
+            </div>
+            <div>
+              <span>PIPELINE</span>
+              <strong>{{ formatInt(d.metrics.pipelineUnits) }} u</strong>
+              <em class="pi-warn">{{ d.metrics.pipelineProjects }} projects</em>
+            </div>
+            <div>
+              <span>RENTAL YIELD</span>
+              <strong>{{ d.metrics.rentalYield }}%</strong>
+              <em>city avg {{ d.metrics.cityRentalYield }}%</em>
+            </div>
+          </div>
+
+          @if (d.projects.length) {
+            <div class="tracked">
+              <span class="pi-kicker">Tracked projects</span>
+              @for (p of d.projects.slice(0, 4); track p.slug) {
+                <a class="tracked__row" [routerLink]="['/property-intelligence/projects', p.slug]">
+                  <span>{{ p.name }}</span>
+                  <span class="pi-mono">{{ p.pricePerM2 | piPerM2: state.currency() : state.vndPerUsd() }}</span>
+                  <span class="pi-mono" [class]="p.soldPct >= 75 ? 'pi-up' : 'pi-warn'">{{ p.soldPct }}%</span>
+                  <span aria-hidden="true">→</span>
+                </a>
+              }
+            </div>
+          }
+
+          <div class="chain">
+            <span class="pi-kicker">Value chain</span>
+            <div class="chain__items">
+              <span class="pi-chip pi-tone-planning">Planning</span><i>→</i>
+              <span class="pi-chip pi-tone-mobility">Infra</span><i>→</i>
+              <span class="pi-chip pi-tone-mobility">Metro</span><i>→</i>
+              <span class="pi-chip pi-tone-mobility">TOD</span><i>→</i>
+              <span class="pi-chip pi-tone-growth">Population</span><i>→</i>
+              <span class="pi-chip pi-tone-growth">Demand</span><i>→</i>
+              <span class="pi-chip pi-tone-growth">Price</span><i>→</i>
+              <span class="pi-chip pi-tone-risk">Risk</span>
+            </div>
+          </div>
+        }
+      }
+    }
+  </aside>
+</div>
