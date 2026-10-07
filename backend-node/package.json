@@ -7,7 +7,15 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "test": "node --test",
-    "seed:living": "node src/living-score/seed/run-seed.js"
+    "seed:living": "node src/living-score/seed/run-seed.js",
+    "sync:time-machine": "node scripts/sync-time-machine.js",
+    "data:living": "node scripts/build-living-osm.js",
+    "data:commute": "node scripts/build-living-commute.js",
+    "data:region": "node scripts/build-future-region.js",
+    "data:provinces": "node scripts/build-future-provinces.js",
+    "data:opportunity": "node scripts/build-opportunity-osm.js",
+    "data:property": "node scripts/build-property-osm.js",
+    "data:landprice": "node scripts/build-landprice.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",

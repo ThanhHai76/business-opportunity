@@ -1,6 +1,6 @@
 'use strict';
 const { createLogger } = require('../common/logger');
-const { SAMPLE_DATA_LABEL } = require('../data/living.types');
+const { DATA_SOURCE_LABEL } = require('../data/living.types');
 const { CRITERION_KEYS } = require('../scoring/criteria');
 const { getSeedData } = require('./seed-data');
 
@@ -8,12 +8,18 @@ const logger = createLogger('PostgresSeeder');
 
 async function insertNotes(client, areaId, kind, notes) {
   for (const [position, text] of notes.entries()) {
-    await client.query('INSERT INTO area_notes (area_id, kind, position, text) VALUES ($1, $2, $3, $4)', [areaId, kind, position, text]);
+    await client.query('INSERT INTO area_notes (area_id, kind, position, text, text_en) VALUES ($1, $2, $3, $4, $5)', [
+      areaId,
+      kind,
+      position,
+      text.vi,
+      text.en,
+    ]);
   }
 }
 
 /**
- * Loads the SAMPLE DATA into PostgreSQL/PostGIS inside a single transaction.
+ * Loads the OpenStreetMap-derived data into PostgreSQL/PostGIS inside a single transaction.
  * Returns false (and does nothing) when data already exists and `reset` is not set.
  */
 async function seedPostgres(pool, options = {}, seed = getSeedData()) {
@@ -33,9 +39,9 @@ async function seedPostgres(pool, options = {}, seed = getSeedData()) {
     const idBySlug = new Map();
     for (const area of seed.areas) {
       const inserted = await client.query(
-        `INSERT INTO areas (slug, name, name_en, search_text, description, population, area_km2,
-                            avg_rent_vnd, avg_price_per_m2_vnd, centroid, boundary, data_source)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
+        `INSERT INTO areas (slug, name, name_en, search_text, description, description_en, area_km2,
+                            metrics, facts, centroid, boundary, data_source)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb,
                  ST_SetSRID(ST_MakePoint($10::float8, $11::float8), 4326),
                  ST_SetSRID(ST_GeomFromGeoJSON($12::text), 4326),
                  $13)
@@ -45,15 +51,15 @@ async function seedPostgres(pool, options = {}, seed = getSeedData()) {
           area.name,
           area.nameEn,
           area.searchText,
-          area.description,
-          area.population,
+          area.description.vi,
+          area.description.en,
           area.areaKm2,
-          area.avgRentVnd,
-          area.avgPricePerM2Vnd,
+          JSON.stringify(area.metrics),
+          JSON.stringify(area.facts),
           area.centroid.lng,
           area.centroid.lat,
           JSON.stringify(area.boundary),
-          SAMPLE_DATA_LABEL,
+          DATA_SOURCE_LABEL,
         ],
       );
       const areaId = inserted.rows[0].id;
@@ -68,13 +74,13 @@ async function seedPostgres(pool, options = {}, seed = getSeedData()) {
 
     for (const m of seed.amenities) {
       await client.query(
-        `INSERT INTO amenities (area_id, type, name, search_text, rating, location)
-         VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6::float8, $7::float8), 4326))`,
-        [idBySlug.get(m.areaSlug), m.type, m.name, m.searchText, m.rating, m.lng, m.lat],
+        `INSERT INTO amenities (area_id, type, name, search_text, location, data_source)
+         VALUES ($1, $2, $3, $4, ST_SetSRID(ST_MakePoint($5::float8, $6::float8), 4326), $7)`,
+        [idBySlug.get(m.areaSlug), m.type, m.name, m.searchText, m.lng, m.lat, DATA_SOURCE_LABEL],
       );
     }
 
-    for (const item of seed.infrastructure) {
+    for (const item of seed.metro) {
       await client.query(
         `INSERT INTO infrastructure (name, kind, status, geometry)
          VALUES ($1, $2, $3, ST_SetSRID(ST_GeomFromGeoJSON($4::text), 4326))`,
@@ -92,7 +98,7 @@ async function seedPostgres(pool, options = {}, seed = getSeedData()) {
 
     await client.query('COMMIT');
     logger.log(
-      `Seeded SAMPLE DATA: ${seed.areas.length} areas, ${seed.amenities.length} amenities, ${seed.infrastructure.length} infrastructure items.`,
+      `Seeded OpenStreetMap data: ${seed.areas.length} areas, ${seed.amenities.length} amenities, ${seed.infrastructure.length} infrastructure items.`,
     );
     return true;
   } catch (error) {

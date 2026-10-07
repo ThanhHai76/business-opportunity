@@ -1,39 +1,25 @@
 <div class="ls-page ls-page--narrow">
   <header class="intro">
     <span class="intro__icon"><ls-icon name="sparkles" [size]="26" /></span>
-    <h1 class="ls-title">AI gợi ý khu vực phù hợp</h1>
-    <p class="ls-subtitle">Cho chúng tôi biết nhu cầu của bạn — hệ thống chấm điểm bằng Scoring Engine rồi giải thích Top 3 khu vực phù hợp nhất.</p>
+    <h1 class="ls-title">{{ t().ai.title }}</h1>
+    <p class="ls-subtitle">{{ t().ai.subtitle }}</p>
   </header>
 
   <form class="form ls-card" (submit)="$event.preventDefault(); submit()">
     <div class="field">
-      <label class="ls-field-label" for="ai-budget">Ngân sách thuê nhà hằng tháng</label>
-      <div class="budget">
-        <strong>{{ budget() | vnd }}</strong>
-        <span>≈ {{ budget() | millions }}/tháng</span>
-      </div>
-      <input id="ai-budget" class="ls-range" type="range" min="2000000" max="30000000" step="500000" [value]="budget()" (input)="setBudget($event)" />
-      <div class="quick">
-        @for (step of budgetSteps; track step) {
-          <button type="button" class="ls-chip" [class.is-on]="budget() === step" (click)="budget.set(step)">{{ step | millions }}</button>
-        }
-      </div>
-    </div>
-
-    <div class="field">
-      <label class="ls-field-label" for="ai-work">Nơi làm việc / học tập</label>
+      <label class="ls-field-label" for="ai-work">{{ t().ai.workplace }}</label>
       <select id="ai-work" class="ls-select" [value]="workplace()" (change)="workplace.set($any($event.target).value)">
-        <option value="">Chưa xác định</option>
+        <option value="">{{ t().ai.workplaceNone }}</option>
         @for (area of areas(); track area.slug) {
           <option [value]="area.slug" [selected]="workplace() === area.slug">{{ area.name }}</option>
         }
       </select>
-      <p class="hint">Dùng để ước lượng khoảng cách di chuyển (đường chim bay) tới từng khu vực.</p>
+      <p class="hint">{{ t().ai.workplaceHint }}</p>
     </div>
 
     <fieldset class="field">
-      <legend class="ls-field-label">Tình trạng gia đình</legend>
-      <div class="seg" role="radiogroup" aria-label="Tình trạng gia đình">
+      <legend class="ls-field-label">{{ t().ai.household }}</legend>
+      <div class="seg" role="radiogroup" [attr.aria-label]="t().ai.household">
         @for (option of households; track option.value) {
           <button
             type="button"
@@ -43,14 +29,14 @@
             [attr.aria-checked]="household() === option.value"
             (click)="household.set(option.value)"
           >
-            {{ option.label }}
+            {{ t().household[option.value] }}
           </button>
         }
       </div>
     </fieldset>
 
     <fieldset class="field">
-      <legend class="ls-field-label">Sở thích</legend>
+      <legend class="ls-field-label">{{ t().ai.interests }}</legend>
       <div class="seg">
         @for (option of interestOptions; track option.value) {
           <button
@@ -60,7 +46,7 @@
             [attr.aria-pressed]="interests().includes(option.value)"
             (click)="toggleInterest(option.value)"
           >
-            {{ option.label }}
+            {{ t().interest[option.value] }}
           </button>
         }
       </div>
@@ -68,8 +54,8 @@
 
     <fieldset class="field">
       <div class="field__head">
-        <legend class="ls-field-label">Mức độ ưu tiên từng tiêu chí</legend>
-        <button type="button" class="link" (click)="resetPriorities()"><ls-icon name="refresh" [size]="13" /> Đặt lại</button>
+        <legend class="ls-field-label">{{ t().ai.priorities }}</legend>
+        <button type="button" class="link" (click)="resetPriorities()"><ls-icon name="refresh" [size]="13" /> {{ t().ai.reset }}</button>
       </div>
       <div class="prio">
         @for (key of criterionKeys; track key) {
@@ -84,18 +70,21 @@
         }
       </div>
       @if (allZero()) {
-        <p class="warn"><ls-icon name="alert" [size]="14" /> Hãy ưu tiên ít nhất một tiêu chí.</p>
+        <p class="warn"><ls-icon name="alert" [size]="14" /> {{ t().ai.needOne }}</p>
+      }
+      @if (meta.missing().length) {
+        <p class="hint">{{ t().ai.notScored(meta.missingLabels()) }}</p>
       }
     </fieldset>
 
     <label class="toggle">
       <input type="checkbox" [checked]="useAi()" (change)="useAi.set($any($event.target).checked)" />
-      <span>Viết lời giải thích bằng AI (dựa trên dữ liệu đã truy xuất) — bỏ chọn để dùng giải thích theo quy tắc</span>
+      <span>{{ t().ai.aiToggle }}</span>
     </label>
 
     <button type="submit" class="ls-btn ls-btn-primary submit" [disabled]="allZero() || status() === 'loading'">
       <ls-icon name="sparkles" [size]="17" />
-      {{ status() === 'loading' ? 'Đang phân tích…' : 'Nhận gợi ý' }}
+      {{ status() === 'loading' ? t().ai.analysing : t().ai.submit }}
     </button>
   </form>
 
@@ -109,16 +98,16 @@
         </div>
       }
       @case ('error') {
-        <div class="ls-card"><ls-state kind="error" title="Chưa có gợi ý" [message]="errorMessage()" actionLabel="Thử lại" (action)="submit()" /></div>
+        <div class="ls-card"><ls-state kind="error" [title]="t().ai.noResult" [message]="errorMessage()" [actionLabel]="t().common.retry" (action)="submit()" /></div>
       }
       @case ('done') {
         @if (response(); as r) {
           <div class="results__head">
-            <h2>Top 3 khu vực phù hợp</h2>
+            <h2>{{ t().ai.top3 }}</h2>
             @if (r.mode === 'ai') {
-              <span class="ls-badge ls-badge--accent"><ls-icon name="sparkles" [size]="12" /> AI · {{ r.model }} + dữ liệu truy xuất</span>
+              <span class="ls-badge ls-badge--accent"><ls-icon name="sparkles" [size]="12" /> {{ t().ai.aiBadge(r.model ?? '') }}</span>
             } @else {
-              <span class="ls-badge"><ls-icon name="layers" [size]="12" /> Xếp hạng theo quy tắc</span>
+              <span class="ls-badge"><ls-icon name="layers" [size]="12" /> {{ t().ai.rulesBadge }}</span>
             }
           </div>
           @if (r.notice) {
@@ -132,35 +121,48 @@
                 <div class="result__title">
                   <h3>{{ item.area.name }}</h3>
                   <p>
-                    Thuê ~{{ item.budget.rentVnd | millions }}/tháng
-                    @if (item.budget.withinBudget) {
-                      <span class="ls-badge ls-badge--ok">Trong ngân sách</span>
-                    } @else {
-                      <span class="ls-badge ls-badge--danger">Vượt ngân sách {{ item.budget.deltaPct }}%</span>
+                    @if (item.area.facts.metroStations.length) {
+                      <span class="ls-badge ls-badge--ok">{{ t().ai.metroBadge(item.area.facts.metroStations.length) }}</span>
                     }
+                    <span class="ls-badge">{{ t().ai.cafesBadge(item.area.facts.cafes) }}</span>
                     @if (item.commute; as c) {
-                      <span class="ls-badge">Cách {{ c.workplaceName }} ~{{ c.km | number: '1.0-1' }} km</span>
+                      <span class="ls-badge">
+                        @if (c.mode === 'road' && c.minutes !== null) {
+                          <ls-icon name="clock" [size]="11" /> {{ t().ai.commuteRoad(c.workplaceName, c.minutes, num(c.km, 1)) }}
+                        } @else {
+                          {{ t().ai.commuteStraight(c.workplaceName, num(c.km, 1)) }}
+                        }
+                      </span>
                     }
                   </p>
                 </div>
                 <div class="result__score">
                   <ls-score-ring [score]="item.matchScore" [size]="64" [showMax]="false" />
-                  <small>Độ phù hợp</small>
+                  <small>{{ t().ai.fit }}</small>
                 </div>
               </header>
 
               <p class="result__summary">{{ item.summary }}</p>
 
-              <h4>Lý do lựa chọn</h4>
+              <h4>{{ t().ai.reasons }}</h4>
               <ul class="reasons">
                 @for (reason of item.reasons; track reason) {
                   <li><ls-icon name="check" [size]="15" /> {{ reason }}</li>
                 }
               </ul>
 
+              <details class="measured">
+                <summary>{{ t().ai.measured }}</summary>
+                <ul>
+                  @for (m of item.metrics; track m.criterion) {
+                    <li><ls-icon [name]="icons[m.criterion]" [size]="14" /> <strong>{{ meta.label(m.criterion) }}:</strong> {{ m.text }}</li>
+                  }
+                </ul>
+              </details>
+
               <div class="pc">
                 <div class="pc__box pc__box--pro">
-                  <h4>Ưu điểm</h4>
+                  <h4>{{ t().detail.pros }}</h4>
                   <ul>
                     @for (p of item.pros; track p) {
                       <li>{{ p }}</li>
@@ -168,7 +170,7 @@
                   </ul>
                 </div>
                 <div class="pc__box pc__box--con">
-                  <h4>Nhược điểm</h4>
+                  <h4>{{ t().detail.cons }}</h4>
                   <ul>
                     @for (c of item.cons; track c) {
                       <li>{{ c }}</li>
@@ -178,19 +180,20 @@
               </div>
 
               <footer class="result__actions">
-                <span class="muted">Living Score mặc định: <strong>{{ item.area.livingScore | number: '1.0-0' }}</strong> · theo trọng số của bạn: <strong>{{ item.personalizedScore | number: '1.0-0' }}</strong></span>
+                @let s = t().ai.scores(num(item.area.livingScore, 0), num(item.personalizedScore, 0));
+                <span class="muted">{{ s[0] }}<strong>{{ s[1] }}</strong>{{ s[2] }}<strong>{{ s[3] }}</strong></span>
                 <span class="grow"></span>
-                <a class="ls-btn ls-btn-soft ls-btn-sm" [routerLink]="['/living-score/area', item.area.slug]">Chi tiết</a>
+                <a class="ls-btn ls-btn-soft ls-btn-sm" [routerLink]="['/living-score/area', item.area.slug]">{{ t().common.details }}</a>
                 <button type="button" class="ls-btn ls-btn-ghost ls-btn-sm" (click)="toggleCompare(item.area.slug)">
                   <ls-icon [name]="inCompare(item.area.slug) ? 'check' : 'plus'" [size]="14" />
-                  {{ inCompare(item.area.slug) ? 'Đã thêm' : 'So sánh' }}
+                  {{ inCompare(item.area.slug) ? t().common.added : t().common.compare }}
                 </button>
                 <button
                   type="button"
                   class="ls-icon-btn"
                   [class.is-on]="prefs.isSaved(item.area.slug)"
                   [attr.aria-pressed]="prefs.isSaved(item.area.slug)"
-                  [attr.aria-label]="'Lưu ' + item.area.name"
+                  [attr.aria-label]="t().common.save(item.area.name)"
                   (click)="prefs.toggleSaved(item.area.slug)"
                 >
                   <ls-icon name="bookmark" [size]="16" />
@@ -202,11 +205,21 @@
           @if (r.results.length > 1) {
             <p class="compare-cta">
               <a class="ls-btn ls-btn-ghost" routerLink="/living-score/compare" [queryParams]="{ a: r.results[0].area.slug + ',' + r.results[1].area.slug + (r.results[2] ? ',' + r.results[2].area.slug : '') }">
-                <ls-icon name="scale" [size]="16" /> So sánh cả {{ r.results.length }} khu vực
+                <ls-icon name="scale" [size]="16" /> {{ t().ai.compareAll(r.results.length) }}
               </a>
             </p>
           }
-          <p class="foot"><ls-icon name="info" [size]="14" /> Dữ liệu minh hoạ (SAMPLE DATA) — kết quả chỉ mang tính tham khảo, không phải tư vấn chính thức.</p>
+          <div class="foot">
+            <p><ls-icon name="info" [size]="14" /> {{ r.areaNote }}</p>
+            <p>{{ r.method }}</p>
+            <p>
+              {{ t().ai.sources }}
+              @for (s of r.sources; track s.url) {
+                <a [href]="s.url" target="_blank" rel="noopener">{{ s.title }}</a> — {{ s.publisher }}, {{ t().ai.licence }} {{ s.license }}.
+              }
+              {{ t().ai.disclaimer }}
+            </p>
+          </div>
         }
       }
     }

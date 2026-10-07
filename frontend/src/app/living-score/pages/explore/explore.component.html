@@ -14,18 +14,18 @@
   <div class="ex-left">
     <form class="ex-search ls-card" role="search" (submit)="$event.preventDefault(); submitSearch()">
       <ls-icon name="search" [size]="18" />
-      <label class="sr-only" for="ex-q">Tìm khu vực hoặc địa điểm</label>
+      <label class="sr-only" for="ex-q">{{ t().explore.searchLabel }}</label>
       <input
         id="ex-q"
         class="ex-search__input"
         type="search"
         autocomplete="off"
-        placeholder="Tìm khu vực… (VD: Cầu Giấy)"
+        [placeholder]="t().explore.placeholder"
         [value]="query()"
         (input)="onQuery($any($event.target).value)"
       />
       @if (query()) {
-        <button type="button" class="ls-icon-btn ex-clear" aria-label="Xoá tìm kiếm" (click)="clearQuery()">
+        <button type="button" class="ls-icon-btn ex-clear" [attr.aria-label]="t().explore.clearSearch" (click)="clearQuery()">
           <ls-icon name="x" [size]="14" />
         </button>
       }
@@ -36,7 +36,7 @@
         aria-controls="ex-filters"
         (click)="filtersOpen.set(!filtersOpen())"
       >
-        <ls-icon name="sliders" [size]="15" /> Bộ lọc
+        <ls-icon name="sliders" [size]="15" /> {{ t().explore.filters }}
         @if (isPersonalized() || enabledAmenities().length || showInfra() || visual() !== 'livingScore') {
           <span class="ex-dot" aria-hidden="true"></span>
         }
@@ -45,31 +45,31 @@
 
     @if (suggestions(); as found) {
       @if (found.areas.length || found.places.length) {
-        <div class="ex-suggest ls-card" role="listbox" aria-label="Kết quả tìm kiếm">
+        <div class="ex-suggest ls-card" role="listbox" [attr.aria-label]="t().explore.results">
           @for (area of found.areas; track area.slug) {
             <button type="button" role="option" class="ex-suggest__row" (click)="select(area.slug)">
               <ls-icon name="pin" [size]="16" />
               <span>{{ area.name }}</span>
-              <small>Điểm {{ area.livingScore | number: '1.0-0' }}</small>
+              <small>{{ t().common.score(round(area.livingScore)) }}</small>
             </button>
           }
           @for (place of found.places; track place.name) {
             <button type="button" role="option" class="ex-suggest__row" (click)="selectPlace(place.areaSlug)">
               <ls-icon [name]="amenityMeta[place.type].icon" [size]="16" />
               <span>{{ place.name }}</span>
-              <small>{{ amenityMeta[place.type].label }}</small>
+              <small>{{ t().amenity[place.type].label }}</small>
             </button>
           }
         </div>
       } @else {
-        <div class="ex-suggest ls-card ex-suggest--empty">Không tìm thấy “{{ found.query }}”.</div>
+        <div class="ex-suggest ls-card ex-suggest--empty">{{ t().explore.notFound(found.query) }}</div>
       }
     }
 
     @if (filtersOpen()) {
       <div id="ex-filters" class="ex-filters ls-card">
         <section>
-          <h3 class="ex-h">Tô màu bản đồ theo</h3>
+          <h3 class="ex-h">{{ t().explore.colourBy }}</h3>
           <div class="ex-chips">
             <button type="button" class="ls-chip" [class.is-on]="visual() === 'livingScore'" (click)="setVisual('livingScore')">Living Score</button>
             @for (key of criterionKeys; track key) {
@@ -81,16 +81,16 @@
         </section>
 
         <section>
-          <h3 class="ex-h">Lớp bản đồ</h3>
+          <h3 class="ex-h">{{ t().explore.layers }}</h3>
           <div class="ex-chips">
             @for (type of amenityTypes; track type) {
               <button type="button" class="ls-chip" [class.is-on]="enabledAmenities().includes(type)" (click)="toggleAmenity(type)">
                 <span class="ex-swatch" [style.background]="amenityMeta[type].color"></span>
-                {{ amenityMeta[type].plural }}
+                {{ t().amenity[type].plural }}
               </button>
             }
             <button type="button" class="ls-chip" [class.is-on]="showInfra()" (click)="toggleInfra()">
-              <ls-icon name="train" [size]="14" /> Metro &amp; hạ tầng
+              <ls-icon name="train" [size]="14" /> {{ t().explore.metro }}
             </button>
           </div>
         </section>
@@ -103,15 +103,15 @@
   </div>
 
   <!-- Area list / bottom sheet -->
-  <aside class="ex-right ls-card" [class.is-collapsed]="!sheetOpen()" aria-label="Danh sách khu vực">
+  <aside class="ex-right ls-card" [class.is-collapsed]="!sheetOpen()" [attr.aria-label]="t().explore.listAria">
     <button type="button" class="ex-handle" (click)="sheetOpen.set(!sheetOpen())" [attr.aria-expanded]="sheetOpen()">
       <span class="ex-handle__bar" aria-hidden="true"></span>
       <span class="ex-handle__text">
-        Khu vực ({{ list().length }})
+        {{ t().explore.areas(list().length) }}
         @if (isPersonalized()) {
-          <span class="ls-badge ls-badge--accent">Cá nhân hoá</span>
+          <span class="ls-badge ls-badge--accent">{{ t().explore.personalised }}</span>
         }
-        <span class="ls-badge ls-badge--sample">SAMPLE DATA</span>
+        <span class="ls-badge ls-badge--source">OpenStreetMap</span>
       </span>
       <ls-icon [name]="sheetOpen() ? 'chevron-down' : 'chevron-up'" [size]="18" />
     </button>
@@ -124,9 +124,9 @@
               <ls-score-ring [score]="area.livingScore" [size]="64" [showMax]="false" />
               <div>
                 <h2>{{ area.name }}</h2>
-                <p>{{ area.avgRentVnd | millions }}/tháng · {{ meta.bandLabel(area.band) }}</p>
+                <p>{{ area.facts | facts: lang() }} · {{ meta.bandLabel(area.band) }}</p>
               </div>
-              <button type="button" class="ls-icon-btn ex-clear" aria-label="Bỏ chọn" (click)="clearSelection()">
+              <button type="button" class="ls-icon-btn ex-clear" [attr.aria-label]="t().explore.deselect" (click)="clearSelection()">
                 <ls-icon name="x" [size]="14" />
               </button>
             </div>
@@ -136,17 +136,17 @@
               }
             </ul>
             <div class="ex-actions">
-              <a class="ls-btn ls-btn-primary ls-btn-sm" [routerLink]="['/living-score/area', area.slug]">Xem chi tiết</a>
+              <a class="ls-btn ls-btn-primary ls-btn-sm" [routerLink]="['/living-score/area', area.slug]">{{ t().common.viewDetails }}</a>
               <button type="button" class="ls-btn ls-btn-ghost ls-btn-sm" (click)="toggleCompare(area.slug)">
                 <ls-icon [name]="inCompare(area.slug) ? 'check' : 'plus'" [size]="14" />
-                {{ inCompare(area.slug) ? 'Đã thêm so sánh' : 'So sánh' }}
+                {{ inCompare(area.slug) ? t().explore.addedCompare : t().common.compare }}
               </button>
               <button
                 type="button"
                 class="ls-icon-btn"
                 [class.is-on]="prefs.isSaved(area.slug)"
                 [attr.aria-pressed]="prefs.isSaved(area.slug)"
-                [attr.aria-label]="prefs.isSaved(area.slug) ? 'Bỏ lưu ' + area.name : 'Lưu ' + area.name"
+                [attr.aria-label]="prefs.isSaved(area.slug) ? t().common.unsave(area.name) : t().common.save(area.name)"
                 (click)="prefs.toggleSaved(area.slug)"
               >
                 <ls-icon name="bookmark" [size]="16" />
@@ -155,20 +155,20 @@
           </article>
         }
 
-        <div class="ex-sort" role="group" aria-label="Sắp xếp">
-          <button type="button" class="ls-chip" [class.is-on]="sort() === 'score'" (click)="sort.set('score')">Điểm cao</button>
-          <button type="button" class="ls-chip" [class.is-on]="sort() === 'rent'" (click)="sort.set('rent')">Giá thuê thấp</button>
-          <button type="button" class="ls-chip" [class.is-on]="sort() === 'name'" (click)="sort.set('name')">Tên A–Z</button>
+        <div class="ex-sort" role="group" [attr.aria-label]="t().explore.sortAria">
+          <button type="button" class="ls-chip" [class.is-on]="sort() === 'score'" (click)="sort.set('score')">{{ t().explore.sortScore }}</button>
+          <button type="button" class="ls-chip" [class.is-on]="sort() === 'metro'" (click)="sort.set('metro')">{{ t().explore.sortMetro }}</button>
+          <button type="button" class="ls-chip" [class.is-on]="sort() === 'name'" (click)="sort.set('name')">{{ t().explore.sortName }}</button>
         </div>
 
         <ul class="ex-list">
           @for (area of sortedList(); track area.slug) {
             <li>
               <button type="button" class="ex-item" [class.is-selected]="area.slug === selectedSlug()" (click)="select(area.slug)">
-                <span class="ex-item__score" [class]="'band-' + area.band">{{ area.livingScore | number: '1.0-0' }}</span>
+                <span class="ex-item__score" [class]="'band-' + area.band">{{ round(area.livingScore) }}</span>
                 <span class="ex-item__text">
                   <strong>{{ area.name }}</strong>
-                  <small>Thuê ~{{ area.avgRentVnd | millions }}/tháng</small>
+                  <small>{{ area.facts | facts: lang() }}</small>
                 </span>
                 <ls-icon name="chevron-right" [size]="16" />
               </button>
@@ -180,30 +180,31 @@
   </aside>
 
   <!-- Legend -->
-  <div class="ex-legend ls-card" aria-label="Chú giải">
+  <div class="ex-legend ls-card" [attr.aria-label]="t().explore.legendAria">
     <strong>{{ visualLabel() }}</strong>
     <span class="ex-legend__bands">
-      <span><i class="band-low"></i>Thấp</span>
-      <span><i class="band-fair"></i>TB</span>
-      <span><i class="band-good"></i>Tốt</span>
-      <span><i class="band-excellent"></i>Rất tốt</span>
+      <span><i class="band-low"></i>{{ t().bands.low }}</span>
+      <span><i class="band-fair"></i>{{ t().bands.fair }}</span>
+      <span><i class="band-good"></i>{{ t().bands.good }}</span>
+      <span><i class="band-excellent"></i>{{ t().bands.excellent }}</span>
     </span>
     @if (showInfra()) {
       <span class="ex-legend__infra">
         @for (s of statusMeta; track s.key) {
-          <span><i class="ex-legend__line" [style.--c]="s.color" [class.dashed]="s.key !== 'operating'"></i>{{ s.label }}</span>
+          <span><i class="ex-legend__line" [style.--c]="s.color" [class.dashed]="s.key !== 'operating'"></i>{{ t().status[s.key] }}</span>
         }
+        <small>{{ t().explore.metroNote }}</small>
       </span>
     }
-    <small>Ranh giới minh hoạ · SAMPLE DATA</small>
+    <small>{{ t().explore.legendNote(meta.osmDate()) }}</small>
   </div>
 
   @if (loadState() === 'loading') {
-    <div class="ex-overlay"><ls-state kind="loading" title="Đang tải bản đồ…" /></div>
+    <div class="ex-overlay"><ls-state kind="loading" [title]="t().explore.loadingMap" /></div>
   } @else if (loadState() === 'error') {
     <div class="ex-overlay">
       <div class="ls-card">
-        <ls-state kind="error" title="Không tải được dữ liệu" [message]="errorMessage()" actionLabel="Thử lại" (action)="reload()" />
+        <ls-state kind="error" [title]="t().common.loadFailed" [message]="errorMessage()" [actionLabel]="t().common.retry" (action)="reload()" />
       </div>
     </div>
   }

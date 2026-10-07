@@ -14,8 +14,10 @@ import {
   untracked,
 } from '@angular/core';
 import * as maplibregl from 'maplibre-gl';
+import { PI_TEXT, PiText } from '../pi-i18n';
+import { formatDistance } from '../pi-format';
 import { Basemap, LngLat, ProjectDetail } from '../pi.models';
-import { BASEMAPS, overlayPalette } from './pi-map-style';
+import { baseStyle, firstSymbolLayer, overlayPalette } from './pi-map-style';
 
 const EMPTY: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 const KM_PER_DEG_LAT = 110.574;
@@ -38,16 +40,19 @@ const POI_STYLE: Record<string, { cls: string }> = {
   park: { cls: 'is-park' },
 };
 
+/** Beyond this, the nearest station is not framed with the project (the map would zoom out to the whole city). */
+const FRAME_STATION_M = 3000;
+
 /**
- * Close-up map for the project deep dive: TOD ring around the nearest station, walk/drive
- * catchments around the project, landmarks and nearby projects (clickable).
+ * Close-up map for the project deep dive: TOD ring around the nearest station, walk/drive catchments around the
+ * project, real landmarks from OpenStreetMap and nearby projects (published prices), clickable.
  */
 @Component({
   selector: 'pi-project-map',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  template: `<div #host class="pi-pmap__host" role="application" [attr.aria-label]="'Map around ' + (project()?.name ?? 'the project')"></div>`,
+  template: `<div #host class="pi-pmap__host" role="application" [attr.aria-label]="project()?.name ?? ''"></div>`,
   styles: [
     `
       pi-project-map {
@@ -159,17 +164,18 @@ const POI_STYLE: Record<string, { cls: string }> = {
 })
 export class PiProjectMapComponent implements AfterViewInit, OnDestroy {
   readonly project = input<ProjectDetail | null>(null);
-  readonly basemap = input<Basemap>('satellite');
+  readonly basemap = input<Basemap>('map');
   readonly theme = input<'light' | 'dark'>('dark');
   readonly show = input.required<{ tod: boolean; walk: boolean; drive: boolean }>();
-  /** Formats a tr/m² price for the project card. */
-  readonly formatPrice = input<(tr: number) => string>((tr) => `${tr} tr/m²`);
+  readonly text = input<PiText>(PI_TEXT.vi);
   readonly openProject = output<string>();
 
   @ViewChild('host', { static: true }) private host!: ElementRef<HTMLDivElement>;
   private readonly zone = inject(NgZone);
   private map?: maplibregl.Map;
   private ready = false;
+  private styleToken = 0;
+  private beforeLabels?: string;
   /** First framing jumps; later project switches animate. */
   private framed = false;
   private markers: maplibregl.Marker[] = [];
@@ -177,17 +183,13 @@ export class PiProjectMapComponent implements AfterViewInit, OnDestroy {
   constructor() {
     effect(() => {
       const p = this.project();
-      this.formatPrice();
+      this.text();
       untracked(() => this.ready && this.render(p));
     });
     effect(() => {
       this.basemap();
       this.theme();
-      untracked(() => {
-        if (!this.ready) return;
-        this.applyBasemap();
-        this.render(this.project(), false);
-      });
+      untracked(() => this.map && this.loadBase(false));
     });
     effect(() => {
       this.show();
@@ -198,37 +200,39 @@ export class PiProjectMapComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.zone.runOutsideAngular(() => {
       const p = this.project();
-      const map = new maplibregl.Map({
+      this.map = new maplibregl.Map({
         container: this.host.nativeElement,
-        style: { version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#0e1826' } }] },
+        style: { version: 8, sources: {}, layers: [{ id: 'background', type: 'background', paint: { 'background-color': this.theme() === 'dark' ? '#0e1826' : '#e7edf3' } }] },
         center: p?.coords ?? [105.938, 21.073],
         zoom: 15,
-        minZoom: 11,
+        minZoom: 10,
         maxZoom: 18,
         attributionControl: { compact: true },
       });
-      this.map = map;
-      map.on('load', () => {
+      this.loadBase(true);
+    });
+  }
+
+  /** Loads the basemap, then redraws the project on top (`style.load`: a hung tile must not hide the overlays). */
+  private loadBase(fly: boolean): void {
+    const map = this.map!;
+    const token = ++this.styleToken;
+    void baseStyle(this.basemap(), this.theme()).then((style) => {
+      if (token !== this.styleToken) return;
+      this.ready = false;
+      this.beforeLabels = firstSymbolLayer(style);
+      map.setStyle(style, { diff: false });
+      map.once('style.load', () => {
+        if (token !== this.styleToken) return;
         for (const id of ['drive', 'walk', 'tod', 'link', 'station']) map.addSource(id, { type: 'geojson', data: EMPTY });
         this.ready = true;
-        this.applyBasemap();
-        this.render(this.project());
+        this.render(this.project(), fly);
       });
     });
   }
 
   ngOnDestroy(): void {
     this.map?.remove();
-  }
-
-  private applyBasemap(): void {
-    const map = this.map!;
-    const spec = BASEMAPS[this.basemap()](this.theme());
-    if (map.getLayer('base')) map.removeLayer('base');
-    if (map.getSource('base')) map.removeSource('base');
-    map.addSource('base', { type: 'raster', tiles: spec.tiles, tileSize: 256, maxzoom: spec.maxzoom, attribution: spec.attribution });
-    map.addLayer({ id: 'base', type: 'raster', source: 'base', paint: spec.paint }, map.getLayer('pm-drive-fill') ? 'pm-drive-fill' : undefined);
-    map.setPaintProperty('bg', 'background-color', this.theme() === 'dark' ? '#0e1826' : '#dfe6ee');
   }
 
   private render(p: ProjectDetail | null, fly = true): void {
@@ -252,12 +256,13 @@ export class PiProjectMapComponent implements AfterViewInit, OnDestroy {
     set('link', { type: 'LineString', coordinates: [p.station.coords, p.coords] });
     set('station', { type: 'Point', coordinates: p.station.coords });
 
-    map.addLayer({ id: 'pm-drive-fill', type: 'fill', source: 'drive', paint: { 'fill-color': pal.violet, 'fill-opacity': 0.05 } });
-    map.addLayer({ id: 'pm-drive-line', type: 'line', source: 'drive', paint: { 'line-color': pal.violet, 'line-width': 1.2, 'line-dasharray': [4, 3] } });
-    map.addLayer({ id: 'pm-walk-fill', type: 'fill', source: 'walk', paint: { 'fill-color': pal.green, 'fill-opacity': 0.12 } });
-    map.addLayer({ id: 'pm-walk-line', type: 'line', source: 'walk', paint: { 'line-color': pal.green, 'line-width': 1.2, 'line-opacity': 0.7 } });
-    map.addLayer({ id: 'pm-tod-fill', type: 'fill', source: 'tod', paint: { 'fill-color': pal.cyan, 'fill-opacity': 0.07 } });
-    map.addLayer({ id: 'pm-tod-line', type: 'line', source: 'tod', paint: { 'line-color': pal.cyan, 'line-width': 1.3, 'line-dasharray': [3, 3] } });
+    const under = this.beforeLabels;
+    map.addLayer({ id: 'pm-drive-fill', type: 'fill', source: 'drive', paint: { 'fill-color': pal.violet, 'fill-opacity': 0.05 } }, under);
+    map.addLayer({ id: 'pm-drive-line', type: 'line', source: 'drive', paint: { 'line-color': pal.violet, 'line-width': 1.2, 'line-dasharray': [4, 3] } }, under);
+    map.addLayer({ id: 'pm-walk-fill', type: 'fill', source: 'walk', paint: { 'fill-color': pal.green, 'fill-opacity': 0.12 } }, under);
+    map.addLayer({ id: 'pm-walk-line', type: 'line', source: 'walk', paint: { 'line-color': pal.green, 'line-width': 1.2, 'line-opacity': 0.7 } }, under);
+    map.addLayer({ id: 'pm-tod-fill', type: 'fill', source: 'tod', paint: { 'fill-color': pal.cyan, 'fill-opacity': 0.07 } }, under);
+    map.addLayer({ id: 'pm-tod-line', type: 'line', source: 'tod', paint: { 'line-color': pal.cyan, 'line-width': 1.3, 'line-dasharray': [3, 3] } }, under);
     map.addLayer({ id: 'pm-link', type: 'line', source: 'link', paint: { 'line-color': pal.projectDot, 'line-width': 1.3, 'line-dasharray': [2, 2] } });
     map.addLayer({
       id: 'pm-station',
@@ -271,12 +276,12 @@ export class PiProjectMapComponent implements AfterViewInit, OnDestroy {
 
     const station = document.createElement('div');
     station.className = 'pi-pm-station';
-    station.textContent = `${p.station.name.toUpperCase()} · ${p.station.line}`;
+    station.textContent = this.text().project.stationLabel(p.station.name, p.station.line);
     add(station, p.station.coords, 'top-left', [12, 10]);
 
     const dist = document.createElement('div');
     dist.className = 'pi-pm-dist';
-    dist.textContent = `${p.station.distanceM} m`;
+    dist.textContent = formatDistance(p.station.distanceM);
     add(dist, [(p.station.coords[0] + p.coords[0]) / 2, (p.station.coords[1] + p.coords[1]) / 2], 'bottom', [0, -4]);
 
     for (const poi of p.pois) {
@@ -290,8 +295,8 @@ export class PiProjectMapComponent implements AfterViewInit, OnDestroy {
       const el = document.createElement('button');
       el.type = 'button';
       el.className = 'pi-pm-near';
-      el.textContent = `■ ${n.name} · ${n.handover.replace(/^Q\d /, '')}`;
-      el.title = `Open ${n.name}`;
+      el.textContent = `■ ${n.name} · ${n.price.label}`;
+      el.title = this.text().project.openNear(n.name);
       el.addEventListener('click', () => this.zone.run(() => this.openProject.emit(n.slug)));
       add(el, n.coords, 'left', [-5, 0]);
     }
@@ -303,15 +308,16 @@ export class PiProjectMapComponent implements AfterViewInit, OnDestroy {
     const name = document.createElement('b');
     name.textContent = p.name;
     const price = document.createElement('small');
-    price.textContent = `${this.formatPrice()(p.pricePerM2)} · selected`;
+    price.textContent = `${p.price.label} ${this.text().perM2} · ${this.text().project.selected}`;
     text.append(name, price);
     card.append(thumb, text);
     add(card, p.coords, 'bottom-left', [6, -6]);
 
     this.applyVisibility();
     if (fly) {
-      const b = new maplibregl.LngLatBounds(p.coords, p.coords).extend(p.station.coords);
-      for (const poi of p.pois) b.extend(poi.coords);
+      const b = new maplibregl.LngLatBounds(p.coords, p.coords);
+      if (p.station.distanceM <= FRAME_STATION_M) b.extend(p.station.coords);
+      for (const poi of p.pois) if (poi.distanceM <= FRAME_STATION_M) b.extend(poi.coords);
       map.fitBounds(b, { padding: { top: 80, bottom: 60, left: 60, right: 140 }, maxZoom: 15.2, duration: this.framed ? 800 : 0 });
       this.framed = true;
     }

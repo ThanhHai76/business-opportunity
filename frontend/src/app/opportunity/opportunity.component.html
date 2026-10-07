@@ -1,0 +1,372 @@
+<section class="op" [attr.data-theme]="theme()" [attr.lang]="lang()">
+  <op-map
+    [wards]="wards()"
+    [places]="places()"
+    [selected]="selected()"
+    [compare]="compare()"
+    [theme]="theme()"
+    [flyToken]="flyToken()"
+    [ariaLabel]="t().title"
+    (wardSelect)="selectWard($event)"
+  />
+
+  <!-- Left: question, horizon, business types, search, ranking -->
+  <aside class="op-left op-glass" [class.is-collapsed]="!panelOpen()">
+    <header class="op-head">
+      <div>
+        <h1>{{ t().title }}</h1>
+        <p class="op-sub">{{ t().subtitle }}</p>
+      </div>
+      <button type="button" class="op-icon op-only-sm" (click)="panelOpen.set(!panelOpen())" [attr.aria-expanded]="panelOpen()" [attr.aria-label]="t().typesAria">
+        <ls-icon [name]="panelOpen() ? 'x' : 'sliders'" [size]="16" />
+      </button>
+    </header>
+    <p class="op-question">{{ t().question }}</p>
+
+    <div class="op-seg" role="group" [attr.aria-label]="t().horizonAria">
+      <button type="button" [class.is-on]="horizon() === 'now'" [attr.aria-pressed]="horizon() === 'now'" (click)="setHorizon('now')">{{ t().horizon.now }}</button>
+      <button type="button" [class.is-on]="horizon() === '2030'" [attr.aria-pressed]="horizon() === '2030'" (click)="setHorizon('2030')">{{ t().horizon['2030'] }}</button>
+    </div>
+
+    <div class="op-types" role="group" [attr.aria-label]="t().typesAria">
+      <button type="button" class="op-type op-type--all" [class.is-on]="!type()" [attr.aria-pressed]="!type()" (click)="setType(null)">
+        <span aria-hidden="true">★</span> {{ t().allTypes }}
+      </button>
+      @for (bt of types(); track bt.key) {
+        <button
+          type="button"
+          class="op-type"
+          [class.is-on]="type() === bt.key"
+          [class.is-sparse]="bt.sparse"
+          [attr.aria-pressed]="type() === bt.key"
+          [title]="bt.sparse ? t().sparseHint(bt.mappedTotal) : bt.description"
+          (click)="setType(bt.key)"
+        >
+          <span aria-hidden="true">{{ bt.icon }}</span> {{ bt.name }}
+          @if (bt.sparse) {
+            <small>· {{ t().sparse }}</small>
+          }
+        </button>
+      }
+    </div>
+    @if (selectedType(); as st) {
+      @if (st.sparse) {
+        <p class="op-warn"><ls-icon name="alert" [size]="14" /> {{ t().sparseHint(st.mappedTotal) }}</p>
+      }
+    }
+
+    <div class="op-search">
+      <ls-icon name="search" [size]="15" />
+      <input type="search" [placeholder]="t().search" [attr.aria-label]="t().searchAria" [value]="query()" (input)="onQuery($event)" autocomplete="off" />
+      @if (suggestions().length) {
+        <ul class="op-suggest op-glass" role="listbox">
+          @for (w of suggestions(); track w.slug) {
+            <li role="option" (mousedown)="selectWard(w.slug, true)">
+              <strong>{{ w.name }}</strong>
+              <span>{{ w.scored ? num(w.score) : t().notScored }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <h2 class="op-h">{{ selectedType() ? t().rankingTitle(selectedType()!.name) : t().rankingAll }}</h2>
+    @if (error(); as message) {
+      <p class="op-error">{{ message }} <button type="button" class="op-link" (click)="retry()">{{ t().retry }}</button></p>
+    }
+    <ol class="op-ranking">
+      @for (w of ranking(); track w.slug; let i = $index) {
+        <li>
+          <button type="button" [class.is-on]="selected() === w.slug" (click)="selectWard(w.slug, true)">
+            <span class="op-ranking__n">{{ i + 1 }}</span>
+            <span class="op-ranking__name">
+              <strong>{{ shortName(w.name) }}</strong>
+              @if (!selectedType() && w.topName) {
+                <small>{{ w.topIcon }} {{ w.topName }}</small>
+              } @else if (w.count !== undefined) {
+                <small>{{ t().places(w.count) }}</small>
+              }
+            </span>
+            <span class="op-score" [style.--c]="bandColor(w.score)">{{ num(w.score, 0) }}</span>
+          </button>
+        </li>
+      } @empty {
+        <li class="op-muted">{{ t().loading }}</li>
+      }
+    </ol>
+  </aside>
+
+  <!-- Tools -->
+  <div class="op-tools op-glass" role="toolbar">
+    <button type="button" (click)="map?.zoomBy(1)" [attr.aria-label]="'+'"><ls-icon name="plus" [size]="16" /></button>
+    <button type="button" (click)="map?.overview()" [attr.aria-label]="'overview'"><ls-icon name="target" [size]="16" /></button>
+    <button type="button" class="op-tools__wide" [class.is-on]="compare().length > 0" (click)="openCompare()"><ls-icon name="scale" [size]="16" /> {{ t().compareOpen(compare().length) }}</button>
+    <button type="button" class="op-tools__wide op-tools__accent" (click)="askOpen.set(true)"><ls-icon name="sparkles" [size]="16" /> {{ t().ask }}</button>
+    <button type="button" (click)="share()" [title]="copied() ? t().shared : t().share" [attr.aria-label]="t().share"><ls-icon [name]="copied() ? 'check' : 'share'" [size]="16" /></button>
+    <button type="button" (click)="toggleLang()" [title]="t().language" [attr.aria-label]="t().language"><ls-icon name="globe" [size]="16" /></button>
+    <button type="button" (click)="methodOpen.set(true)" [title]="t().methodTitle" [attr.aria-label]="t().methodTitle"><ls-icon name="info" [size]="16" /></button>
+  </div>
+
+  <!-- Right: the selected ward -->
+  @if (selected()) {
+    <aside class="op-right op-glass" aria-live="polite">
+      @if (detail(); as d) {
+        <header class="op-ward">
+          <div>
+            <h2>{{ d.name }}</h2>
+            @if (d.facts.population) {
+              <p>{{ t().population }} {{ num(d.facts.population, 0) }} · {{ t().area }} {{ num(d.facts.areaKm2) }} km²</p>
+            }
+          </div>
+          <button type="button" class="op-icon" (click)="closeWard()" [attr.aria-label]="t().close"><ls-icon name="x" [size]="16" /></button>
+        </header>
+
+        <dl class="op-facts">
+          <div><dt>{{ t().metro }}</dt><dd>{{ d.facts.metroStations.length ? d.facts.metroStations.join(', ') : t().metroNone }}</dd></div>
+          <div><dt>{{ t().offices }}</dt><dd>{{ d.facts.counts['offices'] }}</dd></div>
+          <div><dt>{{ t().apartments }}</dt><dd>{{ d.facts.counts['apartments'] }}</dd></div>
+          <div><dt>{{ t().schools }}</dt><dd>{{ d.facts.counts['schools'] }}</dd></div>
+          <div><dt>{{ t().construction }}</dt><dd>{{ num(d.facts.constructionHa) }} ha</dd></div>
+          @if (d.facts.metroBuildingKm !== null && d.facts.metroBuildingKm <= 3) {
+            <div class="op-facts__wide"><dt></dt><dd>🚇 {{ t().metroBuilding(d.facts.metroBuildingKm) }}</dd></div>
+          }
+        </dl>
+
+        @if (!d.scored) {
+          <p class="op-warn"><ls-icon name="info" [size]="14" /> {{ t().notScoredHint }}</p>
+        } @else {
+          @if (d.coverage?.low) {
+            <p class="op-warn"><ls-icon name="alert" [size]="14" /> {{ t().coverageLow }}</p>
+          }
+          @if (focus(); as f) {
+            <section class="op-focus">
+              <span class="op-eyebrow">{{ type() ? t().focusType : t().bestHere }}</span>
+              <div class="op-focus__head">
+                <span class="op-focus__icon" aria-hidden="true">{{ f.icon }}</span>
+                <div>
+                  <h3>{{ f.name }}</h3>
+                  <small>{{ t().places(f.count) }} · {{ t().per10k(num(f.per10k)) }}</small>
+                </div>
+                <span class="op-score op-score--big" [style.--c]="bandColor(f.opportunity)">{{ num(f.opportunity, 0) }}</span>
+              </div>
+              @if (f.confidence === 'low') {
+                <p class="op-low"><ls-icon name="alert" [size]="13" /> {{ t().lowConfidence }}</p>
+              }
+              <details class="op-why" open>
+                <summary>{{ t().why }}</summary>
+                <ul class="op-bars">
+                  @for (dv of f.drivers; track dv.signal) {
+                    <li>
+                      <span>{{ t().signals[dv.signal] }} <small>×{{ num(dv.weight, 2) }}</small></span>
+                      <i><b [style.width.%]="dv.value"></b></i>
+                      <em>+{{ num(dv.points) }}</em>
+                    </li>
+                  }
+                  @if (f.growth !== null) {
+                    <li class="op-bars__growth">
+                      <span>{{ t().growthBonus }} <small>×{{ num(0.25, 2) }}</small></span>
+                      <i><b [style.width.%]="f.growth"></b></i>
+                      <em>+{{ num(f.growth * 0.25) }}</em>
+                    </li>
+                  }
+                  <li class="op-bars__total"><span>{{ t().demand }}</span><i></i><em>{{ num(f.demand) }}</em></li>
+                  <li class="op-bars__minus">
+                    <span>{{ t().competition }} {{ num(f.competition) }}</span>
+                    <i><b [style.width.%]="f.competition"></b></i>
+                    <em>−{{ num(f.competition * 0.4) }}</em>
+                  </li>
+                  <li class="op-bars__total"><span>{{ t().score }}</span><i></i><em>{{ num(f.opportunity) }}</em></li>
+                </ul>
+              </details>
+              <div class="op-actions">
+                <button type="button" class="op-btn" [class.is-on]="showPlaces()" (click)="showPlaces.set(!showPlaces())">
+                  <ls-icon name="pin" [size]="14" /> {{ showPlaces() ? t().hidePlaces : t().showPlaces }}
+                </button>
+                <button type="button" class="op-btn" [class.is-on]="inCompare(d.slug)" (click)="toggleCompare(d.slug)" [disabled]="!inCompare(d.slug) && compare().length >= 3">
+                  <ls-icon [name]="inCompare(d.slug) ? 'check' : 'plus'" [size]="14" /> {{ inCompare(d.slug) ? t().compareAdded : t().compareAdd }}
+                </button>
+              </div>
+            </section>
+          }
+
+          <section>
+            <span class="op-eyebrow">{{ t().otherTypes }}</span>
+            <ul class="op-others">
+              @for (o of others(); track o.type) {
+                <li>
+                  <button type="button" (click)="setType(o.type)">
+                    <span aria-hidden="true">{{ o.icon }}</span>
+                    <span class="op-others__name">{{ o.name }}@if (o.confidence === 'low') {<small> · {{ t().lowConfidence }}</small>}</span>
+                    <span class="op-score" [style.--c]="bandColor(o.opportunity)">{{ num(o.opportunity, 0) }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
+        <p class="op-note">{{ d.caveat }}</p>
+        @if (d.copilot; as cp) {
+          <a class="op-link-card" [routerLink]="['/business-copilot/location', cp.slug]"><ls-icon name="chart" [size]="15" /> {{ t().copilot(cp.name) }}</a>
+        }
+        <a class="op-link-card" routerLink="/property-intelligence/map" [queryParams]="{ ward: d.slug, lang: lang() === 'en' ? 'en' : null }"><ls-icon name="pin" [size]="15" /> {{ t().property }}</a>
+        <p class="op-sources">
+          {{ t().sources }}:
+          @for (s of d.sources; track s.id; let last = $last) {
+            <a [href]="s.url" target="_blank" rel="noopener noreferrer" [title]="s.title">{{ s.publisher }}</a>{{ last ? '' : ' · ' }}
+          }
+        </p>
+      } @else {
+        <p class="op-muted">{{ t().loading }}</p>
+      }
+    </aside>
+  }
+
+  <!-- Legend -->
+  <div class="op-legend op-glass">
+    <strong>{{ t().legendTitle }}{{ selectedType() ? ' · ' + selectedType()!.name : '' }}</strong>
+    <span class="op-legend__scale">
+      @for (s of scoreStops; track s[0]) {
+        <span><i [style.background]="s[1]"></i>{{ s[0] }}+</span>
+      }
+      <span><i class="op-legend__none"></i>{{ t().legendNone }}</span>
+    </span>
+  </div>
+
+  <!-- Method & sources -->
+  @if (methodOpen()) {
+    <div class="op-modal" (click)="methodOpen.set(false)">
+      <div class="op-dialog op-glass" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <div class="op-dialog__head">
+          <h2>{{ t().methodTitle }}</h2>
+          <button type="button" class="op-icon" (click)="methodOpen.set(false)" [attr.aria-label]="t().close"><ls-icon name="x" [size]="16" /></button>
+        </div>
+        @if (wards(); as w) {
+          <p>{{ w.meta.method }}</p>
+          <p class="op-warn"><ls-icon name="alert" [size]="14" /> {{ w.meta.caveat }}</p>
+          <ul class="op-sourcelist">
+            @for (s of w.meta.sources; track s.id) {
+              <li><a [href]="s.url" target="_blank" rel="noopener noreferrer">{{ s.title }}</a> <small>— {{ s.publisher }}</small></li>
+            }
+            <li>{{ t().baseMap }}</li>
+          </ul>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Compare -->
+  @if (compareOpen()) {
+    <div class="op-modal" (click)="compareOpen.set(false)">
+      <div class="op-dialog op-dialog--wide op-glass" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <div class="op-dialog__head">
+          <h2>{{ t().compareTitle }}{{ selectedType() ? ' · ' + selectedType()!.name : '' }}</h2>
+          <button type="button" class="op-icon" (click)="compareOpen.set(false)" [attr.aria-label]="t().close"><ls-icon name="x" [size]="16" /></button>
+        </div>
+        <div class="op-chips">
+          @for (name of compareNames(); track name; let i = $index) {
+            <button type="button" (click)="toggleCompare(compare()[i])">{{ name }} ✕</button>
+          }
+        </div>
+        @if (compare().length < 2) {
+          <p class="op-muted">{{ t().compareNeed }}</p>
+        } @else {
+          @if (compareResult(); as c) {
+          <div class="op-tablewrap">
+            <table class="op-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  @for (w of c.wards; track w.slug) {
+                    <th>{{ w.name }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>{{ c.type ? c.type.name : t().bestHere }}</th>
+                  @for (w of c.wards; track w.slug) {
+                    <td>
+                      @if (w.focus; as f) {
+                        <span class="op-score" [style.--c]="bandColor(f.opportunity)">{{ num(f.opportunity, 0) }}</span>
+                        @if (!c.type) { {{ f.icon }} {{ f.name }} }
+                      } @else {
+                        {{ t().notScored }}
+                      }
+                    </td>
+                  }
+                </tr>
+                @if (c.type) {
+                  <tr><th>{{ t().demand }}</th>@for (w of c.wards; track w.slug) {<td>{{ num(w.focus?.demand) }}</td>}</tr>
+                  <tr><th>{{ t().competition }}</th>@for (w of c.wards; track w.slug) {<td>{{ num(w.focus?.competition) }} <small>({{ w.focus ? t().per10k(num(w.focus.per10k)) : '—' }})</small></td>}</tr>
+                }
+                <tr><th>{{ t().population }}</th>@for (w of c.wards; track w.slug) {<td>{{ num(w.facts.population, 0) }}</td>}</tr>
+                <tr><th>{{ t().offices }}</th>@for (w of c.wards; track w.slug) {<td>{{ w.facts.counts['offices'] }}</td>}</tr>
+                <tr><th>{{ t().apartments }}</th>@for (w of c.wards; track w.slug) {<td>{{ w.facts.counts['apartments'] }}</td>}</tr>
+                <tr><th>{{ t().metro }}</th>@for (w of c.wards; track w.slug) {<td>{{ w.facts.metroStations.length }}</td>}</tr>
+                <tr><th>{{ t().construction }}</th>@for (w of c.wards; track w.slug) {<td>{{ num(w.facts.constructionHa) }} ha</td>}</tr>
+                <tr>
+                  <th>{{ t().bestHere }}</th>
+                  @for (w of c.wards; track w.slug) {
+                    <td>
+                      @for (x of w.top3; track x.type) {
+                        <div>{{ x.icon }} {{ x.name }} <strong>{{ num(x.opportunity, 0) }}</strong></div>
+                      }
+                    </td>
+                  }
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          } @else {
+            <p class="op-muted">{{ t().loading }}</p>
+          }
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Ask AI -->
+  @if (askOpen()) {
+    <div class="op-modal" (click)="askOpen.set(false)">
+      <div class="op-dialog op-glass" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <div class="op-dialog__head">
+          <h2>{{ t().askTitle }}</h2>
+          <button type="button" class="op-icon" (click)="askOpen.set(false)" [attr.aria-label]="t().close"><ls-icon name="x" [size]="16" /></button>
+        </div>
+        <p class="op-muted">{{ t().askIntro }}</p>
+        <form class="op-askform" (submit)="ask($event)">
+          <input type="text" maxlength="500" [placeholder]="t().askPlaceholder" [attr.aria-label]="t().askPlaceholder" [value]="askText()" (input)="onAskInput($event)" />
+          <button type="submit" class="op-btn op-btn--primary" [disabled]="asking() || askText().trim().length < 2">{{ t().askSend }}</button>
+        </form>
+        @if (askError(); as m) {
+          <p class="op-error">{{ m }}</p>
+        }
+        @if (asking()) {
+          <p class="op-muted">{{ t().loading }}</p>
+        }
+        @if (answer(); as a) {
+          <div class="op-answer">
+            <p>{{ a.answer }}</p>
+            @if (a.wards.length) {
+              <div class="op-chips">
+                @for (w of a.wards; track w.slug) {
+                  <button type="button" (click)="askOpen.set(false); selectWard(w.slug, true)">{{ w.name }}</button>
+                }
+              </div>
+            }
+            <small>
+              {{ answeredBy(a) }}
+              @if (a.sources.length) {
+                · {{ t().sources }}:
+                @for (s of a.sources; track s.id; let last = $last) {
+                  <a [href]="s.url" target="_blank" rel="noopener noreferrer" [title]="s.title">{{ s.publisher }}</a>{{ last ? '' : ', ' }}
+                }
+              }
+            </small>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</section>

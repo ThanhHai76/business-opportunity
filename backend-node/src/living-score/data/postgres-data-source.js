@@ -4,25 +4,25 @@ const { createLogger } = require('../common/logger');
 const logger = createLogger('PostgresDataSource');
 
 const AREAS_SQL = `
-  SELECT a.id, a.slug, a.name, a.name_en, a.description, a.population,
-         a.area_km2::float8 AS area_km2, a.avg_rent_vnd, a.avg_price_per_m2_vnd,
+  SELECT a.id, a.slug, a.name, a.name_en, a.search_text, a.description, a.description_en,
+         a.area_km2::float8 AS area_km2, a.metrics, a.facts,
          ST_X(a.centroid) AS lng, ST_Y(a.centroid) AS lat,
          ST_AsGeoJSON(a.boundary, 6)::json AS boundary,
          a.data_source,
          COALESCE((SELECT json_object_agg(s.criterion, s.score) FROM area_scores s WHERE s.area_id = a.id), '{}'::json) AS scores,
-         COALESCE((SELECT json_agg(n.text ORDER BY n.position, n.id) FROM area_notes n WHERE n.area_id = a.id AND n.kind = 'pro'), '[]'::json) AS pros,
-         COALESCE((SELECT json_agg(n.text ORDER BY n.position, n.id) FROM area_notes n WHERE n.area_id = a.id AND n.kind = 'con'), '[]'::json) AS cons
+         COALESCE((SELECT json_agg(json_build_object('vi', n.text, 'en', n.text_en) ORDER BY n.position, n.id) FROM area_notes n WHERE n.area_id = a.id AND n.kind = 'pro'), '[]'::json) AS pros,
+         COALESCE((SELECT json_agg(json_build_object('vi', n.text, 'en', n.text_en) ORDER BY n.position, n.id) FROM area_notes n WHERE n.area_id = a.id AND n.kind = 'con'), '[]'::json) AS cons
   FROM areas a
   ORDER BY a.name`;
 
 const AMENITY_SELECT = `
-  SELECT m.id, a.slug AS area_slug, m.type, m.name, m.rating::float8 AS rating,
+  SELECT m.id, a.slug AS area_slug, m.type, m.name,
          ST_X(m.location) AS lng, ST_Y(m.location) AS lat
   FROM amenities m
   JOIN areas a ON a.id = m.area_id`;
 
 function toAmenity(r) {
-  return { id: r.id, areaSlug: r.area_slug, type: r.type, name: r.name, rating: r.rating, lng: r.lng, lat: r.lat };
+  return { id: r.id, areaSlug: r.area_slug, type: r.type, name: r.name, lng: r.lng, lat: r.lat };
 }
 
 /** PostgreSQL + PostGIS implementation. Geometry is read back as GeoJSON via ST_AsGeoJSON. */
@@ -44,11 +44,11 @@ class PostgresDataSource {
       slug: r.slug,
       name: r.name,
       nameEn: r.name_en,
-      description: r.description,
-      population: r.population,
+      searchText: r.search_text,
+      description: { vi: r.description, en: r.description_en ?? r.description },
       areaKm2: r.area_km2,
-      avgRentVnd: r.avg_rent_vnd,
-      avgPricePerM2Vnd: r.avg_price_per_m2_vnd,
+      metrics: r.metrics,
+      facts: r.facts,
       centroid: { lng: r.lng, lat: r.lat },
       boundary: r.boundary,
       scores: r.scores,

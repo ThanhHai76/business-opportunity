@@ -1,4 +1,3 @@
-import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -9,8 +8,9 @@ import { ScoreRingComponent } from '../../components/score-ring/score-ring.compo
 import { StateMessageComponent } from '../../components/state-message/state-message.component';
 import { COMPARE_COLORS, CRITERION_ICONS } from '../../living-score.constants';
 import { AreaSummary, CRITERION_KEYS, CompareResult, CriterionKey } from '../../models/living-score.models';
-import { MillionsPipe, NumPipe } from '../../pipes/format.pipes';
+import { FactsPipe, NumPipe } from '../../pipes/format.pipes';
 import { LivingMetaService } from '../../services/living-meta.service';
+import { LangService } from '../../services/lang.service';
 import { LivingScoreApiService, describeApiError } from '../../services/living-score-api.service';
 import { PreferencesService } from '../../services/preferences.service';
 
@@ -20,13 +20,12 @@ const MAX_AREAS = 3;
   selector: 'app-compare',
   standalone: true,
   imports: [
-    DecimalPipe,
     RouterLink,
     IconComponent,
     RadarChartComponent,
     ScoreRingComponent,
     StateMessageComponent,
-    MillionsPipe,
+    FactsPipe,
     NumPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,6 +44,9 @@ export class CompareComponent implements OnInit {
   protected readonly icons = CRITERION_ICONS;
   protected readonly criterionKeys = CRITERION_KEYS;
   protected readonly maxAreas = MAX_AREAS;
+  private readonly langService = inject(LangService);
+  protected readonly t = this.langService.t;
+  protected readonly lang = this.langService.lang;
 
   protected readonly allAreas = signal<AreaSummary[]>([]);
   protected readonly selection = signal<string[]>([]);
@@ -53,7 +55,7 @@ export class CompareComponent implements OnInit {
   protected readonly errorMessage = signal('');
   protected readonly listError = signal('');
 
-  protected readonly axes = computed<RadarAxis[]>(() => this.meta.criteria().map((c) => ({ key: c.key, label: c.label })));
+  protected readonly axes = computed<RadarAxis[]>(() => this.meta.criteria().map((c) => ({ key: c.key, label: this.meta.label(c.key) })));
   protected readonly series = computed<RadarSeries[]>(() =>
     (this.result()?.areas ?? []).map((area, index) => ({
       name: area.name,
@@ -84,7 +86,7 @@ export class CompareComponent implements OnInit {
           this.loading.set(true);
           return this.api.compare(slugs, this.prefs.weights()).pipe(
             catchError((error: unknown) => {
-              this.errorMessage.set(describeApiError(error));
+              this.errorMessage.set(describeApiError(error, this.lang()));
               this.loading.set(false);
               return EMPTY;
             }),
@@ -112,7 +114,7 @@ export class CompareComponent implements OnInit {
         if (valid.length !== this.selection().length) this.setSelection(valid);
         else this.refresh$.next();
       },
-      error: (error: unknown) => this.listError.set(describeApiError(error)),
+      error: (error: unknown) => this.listError.set(describeApiError(error, this.lang())),
     });
   }
 
@@ -144,6 +146,7 @@ export class CompareComponent implements OnInit {
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { a: slugs.length ? slugs.join(',') : null },
+      queryParamsHandling: 'merge',
       replaceUrl: true,
     });
     this.refresh$.next();

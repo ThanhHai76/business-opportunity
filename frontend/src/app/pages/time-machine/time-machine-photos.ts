@@ -1,6 +1,6 @@
 /**
  * Real photographs of the landmarks, from Wikimedia Commons (public domain or Creative Commons).
- * Files live in public/images/time-machine/<landmark>-<era>.jpg. Every entry keeps the real date of the
+ * Files live in public/images/time-machine/<landmark>-<era>.webp. Every entry keeps the real date of the
  * photo in its caption — a few are from a nearby year rather than the exact era, and say so.
  *
  * Eras without an entry (and the 2050/2100 scenarios) fall back to the stylised illustration.
@@ -22,7 +22,8 @@ export interface LandmarkPhoto {
 
 const PD = 'Phạm vi công cộng';
 const commons = (file: string): string => `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(file.replace(/ /g, '_'))}`;
-const src = (key: string): string => `/images/time-machine/${key}.jpg`;
+/** WebP (about half the size of the original JPEG downloads). */
+const src = (key: string): string => `/images/time-machine/${key}.webp`;
 
 export const LANDMARK_PHOTOS: Record<string, Record<string, LandmarkPhoto>> = {
   'hoan-kiem': {
@@ -165,6 +166,14 @@ export const LANDMARK_PHOTOS: Record<string, Record<string, LandmarkPhoto>> = {
   },
 
   'mot-cot': {
+    '1926': {
+      src: src('mot-cot-1926'),
+      alt: 'Bưu thiếp cũ: Chùa Một Cột nguyên bản với cầu thang đá dẫn lên đài sen',
+      caption: 'Chùa Một Cột nguyên bản (trước khi bị phá năm 1954), bưu thiếp đầu thế kỷ 20',
+      author: 'Bưu thiếp, không rõ tác giả',
+      license: PD,
+      pageUrl: commons("Hanoï - La Pagode d'une Colonne.jpg"),
+    },
     '2026': {
       src: src('mot-cot-2026'),
       alt: 'Chùa Một Cột trên cột đá giữa hồ, bao quanh là cây xanh',
@@ -175,13 +184,21 @@ export const LANDMARK_PHOTOS: Record<string, Record<string, LandmarkPhoto>> = {
     },
   },
   'hoang-thanh': {
+    '1926': {
+      src: src('hoang-thanh-1926'),
+      alt: 'Bưu thiếp cũ: Cột cờ Hà Nội nhìn từ trên thành, phía trước là doanh trại',
+      caption: 'Cột cờ trong khu thành cổ, bưu thiếp khoảng năm 1905',
+      author: 'Pierre Dieulefils',
+      license: PD,
+      pageUrl: commons("Hanoï - Tour de l'ancienne citadelle.jpg"),
+    },
     '2026': {
       src: src('hoang-thanh-2026'),
-      alt: 'Cổng Đoan Môn của Hoàng thành Thăng Long nhìn từ vườn cỏ phía trước',
-      caption: 'Đoan Môn, Hoàng thành Thăng Long, 2018',
-      author: 'Christophe95',
-      license: 'CC BY-SA 4.0',
-      pageUrl: commons('Doan Mon Gate 1.jpg'),
+      alt: 'Cột cờ Hà Nội với lá cờ đỏ sao vàng trên đỉnh, chân tháp ba tầng bệ',
+      caption: 'Cột cờ Hà Nội, 2012',
+      author: 'Gary Todd',
+      license: 'CC0',
+      pageUrl: commons('Hanoi Flag Tower (9735454512).jpg'),
     },
   },
   'long-bien': {
@@ -221,6 +238,14 @@ export const LANDMARK_PHOTOS: Record<string, Record<string, LandmarkPhoto>> = {
     },
   },
   'tran-quoc': {
+    '1926': {
+      src: src('tran-quoc-1926'),
+      alt: 'Bưu thiếp cũ: con đường đất đắp ven Hồ Tây, một người đội nón đứng bên bờ',
+      caption: 'Đường Cổ Ngư (nay là đường Thanh Niên) ven Hồ Tây, bưu thiếp cuối thế kỷ 19 – đầu thế kỷ 20',
+      author: 'Bưu thiếp, sưu tập P. Dieulefils',
+      license: PD,
+      pageUrl: commons('Đường Cổ Ngư (nay là đường Thanh Niên) ven Hồ Tây cuối thế kỷ 19, đầu thế kỷ 20. Sưu tập của Dieulefils.jpg'),
+    },
     '2026': {
       src: src('tran-quoc-2026'),
       alt: 'Chùa Trấn Quốc bên bờ Hồ Tây với hàng cây cổ thụ',
@@ -278,7 +303,7 @@ export const LANDMARK_PHOTOS: Record<string, Record<string, LandmarkPhoto>> = {
     },
     '2026': {
       src: src('ga-ha-noi-2026'),
-      alt: 'Ga Hà Nội về đêm: khối giữa hiện đại xây lại năm 1976 giữa hai cánh kiến trúc Pháp',
+      alt: 'Ga Hà Nội về đêm: khối giữa hiện đại xây lại sau năm 1975 giữa hai cánh kiến trúc Pháp',
       caption: 'Ga Hà Nội về đêm, 2023',
       author: 'NKSTTSSHNVN',
       license: 'CC BY-SA 4.0',

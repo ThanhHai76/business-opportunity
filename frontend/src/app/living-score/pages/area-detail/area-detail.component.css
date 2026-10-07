@@ -162,8 +162,8 @@ h1 {
 }
 
 .pc__card--con {
-  background: var(--ls-danger-soft);
-  color: var(--ls-danger);
+  background: var(--ls-warn-soft);
+  color: var(--ls-warn);
 }
 
 .pc__card li {
@@ -209,10 +209,55 @@ h1 {
   font-size: 13px;
 }
 
-.rating {
-  color: var(--ls-warn);
-  font-weight: 700;
-  white-space: nowrap;
+.stats-note,
+.block__lead {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: var(--ls-ink-faint);
+}
+.block__lead {
+  margin: -4px 0 14px;
+}
+.metric {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ls-ink-dim);
+}
+.missing {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--ls-surface-2);
+}
+.missing h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--ls-ink-dim);
+}
+.missing ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--ls-ink-faint);
+}
+.missing li {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+.missing li ls-icon {
+  flex: none;
+  transform: translateY(2px);
+}
+.foot p {
+  margin: 0 0 6px;
+}
+.foot a {
+  color: var(--ls-accent);
 }
 
 .foot {
@@ -234,4 +279,35 @@ h1 {
   .head__top {
     align-items: flex-start;
   }
+}
+
+.wards {
+  margin: 12px 0 0;
+  display: grid;
+  gap: 6px;
+}
+.wards__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ls-ink-faint);
+}
+.wards ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wards li {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ls-surface-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.wards small {
+  margin-left: 4px;
+  color: var(--ls-ink-faint);
+  font-weight: 500;
 }

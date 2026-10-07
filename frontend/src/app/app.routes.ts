@@ -9,9 +9,7 @@ export const routes: Routes = [
   {
     path: 'opportunity-map',
     loadComponent: () =>
-      import('./pages/opportunity-map/opportunity-map.component').then(
-        (m) => m.OpportunityMapPageComponent
-      ),
+      import('./opportunity/opportunity.component').then((m) => m.OpportunityComponent),
   },
   {
     path: 'time-machine',

@@ -20,6 +20,7 @@
             "outputPath": "dist/opportunity-map",
             "index": "src/index.html",
             "browser": "src/main.ts",
+            "allowedCommonJsDependencies": ["qrcode", "dijkstrajs"],
             "polyfills": [
               "zone.js"
             ],
@@ -31,7 +32,6 @@
               }
             ],
             "styles": [
-              "node_modules/leaflet/dist/leaflet.css",
               "node_modules/maplibre-gl/dist/maplibre-gl.css",
               "src/styles.css"
             ],

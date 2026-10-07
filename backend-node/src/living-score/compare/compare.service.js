@@ -1,5 +1,6 @@
 'use strict';
 const { CRITERION_KEYS } = require('../scoring/criteria');
+const { dataInfo } = require('../seed/seed-data');
 
 class CompareService {
   constructor(areas, scoring) {
@@ -8,7 +9,7 @@ class CompareService {
   }
 
   /** Two or three areas side by side: per-criterion values, the best area(s) for each criterion, and the best overall. */
-  async compare(slugs, weights) {
+  async compare(slugs, weights, lang = 'vi') {
     const records = await Promise.all(slugs.map((slug) => this.areas.getRecordOrThrow(slug)));
     const summaries = records.map((record) => this.areas.toSummary(record, weights));
 
@@ -23,7 +24,7 @@ class CompareService {
       areas: summaries,
       criteria,
       bestOverall,
-      meta: { isPersonalized: this.scoring.isPersonalized(weights), sampleData: true },
+      meta: { isPersonalized: this.scoring.isPersonalized(weights), data: dataInfo(lang) },
     };
   }
 }

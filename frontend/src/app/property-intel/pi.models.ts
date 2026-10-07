@@ -1,169 +1,210 @@
-/** Response shapes of /api/property-intel (backend-node/src/property-intel). All values are SAMPLE DATA. */
+/**
+ * Response shapes of /api/property-intel (backend-node/src/property-intel). Every figure is cited: OpenStreetMap,
+ * approved plans, the 2026 land price table, CBRE / Savills briefings and the press.
+ */
 
 export type LngLat = [number, number];
+export type Lang = 'vi' | 'en';
 export type Tone = 'planning' | 'mobility' | 'growth' | 'risk';
 export type Horizon = 2026 | 2030 | 2045;
-export type Currency = 'VND' | 'USD';
 export type AskIntent = 'analyze' | 'compare' | 'price' | 'future' | 'report' | 'project';
 
+export interface Source {
+  id: string;
+  title: string;
+  publisher: string;
+  url: string | null;
+}
+
 export interface Criterion {
-  key: string;
+  key: 'connectivity' | 'infrastructure' | 'planning' | 'amenities' | 'population' | 'development';
   code: string;
   label: string;
   tone: Tone;
-  value: number;
+  weight: number;
+  value: number | null;
+  detail: string;
+}
+
+export interface InfraItem {
+  id: string;
+  kind: 'metro' | 'bridge' | 'ring';
+  name: string;
+  note: string | null;
+  status: 'operating' | 'construction' | 'plan';
+  statusAt: 'operating' | 'expected' | 'construction' | 'plan';
+  openYear: number | null;
+  schematic: boolean;
+  distanceKm: number | null;
+  sources: Source[];
 }
 
 export interface Overview {
-  sampleData: true;
   note: string;
-  dataUpdated: string;
-  vndPerUsd: number;
+  dataUpdated: string | null;
   horizons: Horizon[];
-  stats: { districts: number; projects: number; horizon: number };
+  stats: { wards: number; infra: number; poles: number; projects: number; horizon: number };
   featured: {
     slug: string;
     name: string;
-    growthScore: number;
+    score: number;
+    rank: number;
     center: LngLat;
     criteria: Criterion[];
-    topUplift: InfraImpact;
+    topInfra: InfraItem | null;
+    landPrice: LandPrice | null;
   };
+  market: { quarter: string; primary: number };
   defaultQuestion: string;
+  method: string;
 }
 
-export interface DistrictSummary {
+/** Official land price of a ward (2026 table, residential street-front VT1, million VND/m²). */
+export interface LandPrice {
+  zone: number;
+  medianVT1: number;
+  maxVT1: number;
+  streets: number;
+  top: { name: string; vt1: number }[];
+  zoneOnly: boolean;
+  rank: number;
+  ranked: number;
+  cityMedian: number;
+  unit: string;
+}
+
+export interface Quarter {
+  quarter: string;
+  primary: number;
+  primaryHanoi?: number;
+  secondary?: number;
+  secondaryChangeQoQ?: number;
+  launched: number;
+  launchedDerived?: boolean;
+  sold: number;
+  absorptionPct?: number;
+  source: Source;
+}
+
+/** City-wide apartment market as published (CBRE quarters, Savills). */
+export interface CityMarket {
+  quarters: Quarter[];
+  savills: { quarter: string; primary: number; qoqPct: number; yoyPct: number; note: string; source: Source };
+  latest: number;
+}
+
+export interface WardSummary {
   slug: string;
   name: string;
+  shortName: string;
   center: LngLat;
-  growthScore: number;
+  score: number;
   rank: number;
-  pricePerM2: number;
-  yoy: number;
-  risk: number;
-  absorption: number;
-}
-
-export interface InfraImpact {
-  name: string;
-  kind: 'metro' | 'road';
-  uplift: number;
-  planned?: boolean;
-}
-
-export interface TimelineItem {
-  name: string;
-  kind: 'metro' | 'road' | 'urban';
-  start: number;
-  end: number;
-  planned?: boolean;
+  total: number;
+  partial: boolean;
+  population: number | null;
+  density: number | null;
+  metro: { name: string; line: string; distanceM: number };
 }
 
 export interface ProjectSummary {
   slug: string;
   name: string;
-  tower: string;
-  district: string;
-  districtName: string;
+  street: string;
+  ward: { slug: string; name: string } | null;
   coords: LngLat;
-  pricePerM2: number;
-  soldPct: number;
-  handover: string;
+  approx: boolean;
+  price: { min: number; max: number | null; label: string; kind: 'offer' | 'expected' | 'listing'; kindLabel: string };
+  sourceId: string;
   distanceM?: number;
+  inWard?: boolean;
 }
 
-export interface DistrictDetail extends DistrictSummary {
-  tagline: string;
+export interface WardDetail extends WardSummary {
   areaKm2: number;
-  total: number;
-  scoreDelta: number;
-  aiConfidence: number;
+  populationDate: string | null;
   criteria: Criterion[];
-  metrics: {
-    pricePerM2: number;
-    yoy: number;
-    absorption: number;
-    absorptionDeltaQoQ: number;
-    pipelineUnits: number;
-    pipelineProjects: number;
-    rentalYield: number;
-    cityRentalYield: number;
-    cityAbsorption: number;
+  facts: {
+    stationsInside: string[];
+    nearestStation: { name: string; line: string; distanceM: number };
+    buildingStation: { name: string; line: string; distanceM: number; openYear: number } | null;
+    counts: { education: number; health: number; shopping: number; bus: number; parks: number; parkHa: number };
+    constructionHa: number;
+    apartments: number;
+    offices: number;
   };
-  priceTrend: { years: number[]; district: number[]; city: number[]; change6y: number };
-  infraImpacts: InfraImpact[];
-  supplyDemand: { label: string; supply: number; demand: number; forecast?: boolean }[];
-  population: { points: { label: string; value: number; forecast?: boolean }[]; now: number; cagr: number };
-  timeline: { from: number; to: number; now: number; items: TimelineItem[] };
+  infra: InfraItem[];
+  poles: { slug: string; name: string; role: string; inside: boolean; distanceKm: number }[];
+  landPrice: LandPrice | null;
+  market: CityMarket;
   projects: ProjectSummary[];
+  links: {
+    opportunity: string;
+    livingScore: { slug: string; name: string } | null;
+    futureMap: { hub: string; name: string } | null;
+    copilot: { slug: string; name: string } | null;
+  };
+  method: string;
+  caveat: string;
+  sources: Source[];
 }
 
 export interface Poi {
   kind: 'school' | 'hospital' | 'mall' | 'park';
   name: string;
   coords: LngLat;
+  distanceM: number;
+  ha?: number;
 }
 
 export interface ProjectDetail extends ProjectSummary {
-  ward: string;
-  floors: number;
-  units: number;
-  typical: { beds: number; m2: number };
-  estimate: { value: number; plusMinus: number; m2: number };
-  vsDistrict: number;
-  districtPricePerM2: number;
-  history: { points: { label: string; value: number }[]; milestone: { quarter: number; label: string } };
-  devScore: number;
-  devNote: string;
-  riskScore: number;
-  riskNote: string;
+  osm: string | null;
+  note: string | null;
+  /** A 70 m² unit at the published price (billion VND): plain multiplication. */
+  unit: { m2: number; min: number; max: number | null };
+  vsMarket: { pct: number; market: number; quarter: string };
+  landPrice: LandPrice | null;
   station: { name: string; line: string; coords: LngLat; distanceM: number };
   todRadiusM: number;
   proximity: { key: string; label: string; detail: string; distanceM: number; tone?: Tone }[];
   pois: Poi[];
-  plannedInfra: { name: string; kind: 'metro' | 'road'; year: number }[];
+  plannedInfra: InfraItem[];
   nearby: ProjectSummary[];
-  aiTake: string;
-  baseScenario: Scenario;
-}
-
-export interface Scenario {
-  key?: 'bear' | 'base' | 'bull';
-  label?: string;
-  probability: number;
-  change: number;
-  note: string;
+  market: CityMarket;
+  sources: Source[];
 }
 
 export interface AskAnswer {
   question: string;
   intent: AskIntent;
-  engine: 'rule-based';
-  sampleData: true;
-  district: { slug: string; name: string };
+  provider: 'template' | 'anthropic';
+  model: string | null;
+  outOfScope: boolean;
+  ward: { slug: string; name: string };
+  wards: { slug: string; name: string }[];
   project: { slug: string; name: string } | null;
   outlook: { label: string; tone: 'good' | 'neutral' | 'bad' };
   summary: string;
   rows: { label: string; tone: Tone; text: string }[];
-  scenarios?: Scenario[];
   table?: { columns: string[]; rows: string[][]; highlight: number };
   callout?: { title: string; text: string };
-  followUps: string[];
+  sources: Source[];
+  followUps: AskIntent[];
 }
 
 export interface SearchResult {
-  type: 'district' | 'project';
+  type: 'ward' | 'project';
   slug: string;
   name: string;
   detail: string;
 }
 
-type FC = GeoJSON.FeatureCollection;
+type FC = import('geojson').FeatureCollection;
 export interface MapLayers {
   horizon: Horizon;
-  sampleData: true;
+  lang: Lang;
   layers: {
-    districts: FC;
+    wards: FC;
     labels: FC;
     metro: FC;
     stations: FC;
@@ -176,7 +217,7 @@ export interface MapLayers {
   };
 }
 
-/** Toggleable map layers, in the order of the design's layer panel. */
+/** Toggleable map layers, in the order of the layer panel. */
 export type LayerKey =
   | 'planning'
   | 'development'
@@ -184,10 +225,9 @@ export type LayerKey =
   | 'tod'
   | 'infrastructure'
   | 'projects'
-  | 'heatmap'
   | 'social'
   | 'density'
   | 'green';
 
-export type Basemap = 'satellite' | 'dark' | 'terrain';
-export type Lens = 'growth' | 'price' | 'risk';
+export type Basemap = 'map' | 'satellite';
+export type Lens = 'potential' | 'connectivity' | 'infrastructure' | 'landPrice';

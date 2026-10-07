@@ -6,11 +6,8 @@ const TOPIC_FOR_CRITERION = {
   transportation: 'transport',
   education: 'family',
   healthcare: 'family',
-  safety: 'family',
-  greenSpace: 'environment',
-  environment: 'environment',
+  greenSpace: 'family',
   amenities: 'lifestyle',
-  cost: 'cost',
 };
 
 /**

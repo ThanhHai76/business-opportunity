@@ -42,11 +42,11 @@ export class SiteNavComponent {
   protected readonly menuOpen = signal(false);
 
   protected readonly tabs: SiteTab[] = [
-    { path: '/future-map', label: 'Hanoi Future Map', short: 'Future Map', hint: 'Quy hoạch & tương lai 2026 → 2100', key: 'future' },
+    { path: '/future-map', label: 'Hanoi Future Map', short: 'Future Map', hint: 'Quy hoạch Thủ đô 2026 → 2065, có nguồn', key: 'future' },
     { path: '/time-machine', label: 'Hanoi Time Machine', short: 'Time Machine', hint: 'Du hành thời gian 1926 → 2100, có AR', key: 'time' },
-    { path: '/living-score', label: 'Hanoi Living Score', short: 'Living Score', hint: 'Chấm điểm nơi an cư theo 8 tiêu chí', key: 'live' },
-    { path: '/property-intelligence', label: 'AI Property Intelligence', short: 'Property AI', hint: 'Growth Score, quy hoạch, giá & dự án', key: 'property' },
-    { path: '/opportunity-map', label: 'Business Opportunity', short: 'Opportunity', hint: 'Điểm cơ hội kinh doanh theo khu vực', key: 'biz' },
+    { path: '/living-score', label: 'Hanoi Living Score', short: 'Living Score', hint: 'Chấm điểm nơi an cư từ dữ liệu OpenStreetMap', key: 'live' },
+    { path: '/property-intelligence', label: 'AI Property Intelligence', short: 'Property AI', hint: 'Tiềm năng 79 phường/xã: metro, hạ tầng, quy hoạch', key: 'property' },
+    { path: '/opportunity-map', label: 'Business Opportunity', short: 'Opportunity', hint: 'Phường nào ở Hà Nội nên mở gì, theo dữ liệu OSM', key: 'biz' },
     { path: '/business-copilot', label: 'Business Copilot', short: 'Copilot', hint: 'Top 10 vị trí mở kinh doanh tại Hà Nội', key: 'copilot' },
   ];
 

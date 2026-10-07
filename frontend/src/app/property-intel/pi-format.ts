@@ -1,51 +1,36 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { Currency } from './pi.models';
+import { Lang } from './pi.models';
 
-const usd0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-const int = new Intl.NumberFormat('en-US');
+const locale = (lang: Lang) => (lang === 'en' ? 'en-US' : 'vi-VN');
 
-/** Price per m² given in "tr" (million VND): "68.4 tr" or "$2,693". */
-export function formatPerM2(tr: number, currency: Currency, vndPerUsd: number): string {
-  return currency === 'VND' ? `${tr} tr` : usd0.format((tr * 1e6) / vndPerUsd);
+/** A number in the language's format: 68.4 → "68,4" in Vietnamese. */
+export function formatNum(n: number, lang: Lang, digits = 1): string {
+  return n.toLocaleString(locale(lang), { maximumFractionDigits: digits });
 }
 
-/** Unit caption for a per-m² axis or column. */
-export function perM2Unit(currency: Currency): string {
-  return currency === 'VND' ? 'tr/m²' : '$/m²';
+export const formatInt = (n: number, lang: Lang = 'vi'): string => formatNum(Math.round(n), lang, 0);
+export const signed = (n: number, lang: Lang = 'vi', suffix = '%'): string => `${n > 0 ? '+' : ''}${formatNum(n, lang)}${suffix}`;
+
+/** A total in billion VND ("9,8 tỷ" / "9.8 bn VND"). */
+export function formatBillion(ty: number, lang: Lang = 'vi'): string {
+  return `${formatNum(ty, lang, 2)} ${lang === 'en' ? 'bn VND' : 'tỷ'}`;
 }
 
-/** Total price given in "tỷ" (billion VND): "5.39 tỷ" or "$212k". */
-export function formatTotal(ty: number, currency: Currency, vndPerUsd: number): string {
-  if (currency === 'VND') return `${ty} tỷ`;
-  const usd = (ty * 1e9) / vndPerUsd;
-  return usd >= 1e6 ? `$${(usd / 1e6).toFixed(2)}M` : `$${Math.round(usd / 1000)}k`;
-}
-
-export function formatDistance(m: number): string {
-  return m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1)} km`;
-}
-
-export const formatInt = (n: number): string => int.format(n);
-export const signed = (n: number, suffix = '%'): string => `${n > 0 ? '+' : ''}${n}${suffix}`;
-
-@Pipe({ name: 'piPerM2', standalone: true })
-export class PiPerM2Pipe implements PipeTransform {
-  transform(tr: number, currency: Currency, vndPerUsd: number): string {
-    return formatPerM2(tr, currency, vndPerUsd);
-  }
-}
-
-@Pipe({ name: 'piTotal', standalone: true })
-export class PiTotalPipe implements PipeTransform {
-  transform(ty: number, currency: Currency, vndPerUsd: number): string {
-    return formatTotal(ty, currency, vndPerUsd);
-  }
+export function formatDistance(m: number, lang: Lang = 'vi'): string {
+  return m < 1000 ? `${Math.round(m / 10) * 10} m` : `${formatNum(m / 1000, lang)} km`;
 }
 
 @Pipe({ name: 'piDistance', standalone: true })
 export class PiDistancePipe implements PipeTransform {
-  transform(m: number): string {
-    return formatDistance(m);
+  transform(m: number, lang: Lang = 'vi'): string {
+    return formatDistance(m, lang);
+  }
+}
+
+@Pipe({ name: 'piNum', standalone: true })
+export class PiNumPipe implements PipeTransform {
+  transform(n: number, lang: Lang = 'vi', digits = 1): string {
+    return formatNum(n, lang, digits);
   }
 }
 

@@ -1,43 +1,43 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewEncapsulation, effect, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LANDMARK_PHOTOS, LandmarkPhoto } from './time-machine-photos';
+import { ERAS, Era, LANDMARKS, Landmark } from './tm-data';
 import { landmarkIcon } from './landmark-icons';
-import { LANDMARK_INFO, directionsUrl } from './landmark-info';
+import { LANDMARK_EVENTS, LANDMARK_INFO, LandmarkSource, directionsUrl, eraForYear } from './landmark-info';
 import { TmRealMap } from './tm-real-map';
+import { TOURS, Tour } from './landmark-tours';
+import { TmContext } from './tm-context';
+import { TmLens } from './tm-lens';
+import { TmEdu } from './tm-edu';
+import { TmMuseum } from './tm-museum';
+import { TmChat } from './tm-chat';
+import { TmTours } from './tm-tours';
+import { TmCompare } from './tm-compare';
+import { EN_ERAS, EN_EVENTS, EN_LANDMARKS, EN_PHOTOS, EN_SITE, EN_TICKER, EN_TOURS, EN_WIKI, LANG_KEY, Lang } from './tm-i18n';
 import { ThemeService } from '../../services/theme.service';
 
 type MapMode = 'real' | 'illustrated';
 const MAP_MODE_KEY = 'hanoi100.tm.mapMode';
+const PD_VI = 'Phạm vi công cộng';
+const VI_TICKER = ['ĐANG HIỆU CHỈNH DÒNG THỜI GIAN', 'ĐANG TẢI DỮ LIỆU 1926', 'ĐANG TẢI KỊCH BẢN 2100', 'SẴN SÀNG MỞ CỔNG THỜI GIAN'];
+
+function readLang(): Lang {
+  try {
+    return localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'vi';
+  } catch {
+    return 'vi';
+  }
+}
+
 /** Eras whose photo can stand as "then" in the before/after comparison, oldest first. */
 const THEN_ERAS = ['1926', '1954', '1975'];
-
-interface Era {
-  id: string;
-  year: string;
-  label: string;
-  tag: string;
-  future: boolean;
-}
-
-interface Landmark {
-  name: string;
-  sub: string;
-  stories: Record<string, string>;
-}
-
-interface ChatAnswer {
-  q: string;
-  a: string;
-  src: string;
-  future: boolean;
-}
 
 @Component({
   selector: 'app-time-machine',
   standalone: true,
   imports: [RouterLink],
   templateUrl: './time-machine.component.html',
-  styleUrl: './time-machine.component.css',
+  styleUrls: ['./time-machine.component.css', './time-machine-features.css'],
   // This page's interactive bits (era ticks, chat bubbles, chips) are built
   // with plain DOM APIs at runtime, so they never get Angular's emulated
   // `_ngcontent` scoping attribute. Emulated encapsulation would silently
@@ -48,266 +48,180 @@ interface ChatAnswer {
 export class TimeMachineComponent implements AfterViewInit, OnDestroy {
   private readonly root: HTMLElement;
   private readonly reduceMotion: boolean;
-
-  private readonly eras: Era[] = [
-    { id: '1926', year: '1926', label: 'Thời Pháp thuộc', tag: 'TƯ LIỆU LỊCH SỬ', future: false },
-    { id: '1954', year: '1954', label: 'Giải phóng Thủ đô', tag: 'TƯ LIỆU LỊCH SỬ', future: false },
-    { id: '1975', year: '1975', label: 'Thống nhất đất nước', tag: 'TƯ LIỆU LỊCH SỬ', future: false },
-    { id: '2026', year: '2026', label: 'Hiện tại', tag: 'HIỆN TẠI', future: false },
-    { id: '2050', year: '2050', label: 'Kịch bản tương lai', tag: 'KỊCH BẢN TƯƠNG LAI', future: true },
-    { id: '2100', year: '2100', label: 'Kịch bản viễn tưởng', tag: 'KỊCH BẢN TƯƠNG LAI', future: true },
-  ];
-
-  private readonly landmarks: Record<string, Landmark> = {
-    'hoan-kiem': {
-      name: 'Hồ Gươm',
-      sub: 'Hoàn Kiếm Lake & Tháp Rùa',
-      stories: {
-        '1926': 'Dưới thời Pháp thuộc, Hồ Gươm là ranh giới giữa khu phố Tây quy hoạch kiểu Paris ở phía Nam và phố cổ buôn bán tấp nập ở phía Bắc. Tháp Rùa đã đứng đó từ 1886.',
-        '1954': 'Ngày 10/10/1954, đoàn quân giải phóng tiến qua khu vực quanh hồ trong ngày Hà Nội được giải phóng khỏi thực dân Pháp — một khoảnh khắc được ghi lại nhiều nhất trong lịch sử hiện đại của thành phố.',
-        '1975': 'Sau ngày thống nhất, Hồ Gươm trở thành không gian công cộng biểu tượng của thủ đô một nước Việt Nam thống nhất, nơi diễn ra các lễ mít tinh lớn.',
-        '2026': 'Không gian đi bộ quanh hồ cuối tuần thu hút hàng chục nghìn người, xen giữa nhịp sống hiện đại là truyền thuyết vua Lê Lợi trả gươm thần cho rùa vàng vẫn được kể lại mỗi ngày.',
-        '2050': 'Mặt hồ được bảo tồn trong một "vùng lõi di sản" không phương tiện cơ giới, bao quanh bởi các tầng đi bộ trên cao kết nối với toàn khu phố cổ.',
-        '2100': 'Tháp Rùa được số hoá thành một điểm neo thực tế hỗn hợp, nơi du khách có thể "gặp" các nhân vật lịch sử được AI tái hiện ngay tại chỗ.',
-      },
-    },
-    'old-quarter': {
-      name: 'Phố Cổ',
-      sub: '36 phố phường',
-      stories: {
-        '1926': '36 phố phường vẫn giữ nếp "buôn có bạn, bán có phường" — mỗi phố một nghề, từ Hàng Bạc đến Hàng Mã — dù kiến trúc Pháp đã bắt đầu xen vào nhà ống truyền thống.',
-        '1954': 'Sau giải phóng, nhiều cửa hiệu tư sản dần chuyển đổi mô hình, phố cổ bước vào giai đoạn kinh tế tập thể với nhịp sống trầm lắng hơn thời thuộc địa.',
-        '1975': 'Phố cổ trở thành khu dân cư đông đúc bậc nhất Hà Nội thời bao cấp, nhiều nhà ống bị chia nhỏ cho nhiều hộ gia đình sinh sống chung.',
-        '2026': 'Phố cổ vừa là di sản sống vừa là điểm đến du lịch sầm uất nhất Hà Nội — phố đi bộ cuối tuần, quán cà phê trong nhà ống trăm tuổi, xen giữa mật độ dân cư cao nhất thành phố.',
-        '2050': 'Mặt tiền lịch sử được giữ nguyên theo luật bảo tồn nghiêm ngặt, trong khi phần sau mỗi nhà ống được cải tạo bằng công nghệ xây dựng module để nâng chất lượng sống.',
-        '2100': 'Toàn bộ phố cổ trở thành một "bảo tàng sống" được giám sát bởi cảm biến khí hậu vi mô, tự động điều tiết để bảo vệ vật liệu di sản trước biến đổi khí hậu.',
-      },
-    },
-    'ba-dinh': {
-      name: 'Quảng trường Ba Đình',
-      sub: 'Ba Dinh Square',
-      stories: {
-        '1926': 'Khu vực Ba Đình thời Pháp thuộc là quần thể hành chính - dinh thự của chính quyền Đông Dương, quy hoạch theo lối phương Tây với đại lộ rộng và Phủ Toàn quyền uy nghi.',
-        '1954': 'Ba Đình chuyển từ trung tâm quyền lực thực dân thành trung tâm chính trị của nước Việt Nam Dân chủ Cộng hoà sau ngày giải phóng Thủ đô.',
-        '1975': 'Không gian quảng trường gắn liền với ngày 2/9/1945 — nơi Chủ tịch Hồ Chí Minh đọc Tuyên ngôn Độc lập — và tiếp tục là nơi diễn ra các sự kiện trọng đại của đất nước thống nhất.',
-        '2026': 'Lễ thượng cờ - hạ cờ mỗi ngày tại quảng trường vẫn thu hút đông đảo người dân và du khách; Lăng Chủ tịch Hồ Chí Minh nằm ngay trung tâm khu vực.',
-        '2050': 'Khu vực xung quanh quảng trường mở rộng không gian xanh và giao thông công cộng, hạn chế phương tiện cá nhân để bảo tồn cảnh quan nghi lễ.',
-        '2100': 'Các nghi lễ quốc gia được phát dưới dạng trải nghiệm thực tế hỗn hợp cho người Việt khắp nơi trên thế giới "hiện diện" cùng lúc tại quảng trường.',
-      },
-    },
-    'van-mieu': {
-      name: 'Văn Miếu',
-      sub: 'Temple of Literature · est. 1070',
-      stories: {
-        '1926': 'Dưới thời Pháp, Văn Miếu - Quốc Tử Giám không còn chức năng thi cử (khoa cử bị bãi bỏ từ 1919) nhưng vẫn là biểu tượng học vấn Nho giáo giữa một Hà Nội đang Âu hoá.',
-        '1954': 'Sau giải phóng, di tích được chính quyền mới tiếp quản và bắt đầu được nhìn nhận lại như một di sản giáo dục dân tộc cần bảo tồn, dù trùng tu còn hạn chế do chiến tranh.',
-        '1975': 'Văn Miếu dần được đầu tư tu bổ như biểu tượng hiếu học của dân tộc thống nhất, đón học sinh sinh viên đến "xin chữ" trước mỗi kỳ thi.',
-        '2026': '82 bia Tiến sĩ (Di sản Tư liệu Thế giới UNESCO) là điểm đến không thể thiếu của học sinh trước mùa thi và du khách quốc tế tìm hiểu truyền thống khoa bảng Việt Nam.',
-        '2050': 'Bia Tiến sĩ được quét 3D độ phân giải cao, cho phép nghiên cứu văn tự cổ từ xa mà không cần chạm vào hiện vật gốc.',
-        '2100': 'Một "phiên bản song sinh số" đầy đủ của Văn Miếu tồn tại song song, cho phép hậu thế "bước vào" không gian thi cử xưa dù bản gốc có biến đổi thế nào.',
-      },
-    },
-    'opera-house': {
-      name: 'Nhà Hát Lớn',
-      sub: 'Hanoi Opera House · 1911',
-      stories: {
-        '1926': 'Hoàn thành năm 1911 theo phong cách Beaux-Arts, Nhà Hát Lớn là nơi giới thượng lưu Pháp và bản xứ thưởng thức opera, kịch nói — biểu tượng cho tham vọng biến Hà Nội thành "Paris thu nhỏ".',
-        '1954': 'Sau giải phóng, Nhà Hát Lớn trở thành nơi diễn ra các sự kiện chính trị - văn hoá quan trọng của chính quyền mới, chuyển từ không gian giải trí thượng lưu sang không gian công cộng.',
-        '1975': 'Công trình tiếp tục là sân khấu biểu diễn nghệ thuật hàng đầu cả nước thời kỳ thống nhất, dù cơ sở vật chất xuống cấp nhiều sau chiến tranh.',
-        '2026': 'Sau nhiều đợt trùng tu, Nhà Hát Lớn là điểm diễn hoà nhạc, opera, sự kiện cao cấp bậc nhất Hà Nội, kiến trúc Pháp cổ nằm giữa các toà nhà hiện đại xung quanh.',
-        '2050': 'Nội thất lịch sử được số hoá toàn bộ, cho phép dàn dựng các buổi diễn "hồi sinh" nghệ sĩ và tiết mục nổi tiếng đầu thế kỷ 20 bằng hologram trên chính sân khấu gốc.',
-        '2100': 'Nhà Hát Lớn trở thành nút giao giữa biểu diễn trực tiếp và khán giả ảo toàn cầu, âm thanh kiến trúc gốc được bảo tồn tuyệt đối.',
-      },
-    },
-    'mot-cot': {
-      name: 'Chùa Một Cột',
-      sub: 'One Pillar Pagoda · 1049',
-      stories: {
-        '1926': 'Ngôi chùa hình bông sen trên một cột đá giữa hồ vuông, dựng năm 1049 thời vua Lý Thái Tông, nằm lặng lẽ cạnh khu dinh thự hành chính của chính quyền Pháp ở Ba Đình.',
-        '1954': 'Ngày 11/9/1954, trước khi rút khỏi Hà Nội, quân đội Pháp đặt mìn phá huỷ chùa. Năm 1955, chùa được dựng lại theo đúng kiến trúc cũ.',
-        '1975': 'Chùa nằm ngay bên cạnh Lăng Chủ tịch Hồ Chí Minh vừa khánh thành năm 1975, trở thành một phần của quần thể di tích Ba Đình.',
-        '2026': 'Một trong những biểu tượng kiến trúc độc đáo nhất của Hà Nội, là điểm dừng quen thuộc của du khách khi thăm quần thể Lăng Bác – Phủ Chủ tịch.',
-        '2050': 'Kết cấu gỗ và cột đá được theo dõi bằng cảm biến độ ẩm, rung chấn; mặt hồ và cảnh quan quanh chùa được phục dựng theo tư liệu cổ.',
-        '2100': 'Một bản song sinh số cho phép du khách "bước lên" đài sen và xem lại lần dựng chùa năm 1049 lẫn lần phục dựng năm 1955.',
-      },
-    },
-    'hoang-thanh': {
-      name: 'Hoàng thành Thăng Long',
-      sub: 'Imperial Citadel · Cột cờ 1812',
-      stories: {
-        '1926': 'Phần lớn thành Hà Nội đã bị người Pháp phá dỡ cuối thế kỷ 19 để lấy đất xây doanh trại; còn lại Đoan Môn, Hậu Lâu, Bắc Môn và Cột cờ Hà Nội dựng năm 1812.',
-        '1954': 'Sau ngày tiếp quản Thủ đô, khu thành cổ trở thành nơi làm việc của Bộ Quốc phòng — một không gian quân sự khép kín với người dân.',
-        '1975': 'Từ Nhà D67 và hầm chỉ huy trong khu thành, Bộ Chính trị và Quân uỷ Trung ương theo dõi, chỉ đạo các chiến dịch cho tới Mùa Xuân 1975.',
-        '2026': 'Khu trung tâm Hoàng thành được UNESCO công nhận Di sản Văn hoá Thế giới năm 2010; khu khảo cổ 18 Hoàng Diệu hé lộ dấu tích nhiều triều đại chồng lớp.',
-        '2050': 'Các lớp khảo cổ được mở rộng khai quật và trưng bày dưới mái che trong suốt, cho phép nhìn xuyên qua nhiều tầng lịch sử ngay tại chỗ.',
-        '2100': 'Toàn bộ kinh thành Thăng Long qua các triều đại được tái dựng số hoá; du khách chọn một thế kỷ và "đi bộ" trong cung điện đã mất.',
-      },
-    },
-    'long-bien': {
-      name: 'Cầu Long Biên',
-      sub: 'Long Biên Bridge · 1902',
-      stories: {
-        '1926': 'Mang tên cầu Paul Doumer, hoàn thành năm 1902, dài khoảng 1,7 km — khi ấy là cây cầu duy nhất bắc qua sông Hồng, chở cả tàu hoả, xe kéo và người đi bộ.',
-        '1954': 'Tháng 10/1954, những đơn vị lính Pháp cuối cùng rút qua cầu sang bên kia sông; cây cầu được đổi tên thành cầu Long Biên.',
-        '1975': 'Cầu bị ném bom nhiều lần trong các năm 1967 và 1972, nhiều nhịp bị đánh sập nhưng liên tục được sửa chữa để giữ mạch giao thông Bắc – Nam.',
-        '2026': 'Chỉ dành cho tàu hoả, xe máy, xe đạp và người đi bộ; trở thành chứng nhân lịch sử, điểm ngắm hoàng hôn và bãi giữa sông Hồng.',
-        '2050': 'Cầu được gia cố và giữ nguyên dáng thép cổ; hai đầu cầu là không gian công cộng ven sông với đường đi bộ dọc hành lang xanh sông Hồng.',
-        '2100': 'Cây cầu trở thành bảo tàng ngoài trời vắt qua sông, nơi mỗi nhịp thép kể một chương lịch sử bằng thực tế tăng cường.',
-      },
-    },
-    'nha-tho-lon': {
-      name: 'Nhà thờ Lớn Hà Nội',
-      sub: "St. Joseph's Cathedral · 1886",
-      stories: {
-        '1926': 'Khánh thành dịp Giáng sinh năm 1886, xây theo lối Gothic trên nền chùa Báo Thiên cũ — tháp chuông đôi là điểm cao nổi bật của khu phố quanh Hồ Gươm.',
-        '1954': 'Sau Hiệp định Genève, nhiều giáo dân miền Bắc di cư vào Nam; nhà thờ vẫn là trung tâm của Tổng giáo phận Hà Nội.',
-        '1975': 'Những năm sau thống nhất, các thánh lễ vẫn được duy trì; mặt tiền rêu phong của nhà thờ trở thành hình ảnh quen thuộc của Hà Nội thời bao cấp.',
-        '2026': 'Đông nghịt người mỗi dịp Giáng sinh; quanh nhà thờ là những quán "trà chanh" vỉa hè và cà phê — một góc sống động của Hà Nội hiện đại.',
-        '2050': 'Quảng trường trước nhà thờ trở thành không gian đi bộ, mặt đá và kính màu được trùng tu bằng kỹ thuật quét 3D.',
-        '2100': 'Âm thanh chuông và thánh ca nguyên bản được lưu trữ số, phát lại trong những đêm lễ hội ánh sáng trên mặt tiền cổ.',
-      },
-    },
-    'tran-quoc': {
-      name: 'Hồ Tây & Chùa Trấn Quốc',
-      sub: 'West Lake · chùa hơn 1.400 năm',
-      stories: {
-        '1926': 'Hồ Tây rộng hơn 500 ha, bao quanh là làng cá, làng hoa; chùa Trấn Quốc — ngôi chùa có lịch sử từ thế kỷ 6 — nằm trên đảo nhỏ, nối với đê Cổ Ngư.',
-        '1954': 'Năm 1957, thanh niên Thủ đô tham gia tôn tạo đê Cổ Ngư; con đường được đổi tên thành đường Thanh Niên.',
-        '1975': 'Ven hồ vẫn là những làng Quảng An, Nhật Tân, Quảng Bá với đầm sen, vườn đào — lá phổi xanh ở rìa đô thị.',
-        '2026': 'Tây Hồ là khu ở của nhiều người nước ngoài, với khách sạn, quán cà phê ven hồ; trà sen Tây Hồ và hoàng hôn trên hồ là đặc sản.',
-        '2050': 'Đường đi bộ và xe đạp chạy vòng quanh hồ, các đầm sen được phục hồi như vùng đất ngập nước đô thị.',
-        '2100': 'Hồ Tây trở thành trung tâm của một mạng lưới hồ điều hoà sinh thái, giúp thành phố chống ngập và hạ nhiệt.',
-      },
-    },
-    'hoa-lo': {
-      name: 'Nhà tù Hỏa Lò',
-      sub: 'Maison Centrale · 1896',
-      stories: {
-        '1926': 'Nhà tù trung ương do người Pháp xây từ năm 1896, giam giữ hàng nghìn tù nhân, trong đó có rất nhiều người Việt yêu nước và chiến sĩ cách mạng.',
-        '1954': 'Sau khi tiếp quản Thủ đô, nhà tù được chính quyền Việt Nam tiếp tục sử dụng làm trại giam.',
-        '1975': 'Giai đoạn 1964–1973 nơi đây giam giữ phi công Mỹ bị bắn rơi, được họ gọi đùa là "Hanoi Hilton"; tù binh được trao trả năm 1973.',
-        '2026': 'Phần lớn khu nhà tù bị phá dỡ vào thập niên 1990 để xây cao ốc; phần còn lại trở thành di tích – bảo tàng thu hút đông khách tham quan.',
-        '2050': 'Bảo tàng mở rộng kho tư liệu số hoá: thư từ, hồ sơ, lời kể nhân chứng được tra cứu tự do cho học sinh và nhà nghiên cứu.',
-        '2100': 'Trải nghiệm tái hiện lịch sử có hướng dẫn giúp thế hệ sau cảm nhận bối cảnh của những người từng bị giam giữ nơi đây.',
-      },
-    },
-    'dong-xuan': {
-      name: 'Chợ Đồng Xuân',
-      sub: 'Dong Xuan Market · 1889',
-      stories: {
-        '1926': 'Khai trương năm 1889 với mái tôn năm gian, là chợ lớn nhất Hà Nội — nơi hàng hoá từ khắp Bắc Kỳ đổ về phố cổ.',
-        '1954': 'Chợ từng là chiến trường ác liệt trong những ngày Hà Nội kháng chiến 1946–1947; sau năm 1954 trở lại là trung tâm buôn bán của Thủ đô.',
-        '1975': 'Thời bao cấp, chợ chủ yếu là các quầy mậu dịch; người dân xếp hàng với tem phiếu, bên cạnh những gánh hàng nhỏ quanh chợ.',
-        '2026': 'Sau vụ hoả hoạn năm 1994, chợ được xây lại và giữ mặt tiền cũ; ngày nay là chợ bán buôn sầm uất, cuối tuần có chợ đêm dọc phố Hàng Đào.',
-        '2050': 'Logistics giao hàng chuyển ra ngoài giờ cao điểm bằng xe điện nhỏ; mặt tiền lịch sử và mái chợ cũ được bảo tồn.',
-        '2100': 'Chợ vừa là nơi buôn bán vừa là bảo tàng sống về nghề buôn phố cổ, với các gian hàng truyền thống được gìn giữ.',
-      },
-    },
-    'ga-ha-noi': {
-      name: 'Ga Hà Nội',
-      sub: 'Ga Hàng Cỏ · 1902',
-      stories: {
-        '1926': 'Nhà ga trung tâm (ga Hàng Cỏ) hoàn thành năm 1902, đầu mối các tuyến đường sắt đi Hải Phòng, Lào Cai và vào phía Nam.',
-        '1954': 'Sau ngày tiếp quản, nhà ga là cửa ngõ đường sắt chính của Thủ đô miền Bắc.',
-        '1975': 'Toà nhà chính bị bom Mỹ phá huỷ tháng 12/1972; hai cánh kiến trúc Pháp còn lại, khối giữa được xây lại năm 1976 theo phong cách hiện đại.',
-        '2026': 'Vẫn là nhà ga chính của Hà Nội, điểm xuất phát tàu Thống Nhất; tuyến metro số 3 có ga ngầm "Ga Hà Nội" ngay cạnh.',
-        '2050': 'Nhà ga trở thành đầu mối giao thông kết hợp đường sắt quốc gia, metro và xe buýt điện, với khu thương mại phía trên.',
-        '2100': 'Tàu cao tốc và metro tự hành chạy ngầm; mặt tiền 1902 còn lại được giữ như ký ức về thời kỳ đầu của đường sắt Việt Nam.',
-      },
-    },
-  };
-
-  private readonly qa: ChatAnswer[] = [
-    {
-      q: 'Truyền thuyết Hồ Gươm là gì?',
-      a: 'Tương truyền vua Lê Lợi mượn gươm thần để đánh đuổi giặc Minh; sau khi thắng trận, một con rùa vàng nổi lên giữa hồ đòi lại gươm — từ đó hồ được gọi là Hồ Hoàn Kiếm (trả gươm).',
-      src: 'Nguồn: truyền thuyết dân gian, ghi chép trong các tư liệu lịch sử Hà Nội.',
-      future: false,
-    },
-    {
-      q: 'Ba Đình năm 1945 diễn ra sự kiện gì?',
-      a: 'Ngày 2/9/1945, tại Quảng trường Ba Đình, Chủ tịch Hồ Chí Minh đọc bản Tuyên ngôn Độc lập, khai sinh nước Việt Nam Dân chủ Cộng hoà.',
-      src: 'Nguồn: tư liệu lịch sử chính thức Việt Nam.',
-      future: false,
-    },
-    {
-      q: 'Hà Nội năm 2100 sẽ trông như thế nào?',
-      a: 'Đây là kịch bản do AI hình dung: các khu di sản được bảo tồn dưới dạng "bảo tàng sống" với cảm biến khí hậu vi mô, trong khi các khu đô thị mới phát triển giao thông trên cao và không gian số hoá song song với không gian thật.',
-      src: 'Đây là kịch bản tương lai do AI tạo ra — không phải dự đoán chắc chắn.',
-      future: true,
-    },
-    {
-      q: 'Phố Cổ có bao nhiêu tuyến phố nghề?',
-      a: 'Khu Phố Cổ Hà Nội thường được gọi là "36 phố phường", mỗi phố xưa gắn với một nghề thủ công hoặc mặt hàng buôn bán riêng, như Hàng Bạc, Hàng Mã, Hàng Gai.',
-      src: 'Nguồn: tư liệu lịch sử đô thị Hà Nội.',
-      future: false,
-    },
-    {
-      q: 'Chùa Một Cột bị phá năm nào?',
-      a: 'Ngày 11/9/1954, trước khi rút khỏi Hà Nội, quân đội Pháp đặt mìn phá huỷ Chùa Một Cột. Năm 1955 chùa được dựng lại theo kiến trúc cũ — kiến trúc có từ năm 1049 thời vua Lý Thái Tông.',
-      src: 'Nguồn: tư liệu lịch sử về di tích Chùa Một Cột (Diên Hựu tự).',
-      future: false,
-    },
-    {
-      q: 'Vì sao Hỏa Lò được gọi là "Hanoi Hilton"?',
-      a: 'Giai đoạn 1964–1973, nhà tù Hỏa Lò giam giữ phi công Mỹ bị bắn rơi trên miền Bắc; họ đặt cho nơi này biệt danh mỉa mai "Hanoi Hilton". Phần còn lại của nhà tù nay là di tích – bảo tàng.',
-      src: 'Nguồn: tư liệu lịch sử về di tích Nhà tù Hỏa Lò.',
-      future: false,
-    },
-    {
-      q: 'Cầu Long Biên được xây khi nào?',
-      a: 'Cầu hoàn thành năm 1902 dưới tên cầu Paul Doumer, dài khoảng 1,7 km, từng là cây cầu duy nhất qua sông Hồng. Cầu bị ném bom nhiều lần năm 1967 và 1972 nhưng vẫn đứng vững đến nay.',
-      src: 'Nguồn: tư liệu lịch sử giao thông Hà Nội.',
-      future: false,
-    },
-  ];
+  private readonly eras = ERAS;
+  private readonly landmarks = LANDMARKS;
 
   private scopeEl!: HTMLElement;
   private state = { eraIndex: 3, landmark: 'hoan-kiem' };
   private tickerInterval?: ReturnType<typeof setInterval>;
-  private typewriterTimeouts: Array<ReturnType<typeof setTimeout> | ReturnType<typeof setInterval>> = [];
   private railObserver?: IntersectionObserver;
   private revealObserver?: IntersectionObserver;
   private readonly theme = inject(ThemeService);
   private realMap?: TmRealMap;
-  /** Landmark shown in the before/after comparison (only landmarks with both photos). */
-  private compareKey = '';
+  /** Page language; Vietnamese is the source text, English comes from tm-i18n.ts. */
+  private lang: Lang = readLang();
+  /** Vietnamese originals of the template text replaced by data-en translations. */
+  private readonly viText = new Map<Element, string>();
+  private lens?: TmLens;
+  /** Set once the page is set up; from then on selections are mirrored in the URL. */
+  private urlSync = false;
+  private edu?: TmEdu;
+  private museum?: TmMuseum;
+  private chat?: TmChat;
+  private tours?: TmTours;
+  private compare?: TmCompare;
+
+  /** The page's data and selection, as the Time Lens and Education modules see them. */
+  private readonly ctx: TmContext = {
+    lang: () => this.lang,
+    tr: (vi, en) => this.tr(vi, en),
+    keys: () => Object.keys(this.landmarks),
+    name: (key) => this.lm(key).name,
+    sub: (key) => this.lm(key).sub,
+    landmarkUrl: (key) => {
+      const params = new URLSearchParams({ landmark: key });
+      if (this.lang === 'en') params.set('lang', 'en');
+      return `${location.origin}${location.pathname}?${params.toString()}`;
+    },
+    events: (key) => this.events(key),
+    tours: () => TOURS.map((t) => ({ id: t.id, name: this.tourText(t).name, stops: t.stops })),
+    thenPhoto: (key) => {
+      const era = THEN_ERAS.find((e) => LANDMARK_PHOTOS[key]?.[e]);
+      const photo = era ? this.photo(key, era) : undefined;
+      return era && photo ? { era, photo } : null;
+    },
+    photo: (key, eraId) => this.photo(key, eraId),
+    current: () => this.state.landmark,
+    era: () => this.currentEra().id,
+    select: (key, eraId) => {
+      this.state.landmark = key;
+      const index = eraId ? this.eras.findIndex((e) => e.id === eraId) : -1;
+      if (index >= 0) {
+        this.state.eraIndex = index;
+        const slider = this.q<HTMLInputElement>('#tm-eraSlider');
+        if (slider) slider.value = String(index);
+      }
+      this.render();
+    },
+    link: (text, url) => this.sourceLink(text, url),
+  };
 
   constructor(hostRef: ElementRef<HTMLElement>) {
     this.root = hostRef.nativeElement;
     this.reduceMotion =
       typeof window !== 'undefined' &&
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
-    effect(() => this.realMap?.setTheme(this.theme.effective()));
+    effect(() => {
+      // Read the signal first: with `this.realMap?.setTheme(...)` the read is skipped while the map
+      // doesn't exist yet, and the effect would never re-run.
+      const theme = this.theme.effective();
+      this.realMap?.setTheme(theme);
+    });
   }
 
   ngAfterViewInit(): void {
     this.scopeEl = this.q('.tm-root') ?? this.root;
+    // Shared links carry ?landmark=&era=, assignment links ?quiz=&n=&seed=; both may add &lang= (used for this
+    // visit only, not remembered).
+    const params = new URLSearchParams(location.search);
+    const langParam = params.get('lang');
+    if (langParam === 'vi' || langParam === 'en') this.lang = langParam;
+    const landmarkParam = params.get('landmark');
+    if (landmarkParam && this.landmarks[landmarkParam]) this.state.landmark = landmarkParam;
+    const eraIndex = this.eras.findIndex((e) => e.id === params.get('era'));
+    if (eraIndex >= 0) this.state.eraIndex = eraIndex;
+    const slider = this.q<HTMLInputElement>('#tm-eraSlider');
+    if (slider) slider.value = String(this.state.eraIndex);
+    this.wireLangToggle();
+    this.translateStatic();
     this.buildEraTicks();
-    this.buildChatChips();
     this.wireSlider();
     this.buildLandmarkList();
     this.wirePins();
-    this.buildCompare();
     this.wireMapMode();
+    this.tours = new TmTours(this.root, this.ctx, (stops) => {
+      if (stops.length) this.setMapMode('real', false);
+      this.realMap?.showTour(stops);
+    });
+    this.tours.refresh();
+    this.compare = new TmCompare(this.root, this.ctx);
+    this.compare.init();
+    this.renamePins();
+    this.lens = new TmLens(this.root, this.ctx);
+    this.lens.init();
+    this.edu = new TmEdu(this.root, this.ctx);
+    const quiz = params.get('quiz');
+    this.edu.init(quiz ? { scope: quiz, count: Math.min(20, Math.max(1, Number(params.get('n')) || 10)), seed: Number(params.get('seed')) || 1 } : undefined);
+    this.museum = new TmMuseum(this.root, this.ctx);
+    this.museum.init();
+    if (quiz) setTimeout(() => this.q('#tm-education')?.scrollIntoView(), 300);
+    else if (landmarkParam && this.landmarks[landmarkParam]) setTimeout(() => this.q('#tm-map')?.scrollIntoView(), 300);
+    this.q('#tm-mapShare')?.addEventListener('click', () => void this.shareCurrent());
     this.wireNavToggle();
     this.wireLocalAnchors();
-    this.wireChatForm();
+    this.chat = new TmChat(this.root, this.ctx, this.reduceMotion);
+    this.chat.init();
     this.render();
     this.startTicker();
     this.setupRail();
     this.setupReveal();
+    this.urlSync = true;
+  }
+
+  /** Link to the selected landmark and era (and the language, when English). */
+  private shareUrl(key = this.state.landmark): string {
+    const params = new URLSearchParams({ landmark: key, era: this.currentEra().id });
+    if (this.lang === 'en') params.set('lang', 'en');
+    return `${location.origin}${location.pathname}?${params.toString()}`;
+  }
+
+  /** Keeps the address bar on the current landmark/era, so it can be copied or bookmarked. */
+  private syncUrl(): void {
+    if (!this.urlSync) return;
+    const params = new URLSearchParams(location.search);
+    params.set('landmark', this.state.landmark);
+    params.set('era', this.currentEra().id);
+    history.replaceState(history.state, '', `${location.pathname}?${params.toString()}${location.hash}`);
+  }
+
+  /** Phones: the share sheet. Elsewhere: copy the link (with a fallback when the Clipboard API is refused). */
+  private async shareCurrent(): Promise<void> {
+    const url = this.shareUrl();
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${this.lm(this.state.landmark).name} · ${this.currentEra().year} · Hanoi Time Machine`, url });
+      } catch {
+        // share sheet closed — nothing to do
+      }
+      return;
+    }
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(url);
+      copied = true;
+    } catch {
+      const field = document.createElement('textarea');
+      field.value = url;
+      field.style.cssText = 'position:fixed;opacity:0;';
+      document.body.appendChild(field);
+      field.select();
+      copied = document.execCommand?.('copy') ?? false;
+      field.remove();
+    }
+    const button = this.q('#tm-mapShare');
+    if (!button) return;
+    button.textContent = copied ? this.tr('Đã chép link ✓', 'Link copied ✓') : this.tr('Link đã có trên thanh địa chỉ', 'The link is in the address bar');
+    setTimeout(() => (button.textContent = this.tr('Chia sẻ ↗', 'Share ↗')), 2500);
   }
 
   ngOnDestroy(): void {
     if (this.tickerInterval) clearInterval(this.tickerInterval);
-    this.typewriterTimeouts.forEach((t) => {
-      clearTimeout(t as ReturnType<typeof setTimeout>);
-      clearInterval(t as ReturnType<typeof setInterval>);
-    });
+    this.chat?.destroy();
     this.railObserver?.disconnect();
     this.revealObserver?.disconnect();
     this.realMap?.destroy();
+    this.lens?.destroy();
+    this.museum?.destroy();
   }
 
   private q<T extends Element = HTMLElement>(selector: string): T | null {
@@ -322,12 +236,131 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
     return this.eras[this.state.eraIndex];
   }
 
+  // ---------- Language ----------
+
+  /** Vietnamese or English text, by page language. */
+  private tr(vi: string, en: string): string {
+    return this.lang === 'en' ? en : vi;
+  }
+
+  private lm(key: string): Landmark {
+    const vi = this.landmarks[key];
+    return this.lang === 'en' && EN_LANDMARKS[key] ? { ...vi, ...EN_LANDMARKS[key] } : vi;
+  }
+
+  private eraTag(era: Era): string {
+    return this.lang === 'en' ? (EN_ERAS[era.id]?.tag ?? era.tag) : era.tag;
+  }
+
+  private photo(key: string, eraId: string): LandmarkPhoto | undefined {
+    const vi = LANDMARK_PHOTOS[key]?.[eraId];
+    if (!vi || this.lang === 'vi') return vi;
+    return { ...vi, ...EN_PHOTOS[key]?.[eraId], license: vi.license === PD_VI ? 'Public domain' : vi.license };
+  }
+
+  private events(key: string): Array<{ year: string; sort: number; text: string }> {
+    return (LANDMARK_EVENTS[key] ?? []).map((event, i) => {
+      const en = this.lang === 'en' ? EN_EVENTS[key]?.[i] : undefined;
+      return en ? { ...event, year: en.year ?? event.year, text: en.text } : event;
+    });
+  }
+
+  /** In English, each Vietnamese Wikipedia source is preceded by its English Wikipedia article when there is one. */
+  private sources(key: string): LandmarkSource[] {
+    const sources = LANDMARK_INFO[key]?.sources ?? [];
+    if (this.lang === 'vi') return sources;
+    return sources.flatMap((src) => {
+      const translated = { ...src, site: EN_SITE[src.site] ?? src.site };
+      const enTitle = src.site === 'Wikipedia tiếng Việt' ? EN_WIKI[src.title] : undefined;
+      if (!enTitle) return [translated];
+      const english = { title: enTitle, site: 'English Wikipedia', url: `https://en.wikipedia.org/wiki/${encodeURIComponent(enTitle.replace(/ /g, '_'))}` };
+      return [english, translated];
+    });
+  }
+
+  private tourText(tour: Tour): { name: string; description: string } {
+    return this.lang === 'en' ? (EN_TOURS[tour.id] ?? tour) : tour;
+  }
+
+  private wireLangToggle(): void {
+    this.q('#tm-langToggle')?.addEventListener('click', () => this.setLang(this.lang === 'vi' ? 'en' : 'vi'));
+  }
+
+  private setLang(lang: Lang): void {
+    this.lang = lang;
+    try {
+      localStorage.setItem(LANG_KEY, lang);
+    } catch {
+      // storage blocked — the choice just isn't remembered
+    }
+    this.translateStatic();
+    this.buildEraTicks();
+    this.chat?.refresh();
+    this.buildLandmarkList();
+    this.compare?.refresh();
+    this.tours?.refresh();
+    this.renamePins();
+    const ticker = this.q('#tm-heroTicker')?.firstChild;
+    if (ticker) ticker.nodeValue = `${this.tickerPhrases()[0]} `;
+    this.edu?.refresh();
+    this.museum?.refresh();
+    this.render();
+  }
+
+  /**
+   * Swaps template text for its data-en / data-en-html / data-en-placeholder / data-en-aria-label translation
+   * (and back), remembering the Vietnamese original the first time.
+   */
+  private translateStatic(): void {
+    const en = this.lang === 'en';
+    this.scopeEl.setAttribute('lang', this.lang);
+    const swap = (el: Element, key: string, read: () => string, write: (v: string) => void, translation: string) => {
+      if (key === 'text' || key === 'html') {
+        if (!this.viText.has(el)) this.viText.set(el, read());
+        write(en ? translation : (this.viText.get(el) ?? ''));
+      } else {
+        const attr = `data-vi-${key}`;
+        if (!el.hasAttribute(attr)) el.setAttribute(attr, read());
+        write(en ? translation : (el.getAttribute(attr) ?? ''));
+      }
+    };
+    this.qa_('[data-en]').forEach((el) => swap(el, 'text', () => el.textContent ?? '', (v) => (el.textContent = v), el.getAttribute('data-en') ?? ''));
+    this.qa_('[data-en-html]').forEach((el) => swap(el, 'html', () => el.innerHTML, (v) => (el.innerHTML = v), el.getAttribute('data-en-html') ?? ''));
+    for (const attr of ['placeholder', 'aria-label']) {
+      this.qa_(`[data-en-${attr}]`).forEach((el) =>
+        swap(el, attr, () => el.getAttribute(attr) ?? '', (v) => el.setAttribute(attr, v), el.getAttribute(`data-en-${attr}`) ?? ''),
+      );
+    }
+    const toggle = this.q('#tm-langToggle');
+    if (toggle) {
+      toggle.textContent = en ? 'VI' : 'EN';
+      toggle.setAttribute('aria-label', en ? 'Chuyển sang tiếng Việt' : 'Switch to English');
+      toggle.setAttribute('lang', en ? 'vi' : 'en');
+    }
+  }
+
+  /** Names on the illustrated-map pins and the real-map markers. */
+  private renamePins(): void {
+    this.qa_('.tm-pin').forEach((pin) => {
+      const name = this.lm(pin.dataset['landmark'] ?? '')?.name;
+      if (!name) return;
+      pin.setAttribute('aria-label', name);
+      const tag = pin.querySelector('.tm-pin-tag');
+      if (tag) tag.textContent = name;
+    });
+    this.realMap?.setNames(Object.fromEntries(Object.keys(this.landmarks).map((key) => [key, this.lm(key).name])));
+  }
+
+  private tickerPhrases(): string[] {
+    return this.lang === 'en' ? EN_TICKER : VI_TICKER;
+  }
+
   private render(): void {
     const era = this.currentEra();
-    const lm = this.landmarks[this.state.landmark];
+    const lm = this.lm(this.state.landmark);
 
     const mapEraBadge = this.q('#tm-mapEraBadge');
-    if (mapEraBadge) mapEraBadge.textContent = `${era.tag} · ${era.year}`;
+    if (mapEraBadge) mapEraBadge.textContent = `${this.eraTag(era)} · ${era.year}`;
     const mapName = this.q('#tm-mapName');
     if (mapName) mapName.textContent = lm.name;
     const mapSub = this.q('#tm-mapSub');
@@ -338,40 +371,42 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
     mapScenario?.classList.toggle('show', era.future);
 
     const eraYearLabel = this.q('#tm-eraYearLabel');
-    if (eraYearLabel) eraYearLabel.textContent = `${era.year} · ${era.tag}`;
+    if (eraYearLabel) eraYearLabel.textContent = `${era.year} · ${this.eraTag(era)}`;
     const eraLandmarkLabel = this.q('#tm-eraLandmarkLabel');
     if (eraLandmarkLabel) eraLandmarkLabel.textContent = lm.name;
     const eraStoryLabel = this.q('#tm-eraStoryLabel');
     if (eraStoryLabel) eraStoryLabel.textContent = lm.stories[era.id];
 
     this.renderSources(era);
+    this.renderEvents(era, lm.name);
     const directions = this.q<HTMLAnchorElement>('#tm-mapDirections');
     const info = LANDMARK_INFO[this.state.landmark];
     if (directions && info) {
       directions.href = directionsUrl(info.lngLat);
-      directions.setAttribute('aria-label', `Chỉ đường tới ${lm.name} trên Google Maps (mở tab mới)`);
+      directions.setAttribute('aria-label', this.tr(`Chỉ đường tới ${lm.name} trên Google Maps (mở tab mới)`, `Directions to ${lm.name} on Google Maps (opens a new tab)`));
     }
 
-    const photo = LANDMARK_PHOTOS[this.state.landmark]?.[era.id];
+    const photo = this.photo(this.state.landmark, era.id);
     this.showPhoto('#tm-eraPhoto', '#tm-eraCredit', '#tm-eraVisual', photo, era);
     this.showPhoto('#tm-mapPhoto', '#tm-mapPhotoCredit', '#tm-mapPhotoBox', photo, era);
 
     this.scopeEl.setAttribute('data-era', era.id);
 
     this.qa_('.tm-era-tick').forEach((t, i) => t.classList.toggle('active', i === this.state.eraIndex));
-    this.qa_('.tm-pin, .tm-lm').forEach((p) => {
+    this.qa_('.tm-pin, .tm-lm[data-landmark], .tm-tour-stop').forEach((p) => {
       const on = p.dataset['landmark'] === this.state.landmark;
       p.classList.toggle('active', on);
       p.setAttribute('aria-pressed', String(on));
     });
     this.realMap?.select(this.state.landmark);
-    if (this.comparePair(this.state.landmark)) this.compareKey = this.state.landmark;
-    this.renderCompare();
+    this.compare?.render();
+    this.lens?.refresh();
+    this.syncUrl();
   }
 
   /** Reference list in the map panel, and a one-line "Nguồn:" under the timeline story. */
   private renderSources(era: Era): void {
-    const sources = LANDMARK_INFO[this.state.landmark]?.sources ?? [];
+    const sources = this.sources(this.state.landmark);
     const list = this.q('#tm-mapSources');
     if (list) {
       list.replaceChildren(
@@ -389,15 +424,50 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
     if (!line) return;
     line.replaceChildren();
     if (era.future) {
-      line.textContent = 'Kịch bản do AI hình dung — không có nguồn tư liệu.';
+      line.textContent = this.tr('Kịch bản do AI hình dung — không có nguồn tư liệu.', 'A scenario imagined by AI — no historical sources.');
       return;
     }
-    line.append('Nguồn: ');
+    line.append(this.tr('Nguồn: ', 'Sources: '));
     sources.forEach((src, i) => {
       if (i) line.append(', ');
-      line.append(this.sourceLink(src.title, src.url));
+      line.append(this.sourceLink(src.title, src.url), ` (${src.site})`);
     });
-    line.append(' (Wikipedia tiếng Việt)');
+  }
+
+  /** The landmark's dated events; the ones belonging to the current era are highlighted. */
+  private renderEvents(era: Era, name: string): void {
+    const list = this.q('#tm-events');
+    const title = this.q('#tm-eventsName');
+    if (title) title.textContent = name;
+    if (!list) return;
+    list.replaceChildren(
+      ...this.events(this.state.landmark).map((event) => {
+        const target = eraForYear(event.sort);
+        const li = document.createElement('li');
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tm-event';
+        b.classList.toggle('in-era', target === era.id);
+        b.setAttribute('aria-label', `${event.year}: ${event.text} — ${this.tr('chuyển tới mốc', 'go to era')} ${target}`);
+        const year = document.createElement('span');
+        year.className = 'tm-event-year';
+        year.textContent = event.year;
+        const text = document.createElement('span');
+        text.className = 'tm-event-text';
+        text.textContent = event.text;
+        b.append(year, text);
+        b.addEventListener('click', () => {
+          const index = this.eras.findIndex((e) => e.id === target);
+          if (index < 0) return;
+          this.state.eraIndex = index;
+          const slider = this.q<HTMLInputElement>('#tm-eraSlider');
+          if (slider) slider.value = String(index);
+          this.render();
+        });
+        li.appendChild(b);
+        return li;
+      }),
+    );
   }
 
   private sourceLink(text: string, url: string): HTMLAnchorElement {
@@ -444,9 +514,9 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
     if (mode !== 'real' || !host) return;
     this.realMap ??= new TmRealMap(
       host,
-      Object.entries(this.landmarks).map(([key, lm]) => ({
+      Object.keys(this.landmarks).map((key) => ({
         key,
-        name: lm.name,
+        name: this.lm(key).name,
         lngLat: LANDMARK_INFO[key].lngLat,
         icon: landmarkIcon(key),
       })),
@@ -458,76 +528,6 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
     );
     this.realMap.select(this.state.landmark);
     void this.realMap.show();
-  }
-
-  // ---------- Before / after comparison ----------
-
-  private comparePair(key: string): { then: LandmarkPhoto; thenEra: string; now: LandmarkPhoto } | null {
-    const photos = LANDMARK_PHOTOS[key];
-    const thenEra = THEN_ERAS.find((e) => photos?.[e]);
-    const now = photos?.['2026'];
-    return thenEra && now ? { then: photos[thenEra], thenEra, now } : null;
-  }
-
-  private buildCompare(): void {
-    const chips = this.q('#tm-cmpChips');
-    const range = this.q<HTMLInputElement>('#tm-cmpRange');
-    const frame = this.q('#tm-cmp');
-    if (!chips || !range || !frame) return;
-    Object.entries(this.landmarks).forEach(([key, lm]) => {
-      if (!this.comparePair(key)) return;
-      this.compareKey ||= key;
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'tm-lm';
-      b.dataset['cmp'] = key;
-      b.innerHTML = landmarkIcon(key);
-      b.append(lm.name);
-      b.addEventListener('click', () => {
-        this.compareKey = key;
-        this.state.landmark = key;
-        this.render();
-      });
-      chips.appendChild(b);
-    });
-    range.addEventListener('input', () => frame.style.setProperty('--pos', `${range.value}%`));
-  }
-
-  private renderCompare(): void {
-    const pair = this.comparePair(this.compareKey);
-    const oldImg = this.q<HTMLImageElement>('#tm-cmpOld');
-    const nowImg = this.q<HTMLImageElement>('#tm-cmpNow');
-    const credits = this.q('#tm-cmpCredits');
-    const empty = this.q('#tm-cmpEmpty');
-    if (!pair || !oldImg || !nowImg || !credits || !empty) return;
-
-    const lm = this.landmarks[this.compareKey];
-    empty.hidden = this.state.landmark === this.compareKey;
-    empty.textContent = `Chưa có đủ ảnh xưa và nay cho ${this.landmarks[this.state.landmark].name} — đang hiển thị ${lm.name}.`;
-
-    this.qa_('.tm-cmp-chips .tm-lm').forEach((c) => {
-      const on = c.dataset['cmp'] === this.compareKey;
-      c.classList.toggle('active', on);
-      c.setAttribute('aria-pressed', String(on));
-    });
-
-    const setImg = (img: HTMLImageElement, photo: LandmarkPhoto) => {
-      if (!img.getAttribute('src')?.endsWith(photo.src)) img.src = photo.src;
-      img.alt = photo.alt;
-      img.dataset['fit'] = photo.fit ?? 'cover';
-      img.style.objectPosition = photo.position ?? '50% 50%';
-    };
-    setImg(oldImg, pair.then);
-    setImg(nowImg, pair.now);
-    const oldLabel = this.q('#tm-cmpOldLabel');
-    if (oldLabel) oldLabel.textContent = pair.thenEra;
-
-    const creditLine = (year: string, photo: LandmarkPhoto) => {
-      const line = document.createElement('p');
-      line.append(`${year} · ${photo.caption} — `, this.sourceLink(`Ảnh: ${photo.author} · ${photo.license}`, photo.pageUrl));
-      return line;
-    };
-    credits.replaceChildren(creditLine(pair.thenEra, pair.then), creditLine('2026', pair.now));
   }
 
   /**
@@ -551,8 +551,8 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
         box.hidden = true;
       } else {
         credit.textContent = era.future
-          ? 'Hình minh hoạ kịch bản do AI hình dung — không phải ảnh thật'
-          : 'Chưa có ảnh tư liệu cho mốc này — đang dùng hình minh hoạ';
+          ? this.tr('Hình minh hoạ kịch bản do AI hình dung — không phải ảnh thật', 'Illustration of a scenario imagined by AI — not a real photo')
+          : this.tr('Chưa có ảnh tư liệu cho mốc này — đang dùng hình minh hoạ', 'No archive photo for this era yet — showing an illustration');
       }
       return;
     }
@@ -576,13 +576,14 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
     link.href = photo.pageUrl;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.textContent = `Ảnh: ${photo.author} · ${photo.license}`;
+    link.textContent = `${this.tr('Ảnh', 'Photo')}: ${photo.author} · ${photo.license}`;
     credit.append(cap, link);
   }
 
   private buildEraTicks(): void {
     const wrap = this.q('#tm-eraTicks');
     if (!wrap) return;
+    wrap.replaceChildren();
     this.eras.forEach((era, i) => {
       const b = document.createElement('button');
       b.type = 'button';
@@ -595,8 +596,9 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
       b.appendChild(document.createTextNode(era.year));
       const tag = document.createElement('span');
       tag.className = 'tag';
-      tag.textContent = era.tag;
+      tag.textContent = this.eraTag(era);
       b.appendChild(tag);
+      b.classList.toggle('active', i === this.state.eraIndex);
       b.addEventListener('click', () => {
         this.state.eraIndex = i;
         const slider = this.q<HTMLInputElement>('#tm-eraSlider');
@@ -619,7 +621,9 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
   private buildLandmarkList(): void {
     const list = this.q('#tm-lmList');
     if (!list) return;
-    Object.entries(this.landmarks).forEach(([key, lm]) => {
+    list.replaceChildren();
+    Object.keys(this.landmarks).forEach((key) => {
+      const lm = this.lm(key);
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'tm-lm';
@@ -687,14 +691,9 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
     if (this.reduceMotion) return;
     const ticker = this.q('#tm-heroTicker');
     if (!ticker || !ticker.firstChild) return;
-    const phrases = [
-      'ĐANG HIỆU CHỈNH DÒNG THỜI GIAN',
-      'ĐANG TẢI DỮ LIỆU 1926',
-      'ĐANG TẢI KỊCH BẢN 2100',
-      'SẴN SÀNG MỞ CỔNG THỜI GIAN',
-    ];
     let pi = 0;
     this.tickerInterval = setInterval(() => {
+      const phrases = this.tickerPhrases();
       pi = (pi + 1) % phrases.length;
       ticker.firstChild!.nodeValue = phrases[pi] + ' ';
     }, 3200);
@@ -742,101 +741,4 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
     revealEls.forEach((el) => this.revealObserver!.observe(el));
   }
 
-  private buildChatChips(): void {
-    const chipRow = this.q('#tm-chatChips');
-    if (!chipRow) return;
-    this.qa.forEach((item) => {
-      const c = document.createElement('button');
-      c.type = 'button';
-      c.className = 'tm-chip';
-      c.textContent = item.q;
-      c.addEventListener('click', () => this.askQuestion(item.q));
-      chipRow.appendChild(c);
-    });
-  }
-
-  private wireChatForm(): void {
-    const form = this.q<HTMLFormElement>('#tm-chatForm');
-    const input = this.q<HTMLInputElement>('#tm-chatInput');
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const val = input?.value.trim();
-      if (!val) return;
-      this.askQuestion(val);
-      if (input) input.value = '';
-    });
-  }
-
-  private scrollChat(): void {
-    const log = this.q('#tm-chatLog');
-    if (log) log.scrollTop = log.scrollHeight;
-  }
-
-  private addUserBubble(text: string): void {
-    const log = this.q('#tm-chatLog');
-    if (!log) return;
-    const b = document.createElement('div');
-    b.className = 'tm-bubble tm-user';
-    b.textContent = text;
-    log.appendChild(b);
-    this.scrollChat();
-  }
-
-  private addAiBubble(item: ChatAnswer): void {
-    const log = this.q('#tm-chatLog');
-    if (!log) return;
-    const b = document.createElement('div');
-    b.className = 'tm-bubble tm-ai' + (item.future ? ' tm-future' : '');
-
-    if (this.reduceMotion) {
-      b.appendChild(document.createTextNode(item.a));
-      const src = document.createElement('span');
-      src.className = 'tm-src';
-      src.textContent = item.src;
-      b.appendChild(src);
-      log.appendChild(b);
-      this.scrollChat();
-      return;
-    }
-
-    const typing = document.createElement('span');
-    typing.className = 'tm-typing';
-    for (let i = 0; i < 3; i++) typing.appendChild(document.createElement('span'));
-    b.appendChild(typing);
-    log.appendChild(b);
-    this.scrollChat();
-
-    const startTimeout = setTimeout(() => {
-      b.textContent = '';
-      const textNode = document.createTextNode('');
-      b.appendChild(textNode);
-      let i = 0;
-      const interval = setInterval(() => {
-        textNode.nodeValue = item.a.slice(0, i);
-        i++;
-        this.scrollChat();
-        if (i > item.a.length) {
-          clearInterval(interval);
-          const src = document.createElement('span');
-          src.className = 'tm-src';
-          src.textContent = item.src;
-          b.appendChild(src);
-          this.scrollChat();
-        }
-      }, 14);
-      this.typewriterTimeouts.push(interval);
-    }, 500);
-    this.typewriterTimeouts.push(startTimeout);
-  }
-
-  private askQuestion(text: string): void {
-    this.addUserBubble(text);
-    const match = this.qa.find((item) => item.q === text) ?? {
-      q: text,
-      a: 'Câu hỏi thú vị! Trong bản demo này, hãy thử một trong các câu hỏi gợi ý bên trên để xem AI Storyteller hoạt động.',
-      src: 'Demo — chưa kết nối cơ sở dữ liệu đầy đủ.',
-      future: false,
-    };
-    this.addAiBubble(match);
-  }
 }

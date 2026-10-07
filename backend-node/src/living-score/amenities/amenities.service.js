@@ -18,9 +18,9 @@ class AmenitiesService {
           type: 'Feature',
           id: m.id,
           geometry: { type: 'Point', coordinates: [m.lng, m.lat] },
-          properties: { name: m.name, type: m.type, rating: m.rating, areaSlug: m.areaSlug },
+          properties: { name: m.name, type: m.type, areaSlug: m.areaSlug },
         })),
-        meta: { total: records.length, sampleData: true },
+        meta: { total: records.length, source: 'OpenStreetMap contributors (ODbL)' },
       };
     });
   }

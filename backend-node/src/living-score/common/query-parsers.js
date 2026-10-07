@@ -4,7 +4,7 @@ const { AMENITY_TYPES } = require('../data/living.types');
 const { CRITERION_KEYS, isCriterionKey } = require('../scoring/criteria');
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const AREA_SORTS = ['score', 'name', 'rent'];
+const AREA_SORTS = ['score', 'name'];
 
 /** "transportation:20,education:15" -> { transportation: 20, education: 15 } (each value 0-100). */
 function parseWeights(raw) {
@@ -78,6 +78,14 @@ function parseBbox(raw) {
   return { minLng, minLat, maxLng, maxLat };
 }
 
+/** ?lang=vi|en (default vi). */
+function parseLang(raw) {
+  const value = singleString(raw, 'lang');
+  if (value === undefined || value === '') return 'vi';
+  if (value !== 'vi' && value !== 'en') throw badRequest('lang phải là "vi" hoặc "en".');
+  return value;
+}
+
 function parseSort(raw) {
   const value = singleString(raw, 'sort');
   if (value === undefined || value === '') return 'score';
@@ -112,6 +120,7 @@ module.exports = {
   parseAmenityTypes,
   parseBbox,
   parseSort,
+  parseLang,
   parseSearchText,
   parseSlug,
 };

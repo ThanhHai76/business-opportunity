@@ -1,129 +1,120 @@
 'use strict';
 /**
- * GeoJSON layers for the Map Intelligence view, filtered by planning horizon (2026 / 2030 / 2045).
- * District outlines are illustrative Voronoi cells, not administrative boundaries; everything else
- * is sketched from the SAMPLE DATA in data.js.
+ * GeoJSON layers for the Map Intelligence view, per planning horizon (2026 / 2030 / 2045) and language.
+ *
+ * Real data: ward boundaries (2025), metro lines and stations, Ring Road 4 and the Red River bridges (OSM), the
+ * planned lines and the development poles of the approved plans (schematic routes and pole circles, as in the
+ * Future Map), construction sites, schools, health facilities and parks (OSM).
+ * Prices: each ward carries its official land price (2026 table, VT1 median); projects carry their published price.
  */
-const { GeoFrame, buildIllustrativeCells } = require('../living-score/seed/geometry');
-const { getSeedData } = require('../living-score/seed/seed-data');
-const data = require('./data');
-const engine = require('./engine');
+const { circleRing } = require('../future-map/geo');
+const M = require('./model');
+const MK = require('./market');
+const E = require('./engine');
 
-const FRAME = new GeoFrame([105.85, 21.03]);
 const fc = (features) => ({ type: 'FeatureCollection', features });
 const feature = (geometry, properties) => ({ type: 'Feature', geometry, properties });
+const lineGeometry = (lines) => (lines.length === 1 ? { type: 'LineString', coordinates: lines[0] } : { type: 'MultiLineString', coordinates: lines });
 
-const seedLines = getSeedData().infrastructure.filter((i) => i.kind === 'metro_line');
-function seedLine(prefix) {
-  const line = seedLines.find((l) => l.name.startsWith(prefix));
-  if (!line) throw new Error(`property-intel: missing seed metro line "${prefix}"`);
-  return line.geometry.coordinates;
-}
+/** 2026 shows today's network; later horizons show what should be open by then if the plans hold. */
+const lineStatus = (item, horizon) => {
+  const s = M.statusAt(item, horizon);
+  return s === 'expected' ? 'operating' : s === 'construction' ? 'building' : s === 'plan' ? 'planned' : 'operating';
+};
 
-/** Closed ring approximating an ellipse (km radii) around a [lng, lat] centre. */
-function ellipse(center, rxKm, ryKm = rxKm, segments = 48) {
-  const [cx, cy] = FRAME.project(center);
-  const ring = Array.from({ length: segments }, (_, k) => {
-    const a = (2 * Math.PI * k) / segments;
-    return FRAME.unproject([cx + rxKm * Math.cos(a), cy + ryKm * Math.sin(a)]);
-  });
-  ring.push(ring[0]);
-  return { type: 'Polygon', coordinates: [ring] };
-}
+const SOCIAL = { school: 'school', kindergarten: 'school', hospital: 'hospital', clinic: 'hospital' };
 
-/** Slightly skewed rectangle so zones do not look like perfect map tiles. */
-function block(center, [wKm, hKm]) {
-  const [cx, cy] = FRAME.project(center);
-  const s = 0.12;
-  const pts = [
-    [cx - wKm / 2, cy - hKm / 2 + s * hKm],
-    [cx + wKm / 2, cy - hKm / 2],
-    [cx + wKm / 2 - s * wKm, cy + hKm / 2],
-    [cx - wKm / 2, cy + hKm / 2 - s * hKm],
-  ].map((p) => FRAME.unproject(p));
-  pts.push(pts[0]);
-  return { type: 'Polygon', coordinates: [pts] };
-}
+function buildLayers(horizon, lang) {
+  const L = (text) => M.L(text, lang);
 
-const CELLS = buildIllustrativeCells(
-  data.DISTRICTS.map((d) => ({ id: d.slug, center: d.center, radiusKm: d.radiusKm })),
-  FRAME,
-);
-
-function buildLayers(horizon) {
-  const summaries = new Map(engine.listDistricts().map((d) => [d.slug, d]));
-
-  const districts = fc(
-    data.DISTRICTS.map((d) => {
-      const s = summaries.get(d.slug);
-      return feature(
-        { type: 'Polygon', coordinates: [CELLS.get(d.slug)] },
-        { slug: d.slug, name: d.name, growthScore: s.growthScore, price: d.price.now, yoy: s.yoy, density: d.density },
-      );
+  const wards = fc(
+    M.WARDS.map((w) => {
+      const s = M.SCORES.get(w.slug);
+      const f = M.FACTS.get(w.slug);
+      return feature(w.geometry, {
+        slug: w.slug,
+        name: w.name,
+        score: s.score,
+        rank: M.rankOf(w.slug),
+        partial: s.partial,
+        connectivity: s.values.connectivity,
+        infrastructure: s.values.infrastructure,
+        development: s.values.development,
+        density: f.density ?? -1,
+        landPrice: M.LAND.wards[w.slug]?.medianVT1 ?? -1,
+      });
     }),
   );
 
   const labels = fc(
-    data.DISTRICTS.map((d) => {
-      const s = summaries.get(d.slug);
-      return feature({ type: 'Point', coordinates: d.center }, { slug: d.slug, name: d.name, growthScore: s.growthScore, price: d.price.now, yoy: s.yoy });
+    M.WARDS.map((w) => {
+      const s = M.SCORES.get(w.slug);
+      return feature({ type: 'Point', coordinates: w.centroid }, { slug: w.slug, name: w.name, label: w.shortName, score: s.score, rank: M.rankOf(w.slug), population: w.population ?? 0 });
     }),
   );
 
   const metro = fc(
-    data.METRO_LINES.map((l) =>
-      feature(
-        { type: 'LineString', coordinates: seedLine(l.seed) },
-        { id: l.id, name: l.name, color: l.color, opens: l.opens, status: l.opens <= horizon ? 'operating' : 'planned' },
-      ),
+    M.INFRA.filter((i) => i.kind === 'metro').map((i) =>
+      feature(lineGeometry(i.lines), { id: i.id, name: L(i.name), note: L(i.note), color: i.color, opens: i.openYear, schematic: i.schematic, status: lineStatus(i, horizon) }),
     ),
   );
 
   const stations = fc(
-    data.STATIONS.map((s) =>
-      feature({ type: 'Point', coordinates: s.coords }, { slug: s.slug, name: s.name, line: s.line, status: s.opens <= horizon ? 'operating' : 'planned' }),
+    M.STATIONS.map((s) =>
+      feature({ type: 'Point', coordinates: s.coords }, { slug: s.slug, name: s.name, line: s.line, status: s.status === 'operating' || horizon >= 2027 ? 'operating' : 'building' }),
     ),
   );
 
   const tod = fc(
-    data.STATIONS.filter((s) => s.tod).map((s) =>
-      feature(ellipse(s.coords, engine.TOD_RADIUS_M / 1000), {
-        name: `TOD · ${s.name} · ${engine.TOD_RADIUS_M}m`,
-        status: s.opens <= horizon ? 'active' : 'planned',
+    M.STATIONS.map((s) =>
+      feature({ type: 'Polygon', coordinates: [circleRing(s.coords, M.TOD_RADIUS_M / 1000)] }, {
+        name: `TOD · ${s.name} · ${M.TOD_RADIUS_M} m`,
+        status: s.status === 'operating' || horizon >= 2027 ? 'active' : 'planned',
       }),
     ),
   );
 
   const infrastructure = fc(
-    data.INFRASTRUCTURE.map((i) =>
-      feature({ type: 'LineString', coordinates: i.coords }, { slug: i.slug, name: i.name, opens: i.opens, status: i.opens <= horizon ? 'open' : 'building' }),
+    M.INFRA.filter((i) => i.kind !== 'metro').map((i) =>
+      feature(lineGeometry(i.lines), { id: i.id, kind: i.kind, name: L(i.name), note: L(i.note), opens: i.openYear, status: lineStatus(i, horizon) === 'operating' ? 'open' : 'building' }),
     ),
   );
 
-  const planning = fc(
-    data.PLANNING_ZONES.filter((z) => z.from <= horizon).map((z) =>
-      feature(block(z.center, z.sizeKm), { slug: z.slug, name: z.name, kind: z.kind, district: z.district, from: z.from }),
+  // Development poles of the 100-year plan (schematic circles) and the construction sites mapped in OSM today.
+  const planning = fc([
+    ...M.POLES.map((p) =>
+      feature({ type: 'Polygon', coordinates: [circleRing(p.center, p.radiusKm, { wobble: 0.06, phase: p.radiusKm })] }, {
+        slug: p.slug,
+        name: L(p.name),
+        role: L(p.role),
+        kind: 'zone',
+        from: p.year,
+        status: p.year <= horizon ? 'active' : 'planned',
+      }),
     ),
-  );
+    ...M.INFRA_OSM.construction.map((c) => feature({ type: 'Polygon', coordinates: [c.ring] }, { slug: c.id, name: c.name ?? (lang === 'en' ? 'Construction site' : 'Công trường'), kind: 'development', areaHa: c.areaHa })),
+  ]);
 
   const projects = fc(
-    data.PROJECTS.map((p) =>
-      feature({ type: 'Point', coordinates: p.coords }, { slug: p.slug, name: p.name, price: p.pricePerM2, district: p.district, soldPct: p.soldPct }),
+    M.PROJECTS.map((p) =>
+      feature({ type: 'Point', coordinates: p.coords }, { slug: p.slug, name: p.name, price: E.priceLabel(p, lang), kind: M.L(MK.KIND[p.kind], lang), approx: p.approx }),
     ),
   );
 
   const social = fc(
-    data.PROJECTS.flatMap((p) => engine.projectPois(p))
-      .filter((poi) => poi.kind === 'school' || poi.kind === 'hospital')
-      .map((poi) => feature({ type: 'Point', coordinates: poi.coords }, { kind: poi.kind, name: poi.name })),
+    M.POIS.filter((p) => SOCIAL[p.kind]).map((p) =>
+      feature({ type: 'Point', coordinates: p.coords }, { kind: SOCIAL[p.kind], name: p.name ?? (SOCIAL[p.kind] === 'school' ? (lang === 'en' ? 'School' : 'Trường học') : lang === 'en' ? 'Health facility' : 'Cơ sở y tế') }),
+    ),
   );
 
-  const green = fc(data.GREEN_SPACES.map((g) => feature(ellipse(g.center, g.sizeKm[0] / 2, g.sizeKm[1] / 2), { name: g.name })));
+  const green = fc(
+    M.PARKS.filter((p) => p.ha >= 0.3).map((p) => feature({ type: 'Point', coordinates: p.coords }, { name: p.name ?? (lang === 'en' ? 'Park' : 'Công viên'), ha: p.ha })),
+  );
 
   return {
     horizon,
-    sampleData: true,
-    layers: { districts, labels, metro, stations, tod, infrastructure, planning, projects, social, green },
+    lang,
+    layers: { wards, labels, metro, stations, tod, infrastructure, planning, projects, social, green },
   };
 }
 

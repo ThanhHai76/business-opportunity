@@ -16,11 +16,12 @@ class InfrastructureService {
           type: 'Feature',
           id: item.id,
           geometry: item.geometry,
-          properties: { name: item.name, kind: item.kind, status: item.status },
+          properties: { name: item.name, kind: item.kind, status: item.status, source: item.source ?? 'plan' },
         })),
         meta: {
-          sampleData: true,
-          note: 'Tuyến và ga metro chỉ mang tính minh hoạ (vị trí xấp xỉ, tiến độ có thể đã thay đổi) — cần đối chiếu nguồn chính thức.',
+          note: 'Tuyến và ga đang chạy, đoạn đang xây theo OpenStreetMap; tuyến dự kiến là hướng tuyến xấp xỉ theo quy hoạch.',
+          noteEn: 'Lines and stations in service and track under construction as mapped on OpenStreetMap; planned lines are approximate routes from the plans.',
+          source: 'OpenStreetMap contributors (ODbL)',
         },
       };
     });

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { CRITERION_ICONS } from '../../living-score.constants';
 import { CriterionKey } from '../../models/living-score.models';
+import { LangService } from '../../services/lang.service';
 import { LivingMetaService } from '../../services/living-meta.service';
 import { IconComponent } from '../icon/icon.component';
 
@@ -16,13 +17,13 @@ import { IconComponent } from '../icon/icon.component';
         <ls-icon [name]="icon()" [size]="16" />
         {{ label() }}
         @if (weightPct() !== null) {
-          <small>· {{ weightPct() }}% trọng số</small>
+          <small>· {{ t().common.weightShare(weightPct()!) }}</small>
         }
       </span>
       <strong>{{ value() }}<small>/100</small></strong>
     </div>
     <div class="track" role="progressbar" [attr.aria-valuenow]="value()" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="label()">
-      <div class="fill" [style.width.%]="value()" [style.background]="color()"></div>
+      <div class="fill" [style.width.%]="value()" [style.background]="fill()"></div>
     </div>
   `,
   styles: [
@@ -69,6 +70,7 @@ import { IconComponent } from '../icon/icon.component';
 })
 export class CriterionBarComponent {
   private readonly meta = inject(LivingMetaService);
+  protected readonly t = inject(LangService).t;
 
   readonly criterion = input.required<CriterionKey>();
   readonly value = input.required<number>();
@@ -77,4 +79,5 @@ export class CriterionBarComponent {
   protected readonly label = computed(() => this.meta.label(this.criterion()));
   protected readonly icon = computed(() => CRITERION_ICONS[this.criterion()]);
   protected readonly color = computed(() => this.meta.colorFor(this.value()));
+  protected readonly fill = computed(() => `linear-gradient(90deg, color-mix(in srgb, ${this.color()} 55%, #ffffff), ${this.color()})`);
 }

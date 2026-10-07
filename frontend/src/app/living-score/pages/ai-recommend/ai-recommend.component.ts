@@ -1,6 +1,5 @@
-import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IconComponent } from '../../components/icon/icon.component';
 import { ScoreRingComponent } from '../../components/score-ring/score-ring.component';
 import { StateMessageComponent } from '../../components/state-message/state-message.component';
@@ -14,35 +13,36 @@ import {
   RecommendationRequest,
   RecommendationResponse,
 } from '../../models/living-score.models';
-import { MillionsPipe, VndPipe } from '../../pipes/format.pipes';
 import { LivingMetaService } from '../../services/living-meta.service';
+import { formatNum } from '../../pipes/format.pipes';
+import { LangService } from '../../services/lang.service';
 import { LivingScoreApiService, describeApiError } from '../../services/living-score-api.service';
 import { PreferencesService } from '../../services/preferences.service';
 
 const NEUTRAL_PRIORITY = 3;
-const BUDGET_STEPS = [5_000_000, 7_000_000, 10_000_000, 15_000_000, 25_000_000];
 
 @Component({
   selector: 'app-ai-recommend',
   standalone: true,
-  imports: [DecimalPipe, RouterLink, IconComponent, ScoreRingComponent, StateMessageComponent, MillionsPipe, VndPipe],
+  imports: [RouterLink, IconComponent, ScoreRingComponent, StateMessageComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ai-recommend.component.html',
   styleUrl: './ai-recommend.component.css',
 })
 export class AiRecommendComponent implements OnInit {
   private readonly api = inject(LivingScoreApiService);
+  private readonly route = inject(ActivatedRoute);
   protected readonly prefs = inject(PreferencesService);
   protected readonly meta = inject(LivingMetaService);
   @ViewChild('results') private results?: ElementRef<HTMLElement>;
 
+  private readonly langService = inject(LangService);
+  protected readonly t = this.langService.t;
   protected readonly households = HOUSEHOLD_OPTIONS;
   protected readonly interestOptions = INTEREST_OPTIONS;
   protected readonly icons = CRITERION_ICONS;
   protected readonly criterionKeys = CRITERION_KEYS;
-  protected readonly budgetSteps = BUDGET_STEPS;
 
-  protected readonly budget = signal(7_000_000);
   protected readonly workplace = signal('');
   protected readonly household = signal<HouseholdType>('single');
   protected readonly interests = signal<InterestKey[]>([]);
@@ -58,8 +58,13 @@ export class AiRecommendComponent implements OnInit {
   protected readonly allZero = computed(() => CRITERION_KEYS.every((k) => this.priorities()[k] === 0));
 
   ngOnInit(): void {
+    // ?workplace=<area> (e.g. from a Future Map direction): pre-select where the user works.
+    const workplace = this.route.snapshot.queryParamMap.get('workplace');
     this.api.areas({ sort: 'name' }).subscribe({
-      next: (list) => this.areas.set(list.data),
+      next: (list) => {
+        this.areas.set(list.data);
+        if (workplace && list.data.some((a) => a.slug === workplace)) this.workplace.set(workplace);
+      },
       error: () => this.areas.set([]),
     });
   }
@@ -73,10 +78,6 @@ export class AiRecommendComponent implements OnInit {
     this.priorities.update((p) => ({ ...p, [key]: value }));
   }
 
-  protected setBudget(event: Event): void {
-    this.budget.set(Number((event.target as HTMLInputElement).value));
-  }
-
   protected resetPriorities(): void {
     this.priorities.set(Object.fromEntries(CRITERION_KEYS.map((k) => [k, NEUTRAL_PRIORITY])) as Record<CriterionKey, number>);
   }
@@ -84,7 +85,6 @@ export class AiRecommendComponent implements OnInit {
   protected submit(): void {
     if (this.allZero() || this.status() === 'loading') return;
     const request: RecommendationRequest = {
-      budgetVnd: this.budget(),
       workplaceAreaSlug: this.workplace() || undefined,
       household: this.household(),
       interests: this.interests(),
@@ -100,14 +100,18 @@ export class AiRecommendComponent implements OnInit {
         setTimeout(() => this.results?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
       },
       error: (error: unknown) => {
-        this.errorMessage.set(describeApiError(error));
+        this.errorMessage.set(describeApiError(error, this.langService.lang()));
         this.status.set('error');
       },
     });
   }
 
   protected priorityLabel(value: number): string {
-    return ['Bỏ qua', 'Thấp', 'Vừa phải', 'Quan trọng', 'Rất quan trọng', 'Ưu tiên số 1'][value] ?? '';
+    return this.t().ai.priority[value] ?? '';
+  }
+
+  protected num(value: number, digits: number): string {
+    return formatNum(value, this.langService.lang(), digits);
   }
 
   protected toggleCompare(slug: string): void {

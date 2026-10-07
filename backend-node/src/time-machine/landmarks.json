@@ -1,0 +1,929 @@
+{
+  "eras": [
+    {
+      "id": "1926",
+      "year": "1926",
+      "label": "Thời Pháp thuộc",
+      "labelEn": "French colonial era",
+      "future": false
+    },
+    {
+      "id": "1954",
+      "year": "1954",
+      "label": "Giải phóng Thủ đô",
+      "labelEn": "Liberation of the capital",
+      "future": false
+    },
+    {
+      "id": "1975",
+      "year": "1975",
+      "label": "Thống nhất đất nước",
+      "labelEn": "National reunification",
+      "future": false
+    },
+    {
+      "id": "2026",
+      "year": "2026",
+      "label": "Hiện tại",
+      "labelEn": "Present day",
+      "future": false
+    },
+    {
+      "id": "2050",
+      "year": "2050",
+      "label": "Kịch bản tương lai",
+      "labelEn": "Future scenario",
+      "future": true
+    },
+    {
+      "id": "2100",
+      "year": "2100",
+      "label": "Kịch bản viễn tưởng",
+      "labelEn": "Speculative scenario",
+      "future": true
+    }
+  ],
+  "enWiki": {
+    "Hồ Hoàn Kiếm": "Hoàn Kiếm Lake",
+    "Tháp Rùa": "Turtle Tower",
+    "Khu phố cổ Hà Nội": "Old Quarter, Hanoi",
+    "Chợ Đồng Xuân": "Đồng Xuân Market",
+    "Quảng trường Ba Đình": "Ba Đình Square",
+    "Lăng Chủ tịch Hồ Chí Minh": "Ho Chi Minh Mausoleum",
+    "Văn Miếu – Quốc Tử Giám": "Temple of Literature, Hanoi",
+    "Nhà hát Lớn Hà Nội": "Hanoi Opera House",
+    "Chùa Một Cột": "One Pillar Pagoda",
+    "Hoàng thành Thăng Long": "Imperial Citadel of Thăng Long",
+    "Cột cờ Hà Nội": "Flag Tower of Hanoi",
+    "Cầu Long Biên": "Long Biên Bridge",
+    "Nhà thờ Lớn Hà Nội": "St. Joseph's Cathedral, Hanoi",
+    "Chùa Trấn Quốc": "Trấn Quốc Pagoda",
+    "Hồ Tây": "West Lake (Hanoi)",
+    "Nhà tù Hỏa Lò": "Hỏa Lò Prison",
+    "Ga Hà Nội": "Hanoi railway station"
+  },
+  "landmarks": {
+    "hoan-kiem": {
+      "name": "Hồ Gươm",
+      "sub": "Hoàn Kiếm Lake & Tháp Rùa",
+      "stories": {
+        "1926": "Dưới thời Pháp thuộc, Hồ Gươm là ranh giới giữa khu phố Tây quy hoạch kiểu Paris ở phía Nam và phố cổ buôn bán tấp nập ở phía Bắc. Tháp Rùa đã đứng đó từ 1886.",
+        "1954": "Ngày 10/10/1954, đoàn quân giải phóng tiến qua khu vực quanh hồ trong ngày Hà Nội được giải phóng khỏi thực dân Pháp — một khoảnh khắc được ghi lại nhiều nhất trong lịch sử hiện đại của thành phố.",
+        "1975": "Sau ngày thống nhất, Hồ Gươm trở thành không gian công cộng biểu tượng của thủ đô một nước Việt Nam thống nhất, nơi diễn ra các lễ mít tinh lớn.",
+        "2026": "Không gian đi bộ quanh hồ cuối tuần thu hút hàng chục nghìn người, xen giữa nhịp sống hiện đại là truyền thuyết vua Lê Lợi trả gươm thần cho rùa vàng vẫn được kể lại mỗi ngày.",
+        "2050": "Mặt hồ được bảo tồn trong một \"vùng lõi di sản\" không phương tiện cơ giới, bao quanh bởi các tầng đi bộ trên cao kết nối với toàn khu phố cổ.",
+        "2100": "Tháp Rùa được số hoá thành một điểm neo thực tế hỗn hợp, nơi du khách có thể \"gặp\" các nhân vật lịch sử được AI tái hiện ngay tại chỗ."
+      },
+      "events": [
+        {
+          "year": "1865",
+          "text": "Nguyễn Văn Siêu tu sửa đền Ngọc Sơn, dựng cầu Thê Húc"
+        },
+        {
+          "year": "1886",
+          "text": "Tháp Rùa được xây trên gò giữa hồ"
+        },
+        {
+          "year": "1954",
+          "text": "10/10: đoàn quân giải phóng tiếp quản Thủ đô"
+        },
+        {
+          "year": "2016",
+          "text": "Cụ Rùa Hồ Gươm mất (1/2016); phố đi bộ quanh hồ mở từ 9/2016"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Hồ Hoàn Kiếm",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/H%E1%BB%93_Ho%C3%A0n_Ki%E1%BA%BFm"
+        },
+        {
+          "title": "Tháp Rùa",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Th%C3%A1p_R%C3%B9a"
+        }
+      ],
+      "en": {
+        "name": "Hoan Kiem Lake",
+        "sub": "Sword Lake & Turtle Tower",
+        "stories": {
+          "1926": "Under French rule, Hoan Kiem Lake marked the line between the Paris-style French Quarter to the south and the busy trading streets of the Old Quarter to the north. Turtle Tower had stood there since 1886.",
+          "1954": "On 10 October 1954 the liberation army marched through the streets around the lake on the day Hanoi was freed from French colonial rule — one of the most photographed moments in the city’s modern history.",
+          "1975": "After reunification the lake became the symbolic public space of the capital of a unified Vietnam, the setting for large rallies.",
+          "2026": "The weekend pedestrian zone around the lake draws tens of thousands of people, and amid modern city life the legend of King Lê Lợi returning the magic sword to the golden turtle is still retold every day.",
+          "2050": "The lake is protected inside a car-free “heritage core”, ringed by elevated walkways linked to the whole Old Quarter.",
+          "2100": "Turtle Tower is digitised into a mixed-reality anchor where visitors can “meet” historical figures recreated by AI on the spot."
+        },
+        "events": [
+          {
+            "year": "1865",
+            "text": "Nguyễn Văn Siêu restores Ngọc Sơn temple and builds Thê Húc bridge"
+          },
+          {
+            "year": "1886",
+            "text": "Turtle Tower is built on the mound in the lake"
+          },
+          {
+            "year": "1954",
+            "text": "10 October: the liberation army takes over the capital"
+          },
+          {
+            "year": "2016",
+            "text": "The Hoan Kiem turtle dies (Jan 2016); the lakeside walking zone opens from Sept 2016"
+          }
+        ]
+      }
+    },
+    "old-quarter": {
+      "name": "Phố Cổ",
+      "sub": "36 phố phường",
+      "stories": {
+        "1926": "36 phố phường vẫn giữ nếp \"buôn có bạn, bán có phường\" — mỗi phố một nghề, từ Hàng Bạc đến Hàng Mã — dù kiến trúc Pháp đã bắt đầu xen vào nhà ống truyền thống.",
+        "1954": "Sau giải phóng, nhiều cửa hiệu tư sản dần chuyển đổi mô hình, phố cổ bước vào giai đoạn kinh tế tập thể với nhịp sống trầm lắng hơn thời thuộc địa.",
+        "1975": "Phố cổ trở thành khu dân cư đông đúc bậc nhất Hà Nội thời bao cấp, nhiều nhà ống bị chia nhỏ cho nhiều hộ gia đình sinh sống chung.",
+        "2026": "Phố cổ vừa là di sản sống vừa là điểm đến du lịch sầm uất nhất Hà Nội — phố đi bộ cuối tuần, quán cà phê trong nhà ống trăm tuổi, xen giữa mật độ dân cư cao nhất thành phố.",
+        "2050": "Mặt tiền lịch sử được giữ nguyên theo luật bảo tồn nghiêm ngặt, trong khi phần sau mỗi nhà ống được cải tạo bằng công nghệ xây dựng module để nâng chất lượng sống.",
+        "2100": "Toàn bộ phố cổ trở thành một \"bảo tàng sống\" được giám sát bởi cảm biến khí hậu vi mô, tự động điều tiết để bảo vệ vật liệu di sản trước biến đổi khí hậu."
+      },
+      "events": [
+        {
+          "year": "1889",
+          "text": "Chợ Đồng Xuân khai trương — trung tâm buôn bán của 36 phố phường"
+        },
+        {
+          "year": "1946–47",
+          "text": "Liên khu I chiến đấu 60 ngày đêm trong lòng phố cổ"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Khu phố cổ Hà Nội",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Khu_ph%E1%BB%91_c%E1%BB%95_H%C3%A0_N%E1%BB%99i"
+        },
+        {
+          "title": "Chợ Đồng Xuân",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Ch%E1%BB%A3_%C4%90%E1%BB%93ng_Xu%C3%A2n"
+        },
+        {
+          "title": "Trận Hà Nội (1946)",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Tr%E1%BA%ADn_H%C3%A0_N%E1%BB%99i_(1946)"
+        }
+      ],
+      "en": {
+        "name": "Old Quarter",
+        "sub": "36 guild streets",
+        "stories": {
+          "1926": "The 36 streets still kept the old custom of one trade per street — from Hàng Bạc (silver) to Hàng Mã (votive paper) — though French architecture had begun to appear among the traditional tube houses.",
+          "1954": "After liberation many private shops gradually changed their business model, and the Old Quarter entered a period of collective economy, quieter than in colonial times.",
+          "1975": "In the subsidy era the Old Quarter became one of the most crowded neighbourhoods of Hanoi; many tube houses were split up and shared by several families.",
+          "2026": "The Old Quarter is both living heritage and Hanoi’s busiest tourist destination — weekend walking streets and cafés in century-old tube houses, amid the highest population density in the city.",
+          "2050": "Historic façades are kept intact under strict conservation rules, while the back of each tube house is renovated with modular construction to raise living standards.",
+          "2100": "The whole Old Quarter becomes a “living museum” watched over by micro-climate sensors that adjust conditions automatically to protect heritage materials from climate change."
+        },
+        "events": [
+          {
+            "year": "1889",
+            "text": "Dong Xuan Market opens — the trading heart of the 36 streets"
+          },
+          {
+            "year": "1946–47",
+            "text": "Inter-zone I fights for 60 days and nights inside the Old Quarter"
+          }
+        ]
+      }
+    },
+    "ba-dinh": {
+      "name": "Quảng trường Ba Đình",
+      "sub": "Ba Dinh Square",
+      "stories": {
+        "1926": "Khu vực Ba Đình thời Pháp thuộc là quần thể hành chính - dinh thự của chính quyền Đông Dương, quy hoạch theo lối phương Tây với đại lộ rộng và Phủ Toàn quyền uy nghi.",
+        "1954": "Ba Đình chuyển từ trung tâm quyền lực thực dân thành trung tâm chính trị của nước Việt Nam Dân chủ Cộng hoà sau ngày giải phóng Thủ đô.",
+        "1975": "Không gian quảng trường gắn liền với ngày 2/9/1945 — nơi Chủ tịch Hồ Chí Minh đọc Tuyên ngôn Độc lập — và tiếp tục là nơi diễn ra các sự kiện trọng đại của đất nước thống nhất.",
+        "2026": "Lễ thượng cờ - hạ cờ mỗi ngày tại quảng trường vẫn thu hút đông đảo người dân và du khách; Lăng Chủ tịch Hồ Chí Minh nằm ngay trung tâm khu vực.",
+        "2050": "Khu vực xung quanh quảng trường mở rộng không gian xanh và giao thông công cộng, hạn chế phương tiện cá nhân để bảo tồn cảnh quan nghi lễ.",
+        "2100": "Các nghi lễ quốc gia được phát dưới dạng trải nghiệm thực tế hỗn hợp cho người Việt khắp nơi trên thế giới \"hiện diện\" cùng lúc tại quảng trường."
+      },
+      "events": [
+        {
+          "year": "1945",
+          "text": "2/9: Chủ tịch Hồ Chí Minh đọc Tuyên ngôn Độc lập tại quảng trường"
+        },
+        {
+          "year": "1954",
+          "text": "Tiếp quản Thủ đô; Ba Đình trở thành trung tâm chính trị"
+        },
+        {
+          "year": "1975",
+          "text": "29/8: Lăng Chủ tịch Hồ Chí Minh khánh thành"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Quảng trường Ba Đình",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Qu%E1%BA%A3ng_tr%C6%B0%E1%BB%9Dng_Ba_%C4%90%C3%ACnh"
+        },
+        {
+          "title": "Lăng Chủ tịch Hồ Chí Minh",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/L%C4%83ng_Ch%E1%BB%A7_t%E1%BB%8Bch_H%E1%BB%93_Ch%C3%AD_Minh"
+        }
+      ],
+      "en": {
+        "name": "Ba Dinh Square",
+        "sub": "Quảng trường Ba Đình",
+        "stories": {
+          "1926": "In the French era Ba Đình was the administrative and residential quarter of the Indochina government, laid out in Western style with wide boulevards and the imposing Governor-General’s Palace.",
+          "1954": "After the capital was liberated, Ba Đình changed from the seat of colonial power into the political centre of the Democratic Republic of Vietnam.",
+          "1975": "The square is bound up with 2 September 1945 — when President Hồ Chí Minh read the Declaration of Independence here — and went on hosting the major events of the reunified country.",
+          "2026": "The daily flag-raising and flag-lowering ceremonies still draw crowds of residents and visitors; the Hồ Chí Minh Mausoleum stands at the heart of the area.",
+          "2050": "The area around the square gains green space and public transport, with private vehicles restricted to protect the ceremonial landscape.",
+          "2100": "National ceremonies are broadcast as mixed-reality experiences, letting Vietnamese people all over the world be “present” in the square at the same time."
+        },
+        "events": [
+          {
+            "year": "1945",
+            "text": "2 September: President Hồ Chí Minh reads the Declaration of Independence in the square"
+          },
+          {
+            "year": "1954",
+            "text": "Takeover of the capital; Ba Đình becomes the political centre"
+          },
+          {
+            "year": "1975",
+            "text": "29 August: the Hồ Chí Minh Mausoleum is inaugurated"
+          }
+        ]
+      }
+    },
+    "van-mieu": {
+      "name": "Văn Miếu",
+      "sub": "Temple of Literature · est. 1070",
+      "stories": {
+        "1926": "Dưới thời Pháp, Văn Miếu - Quốc Tử Giám không còn chức năng thi cử (khoa cử bị bãi bỏ từ 1919) nhưng vẫn là biểu tượng học vấn Nho giáo giữa một Hà Nội đang Âu hoá.",
+        "1954": "Sau giải phóng, di tích được chính quyền mới tiếp quản và bắt đầu được nhìn nhận lại như một di sản giáo dục dân tộc cần bảo tồn, dù trùng tu còn hạn chế do chiến tranh.",
+        "1975": "Văn Miếu dần được đầu tư tu bổ như biểu tượng hiếu học của dân tộc thống nhất, đón học sinh sinh viên đến \"xin chữ\" trước mỗi kỳ thi.",
+        "2026": "82 bia Tiến sĩ (Di sản Tư liệu Thế giới UNESCO) là điểm đến không thể thiếu của học sinh trước mùa thi và du khách quốc tế tìm hiểu truyền thống khoa bảng Việt Nam.",
+        "2050": "Bia Tiến sĩ được quét 3D độ phân giải cao, cho phép nghiên cứu văn tự cổ từ xa mà không cần chạm vào hiện vật gốc.",
+        "2100": "Một \"phiên bản song sinh số\" đầy đủ của Văn Miếu tồn tại song song, cho phép hậu thế \"bước vào\" không gian thi cử xưa dù bản gốc có biến đổi thế nào."
+      },
+      "events": [
+        {
+          "year": "1070",
+          "text": "Vua Lý Thánh Tông cho dựng Văn Miếu"
+        },
+        {
+          "year": "1076",
+          "text": "Quốc Tử Giám — trường đại học đầu tiên của Việt Nam"
+        },
+        {
+          "year": "1805",
+          "text": "Khuê Văn Các được xây"
+        },
+        {
+          "year": "2010",
+          "text": "82 bia tiến sĩ được UNESCO công nhận Di sản tư liệu thế giới"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Văn Miếu – Quốc Tử Giám",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/V%C4%83n_Mi%E1%BA%BFu_%E2%80%93_Qu%E1%BB%91c_T%E1%BB%AD_Gi%C3%A1m"
+        },
+        {
+          "title": "Văn Miếu – Quốc Tử Giám",
+          "site": "Trang chính thức của di tích",
+          "url": "https://vanmieu.gov.vn/vi"
+        }
+      ],
+      "en": {
+        "name": "Temple of Literature",
+        "sub": "Văn Miếu · founded 1070",
+        "stories": {
+          "1926": "Under the French, the Temple of Literature – Imperial Academy no longer held examinations (the mandarin exams were abolished in 1919), but it remained a symbol of Confucian learning in a Hanoi that was becoming Westernised.",
+          "1954": "After liberation the new government took over the site, which began to be seen again as national educational heritage worth preserving, though restoration was limited by the war.",
+          "1975": "The temple was gradually restored as a symbol of the unified nation’s love of learning, welcoming students who came to “ask for calligraphy” before every exam.",
+          "2026": "The 82 Doctors’ steles (UNESCO Memory of the World) are a must for students before exam season and for international visitors learning about Vietnam’s examination tradition.",
+          "2050": "The steles are scanned in high-resolution 3D, so the ancient inscriptions can be studied remotely without touching the originals.",
+          "2100": "A complete “digital twin” of the temple exists alongside it, letting future generations “step into” the old examination grounds however the original changes."
+        },
+        "events": [
+          {
+            "year": "1070",
+            "text": "King Lý Thánh Tông has the Temple of Literature built"
+          },
+          {
+            "year": "1076",
+            "text": "Imperial Academy — Vietnam’s first university"
+          },
+          {
+            "year": "1805",
+            "text": "Khuê Văn Các pavilion is built"
+          },
+          {
+            "year": "2010",
+            "text": "The 82 Doctors’ steles are recognised by UNESCO as Memory of the World"
+          }
+        ]
+      }
+    },
+    "opera-house": {
+      "name": "Nhà Hát Lớn",
+      "sub": "Hanoi Opera House · 1911",
+      "stories": {
+        "1926": "Hoàn thành năm 1911 theo phong cách Beaux-Arts, Nhà Hát Lớn là nơi giới thượng lưu Pháp và bản xứ thưởng thức opera, kịch nói — biểu tượng cho tham vọng biến Hà Nội thành \"Paris thu nhỏ\".",
+        "1954": "Sau giải phóng, Nhà Hát Lớn trở thành nơi diễn ra các sự kiện chính trị - văn hoá quan trọng của chính quyền mới, chuyển từ không gian giải trí thượng lưu sang không gian công cộng.",
+        "1975": "Công trình tiếp tục là sân khấu biểu diễn nghệ thuật hàng đầu cả nước thời kỳ thống nhất, dù cơ sở vật chất xuống cấp nhiều sau chiến tranh.",
+        "2026": "Sau nhiều đợt trùng tu, Nhà Hát Lớn là điểm diễn hoà nhạc, opera, sự kiện cao cấp bậc nhất Hà Nội, kiến trúc Pháp cổ nằm giữa các toà nhà hiện đại xung quanh.",
+        "2050": "Nội thất lịch sử được số hoá toàn bộ, cho phép dàn dựng các buổi diễn \"hồi sinh\" nghệ sĩ và tiết mục nổi tiếng đầu thế kỷ 20 bằng hologram trên chính sân khấu gốc.",
+        "2100": "Nhà Hát Lớn trở thành nút giao giữa biểu diễn trực tiếp và khán giả ảo toàn cầu, âm thanh kiến trúc gốc được bảo tồn tuyệt đối."
+      },
+      "events": [
+        {
+          "year": "1901",
+          "text": "Khởi công theo mẫu Nhà hát Opéra Garnier (Paris)"
+        },
+        {
+          "year": "1911",
+          "text": "Hoàn thành"
+        },
+        {
+          "year": "1945",
+          "text": "19/8: cuộc mít tinh tại quảng trường Nhà hát mở đầu giành chính quyền ở Hà Nội"
+        },
+        {
+          "year": "1997",
+          "text": "Hoàn tất đợt trùng tu lớn"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Nhà hát Lớn Hà Nội",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Nh%C3%A0_h%C3%A1t_L%E1%BB%9Bn_H%C3%A0_N%E1%BB%99i"
+        }
+      ],
+      "en": {
+        "name": "Hanoi Opera House",
+        "sub": "Nhà Hát Lớn · 1911",
+        "stories": {
+          "1926": "Completed in 1911 in Beaux-Arts style, the Opera House was where the French and local elite enjoyed opera and theatre — a symbol of the ambition to turn Hanoi into a “little Paris”.",
+          "1954": "After liberation it hosted important political and cultural events of the new government, turning from an elite entertainment venue into a public space.",
+          "1975": "Through the years of reunification it remained the country’s leading performing-arts stage, though its facilities had deteriorated badly after the war.",
+          "2026": "After several restorations the Opera House is Hanoi’s top venue for concerts, opera and prestige events — old French architecture amid the modern buildings around it.",
+          "2050": "The historic interior is fully digitised, allowing “revival” shows of famous early-20th-century artists and acts as holograms on the original stage.",
+          "2100": "The Opera House becomes a meeting point of live performance and a global virtual audience, with the original architectural acoustics preserved absolutely."
+        },
+        "events": [
+          {
+            "year": "1901",
+            "text": "Construction begins, modelled on the Opéra Garnier (Paris)"
+          },
+          {
+            "year": "1911",
+            "text": "Completed"
+          },
+          {
+            "year": "1945",
+            "text": "19 August: a rally in the Opera House square starts the seizure of power in Hanoi"
+          },
+          {
+            "year": "1997",
+            "text": "A major restoration is completed"
+          }
+        ]
+      }
+    },
+    "mot-cot": {
+      "name": "Chùa Một Cột",
+      "sub": "One Pillar Pagoda · 1049",
+      "stories": {
+        "1926": "Ngôi chùa hình bông sen trên một cột đá giữa hồ vuông, dựng năm 1049 thời vua Lý Thái Tông, nằm lặng lẽ cạnh khu dinh thự hành chính của chính quyền Pháp ở Ba Đình.",
+        "1954": "Ngày 11/9/1954, trước khi rút khỏi Hà Nội, quân đội Pháp đặt mìn phá huỷ chùa. Năm 1955, chùa được dựng lại theo đúng kiến trúc cũ.",
+        "1975": "Chùa nằm ngay bên cạnh Lăng Chủ tịch Hồ Chí Minh vừa khánh thành năm 1975, trở thành một phần của quần thể di tích Ba Đình.",
+        "2026": "Một trong những biểu tượng kiến trúc độc đáo nhất của Hà Nội, là điểm dừng quen thuộc của du khách khi thăm quần thể Lăng Bác – Phủ Chủ tịch.",
+        "2050": "Kết cấu gỗ và cột đá được theo dõi bằng cảm biến độ ẩm, rung chấn; mặt hồ và cảnh quan quanh chùa được phục dựng theo tư liệu cổ.",
+        "2100": "Một bản song sinh số cho phép du khách \"bước lên\" đài sen và xem lại lần dựng chùa năm 1049 lẫn lần phục dựng năm 1955."
+      },
+      "events": [
+        {
+          "year": "1049",
+          "text": "Vua Lý Thái Tông dựng chùa hình bông sen trên một cột"
+        },
+        {
+          "year": "1954",
+          "text": "11/9: quân Pháp đặt mìn phá chùa trước khi rút"
+        },
+        {
+          "year": "1955",
+          "text": "Chùa được dựng lại theo kiến trúc cũ"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Chùa Một Cột",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Ch%C3%B9a_M%E1%BB%99t_C%E1%BB%99t"
+        }
+      ],
+      "en": {
+        "name": "One Pillar Pagoda",
+        "sub": "Chùa Một Cột · 1049",
+        "stories": {
+          "1926": "The lotus-shaped pagoda on a single stone pillar in a square pond, built in 1049 under King Lý Thái Tông, stood quietly beside the French administrative mansions of Ba Đình.",
+          "1954": "On 11 September 1954, before withdrawing from Hanoi, the French army mined and destroyed the pagoda. In 1955 it was rebuilt to its original design.",
+          "1975": "The pagoda stands right beside the Hồ Chí Minh Mausoleum, inaugurated in 1975, and became part of the Ba Đình relic complex.",
+          "2026": "One of Hanoi’s most distinctive architectural symbols, and a familiar stop for visitors to the Mausoleum – Presidential Palace complex.",
+          "2050": "Its timber frame and stone pillar are monitored by humidity and vibration sensors; the pond and its surroundings are restored according to old records.",
+          "2100": "A digital twin lets visitors “step onto” the lotus platform and watch both the building of 1049 and the rebuilding of 1955."
+        },
+        "events": [
+          {
+            "year": "1049",
+            "text": "King Lý Thái Tông builds a lotus-shaped pagoda on a single pillar"
+          },
+          {
+            "year": "1954",
+            "text": "11 September: French troops blow up the pagoda before withdrawing"
+          },
+          {
+            "year": "1955",
+            "text": "The pagoda is rebuilt to its original design"
+          }
+        ]
+      }
+    },
+    "hoang-thanh": {
+      "name": "Hoàng thành Thăng Long",
+      "sub": "Imperial Citadel · Cột cờ 1812",
+      "stories": {
+        "1926": "Phần lớn thành Hà Nội đã bị người Pháp phá dỡ cuối thế kỷ 19 để lấy đất xây doanh trại; còn lại Đoan Môn, Hậu Lâu, Bắc Môn và Cột cờ Hà Nội dựng năm 1812.",
+        "1954": "Sau ngày tiếp quản Thủ đô, khu thành cổ trở thành nơi làm việc của Bộ Quốc phòng — một không gian quân sự khép kín với người dân.",
+        "1975": "Từ Nhà D67 và hầm chỉ huy trong khu thành, Bộ Chính trị và Quân uỷ Trung ương theo dõi, chỉ đạo các chiến dịch cho tới Mùa Xuân 1975.",
+        "2026": "Khu trung tâm Hoàng thành được UNESCO công nhận Di sản Văn hoá Thế giới năm 2010; khu khảo cổ 18 Hoàng Diệu hé lộ dấu tích nhiều triều đại chồng lớp.",
+        "2050": "Các lớp khảo cổ được mở rộng khai quật và trưng bày dưới mái che trong suốt, cho phép nhìn xuyên qua nhiều tầng lịch sử ngay tại chỗ.",
+        "2100": "Toàn bộ kinh thành Thăng Long qua các triều đại được tái dựng số hoá; du khách chọn một thế kỷ và \"đi bộ\" trong cung điện đã mất."
+      },
+      "events": [
+        {
+          "year": "1010",
+          "text": "Lý Thái Tổ dời đô về Thăng Long"
+        },
+        {
+          "year": "1812",
+          "text": "Cột cờ Hà Nội được xây dưới thời Gia Long"
+        },
+        {
+          "year": "1954",
+          "text": "Khu thành cổ trở thành nơi làm việc của Bộ Quốc phòng"
+        },
+        {
+          "year": "2010",
+          "text": "Khu trung tâm Hoàng thành được UNESCO công nhận Di sản thế giới"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Hoàng thành Thăng Long",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Ho%C3%A0ng_th%C3%A0nh_Th%C4%83ng_Long"
+        },
+        {
+          "title": "Cột cờ Hà Nội",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/C%E1%BB%99t_c%E1%BB%9D_H%C3%A0_N%E1%BB%99i"
+        },
+        {
+          "title": "Hoàng thành Thăng Long",
+          "site": "Trang chính thức của di tích",
+          "url": "https://hoangthanhthanglong.vn/"
+        },
+        {
+          "title": "Central Sector of the Imperial Citadel of Thang Long – Hanoi",
+          "site": "UNESCO World Heritage Centre",
+          "url": "https://whc.unesco.org/en/list/1328"
+        }
+      ],
+      "en": {
+        "name": "Imperial Citadel of Thang Long",
+        "sub": "Hoàng thành · Flag Tower 1812",
+        "stories": {
+          "1926": "Most of the Hanoi citadel had been pulled down by the French in the late 19th century to make room for barracks; what remained were Đoan Môn gate, Hậu Lâu, the North Gate and the Hanoi Flag Tower, built in 1812.",
+          "1954": "After the takeover of the capital the old citadel became the workplace of the Ministry of Defence — a military area closed to the public.",
+          "1975": "From House D67 and the command bunker inside the citadel, the Politburo and the Central Military Commission followed and directed the campaigns up to the Spring of 1975.",
+          "2026": "The central sector of the citadel was inscribed as a UNESCO World Heritage Site in 2010; the archaeological site at 18 Hoàng Diệu reveals traces of many dynasties layered on top of each other.",
+          "2050": "The archaeological layers are excavated further and displayed under transparent roofs, letting visitors look down through many layers of history on the spot.",
+          "2100": "The whole Thăng Long capital across the dynasties is rebuilt digitally; visitors pick a century and “walk” through palaces that have disappeared."
+        },
+        "events": [
+          {
+            "year": "1010",
+            "text": "Lý Thái Tổ moves the capital to Thăng Long"
+          },
+          {
+            "year": "1812",
+            "text": "The Hanoi Flag Tower is built under Emperor Gia Long"
+          },
+          {
+            "year": "1954",
+            "text": "The citadel becomes the workplace of the Ministry of Defence"
+          },
+          {
+            "year": "2010",
+            "text": "The central sector is inscribed as a UNESCO World Heritage Site"
+          }
+        ]
+      }
+    },
+    "long-bien": {
+      "name": "Cầu Long Biên",
+      "sub": "Long Biên Bridge · 1902",
+      "stories": {
+        "1926": "Mang tên cầu Paul Doumer, hoàn thành năm 1902, dài khoảng 1,7 km — khi ấy là cây cầu duy nhất bắc qua sông Hồng, chở cả tàu hoả, xe kéo và người đi bộ.",
+        "1954": "Tháng 10/1954, những đơn vị lính Pháp cuối cùng rút qua cầu sang bên kia sông; cây cầu được đổi tên thành cầu Long Biên.",
+        "1975": "Cầu bị ném bom nhiều lần trong các năm 1967 và 1972, nhiều nhịp bị đánh sập nhưng liên tục được sửa chữa để giữ mạch giao thông Bắc – Nam.",
+        "2026": "Chỉ dành cho tàu hoả, xe máy, xe đạp và người đi bộ; trở thành chứng nhân lịch sử, điểm ngắm hoàng hôn và bãi giữa sông Hồng.",
+        "2050": "Cầu được gia cố và giữ nguyên dáng thép cổ; hai đầu cầu là không gian công cộng ven sông với đường đi bộ dọc hành lang xanh sông Hồng.",
+        "2100": "Cây cầu trở thành bảo tàng ngoài trời vắt qua sông, nơi mỗi nhịp thép kể một chương lịch sử bằng thực tế tăng cường."
+      },
+      "events": [
+        {
+          "year": "1898",
+          "text": "Khởi công cầu Paul Doumer"
+        },
+        {
+          "year": "1902",
+          "text": "Khánh thành — cây cầu đầu tiên bắc qua sông Hồng"
+        },
+        {
+          "year": "1954",
+          "text": "Lính Pháp rút qua cầu; cầu đổi tên thành Long Biên"
+        },
+        {
+          "year": "1967",
+          "text": "Bị máy bay Mỹ ném bom"
+        },
+        {
+          "year": "1972",
+          "text": "Nhiều nhịp bị đánh sập, được sửa chữa để thông tuyến"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Cầu Long Biên",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/C%E1%BA%A7u_Long_Bi%C3%AAn"
+        }
+      ],
+      "en": {
+        "name": "Long Bien Bridge",
+        "sub": "Cầu Long Biên · 1902",
+        "stories": {
+          "1926": "Named Paul Doumer Bridge, completed in 1902 and about 1.7 km long, it was then the only bridge across the Red River, carrying trains, rickshaws and pedestrians.",
+          "1954": "In October 1954 the last French units withdrew across the bridge to the other bank; the bridge was renamed Long Biên Bridge.",
+          "1975": "The bridge was bombed many times in 1967 and 1972; several spans were brought down but were repaired again and again to keep the north–south link open.",
+          "2026": "Open only to trains, motorbikes, bicycles and pedestrians, it has become a witness of history and a spot for watching the sunset over the Red River and its sandbank.",
+          "2050": "The bridge is strengthened while keeping its old steel form; both ends become riverside public spaces with walkways along the Red River green corridor.",
+          "2100": "The bridge becomes an open-air museum spanning the river, where each steel span tells a chapter of history in augmented reality."
+        },
+        "events": [
+          {
+            "year": "1898",
+            "text": "Construction of Paul Doumer Bridge begins"
+          },
+          {
+            "year": "1902",
+            "text": "Inaugurated — the first bridge across the Red River"
+          },
+          {
+            "year": "1954",
+            "text": "French troops withdraw across the bridge; it is renamed Long Biên"
+          },
+          {
+            "year": "1967",
+            "text": "Bombed by US aircraft"
+          },
+          {
+            "year": "1972",
+            "text": "Several spans are brought down, then repaired to reopen the line"
+          }
+        ]
+      }
+    },
+    "nha-tho-lon": {
+      "name": "Nhà thờ Lớn Hà Nội",
+      "sub": "St. Joseph's Cathedral · 1886",
+      "stories": {
+        "1926": "Khánh thành dịp Giáng sinh năm 1886, xây theo lối Gothic trên nền chùa Báo Thiên cũ — tháp chuông đôi là điểm cao nổi bật của khu phố quanh Hồ Gươm.",
+        "1954": "Sau Hiệp định Genève, nhiều giáo dân miền Bắc di cư vào Nam; nhà thờ vẫn là trung tâm của Tổng giáo phận Hà Nội.",
+        "1975": "Những năm sau thống nhất, các thánh lễ vẫn được duy trì; mặt tiền rêu phong của nhà thờ trở thành hình ảnh quen thuộc của Hà Nội thời bao cấp.",
+        "2026": "Đông nghịt người mỗi dịp Giáng sinh; quanh nhà thờ là những quán \"trà chanh\" vỉa hè và cà phê — một góc sống động của Hà Nội hiện đại.",
+        "2050": "Quảng trường trước nhà thờ trở thành không gian đi bộ, mặt đá và kính màu được trùng tu bằng kỹ thuật quét 3D.",
+        "2100": "Âm thanh chuông và thánh ca nguyên bản được lưu trữ số, phát lại trong những đêm lễ hội ánh sáng trên mặt tiền cổ."
+      },
+      "events": [
+        {
+          "year": "1884",
+          "text": "Khởi công trên nền chùa Báo Thiên cũ"
+        },
+        {
+          "year": "1886",
+          "text": "Khánh thành dịp Giáng sinh"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Nhà thờ Lớn Hà Nội",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Nh%C3%A0_th%E1%BB%9D_L%E1%BB%9Bn_H%C3%A0_N%E1%BB%99i"
+        },
+        {
+          "title": "Chùa Báo Thiên",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Ch%C3%B9a_B%C3%A1o_Thi%C3%AAn"
+        }
+      ],
+      "en": {
+        "name": "St. Joseph’s Cathedral",
+        "sub": "Nhà thờ Lớn · 1886",
+        "stories": {
+          "1926": "Inaugurated at Christmas 1886 and built in Gothic style on the site of the old Báo Thiên pagoda, its twin bell towers were the landmark of the streets around Hoan Kiem Lake.",
+          "1954": "After the Geneva Accords many northern Catholics migrated south; the cathedral remained the centre of the Archdiocese of Hanoi.",
+          "1975": "In the years after reunification masses went on; the weathered façade became a familiar image of subsidy-era Hanoi.",
+          "2026": "Packed every Christmas; around the cathedral are pavement “lemon tea” stalls and cafés — a lively corner of modern Hanoi.",
+          "2050": "The square in front of the cathedral becomes a pedestrian space; its stone and stained glass are restored with the help of 3D scanning.",
+          "2100": "The original sound of its bells and hymns is archived digitally and played back on festival nights of light on the old façade."
+        },
+        "events": [
+          {
+            "year": "1884",
+            "text": "Construction begins on the site of the old Báo Thiên pagoda"
+          },
+          {
+            "year": "1886",
+            "text": "Inaugurated at Christmas"
+          }
+        ]
+      }
+    },
+    "tran-quoc": {
+      "name": "Hồ Tây & Chùa Trấn Quốc",
+      "sub": "West Lake · chùa hơn 1.400 năm",
+      "stories": {
+        "1926": "Hồ Tây rộng hơn 500 ha, bao quanh là làng cá, làng hoa; chùa Trấn Quốc — ngôi chùa có lịch sử từ thế kỷ 6 — nằm trên đảo nhỏ, nối với đê Cổ Ngư.",
+        "1954": "Năm 1957, thanh niên Thủ đô tham gia tôn tạo đê Cổ Ngư; con đường được đổi tên thành đường Thanh Niên.",
+        "1975": "Ven hồ vẫn là những làng Quảng An, Nhật Tân, Quảng Bá với đầm sen, vườn đào — lá phổi xanh ở rìa đô thị.",
+        "2026": "Tây Hồ là khu ở của nhiều người nước ngoài, với khách sạn, quán cà phê ven hồ; trà sen Tây Hồ và hoàng hôn trên hồ là đặc sản.",
+        "2050": "Đường đi bộ và xe đạp chạy vòng quanh hồ, các đầm sen được phục hồi như vùng đất ngập nước đô thị.",
+        "2100": "Hồ Tây trở thành trung tâm của một mạng lưới hồ điều hoà sinh thái, giúp thành phố chống ngập và hạ nhiệt."
+      },
+      "events": [
+        {
+          "year": "Thế kỷ 6",
+          "text": "Chùa được dựng bên bờ sông Hồng dưới thời Lý Nam Đế"
+        },
+        {
+          "year": "1615",
+          "text": "Chùa được dời ra gò Kim Ngư giữa hồ"
+        },
+        {
+          "year": "1957",
+          "text": "Đê Cổ Ngư được tôn tạo và đổi tên thành đường Thanh Niên"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Chùa Trấn Quốc",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Ch%C3%B9a_Tr%E1%BA%A5n_Qu%E1%BB%91c"
+        },
+        {
+          "title": "Hồ Tây",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/H%E1%BB%93_T%C3%A2y"
+        }
+      ],
+      "en": {
+        "name": "West Lake & Tran Quoc Pagoda",
+        "sub": "Hồ Tây · a pagoda over 1,400 years old",
+        "stories": {
+          "1926": "West Lake covered more than 500 ha, ringed by fishing and flower villages; Trấn Quốc pagoda — with a history going back to the 6th century — stood on a small island linked to the Cổ Ngư dyke.",
+          "1954": "In 1957 young people of the capital helped rebuild the Cổ Ngư dyke; the road was renamed Thanh Niên (Youth) Road.",
+          "1975": "Around the lake were still the villages of Quảng An, Nhật Tân and Quảng Bá, with lotus ponds and peach gardens — a green lung at the edge of the city.",
+          "2026": "Tây Hồ is home to many foreigners, with hotels and lakeside cafés; West Lake lotus tea and sunsets over the lake are its specialities.",
+          "2050": "A walking and cycling path circles the lake, and the lotus ponds are restored as urban wetlands.",
+          "2100": "West Lake becomes the heart of a network of ecological retention lakes that help the city fight floods and keep cool."
+        },
+        "events": [
+          {
+            "year": "6th century",
+            "text": "The pagoda is founded on the bank of the Red River under Lý Nam Đế"
+          },
+          {
+            "year": "1615",
+            "text": "The pagoda is moved to Kim Ngư islet in the lake"
+          },
+          {
+            "year": "1957",
+            "text": "The Cổ Ngư dyke is rebuilt and renamed Thanh Niên Road"
+          }
+        ]
+      }
+    },
+    "hoa-lo": {
+      "name": "Nhà tù Hỏa Lò",
+      "sub": "Maison Centrale · 1896",
+      "stories": {
+        "1926": "Nhà tù trung ương do người Pháp xây từ năm 1896, giam giữ hàng nghìn tù nhân, trong đó có rất nhiều người Việt yêu nước và chiến sĩ cách mạng.",
+        "1954": "Sau khi tiếp quản Thủ đô, nhà tù được chính quyền Việt Nam tiếp tục sử dụng làm trại giam.",
+        "1975": "Giai đoạn 1964–1973 nơi đây giam giữ phi công Mỹ bị bắn rơi, được họ gọi đùa là \"Hanoi Hilton\"; tù binh được trao trả năm 1973.",
+        "2026": "Phần lớn khu nhà tù bị phá dỡ vào thập niên 1990 để xây cao ốc; phần còn lại trở thành di tích – bảo tàng thu hút đông khách tham quan.",
+        "2050": "Bảo tàng mở rộng kho tư liệu số hoá: thư từ, hồ sơ, lời kể nhân chứng được tra cứu tự do cho học sinh và nhà nghiên cứu.",
+        "2100": "Trải nghiệm tái hiện lịch sử có hướng dẫn giúp thế hệ sau cảm nhận bối cảnh của những người từng bị giam giữ nơi đây."
+      },
+      "events": [
+        {
+          "year": "1896",
+          "text": "Người Pháp xây nhà tù trung ương (Maison Centrale)"
+        },
+        {
+          "year": "1954",
+          "text": "Chính quyền Việt Nam tiếp quản nhà tù"
+        },
+        {
+          "year": "1964–73",
+          "text": "Giam giữ phi công Mỹ — \"Hanoi Hilton\""
+        },
+        {
+          "year": "1993",
+          "text": "Phần lớn khu nhà tù bị phá dỡ để xây cao ốc; phần còn lại thành di tích"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Nhà tù Hỏa Lò",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Nh%C3%A0_t%C3%B9_H%E1%BB%8Fa_L%C3%B2"
+        },
+        {
+          "title": "Di tích Nhà tù Hỏa Lò",
+          "site": "Trang chính thức của di tích",
+          "url": "https://hoalo.vn/"
+        }
+      ],
+      "en": {
+        "name": "Hoa Lo Prison",
+        "sub": "Maison Centrale · 1896",
+        "stories": {
+          "1926": "The central prison built by the French from 1896 held thousands of prisoners, many of them Vietnamese patriots and revolutionaries.",
+          "1954": "After the takeover of the capital the Vietnamese government went on using it as a prison.",
+          "1975": "From 1964 to 1973 it held American pilots shot down over the North, who jokingly called it the “Hanoi Hilton”; the prisoners of war were released in 1973.",
+          "2026": "Most of the prison was demolished in the 1990s to make way for a high-rise; the remaining part is a relic site and museum that draws many visitors.",
+          "2050": "The museum expands its digitised archive: letters, records and witness accounts are freely searchable for students and researchers.",
+          "2100": "Guided historical re-enactments help later generations understand the circumstances of the people once held here."
+        },
+        "events": [
+          {
+            "year": "1896",
+            "text": "The French build the central prison (Maison Centrale)"
+          },
+          {
+            "year": "1954",
+            "text": "The Vietnamese government takes over the prison"
+          },
+          {
+            "year": "1964–73",
+            "text": "Holds American pilots — the “Hanoi Hilton”"
+          },
+          {
+            "year": "1993",
+            "text": "Most of the prison is demolished for a high-rise; the rest becomes a relic site"
+          }
+        ]
+      }
+    },
+    "dong-xuan": {
+      "name": "Chợ Đồng Xuân",
+      "sub": "Dong Xuan Market · 1889",
+      "stories": {
+        "1926": "Khai trương năm 1889 với mái tôn năm gian, là chợ lớn nhất Hà Nội — nơi hàng hoá từ khắp Bắc Kỳ đổ về phố cổ.",
+        "1954": "Chợ từng là chiến trường ác liệt trong những ngày Hà Nội kháng chiến 1946–1947; sau năm 1954 trở lại là trung tâm buôn bán của Thủ đô.",
+        "1975": "Thời bao cấp, chợ chủ yếu là các quầy mậu dịch; người dân xếp hàng với tem phiếu, bên cạnh những gánh hàng nhỏ quanh chợ.",
+        "2026": "Sau vụ hoả hoạn năm 1994, chợ được xây lại và giữ mặt tiền cũ; ngày nay là chợ bán buôn sầm uất, cuối tuần có chợ đêm dọc phố Hàng Đào.",
+        "2050": "Logistics giao hàng chuyển ra ngoài giờ cao điểm bằng xe điện nhỏ; mặt tiền lịch sử và mái chợ cũ được bảo tồn.",
+        "2100": "Chợ vừa là nơi buôn bán vừa là bảo tàng sống về nghề buôn phố cổ, với các gian hàng truyền thống được gìn giữ."
+      },
+      "events": [
+        {
+          "year": "1889",
+          "text": "Khai trương với mái tôn năm gian"
+        },
+        {
+          "year": "1946–47",
+          "text": "Chiến trường ác liệt trong những ngày kháng chiến"
+        },
+        {
+          "year": "1994",
+          "text": "Hoả hoạn lớn; chợ được xây lại, giữ mặt tiền cũ"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Chợ Đồng Xuân",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Ch%E1%BB%A3_%C4%90%E1%BB%93ng_Xu%C3%A2n"
+        }
+      ],
+      "en": {
+        "name": "Dong Xuan Market",
+        "sub": "Chợ Đồng Xuân · 1889",
+        "stories": {
+          "1926": "Opened in 1889 under a five-bay iron roof, it was Hanoi’s largest market — where goods from all over Tonkin flowed into the Old Quarter.",
+          "1954": "The market was the scene of fierce fighting in the days of Hanoi’s resistance of 1946–1947; after 1954 it was again the trading centre of the capital.",
+          "1975": "In the subsidy era the market was mostly state-run counters; people queued with ration coupons, beside the small vendors around the market.",
+          "2026": "After the fire of 1994 the market was rebuilt, keeping its old façade; today it is a busy wholesale market, with a weekend night market along Hàng Đào street.",
+          "2050": "Deliveries move outside peak hours using small electric vehicles; the historic façade and the old market roof are preserved.",
+          "2100": "The market is both a place of trade and a living museum of Old Quarter commerce, with its traditional stalls kept alive."
+        },
+        "events": [
+          {
+            "year": "1889",
+            "text": "Opens under a five-bay iron roof"
+          },
+          {
+            "year": "1946–47",
+            "text": "Scene of fierce fighting during the resistance"
+          },
+          {
+            "year": "1994",
+            "text": "A major fire; the market is rebuilt, keeping its old façade"
+          }
+        ]
+      }
+    },
+    "ga-ha-noi": {
+      "name": "Ga Hà Nội",
+      "sub": "Ga Hàng Cỏ · 1902",
+      "stories": {
+        "1926": "Nhà ga trung tâm (ga Hàng Cỏ) hoàn thành năm 1902, đầu mối các tuyến đường sắt đi Hải Phòng, Lào Cai và vào phía Nam.",
+        "1954": "Sau ngày tiếp quản, nhà ga là cửa ngõ đường sắt chính của Thủ đô miền Bắc.",
+        "1975": "Đại sảnh bị bom Mỹ đánh sập năm 1972; hai cánh kiến trúc Pháp còn lại. Sau ngày thống nhất, ga Hàng Cỏ đổi tên thành ga Hà Nội và đại sảnh được xây lại theo kiến trúc mới.",
+        "2026": "Vẫn là nhà ga chính của Hà Nội, điểm xuất phát tàu Thống Nhất; tuyến metro số 3 có ga ngầm \"Ga Hà Nội\" ngay cạnh.",
+        "2050": "Nhà ga trở thành đầu mối giao thông kết hợp đường sắt quốc gia, metro và xe buýt điện, với khu thương mại phía trên.",
+        "2100": "Tàu cao tốc và metro tự hành chạy ngầm; mặt tiền 1902 còn lại được giữ như ký ức về thời kỳ đầu của đường sắt Việt Nam."
+      },
+      "events": [
+        {
+          "year": "1902",
+          "text": "Nhà ga trung tâm (ga Hàng Cỏ) hoàn thành"
+        },
+        {
+          "year": "1972",
+          "text": "Trúng bom Mỹ; đại sảnh bị đánh sập hoàn toàn"
+        },
+        {
+          "year": "Sau 1975",
+          "text": "Đổi tên thành ga Hà Nội; đại sảnh được xây lại theo kiến trúc mới"
+        }
+      ],
+      "sources": [
+        {
+          "title": "Ga Hà Nội",
+          "site": "Wikipedia tiếng Việt",
+          "url": "https://vi.wikipedia.org/wiki/Ga_H%C3%A0_N%E1%BB%99i"
+        }
+      ],
+      "en": {
+        "name": "Hanoi Railway Station",
+        "sub": "Ga Hàng Cỏ · 1902",
+        "stories": {
+          "1926": "The central station (Hàng Cỏ station), completed in 1902, was the hub of the lines to Haiphong, Lào Cai and the south.",
+          "1954": "After the takeover, the station was the main railway gateway of the capital of the North.",
+          "1975": "The main hall was destroyed by American bombs in 1972; the two French wings survived. After reunification Hàng Cỏ station was renamed Hanoi Station and the hall was rebuilt in a new style.",
+          "2026": "Still Hanoi’s main station and the starting point of the Reunification Express; metro line 3 has an underground “Ga Hà Nội” station right next to it.",
+          "2050": "The station becomes an interchange for national rail, metro and electric buses, with a commercial area above it.",
+          "2100": "High-speed trains and driverless metros run underground; the remaining 1902 façade is kept as a memory of the early days of Vietnam’s railways."
+        },
+        "events": [
+          {
+            "year": "1902",
+            "text": "The central station (Hàng Cỏ station) is completed"
+          },
+          {
+            "year": "1972",
+            "text": "Hit by US bombs; the main hall is destroyed"
+          },
+          {
+            "year": "After 1975",
+            "text": "Renamed Hanoi Station; the main hall is rebuilt in a new style"
+          }
+        ]
+      }
+    }
+  }
+}

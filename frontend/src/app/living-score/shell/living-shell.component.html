@@ -1,31 +1,56 @@
-<div class="ls-root" [attr.data-theme]="theme()" [style]="bandVars">
+<div class="ls-root" [attr.data-theme]="theme()" [attr.lang]="lang.lang()" [style]="bandVars">
   <header class="ls-topbar">
-    <a class="ls-brand" routerLink="/living-score" aria-label="Hanoi Living Score — trang giới thiệu">
+    <a class="ls-brand" routerLink="/living-score" [attr.aria-label]="t().nav.brand">
       <span class="ls-brand__mark" aria-hidden="true">
         <ls-icon name="pin" [size]="18" />
       </span>
       <span>Living Score</span>
     </a>
 
-    <nav class="ls-topnav" aria-label="Điều hướng chính">
+    <nav class="ls-topnav" [attr.aria-label]="t().nav.main">
       @for (item of nav; track item.path) {
         <a [routerLink]="item.path" routerLinkActive="is-active">
           <ls-icon [name]="item.icon" [size]="17" />
-          {{ item.label }}
+          {{ t().nav[item.key] }}
         </a>
       }
     </nav>
+
+    <div class="ls-topbar__actions">
+      <button type="button" class="ls-btn ls-btn-ghost ls-btn-sm" [title]="t().shell.shareTitle" [attr.aria-label]="t().shell.share" (click)="share()">
+        <ls-icon name="share" [size]="15" /> <span class="ls-hide-sm">{{ t().shell.share }}</span>
+      </button>
+      <button type="button" class="ls-btn ls-btn-ghost ls-btn-sm" [attr.aria-label]="t().shell.switchToAria" (click)="lang.toggle()">
+        <ls-icon name="globe" [size]="15" /> {{ lang.lang() === 'vi' ? 'EN' : 'VI' }}
+      </button>
+    </div>
   </header>
 
+  @if (prefs.sharedWeights()) {
+    <div class="ls-shared" role="status">
+      <ls-icon name="sliders" [size]="15" />
+      <span>{{ t().shell.sharedTitle }}</span>
+      <button type="button" class="ls-btn ls-btn-primary ls-btn-sm" (click)="prefs.adoptShared()">{{ t().shell.sharedAdopt }}</button>
+      <button type="button" class="ls-btn ls-btn-ghost ls-btn-sm" (click)="dismissShared()">{{ t().shell.sharedDismiss }}</button>
+    </div>
+  }
+
   <main class="ls-main">
-    <router-outlet />
+    <!-- Re-created when the language or the weights source changes, so every page reloads its data. -->
+    @for (key of [viewKey()]; track key) {
+      <router-outlet />
+    }
   </main>
 
-  <nav class="ls-bottomnav" aria-label="Điều hướng chính (di động)">
+  @if (toast()) {
+    <div class="ls-toast" role="status">{{ toast() }}</div>
+  }
+
+  <nav class="ls-bottomnav" [attr.aria-label]="t().nav.mobile">
     @for (item of nav; track item.path) {
       <a [routerLink]="item.path" routerLinkActive="is-active">
         <ls-icon [name]="item.icon" [size]="21" />
-        {{ item.label }}
+        {{ t().nav[item.key] }}
       </a>
     }
   </nav>

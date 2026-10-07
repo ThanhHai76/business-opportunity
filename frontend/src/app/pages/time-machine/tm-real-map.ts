@@ -26,8 +26,8 @@ const CENTRE_BOUNDS: maplibregl.LngLatBoundsLike = [
 ];
 
 /**
- * The geographic version of the Time Machine map: an OpenStreetMap base with one marker per landmark.
- * MapLibre is only downloaded the first time the real map is shown.
+ * The geographic version of the Time Machine map: an OpenFreeMap base with one marker per landmark, and
+ * optionally a walking tour drawn through some of them. MapLibre is only downloaded the first time the map is shown.
  */
 export class TmRealMap {
   private map?: maplibregl.Map;
@@ -35,6 +35,8 @@ export class TmRealMap {
   private readonly markers = new Map<string, HTMLElement>();
   private theme: Theme;
   private selected = '';
+  /** Landmark keys of the tour on show, in walking order (empty = none). */
+  private tour: string[] = [];
   private destroyed = false;
 
   constructor(
@@ -72,7 +74,74 @@ export class TmRealMap {
     if (theme === this.theme) return;
     this.theme = theme;
     // Markers are DOM elements, so swapping the style leaves them in place.
-    this.map?.setStyle(STYLE_URL[theme]);
+    // diff: false → a full reload that fires 'style.load', where the tour line is added back.
+    this.map?.setStyle(STYLE_URL[theme], { diff: false });
+  }
+
+  /** New display names (e.g. after a language switch): marker labels and accessible names. */
+  setNames(names: Record<string, string>): void {
+    for (const item of this.items) if (names[item.key]) item.name = names[item.key];
+    this.markers.forEach((el, key) => {
+      const name = names[key];
+      if (!name) return;
+      el.setAttribute('aria-label', name);
+      const tag = el.querySelector('.tm-mpin-tag');
+      if (tag) tag.textContent = name;
+    });
+  }
+
+  /** Draws a tour (landmark keys in order) as a dashed line with numbered stops; [] clears it. */
+  showTour(keys: string[]): void {
+    this.tour = keys;
+    this.markers.forEach((el, key) => {
+      const order = keys.indexOf(key);
+      if (order >= 0) el.dataset['order'] = String(order + 1);
+      else delete el.dataset['order'];
+      el.classList.toggle('off-tour', keys.length > 0 && order < 0);
+    });
+    this.applyTour();
+    const coords = this.tourCoords();
+    if (this.map && coords.length > 1) {
+      const lngs = coords.map((c) => c[0]);
+      const lats = coords.map((c) => c[1]);
+      this.map.fitBounds(
+        [
+          [Math.min(...lngs), Math.min(...lats)],
+          [Math.max(...lngs), Math.max(...lats)],
+        ],
+        { padding: 60, maxZoom: 16, duration: 700 },
+      );
+    }
+  }
+
+  private tourCoords(): [number, number][] {
+    return this.tour.map((key) => this.items.find((i) => i.key === key)?.lngLat).filter((c): c is [number, number] => !!c);
+  }
+
+  /**
+   * (Re)creates the tour line; runs again on every 'style.load', since a style swap drops custom layers.
+   * isStyleLoaded() stays false while a vector style's sprites/glyphs load, so rely on addSource throwing instead.
+   */
+  private applyTour(): void {
+    const map = this.map;
+    if (!map) return;
+    const data: GeoJSON.Feature = { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: this.tourCoords() } };
+    try {
+      const source = map.getSource('tm-tour') as maplibregl.GeoJSONSource | undefined;
+      if (source) source.setData(data);
+      else map.addSource('tm-tour', { type: 'geojson', data });
+      if (!map.getLayer('tm-tour-line')) {
+        map.addLayer({
+          id: 'tm-tour-line',
+          type: 'line',
+          source: 'tm-tour',
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': this.theme === 'dark' ? '#e4c98a' : '#8a6420', 'line-width': 3, 'line-dasharray': [1.5, 1.5], 'line-opacity': 0.9 },
+        });
+      }
+    } catch {
+      // Style still loading — the 'style.load' listener adds the line once it is ready.
+    }
   }
 
   destroy(): void {
@@ -97,6 +166,7 @@ export class TmRealMap {
     });
     map.touchZoomRotate.disableRotation();
     map.addControl(new ml.NavigationControl({ showCompass: false }), 'top-right');
+    map.on('style.load', () => this.applyTour());
 
     for (const item of this.items) {
       const el = document.createElement('button');
@@ -118,5 +188,6 @@ export class TmRealMap {
     }
     this.map = map;
     if (this.selected) this.select(this.selected);
+    if (this.tour.length) this.showTour(this.tour);
   }
 }

@@ -12,17 +12,17 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import * as maplibregl from 'maplibre-gl';
-import { catchError, of } from 'rxjs';
+import { catchError, of, switchMap } from 'rxjs';
 import { ThemeService } from '../../../services/theme.service';
-import { BASEMAPS, overlayPalette } from '../../components/pi-map-style';
-import { formatInt } from '../../pi-format';
+import { baseStyle, firstSymbolLayer, overlayPalette } from '../../components/pi-map-style';
+import { formatDistance, formatInt, formatNum } from '../../pi-format';
 import { MapLayers } from '../../pi.models';
 import { PiApiService, PiStateService } from '../../pi.service';
 
-/** 03 · Hero / entry — the product pitch with a live map behind it. */
+/** 03 · Hero / entry — the product pitch with a live map of the featured ward behind it. */
 @Component({
   selector: 'pi-hero',
   standalone: true,
@@ -33,36 +33,40 @@ import { PiApiService, PiStateService } from '../../pi.service';
 })
 export class PiHeroComponent implements AfterViewInit, OnDestroy {
   private readonly api = inject(PiApiService);
-  private readonly state = inject(PiStateService);
+  protected readonly state = inject(PiStateService);
   private readonly router = inject(Router);
   private readonly zone = inject(NgZone);
   protected readonly theme = inject(ThemeService);
+  protected readonly t = this.state.t;
 
   @ViewChild('mapHost', { static: true }) private mapHost!: ElementRef<HTMLDivElement>;
   private map?: maplibregl.Map;
-  private mapReady = false;
+  private styleToken = 0;
 
-  protected readonly overview = toSignal(this.api.overview().pipe(catchError(() => of(null))), { initialValue: null });
-  private readonly layers = toSignal(this.api.map(2030).pipe(catchError(() => of(null))), { initialValue: null });
+  protected readonly overview = toSignal(toObservable(this.state.lang).pipe(switchMap((lang) => this.api.overview(lang).pipe(catchError(() => of(null))))), { initialValue: null });
+  private readonly layers = toSignal(toObservable(this.state.lang).pipe(switchMap((lang) => this.api.map(2026, lang).pipe(catchError(() => of(null))))), { initialValue: null });
   protected readonly offline = computed(() => this.overview() === null && this.layers() === null);
 
   protected readonly question = signal('');
-  protected readonly placeholder = computed(() => this.overview()?.defaultQuestion ?? 'Is Gia Lâm a good area to buy for the next 5 years?');
+  protected readonly placeholder = computed(() => this.overview()?.defaultQuestion ?? '');
   protected readonly formatInt = formatInt;
+  protected readonly formatDistance = formatDistance;
+  protected readonly formatNum = formatNum;
 
   constructor() {
     effect(() => {
-      const layers = this.layers();
+      this.layers();
+      this.overview();
       this.theme.effective();
-      untracked(() => this.mapReady && this.draw(layers));
+      untracked(() => this.map && this.draw());
     });
   }
 
   ngAfterViewInit(): void {
     this.zone.runOutsideAngular(() => {
-      const map = new maplibregl.Map({
+      this.map = new maplibregl.Map({
         container: this.mapHost.nativeElement,
-        style: { version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#0a101c' } }] },
+        style: { version: 8, sources: {}, layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#0a101c' } }] },
         center: [105.9, 21.05],
         zoom: 11.3,
         pitch: 48,
@@ -70,11 +74,7 @@ export class PiHeroComponent implements AfterViewInit, OnDestroy {
         interactive: false,
         attributionControl: { compact: true },
       });
-      this.map = map;
-      map.on('load', () => {
-        this.mapReady = true;
-        this.draw(this.layers());
-      });
+      this.draw();
     });
   }
 
@@ -82,47 +82,62 @@ export class PiHeroComponent implements AfterViewInit, OnDestroy {
     this.map?.remove();
   }
 
-  private draw(data: MapLayers | null): void {
+  /** Basemap, then the featured ward, the metro and its TOD rings, and the bridges / Ring Road 4 being built. */
+  private draw(): void {
     const map = this.map!;
     const theme = this.theme.effective();
-    const p = overlayPalette(theme);
-    const spec = BASEMAPS[theme === 'dark' ? 'satellite' : 'dark'](theme);
-    for (const id of ['h-district', 'h-district-line', 'h-tod', 'h-tod-line', 'h-metro', 'base']) if (map.getLayer(id)) map.removeLayer(id);
-    for (const id of ['h-districts', 'h-tod', 'h-metro', 'base']) if (map.getSource(id)) map.removeSource(id);
-    map.setPaintProperty('bg', 'background-color', theme === 'dark' ? '#0a101c' : '#eef2f7');
-    map.addSource('base', { type: 'raster', tiles: spec.tiles, tileSize: 256, maxzoom: spec.maxzoom, attribution: spec.attribution });
-    map.addLayer({ id: 'base', type: 'raster', source: 'base', paint: theme === 'dark' ? { 'raster-brightness-max': 0.5, 'raster-saturation': -0.4 } : spec.paint });
-    if (!data) return;
+    const data: MapLayers | null = this.layers();
+    const token = ++this.styleToken;
+    void baseStyle('map', theme).then((style) => {
+      if (token !== this.styleToken) return;
+      const before = firstSymbolLayer(style);
+      map.setStyle(style, { diff: false });
+      map.once('style.load', () => {
+        if (token !== this.styleToken || !data) return;
+        const p = overlayPalette(theme);
+        const featured = this.overview()?.featured.slug ?? '';
+        map.addSource('h-wards', { type: 'geojson', data: data.layers.wards });
+        map.addSource('h-tod', { type: 'geojson', data: data.layers.tod });
+        map.addSource('h-metro', { type: 'geojson', data: data.layers.metro });
+        map.addSource('h-infra', { type: 'geojson', data: data.layers.infrastructure });
+        const isFeatured: maplibregl.FilterSpecification = ['==', ['get', 'slug'], featured];
+        map.addLayer({ id: 'h-ward', type: 'fill', source: 'h-wards', filter: isFeatured, paint: { 'fill-color': p.green, 'fill-opacity': 0.16 } }, before);
+        map.addLayer({ id: 'h-ward-line', type: 'line', source: 'h-wards', filter: isFeatured, paint: { 'line-color': p.green, 'line-width': 2.4 } }, before);
+        map.addLayer({ id: 'h-tod', type: 'fill', source: 'h-tod', paint: { 'fill-color': p.cyan, 'fill-opacity': 0.08 } }, before);
+        map.addLayer({ id: 'h-infra', type: 'line', source: 'h-infra', paint: { 'line-color': p.amber, 'line-width': 3.5, 'line-dasharray': [2.5, 1.5] } });
+        map.addLayer({ id: 'h-metro', type: 'line', source: 'h-metro', layout: { 'line-cap': 'round' }, paint: { 'line-color': ['coalesce', ['get', 'color'], p.cyan], 'line-width': 4, 'line-opacity': 0.9 } });
 
-    const featured = this.overview()?.featured.slug ?? 'gia-lam';
-    map.addSource('h-districts', { type: 'geojson', data: data.layers.districts });
-    map.addSource('h-tod', { type: 'geojson', data: data.layers.tod });
-    map.addSource('h-metro', { type: 'geojson', data: data.layers.metro });
-    map.addLayer({ id: 'h-district', type: 'fill', source: 'h-districts', filter: ['==', ['get', 'slug'], featured], paint: { 'fill-color': p.green, 'fill-opacity': 0.1 } });
-    map.addLayer({ id: 'h-district-line', type: 'line', source: 'h-districts', filter: ['==', ['get', 'slug'], featured], paint: { 'line-color': p.green, 'line-width': 2 } });
-    map.addLayer({ id: 'h-tod', type: 'fill', source: 'h-tod', paint: { 'fill-color': p.cyan, 'fill-opacity': 0.07 } });
-    map.addLayer({ id: 'h-tod-line', type: 'line', source: 'h-tod', paint: { 'line-color': p.cyan, 'line-width': 1.4, 'line-dasharray': [3, 3] } });
-    map.addLayer({ id: 'h-metro', type: 'line', source: 'h-metro', layout: { 'line-cap': 'round' }, paint: { 'line-color': p.cyan, 'line-width': 4, 'line-dasharray': [3, 1.8], 'line-opacity': 0.85 } });
-
-    const cell = data.layers.districts.features.find((f) => (f.properties as { slug: string }).slug === featured);
-    if (cell) {
-      const ring = (cell.geometry as GeoJSON.Polygon).coordinates[0] as [number, number][];
-      const bounds = ring.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(ring[0], ring[0]));
-      const w = this.mapHost.nativeElement.clientWidth;
-      const wide = w > 1100;
-      map.fitBounds(bounds, {
-        padding: { top: 120, bottom: 120, left: wide ? Math.round(w * 0.5) : 40, right: wide ? 160 : 40 },
-        pitch: 48,
-        bearing: -16,
-        duration: 0,
-        maxZoom: 12.4,
+        const ward = data.layers.wards.features.find((f) => (f.properties as { slug: string }).slug === featured);
+        if (!ward) return;
+        const polys = ward.geometry.type === 'Polygon' ? [ward.geometry.coordinates] : (ward.geometry as GeoJSON.MultiPolygon).coordinates;
+        const first = polys[0][0][0] as [number, number];
+        const bounds = new maplibregl.LngLatBounds(first, first);
+        for (const poly of polys) for (const c of poly[0]) bounds.extend(c as [number, number]);
+        const w = this.mapHost.nativeElement.clientWidth;
+        const wide = w > 1100;
+        map.fitBounds(bounds, {
+          padding: { top: 140, bottom: 140, left: wide ? Math.round(w * 0.5) : 40, right: wide ? 200 : 40 },
+          pitch: 48,
+          bearing: -16,
+          duration: 0,
+          maxZoom: 13,
+        });
       });
-    }
+    });
   }
 
   protected ask(): void {
     const q = this.question().trim() || this.placeholder();
+    if (!q) return;
+    const featured = this.overview()?.featured.slug;
+    if (featured && !this.question().trim()) this.state.set('ward', featured);
     this.state.ask(q);
+    void this.router.navigate(['/property-intelligence/map']);
+  }
+
+  protected openFeatured(): void {
+    const featured = this.overview()?.featured.slug;
+    if (featured) this.state.set('ward', featured);
     void this.router.navigate(['/property-intelligence/map']);
   }
 }

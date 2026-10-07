@@ -1,7 +1,9 @@
+@let tx = t();
+@let lang = state.lang();
 @switch (load().status) {
   @case ('loading') {
     <div class="deep">
-      <div class="map"><div class="pi-state">Loading project…</div></div>
+      <div class="map"><div class="pi-state">{{ tx.project.loading }}</div></div>
       <div class="panel">
         <div class="col"><div class="pi-skeleton" style="height: 150px"></div><div class="pi-skeleton" style="height: 240px"></div></div>
         <div class="col"><div class="pi-skeleton" style="height: 260px"></div><div class="pi-skeleton" style="height: 160px"></div></div>
@@ -12,7 +14,7 @@
     @if (load(); as l) {
       <div class="pi-state pi-state--error" role="alert">
         {{ l.status === 'error' ? l.message : '' }}
-        <button type="button" class="pi-btn" (click)="openProject('riverside-aurora')">Open Riverside Aurora</button>
+        <button type="button" class="pi-btn" (click)="openProject('vinhomes-skylake')">{{ tx.project.openDefault }}</button>
       </div>
     }
   }
@@ -21,140 +23,122 @@
       <div class="deep">
         <!-- ============================== map -->
         <div class="map">
-          <pi-project-map
-            [project]="p"
-            [basemap]="state.basemap()"
-            [theme]="theme.effective()"
-            [show]="show()"
-            [formatPrice]="priceFormatter()"
-            (openProject)="openProject($event)"
-          />
+          <pi-project-map [project]="p" [basemap]="state.basemap()" [theme]="theme.effective()" [show]="show()" [text]="tx" (openProject)="openProject($event)" />
           <div class="map__chips">
-            <button type="button" class="chip chip--tod" [attr.aria-pressed]="show().tod" (click)="toggleShow('tod')">{{ p.todRadiusM }} m TOD radius</button>
-            <button type="button" class="chip chip--walk" [attr.aria-pressed]="show().walk" (click)="toggleShow('walk')">Walk 10 min</button>
-            <button type="button" class="chip chip--drive" [attr.aria-pressed]="show().drive" (click)="toggleShow('drive')">Drive 20 min</button>
+            <button type="button" class="chip chip--tod" [attr.aria-pressed]="show().tod" (click)="toggleShow('tod')">{{ tx.project.chips.tod(p.todRadiusM) }}</button>
+            <button type="button" class="chip chip--walk" [attr.aria-pressed]="show().walk" (click)="toggleShow('walk')">{{ tx.project.chips.walk }}</button>
+            <button type="button" class="chip chip--drive" [attr.aria-pressed]="show().drive" (click)="toggleShow('drive')">{{ tx.project.chips.drive }}</button>
           </div>
-          <div class="map__basemap pi-seg" role="group" aria-label="Basemap">
-            <button type="button" [attr.aria-pressed]="state.basemap() === 'satellite'" (click)="state.set('basemap', 'satellite')">Satellite</button>
-            <button type="button" [attr.aria-pressed]="state.basemap() === 'dark'" (click)="state.set('basemap', 'dark')">{{ theme.effective() === 'dark' ? 'Dark' : 'Light' }}</button>
+          <div class="map__basemap pi-seg" role="group" [attr.aria-label]="tx.basemap">
+            <button type="button" [attr.aria-pressed]="state.basemap() === 'map'" (click)="state.set('basemap', 'map')">{{ tx.basemaps.map }}</button>
+            <button type="button" [attr.aria-pressed]="state.basemap() === 'satellite'" (click)="state.set('basemap', 'satellite')">{{ tx.basemaps.satellite }}</button>
           </div>
         </div>
 
         <!-- ============================== intelligence panel -->
         <div class="panel">
+          <p class="banner" role="note">{{ tx.project.banner }}</p>
           <div class="col">
-            <div class="render">
-              <span class="pi-chip pi-tone-growth">{{ p.handover.startsWith('Completed') ? p.handover.toUpperCase() : 'HANDOVER ' + p.handover.toUpperCase() }}</span>
-              <span class="render__note">[ project render / aerial photo ]</span>
-            </div>
-
             <div class="title">
-              <span class="pi-kicker">Property intelligence</span>
-              <h1 class="pi-display">{{ p.name }} · {{ p.tower.replace('Tower ', '') }}</h1>
+              <span class="pi-kicker">{{ tx.project.kicker }} · {{ p.street }}</span>
+              <h1 class="pi-display">{{ p.name }}</h1>
               <p>
-                {{ p.ward }}, <button type="button" class="link" (click)="openDistrict(p.district)">{{ p.districtName }}</button>
-                · {{ p.floors }} floors · {{ p.units }} units · {{ p.typical.beds }}BR {{ p.typical.m2 }} m² typical
+                @if (p.ward; as w) {
+                  <button type="button" class="link" (click)="openWard(w.slug)" [title]="tx.project.wardLink(w.name)">{{ w.name }}</button>
+                }
+                @if (p.note) {
+                  · {{ p.note }}
+                }
               </p>
+              @if (p.approx) {
+                <p class="muted">⚠ {{ tx.project.approx }}</p>
+              }
             </div>
 
             <div class="kpis">
-              <div class="kpi">
-                <span>ESTIMATED PRICE</span>
-                <strong>{{ p.estimate.value | piTotal: state.currency() : state.vndPerUsd() }}</strong>
-                <em>± {{ p.estimate.plusMinus | piTotal: state.currency() : state.vndPerUsd() }} · {{ p.estimate.m2 }} m² unit</em>
+              <div class="kpi kpi--wide">
+                <span>{{ tx.project.price }} · {{ p.price.kindLabel }}</span>
+                <strong>{{ p.price.label }} <small>{{ tx.perM2 }}</small></strong>
+                <em [class]="p.vsMarket.pct > 0 ? 'pi-warn' : 'pi-up'">{{ tx.project.vsMarket(p.vsMarket.pct, p.vsMarket.market, p.vsMarket.quarter) }}</em>
               </div>
               <div class="kpi">
-                <span>PRICE / m²</span>
-                <strong>{{ p.pricePerM2 | piPerM2: state.currency() : state.vndPerUsd() }}</strong>
-                <em [class]="p.vsDistrict >= 0 ? 'pi-up' : 'pi-down'">{{ p.vsDistrict > 0 ? '+' : '' }}{{ p.vsDistrict }}% vs district</em>
+                <span>{{ tx.project.unit(p.unit.m2) }}</span>
+                <strong>{{ unitPrice() }}</strong>
+                <em>{{ tx.project.unitSub }}</em>
+              </div>
+              <div class="kpi">
+                <span>{{ tx.project.land }}</span>
+                @if (p.landPrice; as l) {
+                  <strong>{{ formatNum(l.medianVT1, lang) }} <small>{{ tx.perM2 }}</small></strong>
+                  <em>{{ tx.project.landSub(l.rank, l.ranked) }}</em>
+                } @else {
+                  <strong>—</strong>
+                }
               </div>
             </div>
 
-            @if (chart(); as c) {
-              <div class="trend">
-                <div class="trend__head">
-                  <span>Historical Trend</span>
-                  <div class="trend__range" role="group" aria-label="Range">
-                    @for (r of ranges; track r) {
-                      <button type="button" [attr.aria-pressed]="range() === r" (click)="range.set(r)">{{ r }}</button>
-                    }
-                  </div>
-                </div>
-                <svg viewBox="0 0 320 120" preserveAspectRatio="none" class="trend__svg" role="img" [attr.aria-label]="p.name + ' price history'">
-                  <line x1="0" y1="30" x2="320" y2="30" class="grid" />
-                  <line x1="0" y1="70" x2="320" y2="70" class="grid" />
-                  <line x1="0" y1="110" x2="320" y2="110" class="grid" />
-                  <polygon [attr.points]="c.area" class="area" />
-                  <polyline [attr.points]="c.line" class="line" vector-effect="non-scaling-stroke" />
-                  @if (c.milestoneX !== null) {
-                    <line [attr.x1]="c.milestoneX" y1="0" [attr.x2]="c.milestoneX" y2="120" class="milestone" vector-effect="non-scaling-stroke" />
-                  }
-                </svg>
-                <div class="trend__foot">
-                  <span>{{ c.first.label }} · {{ c.first.value | piPerM2: state.currency() : state.vndPerUsd() }}</span>
-                  @if (c.milestoneX !== null) {
-                    <span class="pi-tone-mobility milestone-label">{{ c.milestone }}</span>
-                  }
-                  <span class="pi-up">{{ c.last.label }} · {{ c.last.value | piPerM2: state.currency() : state.vndPerUsd() }}</span>
-                </div>
-              </div>
+            @if (priceSource(); as s) {
+              <p class="src">
+                {{ tx.project.source }}:
+                @if (s.url) {
+                  <a [href]="s.url" target="_blank" rel="noopener">{{ s.title }}</a>
+                } @else {
+                  {{ s.title }}
+                }
+                — {{ s.publisher }}
+              </p>
             }
 
-            <div class="scores">
-              <div class="scorebox scorebox--good">
-                <strong>{{ p.devScore }}</strong>
-                <div><span>Development Score</span><small>{{ p.devNote }}</small></div>
+            <section>
+              <span class="pi-kicker section-title">{{ tx.project.nearby }}</span>
+              <div class="near">
+                <div class="near__row near__row--head"><span>{{ tx.project.nearCols.project }}</span><span>{{ tx.project.nearCols.price }}</span><span>{{ tx.project.nearCols.distance }}</span></div>
+                @for (n of p.nearby; track n.slug) {
+                  <button type="button" class="near__row" (click)="openProject(n.slug)" [title]="n.price.kindLabel">
+                    <span>{{ n.name }}</span>
+                    <span class="pi-mono">{{ n.price.label }}</span>
+                    <span class="pi-mono">{{ (n.distanceM ?? 0) | piDistance: lang }}</span>
+                  </button>
+                }
               </div>
-              <div class="scorebox scorebox--risk">
-                <strong>{{ p.riskScore }}</strong>
-                <div><span>Risk Score</span><small>{{ p.riskNote }}</small></div>
-              </div>
-            </div>
+            </section>
           </div>
 
           <div class="col">
             <section>
-              <span class="pi-kicker section-title">Proximity</span>
+              <span class="pi-kicker section-title">{{ tx.project.proximity }}</span>
               <div class="prox">
                 @for (r of p.proximity; track r.key) {
                   <div class="prox__row">
                     <span>{{ r.label }}</span>
                     <span class="prox__detail">{{ r.detail }}</span>
-                    <span class="prox__d" [class]="r.tone ? 'pi-tone-' + r.tone : ''">{{ r.distanceM | piDistance }}</span>
+                    <span class="prox__d" [class]="r.tone ? 'pi-tone-' + r.tone : ''">{{ r.distanceM | piDistance: lang }}</span>
                   </div>
                 }
               </div>
             </section>
 
             <section>
-              <span class="pi-kicker section-title">Planned infrastructure</span>
+              <span class="pi-kicker section-title">{{ tx.project.infra }}</span>
               <div class="infra">
-                @for (i of p.plannedInfra; track i.name) {
+                @for (i of p.plannedInfra; track i.id) {
                   <div class="infra__row" [class]="i.kind === 'metro' ? 'pi-tone-mobility' : 'pi-tone-planning'">
-                    <i aria-hidden="true"></i><span>{{ i.name }}</span><em>{{ i.year }}</em>
+                    <i aria-hidden="true"></i>
+                    <span>
+                      {{ i.name }}
+                      <small>{{ tx.ward.status[i.status] }} · {{ (i.distanceKm ?? 0) * 1000 | piDistance: lang }}@if (i.schematic) { · {{ tx.ward.schematic }} }</small>
+                    </span>
+                    <em>{{ i.openYear ?? '—' }}</em>
                   </div>
-                }
-              </div>
-            </section>
-
-            <section>
-              <span class="pi-kicker section-title">Nearby projects</span>
-              <div class="near">
-                <div class="near__row near__row--head"><span>PROJECT</span><span>{{ state.currency() === 'VND' ? 'tr/m²' : '$/m²' }}</span><span>SOLD</span></div>
-                @for (n of p.nearby; track n.slug) {
-                  <button type="button" class="near__row" (click)="openProject(n.slug)">
-                    <span>{{ n.name }}</span>
-                    <span class="pi-mono">{{ state.currency() === 'VND' ? n.pricePerM2 : (n.pricePerM2 | piPerM2: 'USD' : state.vndPerUsd()) }}</span>
-                    <span class="pi-mono" [class]="n.soldPct >= 75 ? 'pi-up' : 'pi-warn'">{{ n.soldPct }}%</span>
-                  </button>
+                } @empty {
+                  <p class="muted">{{ tx.project.infraNone }}</p>
                 }
               </div>
             </section>
 
             <div class="take">
-              <div class="take__head"><i aria-hidden="true"></i><span>AI TAKE</span></div>
-              <p>{{ p.aiTake }}</p>
-              <button type="button" class="take__ask" (click)="askAbout(p)">Ask Property AI about this project →</button>
+              <div class="take__head"><i aria-hidden="true"></i><span>{{ tx.ai.title.toUpperCase() }}</span></div>
+              <button type="button" class="take__ask" (click)="askAbout(p)">{{ tx.project.askAbout }}</button>
             </div>
           </div>
         </div>
@@ -165,63 +149,62 @@
         <div class="report" role="dialog" aria-modal="true" aria-labelledby="report-title">
           <header class="report__head">
             <div>
-              <span class="pi-kicker">Investment report · sample data</span>
-              <h2 id="report-title" class="pi-display">{{ p.name }} · {{ p.tower }}</h2>
-              <p>{{ p.ward }}, {{ p.districtName }} · generated {{ today() }}</p>
+              <span class="pi-kicker">{{ tx.project.reportKicker }}</span>
+              <h2 id="report-title" class="pi-display">{{ p.name }}</h2>
+              <p>{{ p.ward?.name ?? p.street }} · {{ tx.project.generated(today()) }}</p>
             </div>
             <div class="report__actions">
-              <button type="button" class="pi-btn" (click)="print()">Print / PDF</button>
-              <button type="button" class="pi-btn" (click)="closeReport()" aria-label="Close report">✕</button>
+              <button type="button" class="pi-btn" (click)="print()">{{ tx.project.print }}</button>
+              <button type="button" class="pi-btn" (click)="closeReport()" [attr.aria-label]="tx.project.close">✕</button>
             </div>
           </header>
           <div class="report__body">
             <section>
-              <h3>Valuation</h3>
+              <h3>{{ tx.project.sections.price }}</h3>
               <ul>
-                <li>Typical {{ p.typical.beds }}BR {{ p.estimate.m2 }} m² unit: <b>{{ p.estimate.value | piTotal: state.currency() : state.vndPerUsd() }}</b> (± {{ p.estimate.plusMinus | piTotal: state.currency() : state.vndPerUsd() }})</li>
-                <li>{{ p.pricePerM2 | piPerM2: state.currency() : state.vndPerUsd() }}/m², {{ p.vsDistrict > 0 ? '+' : '' }}{{ p.vsDistrict }}% vs the {{ p.districtName }} average of {{ p.districtPricePerM2 | piPerM2: state.currency() : state.vndPerUsd() }}/m²</li>
-                <li>Base-case 5-year value ≈ <b>{{ base5y() | piTotal: state.currency() : state.vndPerUsd() }}</b> ({{ p.baseScenario.change > 0 ? '+' : '' }}{{ p.baseScenario.change }}%, {{ p.baseScenario.note.toLowerCase() }})</li>
+                <li>{{ p.price.label }} {{ tx.perM2 }} ({{ p.price.kindLabel }})</li>
+                <li>{{ tx.project.vsMarket(p.vsMarket.pct, p.vsMarket.market, p.vsMarket.quarter) }}</li>
+                <li>{{ tx.project.unit(p.unit.m2) }}: {{ unitPrice() }}</li>
+                @if (p.landPrice; as l) {
+                  <li>{{ tx.project.land }}: {{ formatNum(l.medianVT1, lang) }} {{ tx.perM2 }} ({{ tx.project.landSub(l.rank, l.ranked) }})</li>
+                }
               </ul>
             </section>
             <section>
-              <h3>Project</h3>
-              <ul>
-                <li>{{ p.floors }} floors · {{ p.units }} units · {{ p.soldPct }}% sold · handover {{ p.handover }}</li>
-                <li>Development score {{ p.devScore }} ({{ p.devNote }}) · Risk score {{ p.riskScore }} ({{ p.riskNote }})</li>
-              </ul>
-            </section>
-            <section>
-              <h3>Location</h3>
+              <h3>{{ tx.project.sections.location }}</h3>
               <ul>
                 @for (r of p.proximity; track r.key) {
-                  <li>{{ r.label }}: {{ r.detail }} — {{ r.distanceM | piDistance }}</li>
+                  <li>{{ r.label }}: {{ r.detail }} — {{ r.distanceM | piDistance: lang }}</li>
                 }
               </ul>
             </section>
             <section>
-              <h3>Infrastructure pipeline</h3>
+              <h3>{{ tx.project.sections.infra }}</h3>
               <ul>
-                @for (i of p.plannedInfra; track i.name) {
-                  <li>{{ i.name }} — {{ i.year }}</li>
+                @for (i of p.plannedInfra; track i.id) {
+                  <li>{{ i.name }} — {{ tx.ward.status[i.status] }}, {{ i.openYear ?? '—' }} · {{ (i.distanceKm ?? 0) * 1000 | piDistance: lang }}</li>
+                } @empty {
+                  <li>{{ tx.project.infraNone }}</li>
                 }
               </ul>
             </section>
             <section>
-              <h3>Comparables</h3>
+              <h3>{{ tx.project.sections.comps }}</h3>
               <ul>
                 @for (n of p.nearby; track n.slug) {
-                  <li>{{ n.name }} ({{ n.districtName }}): {{ n.pricePerM2 | piPerM2: state.currency() : state.vndPerUsd() }}/m², {{ n.soldPct }}% sold</li>
+                  <li>{{ n.name }} ({{ n.ward?.name ?? n.street }}): {{ n.price.label }} {{ tx.perM2 }}, {{ n.price.kindLabel }}</li>
                 }
               </ul>
             </section>
-            <section class="report__take">
-              <h3>AI take</h3>
-              <p>{{ p.aiTake }}</p>
+            <section>
+              <h3>{{ tx.project.sections.sources }}</h3>
+              <ul>
+                @for (s of p.sources; track s.id) {
+                  <li>{{ s.title }} — {{ s.publisher }}@if (s.url) { · <a [href]="s.url" target="_blank" rel="noopener">{{ s.url }}</a> }</li>
+                }
+              </ul>
             </section>
-            <p class="report__disclaimer">
-              SAMPLE DATA — every price, score, project and scenario in AI Property Intelligence is illustrative and generated for this
-              demo. It is not investment advice and not official market or planning data.
-            </p>
+            <p class="report__disclaimer">{{ tx.project.disclaimer }}</p>
           </div>
         </div>
       }

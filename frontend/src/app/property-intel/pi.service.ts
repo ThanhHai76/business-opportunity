@@ -1,15 +1,14 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Injectable, WritableSignal, inject, signal } from '@angular/core';
+import { Injectable, WritableSignal, computed, inject, signal } from '@angular/core';
 import { Observable, shareReplay } from 'rxjs';
 import { PROPERTY_INTEL_API_URL } from '../config';
+import { PI_TEXT } from './pi-i18n';
 import {
   AskAnswer,
   AskIntent,
   Basemap,
-  Currency,
-  DistrictDetail,
-  DistrictSummary,
   Horizon,
+  Lang,
   LayerKey,
   Lens,
   MapLayers,
@@ -17,19 +16,21 @@ import {
   ProjectDetail,
   ProjectSummary,
   SearchResult,
+  WardDetail,
+  WardSummary,
 } from './pi.models';
 
-export function describeError(error: unknown): string {
+export function describeError(error: unknown, lang: Lang = 'vi'): string {
   if (error instanceof HttpErrorResponse) {
-    if (error.status === 0) return 'Không kết nối được máy chủ. Hãy chắc chắn backend-node đang chạy (cổng 8000).';
+    if (error.status === 0) return PI_TEXT[lang].offline;
     const message = (error.error as { message?: unknown } | null)?.message;
     if (typeof message === 'string') return message;
-    return `Yêu cầu thất bại (${error.status}).`;
+    return lang === 'en' ? `Request failed (${error.status}).` : `Yêu cầu thất bại (${error.status}).`;
   }
-  return 'Đã xảy ra lỗi. Vui lòng thử lại.';
+  return lang === 'en' ? 'Something went wrong. Please try again.' : 'Đã xảy ra lỗi. Vui lòng thử lại.';
 }
 
-/** REST client for /api/property-intel. Static responses are cached for the session. */
+/** REST client for /api/property-intel. Static responses are cached for the session (per language). */
 @Injectable({ providedIn: 'root' })
 export class PiApiService {
   private readonly http = inject(HttpClient);
@@ -47,83 +48,102 @@ export class PiApiService {
     return hit;
   }
 
-  overview(): Observable<Overview> {
-    return this.cached(`${this.base}/overview`);
+  overview(lang: Lang): Observable<Overview> {
+    return this.cached(`${this.base}/overview?lang=${lang}`);
   }
 
-  districts(): Observable<{ districts: DistrictSummary[] }> {
-    return this.cached(`${this.base}/districts`);
+  wards(): Observable<{ wards: WardSummary[] }> {
+    return this.cached(`${this.base}/wards`);
   }
 
-  district(slug: string): Observable<DistrictDetail> {
-    return this.cached(`${this.base}/districts/${encodeURIComponent(slug)}`);
+  ward(slug: string, lang: Lang): Observable<WardDetail> {
+    return this.cached(`${this.base}/wards/${encodeURIComponent(slug)}?lang=${lang}`);
   }
 
-  projects(): Observable<{ projects: ProjectSummary[] }> {
-    return this.cached(`${this.base}/projects`);
+  projects(lang: Lang): Observable<{ projects: ProjectSummary[] }> {
+    return this.cached(`${this.base}/projects?lang=${lang}`);
   }
 
-  project(slug: string): Observable<ProjectDetail> {
-    return this.cached(`${this.base}/projects/${encodeURIComponent(slug)}`);
+  project(slug: string, lang: Lang): Observable<ProjectDetail> {
+    return this.cached(`${this.base}/projects/${encodeURIComponent(slug)}?lang=${lang}`);
   }
 
-  map(horizon: Horizon): Observable<MapLayers> {
-    return this.cached(`${this.base}/map?horizon=${horizon}`);
+  map(horizon: Horizon, lang: Lang): Observable<MapLayers> {
+    return this.cached(`${this.base}/map?horizon=${horizon}&lang=${lang}`);
   }
 
-  search(q: string): Observable<{ results: SearchResult[] }> {
-    return this.http.get<{ results: SearchResult[] }>(`${this.base}/search`, { params: { q } });
+  search(q: string, lang: Lang): Observable<{ results: SearchResult[] }> {
+    return this.http.get<{ results: SearchResult[] }>(`${this.base}/search`, { params: { q, lang } });
   }
 
-  ask(body: { question: string; intent?: AskIntent; district?: string; project?: string }): Observable<AskAnswer> {
+  ask(body: { question: string; intent?: AskIntent; ward?: string; project?: string; lang: Lang }): Observable<AskAnswer> {
     return this.http.post<AskAnswer>(`${this.base}/ask`, body);
   }
 }
 
-const STORAGE_KEY = 'pi.state';
-const DEFAULT_LAYERS: Record<LayerKey, boolean> = {
+const STORAGE_KEY = 'pi.state.v2';
+const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const HORIZONS: Horizon[] = [2026, 2030, 2045];
+export const DEFAULT_LAYERS: Record<LayerKey, boolean> = {
   planning: true,
-  development: true,
+  development: false,
   metro: true,
   tod: true,
   infrastructure: true,
   projects: true,
-  heatmap: true,
-  social: true,
+  social: false,
   density: false,
   green: false,
 };
 
-interface Persisted {
-  currency: Currency;
+export interface Persisted {
+  lang: Lang;
   horizon: Horizon;
   basemap: Basemap;
   lens: Lens;
-  district: string;
+  ward: string;
   project: string;
   layers: Record<LayerKey, boolean>;
   watchlist: string[];
 }
 
-function read(): Persisted {
-  const fallback: Persisted = {
-    currency: 'VND',
-    horizon: 2030,
-    basemap: 'satellite',
-    lens: 'growth',
-    district: 'gia-lam',
-    project: 'riverside-aurora',
-    layers: { ...DEFAULT_LAYERS },
-    watchlist: [],
-  };
+export const DEFAULT_STATE: Persisted = {
+  lang: 'vi',
+  horizon: 2026,
+  basemap: 'map',
+  lens: 'potential',
+  ward: 'phuong-bo-de',
+  project: 'vinhomes-skylake',
+  layers: { ...DEFAULT_LAYERS },
+  watchlist: [],
+};
+
+/** Saved state, then the link's ?ward=&horizon=&lang= on top (a shared link wins over what was saved). */
+export function initialState(stored: string | null, search: string): Persisted {
+  let state: Persisted = { ...DEFAULT_STATE, layers: { ...DEFAULT_LAYERS } };
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return fallback;
-    const parsed = JSON.parse(raw) as Partial<Persisted>;
-    return { ...fallback, ...parsed, layers: { ...DEFAULT_LAYERS, ...parsed.layers } };
+    if (stored) {
+      const parsed = JSON.parse(stored) as Partial<Persisted>;
+      state = { ...state, ...parsed, layers: { ...DEFAULT_LAYERS, ...parsed.layers } };
+      // Keys from earlier versions (currency switch, price heat layer).
+      delete (state as Partial<Persisted> & { currency?: unknown }).currency;
+      delete (state.layers as Record<string, boolean>)['heatmap'];
+    }
   } catch {
-    return fallback;
+    // corrupted storage — defaults
   }
+  if (!['map', 'satellite'].includes(state.basemap)) state.basemap = 'map';
+  if (!['potential', 'connectivity', 'infrastructure', 'landPrice'].includes(state.lens)) state.lens = 'potential';
+  if (!HORIZONS.includes(state.horizon)) state.horizon = 2026;
+  if (state.lang !== 'en') state.lang = 'vi';
+  const params = new URLSearchParams(search);
+  const ward = params.get('ward');
+  if (ward && SLUG.test(ward)) state.ward = ward;
+  const horizon = Number(params.get('horizon'));
+  if (HORIZONS.includes(horizon as Horizon)) state.horizon = horizon as Horizon;
+  const lang = params.get('lang');
+  if (lang === 'vi' || lang === 'en') state.lang = lang;
+  return state;
 }
 
 export interface ChatTurn {
@@ -137,23 +157,22 @@ export interface ChatTurn {
 @Injectable({ providedIn: 'root' })
 export class PiStateService {
   private readonly api = inject(PiApiService);
-  private readonly initial = read();
+  private readonly initial = initialState(readStorage(), typeof location !== 'undefined' ? location.search : '');
   private nextId = 1;
 
-  readonly currency = signal<Currency>(this.initial.currency);
+  readonly lang = signal<Lang>(this.initial.lang);
+  readonly t = computed(() => PI_TEXT[this.lang()]);
   readonly horizon = signal<Horizon>(this.initial.horizon);
   readonly basemap = signal<Basemap>(this.initial.basemap);
   readonly lens = signal<Lens>(this.initial.lens);
-  readonly district = signal<string>(this.initial.district);
+  readonly ward = signal<string>(this.initial.ward);
   readonly project = signal<string>(this.initial.project);
   readonly layers = signal<Record<LayerKey, boolean>>(this.initial.layers);
   readonly watchlist = signal<string[]>(this.initial.watchlist);
-  /** Sample VND per USD from the API; used by the currency switch. */
-  readonly vndPerUsd = signal(25_400);
 
   readonly chat = signal<ChatTurn[]>([]);
   readonly asking = signal(false);
-  /** Investment report dialog for the current project (opened from the shell header). */
+  /** Project report dialog (opened from the shell header). */
   readonly reportOpen = signal(false);
 
   toggleLayer(key: LayerKey): void {
@@ -161,7 +180,12 @@ export class PiStateService {
     this.save();
   }
 
-  set<K extends 'currency' | 'horizon' | 'basemap' | 'lens' | 'district' | 'project'>(key: K, value: Persisted[K]): void {
+  setLayers(on: LayerKey[]): void {
+    this.layers.update((l) => Object.fromEntries(Object.keys(l).map((k) => [k, on.includes(k as LayerKey)])) as Record<LayerKey, boolean>);
+    this.save();
+  }
+
+  set<K extends 'lang' | 'horizon' | 'basemap' | 'lens' | 'ward' | 'project'>(key: K, value: Persisted[K]): void {
     (this[key] as WritableSignal<Persisted[K]>).set(value);
     this.save();
   }
@@ -171,20 +195,30 @@ export class PiStateService {
     this.save();
   }
 
+  /** Link to what is on screen: the page path plus ward, horizon and language. */
+  shareUrl(path: string): string {
+    const params = new URLSearchParams();
+    params.set('ward', this.ward());
+    params.set('horizon', String(this.horizon()));
+    if (this.lang() === 'en') params.set('lang', 'en');
+    return `${location.origin}${path.split('?')[0]}?${params}`;
+  }
+
   /** Sends a question to the analyst; answers stack up in `chat` (the newest last). */
   ask(question: string, intent?: AskIntent): void {
     const text = question.trim();
     if (!text || this.asking()) return;
     const id = this.nextId++;
+    const lang = this.lang();
     this.chat.update((turns) => [...turns, { id, question: text }].slice(-12));
     this.asking.set(true);
-    this.api.ask({ question: text, intent, district: this.district(), project: this.project() }).subscribe({
+    this.api.ask({ question: text, intent, ward: this.ward(), project: intent === 'project' ? this.project() : undefined, lang }).subscribe({
       next: (answer) => {
         this.patchTurn(id, { answer });
         this.asking.set(false);
       },
       error: (err) => {
-        this.patchTurn(id, { error: describeError(err) });
+        this.patchTurn(id, { error: describeError(err, lang) });
         this.asking.set(false);
       },
     });
@@ -196,11 +230,11 @@ export class PiStateService {
 
   private save(): void {
     const state: Persisted = {
-      currency: this.currency(),
+      lang: this.lang(),
       horizon: this.horizon(),
       basemap: this.basemap(),
       lens: this.lens(),
-      district: this.district(),
+      ward: this.ward(),
       project: this.project(),
       layers: this.layers(),
       watchlist: this.watchlist(),
@@ -210,5 +244,13 @@ export class PiStateService {
     } catch {
       // storage blocked — state still applies for this session
     }
+  }
+}
+
+function readStorage(): string | null {
+  try {
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
   }
 }

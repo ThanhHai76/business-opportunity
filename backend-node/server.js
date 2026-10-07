@@ -1,14 +1,11 @@
 /**
  * Node.js/Express API for the Opportunity Map project.
  *
- *   /api/cities, /api/business-types, /api/areas ...   "Bản đồ Cơ hội Kinh doanh" — a drop-in
- *       replacement for the FastAPI backend (../backend), same endpoints and response shapes.
+ *   /api/opportunity/...                               Business Opportunity Map — Hanoi wards (2025), OSM data (src/opportunity).
  *   /api/living-score/...                              Hanoi Living Score (src/living-score).
- *   /api/future-map/...                                Hanoi Future Map — scenario layers 2026-2100 (src/future-map).
+ *   /api/future-map/...                                Hanoi Future Map — sourced plan milestones 2026-2065 (src/future-map).
  *   /api/business-copilot/...                          Hanoi Business Copilot — location intelligence (src/business-copilot).
  *   /api/property-intel/...                            AI Property Intelligence — area and project intelligence (src/property-intel).
- *
- * Run this or the Python backend on port 8000, never both at once.
  */
 try {
   process.loadEnvFile(); // optional .env (Node >= 20.12); real environment variables win
@@ -18,12 +15,12 @@ try {
 
 const express = require('express');
 const cors = require('cors');
-const { CITIES, squarePolygon } = require('./src/data');
-const { BUSINESS_TYPES, scoreArea } = require('./src/scoring');
+const { createOpportunityMap } = require('./src/opportunity');
 const { createLivingScore } = require('./src/living-score');
 const { createFutureMap } = require('./src/future-map');
 const { createBusinessCopilot } = require('./src/business-copilot');
 const { createPropertyIntel } = require('./src/property-intel');
+const { createTimeMachine } = require('./src/time-machine');
 
 const PORT = process.env.PORT || 8000;
 
@@ -36,15 +33,6 @@ const EXTRA_CORS_ORIGINS = (process.env.CORS_ORIGIN || '')
   .map((o) => o.trim())
   .filter(Boolean);
 const LOCALHOST_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
-
-// Flat slug -> { area, city } index, built once at startup so
-// /api/areas/:slug is a lookup instead of a scan across every city.
-const AREA_INDEX = new Map();
-for (const city of Object.values(CITIES)) {
-  for (const area of city.areas) {
-    AREA_INDEX.set(area.slug, { area, city });
-  }
-}
 
 function createApp(options = {}) {
   const app = express();
@@ -78,87 +66,9 @@ function createApp(options = {}) {
     res.json({ status: 'ok' });
   });
 
-  app.get('/api/cities', (req, res) => {
-    const cities = Object.entries(CITIES).map(([id, city]) => ({ id, label: city.label }));
-    res.json(cities);
-  });
-
-  app.get('/api/business-types', (req, res) => {
-    const types = Object.entries(BUSINESS_TYPES).map(([id, spec]) => ({
-      id,
-      name: spec.name,
-      icon: spec.icon,
-      description: spec.description,
-    }));
-    res.json(types);
-  });
-
-  // GeoJSON FeatureCollection for one city (?city=hcm|hanoi, default hcm) —
-  // one polygon Feature per area, with the top-ranked opportunity baked into
-  // `properties` so the map can choropleth-color every zone in one request.
-  app.get('/api/areas', (req, res, next) => {
-    try {
-      const cityId = req.query.city || 'hcm';
-      const city = CITIES[cityId];
-      if (!city) {
-        return res.status(404).json({ detail: `Unknown city "${cityId}". Try one of: ${Object.keys(CITIES).join(', ')}` });
-      }
-
-      const features = city.areas.map((area) => {
-        const opportunities = scoreArea(area.metrics, area.competition);
-        const top = opportunities[0];
-        return {
-          type: 'Feature',
-          geometry: { type: 'Polygon', coordinates: squarePolygon(area.lat, area.lng) },
-          properties: {
-            slug: area.slug,
-            name: area.name,
-            district: area.district,
-            city: city.label,
-            lat: area.lat,
-            lng: area.lng,
-            top_opportunity: {
-              type_id: top.type_id,
-              name: top.name,
-              icon: top.icon,
-              opportunity_score: top.opportunity_score,
-            },
-            metrics: area.metrics,
-          },
-        };
-      });
-
-      res.json({ type: 'FeatureCollection', features });
-    } catch (err) {
-      next(err);
-    }
-  });
-
-  // Area detail by slug, looked up across every city (slugs are globally
-  // unique), so the frontend never has to pass a city alongside the slug.
-  app.get('/api/areas/:slug', (req, res, next) => {
-    try {
-      const entry = AREA_INDEX.get(req.params.slug);
-      if (!entry) {
-        return res.status(404).json({ detail: 'Area not found' });
-      }
-      const { area, city } = entry;
-      const opportunities = scoreArea(area.metrics, area.competition);
-      res.json({
-        slug: area.slug,
-        name: area.name,
-        district: area.district,
-        city: city.label,
-        lat: area.lat,
-        lng: area.lng,
-        summary: area.summary,
-        metrics: area.metrics,
-        opportunities,
-      });
-    } catch (err) {
-      next(err);
-    }
-  });
+  // Business Opportunity Map (Hanoi wards, OpenStreetMap data; AI answers from the data).
+  const opportunity = createOpportunityMap(options.opportunity);
+  app.use('/api/opportunity', opportunity.router);
 
   // Hanoi Living Score (its own JSON error format, rate limiting and security headers).
   const living = createLivingScore(options.living);
@@ -175,6 +85,10 @@ function createApp(options = {}) {
   // AI Property Intelligence (sample data; rule-based analyst).
   const propertyIntel = createPropertyIntel(options.propertyIntel);
   app.use('/api/property-intel', propertyIntel.router);
+
+  // Hanoi Time Machine AI Storyteller (grounded in the page's own landmark data; mock unless ANTHROPIC_API_KEY is set).
+  const timeMachine = createTimeMachine(options.timeMachine);
+  app.use('/api/time-machine', timeMachine.router);
 
   // Unmatched routes and uncaught errors still respond with JSON, matching
   // every other endpoint's contract (the frontend never has to special-case
@@ -196,11 +110,11 @@ async function main() {
   await living.init();
   const server = app.listen(PORT, () => {
     console.log(`Opportunity Map API (Node/Express) listening on http://localhost:${PORT}`);
-    console.log(`  Business Opportunity Map  /api/areas, /api/cities, /api/business-types`);
+    console.log('  Business Opportunity Map  /api/opportunity (Hanoi wards, OSM data)');
     console.log(`  Hanoi Living Score        /api/living-score  (data source: ${living.config.dataSource})`);
-    console.log('  Hanoi Future Map          /api/future-map    (scenario data)');
+    console.log('  Hanoi Future Map          /api/future-map    (sourced plan data)');
     console.log('  Hanoi Business Copilot    /api/business-copilot (demo data)');
-    console.log('  AI Property Intelligence  /api/property-intel (sample data)');
+    console.log('  AI Property Intelligence  /api/property-intel (79 wards, land prices 2026, market briefings)');
     if (!living.config.anthropicApiKey) console.log('  ANTHROPIC_API_KEY not set — AI recommendations use rule-based explanations.');
   });
 

@@ -451,3 +451,8 @@
     display: none;
   }
 }
+
+.ex-legend__infra small {
+  flex-basis: 100%;
+  color: var(--ls-ink-faint);
+}

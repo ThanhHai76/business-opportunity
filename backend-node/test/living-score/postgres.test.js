@@ -30,7 +30,7 @@ function fakePool({ existingAreas = 0 } = {}) {
 describe('seedPostgres', () => {
   const seed = getSeedData();
 
-  it('loads all SAMPLE DATA inside one transaction', async () => {
+  it('loads all data inside one transaction', async () => {
     const pool = fakePool();
     assert.equal(await seedPostgres(pool), true);
     const sqls = pool.calls.map((c) => c.sql);
@@ -38,15 +38,17 @@ describe('seedPostgres', () => {
     assert.equal(sqls.at(-1), 'COMMIT');
     const count = (re) => sqls.filter((s) => re.test(s)).length;
     assert.equal(count(/^INSERT INTO areas/), seed.areas.length);
-    assert.equal(count(/^INSERT INTO area_scores/), seed.areas.length * 8);
+    assert.equal(count(/^INSERT INTO area_scores/), seed.areas.length * 5);
     assert.equal(count(/^INSERT INTO amenities/), seed.amenities.length);
-    assert.equal(count(/^INSERT INTO infrastructure/), seed.infrastructure.length);
+    assert.equal(count(/^INSERT INTO infrastructure/), seed.metro.length);
     assert.equal(count(/^INSERT INTO area_knowledge/), seed.knowledge.length);
     assert.equal(pool.client.released, true);
     const areaInsert = pool.calls.find((c) => /^INSERT INTO areas/.test(c.sql));
     assert.equal(areaInsert.params.length, 13);
-    assert.equal(areaInsert.params.at(-1), 'SAMPLE DATA');
+    assert.equal(areaInsert.params.at(-1), 'OpenStreetMap');
     assert.equal(JSON.parse(areaInsert.params[11]).type, 'Polygon');
+    assert.equal(JSON.parse(areaInsert.params[7]).length, 5);
+    assert.match(areaInsert.params[5], /former/);
   });
 
   it('does nothing when data already exists, unless reset is requested', async () => {

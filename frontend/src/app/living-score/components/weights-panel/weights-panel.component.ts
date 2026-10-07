@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
 import { CRITERION_ICONS } from '../../living-score.constants';
 import { CRITERION_KEYS, CriterionKey, CriterionMap } from '../../models/living-score.models';
+import { LangService } from '../../services/lang.service';
 import { LivingMetaService } from '../../services/living-meta.service';
 import { PreferencesService, fullWeights } from '../../services/preferences.service';
 import { IconComponent } from '../icon/icon.component';
@@ -16,9 +17,9 @@ import { IconComponent } from '../icon/icon.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="head">
-      <strong>Trọng số cá nhân hoá</strong>
+      <strong>{{ t().weights.title }}</strong>
       <button type="button" class="reset" (click)="reset()" [disabled]="!prefs.weights()">
-        <ls-icon name="refresh" [size]="14" /> Đặt lại
+        <ls-icon name="refresh" [size]="14" /> {{ t().weights.reset }}
       </button>
     </div>
     @if (meta.ready()) {
@@ -44,7 +45,7 @@ import { IconComponent } from '../icon/icon.component';
         }
       </div>
       <p class="note">
-        {{ prefs.weights() ? 'Đang dùng điểm cá nhân hoá — tổng trọng số được chuẩn hoá về 100%.' : 'Đang dùng trọng số mặc định. Kéo thanh trượt để cá nhân hoá.' }}
+        {{ prefs.weights() ? t().weights.personal : t().weights.default }}
       </p>
     }
   `,
@@ -115,6 +116,7 @@ import { IconComponent } from '../icon/icon.component';
 export class WeightsPanelComponent {
   protected readonly prefs = inject(PreferencesService);
   protected readonly meta = inject(LivingMetaService);
+  protected readonly t = inject(LangService).t;
 
   /** Fires after every change so the parent can reload scores. */
   readonly changed = output<void>();

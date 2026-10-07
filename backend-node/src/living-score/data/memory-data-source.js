@@ -1,11 +1,11 @@
 'use strict';
 const { getSeedData } = require('../seed/seed-data');
-const { SAMPLE_DATA_LABEL } = require('./living.types');
+const { DATA_SOURCE_LABEL } = require('./living.types');
 
 /**
  * Read-side port of the domain (listAreas, listAmenities, searchAmenities, listInfrastructure,
  * listKnowledge, ping). Implemented by PostgreSQL/PostGIS and by this in-memory store over the
- * same SAMPLE DATA, so services never care where the data lives.
+ * same OpenStreetMap-derived data, so services never care where the data lives.
  */
 class MemoryDataSource {
   constructor(seed = getSeedData()) {
@@ -15,29 +15,28 @@ class MemoryDataSource {
       slug: a.slug,
       name: a.name,
       nameEn: a.nameEn,
+      searchText: a.searchText,
       description: a.description,
-      population: a.population,
       areaKm2: a.areaKm2,
-      avgRentVnd: a.avgRentVnd,
-      avgPricePerM2Vnd: a.avgPricePerM2Vnd,
+      metrics: a.metrics,
+      facts: a.facts,
       centroid: a.centroid,
       boundary: a.boundary,
       scores: a.scores,
       pros: a.pros,
       cons: a.cons,
-      dataSource: SAMPLE_DATA_LABEL,
+      dataSource: DATA_SOURCE_LABEL,
     }));
     this.amenities = seed.amenities.map((m, index) => ({
       id: index + 1,
       areaSlug: m.areaSlug,
       type: m.type,
       name: m.name,
-      rating: m.rating,
       lng: m.lng,
       lat: m.lat,
       searchText: m.searchText,
     }));
-    this.infrastructure = seed.infrastructure.map((item, index) => ({ id: index + 1, ...item }));
+    this.infrastructure = seed.metro.map((item, index) => ({ id: index + 1, ...item }));
     const idBySlug = new Map(this.areas.map((a) => [a.slug, a.id]));
     this.knowledge = seed.knowledge.map((k, index) => ({
       id: index + 1,

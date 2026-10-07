@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { LangService } from '../../services/lang.service';
 
 export interface RadarAxis {
   key: string;
@@ -71,6 +72,7 @@ interface Point {
   ],
 })
 export class RadarChartComponent {
+  private readonly t = inject(LangService).t;
   protected readonly size = 340;
   protected readonly centre = this.size / 2;
   /** Extra horizontal room so long axis labels ("Không gian xanh") are never clipped. */
@@ -102,7 +104,7 @@ export class RadarChartComponent {
   );
 
   protected readonly ariaLabel = computed(
-    () => 'Biểu đồ radar so sánh: ' + this.series().map((s) => s.name).join(', '),
+    () => this.t().compare.radarAria + this.series().map((s) => s.name).join(', '),
   );
 
   private point(index: number, value: number, scale = 1): Point {

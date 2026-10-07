@@ -1,4 +1,3 @@
-import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -20,26 +19,26 @@ import {
   ScoreVisual,
   SearchResult,
 } from '../../models/living-score.models';
-import { MillionsPipe } from '../../pipes/format.pipes';
+import { FactsPipe } from '../../pipes/format.pipes';
+import { LangService } from '../../services/lang.service';
 import { LivingScoreApiService, describeApiError } from '../../services/living-score-api.service';
 import { LivingMetaService } from '../../services/living-meta.service';
 import { PreferencesService } from '../../services/preferences.service';
 
-type SortKey = 'score' | 'name' | 'rent';
+type SortKey = 'score' | 'name' | 'metro';
 type LoadState = 'loading' | 'ready' | 'error';
 
 @Component({
   selector: 'app-explore',
   standalone: true,
   imports: [
-    DecimalPipe,
     RouterLink,
     AreaMapComponent,
     IconComponent,
     ScoreRingComponent,
     StateMessageComponent,
     WeightsPanelComponent,
-    MillionsPipe,
+    FactsPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './explore.component.html',
@@ -55,7 +54,11 @@ export class ExploreComponent implements OnInit {
 
   protected readonly amenityTypes = AMENITY_TYPES;
   protected readonly amenityMeta = AMENITY_META;
-  protected readonly statusMeta = Object.entries(STATUS_META).map(([key, value]) => ({ key, ...value }));
+  protected readonly statusMeta = (Object.keys(STATUS_META) as Array<keyof typeof STATUS_META>).map((key) => ({ key, ...STATUS_META[key] }));
+  private readonly langService = inject(LangService);
+  protected readonly t = this.langService.t;
+  protected readonly lang = this.langService.lang;
+  protected readonly round = Math.round;
   protected readonly criterionKeys = CRITERION_KEYS;
   protected readonly criterionIcons = CRITERION_ICONS;
   protected readonly theme = this.prefs.effectiveTheme;
@@ -88,8 +91,8 @@ export class ExploreComponent implements OnInit {
     switch (this.sort()) {
       case 'name':
         return items.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
-      case 'rent':
-        return items.sort((a, b) => a.avgRentVnd - b.avgRentVnd);
+      case 'metro':
+        return items.sort((a, b) => b.facts.metroStations.length - a.facts.metroStations.length || b.livingScore - a.livingScore);
       default:
         return items;
     }
@@ -127,7 +130,7 @@ export class ExploreComponent implements OnInit {
             list: this.api.areas({ weights }),
           }).pipe(
             catchError((error: unknown) => {
-              this.errorMessage.set(describeApiError(error));
+              this.errorMessage.set(describeApiError(error, this.lang()));
               this.loadState.set('error');
               return EMPTY;
             }),
@@ -202,12 +205,12 @@ export class ExploreComponent implements OnInit {
     this.selectedSlug.set(slug);
     this.suggestions.set(null);
     this.sheetOpen.set(true);
-    void this.router.navigate([], { relativeTo: this.route, queryParams: { area: slug }, replaceUrl: true });
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { area: slug }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   protected clearSelection(): void {
     this.selectedSlug.set(null);
-    void this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { area: null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   protected onQuery(value: string): void {

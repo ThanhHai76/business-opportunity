@@ -14,43 +14,54 @@ import {
   untracked,
 } from '@angular/core';
 import * as maplibregl from 'maplibre-gl';
+import { PI_TEXT, PiText } from '../pi-i18n';
 import { Basemap, LayerKey, Lens, MapLayers } from '../pi.models';
-import { BASEMAPS, overlayPalette, PiPalette } from './pi-map-style';
+import { LABEL_FONT, PiPalette, baseStyle, firstSymbolLayer, overlayPalette } from './pi-map-style';
 
-const HANOI_CENTER: [number, number] = [105.87, 21.05];
+const HANOI_CENTER: [number, number] = [105.85, 21.03];
 const EMPTY: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
-const SOURCES = ['districts', 'metro', 'stations', 'tod', 'infrastructure', 'planning', 'projects', 'social', 'green', 'heat'] as const;
+const SOURCES = ['wards', 'labels', 'metro', 'stations', 'tod', 'infrastructure', 'planning', 'projects', 'social', 'green'] as const;
+type SourceId = (typeof SOURCES)[number];
 
 /** Overlay layer ids → the layer-panel toggle that shows them (undefined = always on). */
 const LAYER_TOGGLES: Record<string, LayerKey | undefined> = {
   'pi-density': 'density',
   'pi-lens': undefined,
-  'pi-district-line': undefined,
-  'pi-green': 'green',
-  'pi-heat': 'heatmap',
+  'pi-ward-line': undefined,
   'pi-planning-fill': 'planning',
   'pi-planning-line': 'planning',
   'pi-development': 'development',
+  'pi-development-line': 'development',
+  'pi-green': 'green',
   'pi-tod-fill': 'tod',
   'pi-tod-line': 'tod',
   'pi-infra': 'infrastructure',
+  'pi-infra-dashed': 'infrastructure',
   'pi-metro': 'metro',
+  'pi-metro-dashed': 'metro',
   'pi-stations': 'metro',
   'pi-social': 'social',
   'pi-projects': 'projects',
   'pi-selected-line': undefined,
+  'pi-ward-labels': undefined,
 };
+/** Layers that go under the base map's labels; the rest are drawn on top. */
+const UNDER_LABELS = new Set(['pi-density', 'pi-lens', 'pi-ward-line', 'pi-planning-fill', 'pi-planning-line', 'pi-development', 'pi-development-line', 'pi-green', 'pi-tod-fill', 'pi-tod-line']);
+
+const LENS_FIELD: Record<Lens, string> = { potential: 'score', connectivity: 'connectivity', infrastructure: 'infrastructure', landPrice: 'landPrice' };
+/** Land price stops (million VND/m², ward median VT1): 10 → 300 on a roughly logarithmic scale. */
+export const LAND_STOPS = [10, 30, 60, 120, 250] as const;
 
 /**
- * MapLibre map for the Map Intelligence dashboard. Purely presentational: the parent passes the
- * GeoJSON layers, toggles, basemap, lens, theme and selection; clicks come back as outputs.
+ * MapLibre map for the Map Intelligence dashboard. Purely presentational: the parent passes the GeoJSON layers,
+ * toggles, basemap, lens, theme, language and selection; clicks come back as outputs.
  */
 @Component({
   selector: 'pi-area-map',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  template: `<div #host class="pi-map__host" role="application" aria-label="Map of Hà Nội districts with growth, planning and metro layers"></div>`,
+  template: `<div #host class="pi-map__host" role="application" [attr.aria-label]="text().mapAria"></div>`,
   styles: [
     `
       pi-area-map {
@@ -62,19 +73,6 @@ const LAYER_TOGGLES: Record<string, LayerKey | undefined> = {
         position: absolute;
         inset: 0;
         background: var(--pi-map);
-      }
-      .pi-map-label {
-        font: 600 11px var(--pi-font-mono);
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.62);
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-        pointer-events: none;
-        white-space: nowrap;
-      }
-      :root[data-theme='light'] .pi-map-label {
-        color: rgba(10, 20, 38, 0.66);
-        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
       }
       .pi-map-callout {
         display: flex;
@@ -88,15 +86,15 @@ const LAYER_TOGGLES: Record<string, LayerKey | undefined> = {
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         color: var(--pi-ink);
         cursor: default;
+        pointer-events: none;
       }
       .pi-map-callout b {
         font: 700 13px var(--pi-font-display);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+        letter-spacing: 0.04em;
       }
       .pi-map-callout span {
         display: flex;
-        gap: 12px;
+        gap: 10px;
         font: 500 11px var(--pi-font-mono);
         color: var(--pi-dim);
         white-space: nowrap;
@@ -111,16 +109,16 @@ const LAYER_TOGGLES: Record<string, LayerKey | undefined> = {
 export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
   readonly data = input<MapLayers | null>(null);
   readonly toggles = input.required<Record<LayerKey, boolean>>();
-  readonly basemap = input<Basemap>('satellite');
-  readonly lens = input<Lens>('growth');
+  readonly basemap = input<Basemap>('map');
+  readonly lens = input<Lens>('potential');
   readonly theme = input<'light' | 'dark'>('dark');
   readonly selected = input<string | null>(null);
+  readonly text = input<PiText>(PI_TEXT.vi);
+  readonly lang = input<'vi' | 'en'>('vi');
   /** Pixels on the right covered by the floating AI panel, so fitBounds centres in what is visible. */
   readonly rightInset = input(0);
-  /** Formats a tr/m² price for the callout (currency-aware). */
-  readonly formatPrice = input<(tr: number) => string>((tr) => `${tr} tr/m²`);
 
-  readonly selectDistrict = output<string>();
+  readonly selectWard = output<string>();
   readonly selectProject = output<string>();
 
   @ViewChild('host', { static: true }) private host!: ElementRef<HTMLDivElement>;
@@ -128,7 +126,9 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
   private map?: maplibregl.Map;
   private ready = false;
   private framed = false;
-  private labelMarkers: maplibregl.Marker[] = [];
+  /** Increments on every basemap load, so a slow style that arrives late is ignored. */
+  private styleToken = 0;
+  private beforeLabels?: string;
   private callout?: maplibregl.Marker;
   private hoverPopup?: maplibregl.Popup;
   private palette: PiPalette = overlayPalette('dark');
@@ -139,14 +139,13 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
       untracked(() => this.ready && this.applyData(data));
     });
     effect(() => {
-      this.theme();
       this.lens();
-      untracked(() => this.ready && this.rebuildOverlays());
+      untracked(() => this.ready && this.applyLens());
     });
     effect(() => {
       this.basemap();
       this.theme();
-      untracked(() => this.ready && this.applyBasemap());
+      untracked(() => this.map && this.loadBase());
     });
     effect(() => {
       this.toggles();
@@ -154,33 +153,24 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
     });
     effect(() => {
       const slug = this.selected();
-      this.formatPrice();
+      this.text();
       untracked(() => this.ready && this.applySelection(slug, true));
     });
   }
 
   ngAfterViewInit(): void {
     this.zone.runOutsideAngular(() => {
-      const map = new maplibregl.Map({
+      this.map = new maplibregl.Map({
         container: this.host.nativeElement,
-        style: { version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#0e1826' } }] },
+        style: { version: 8, sources: {}, layers: [{ id: 'background', type: 'background', paint: { 'background-color': this.theme() === 'dark' ? '#0e1826' : '#e7edf3' } }] },
         center: HANOI_CENTER,
-        zoom: 11.2,
-        minZoom: 9,
+        zoom: 11,
+        minZoom: 8.5,
         maxZoom: 17,
         attributionControl: { compact: true },
-        dragRotate: true,
-        pitchWithRotate: true,
       });
-      this.map = map;
-      map.on('load', () => {
-        for (const id of SOURCES) map.addSource(id, { type: 'geojson', data: EMPTY });
-        this.ready = true;
-        this.applyBasemap();
-        this.rebuildOverlays();
-        this.applyData(this.data());
-        this.bindInteractions();
-      });
+      this.bindInteractions();
+      this.loadBase();
     });
   }
 
@@ -204,226 +194,176 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
     return on;
   }
 
+  // ------------------------------------------------------------------ basemap
+
+  /** Loads the basemap style, then (re)creates every overlay on top of it. */
+  private loadBase(): void {
+    const map = this.map!;
+    const token = ++this.styleToken;
+    void baseStyle(this.basemap(), this.theme()).then((style) => {
+      if (token !== this.styleToken) return;
+      this.ready = false;
+      this.beforeLabels = firstSymbolLayer(style);
+      map.setStyle(style, { diff: false });
+      // `style.load`, not `load`: one hung base tile must not keep the data layers from appearing.
+      map.once('style.load', () => {
+        if (token !== this.styleToken) return;
+        for (const id of SOURCES) map.addSource(id, { type: 'geojson', data: EMPTY, ...(id === 'wards' ? { promoteId: 'slug' } : {}) });
+        this.ready = true;
+        this.addOverlays();
+        this.applyData(this.data());
+      });
+    });
+  }
+
   // ------------------------------------------------------------------ data
 
   private applyData(data: MapLayers | null): void {
     const map = this.map!;
     const l = data?.layers;
-    const set = (id: string, fc: GeoJSON.FeatureCollection | undefined) => (map.getSource(id) as maplibregl.GeoJSONSource).setData(fc ?? EMPTY);
-    set('districts', l?.districts);
-    set('metro', l?.metro);
-    set('stations', l?.stations);
-    set('tod', l?.tod);
-    set('infrastructure', l?.infrastructure);
-    set('planning', l?.planning);
-    set('projects', l?.projects);
-    set('social', l?.social);
-    set('green', l?.green);
-    // Price heat: district centres (weighted by price) plus every project point.
-    const heat: GeoJSON.FeatureCollection = {
-      type: 'FeatureCollection',
-      features: [...(l?.labels.features ?? []), ...(l?.projects.features ?? [])].map((f) => ({
-        type: 'Feature',
-        geometry: f.geometry,
-        properties: { price: (f.properties as { price: number }).price },
-      })),
-    };
-    set('heat', heat);
-    this.buildLabels(l?.labels);
-    // Frame the selected district the first time data arrives; later horizon switches keep the view.
+    for (const id of SOURCES) (map.getSource(id) as maplibregl.GeoJSONSource | undefined)?.setData((l?.[id as SourceId] as GeoJSON.FeatureCollection | undefined) ?? EMPTY);
+    // Frame the selected ward the first time data arrives; later horizon switches keep the view.
     this.applySelection(this.selected(), !!l && !this.framed);
     if (l) this.framed = true;
   }
 
-  private buildLabels(labels: GeoJSON.FeatureCollection | undefined): void {
-    this.labelMarkers.forEach((m) => m.remove());
-    this.labelMarkers = (labels?.features ?? []).map((f) => {
-      const el = document.createElement('div');
-      el.className = 'pi-map-label';
-      el.textContent = (f.properties as { name: string }).name;
-      return new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat((f.geometry as GeoJSON.Point).coordinates as [number, number]).addTo(this.map!);
-    });
-  }
-
-  // ------------------------------------------------------------------ style
-
-  private applyBasemap(): void {
-    const map = this.map!;
-    const spec = BASEMAPS[this.basemap()](this.theme());
-    if (map.getLayer('base')) map.removeLayer('base');
-    if (map.getSource('base')) map.removeSource('base');
-    map.addSource('base', { type: 'raster', tiles: spec.tiles, tileSize: 256, maxzoom: spec.maxzoom, attribution: spec.attribution });
-    map.addLayer({ id: 'base', type: 'raster', source: 'base', paint: spec.paint }, map.getLayer('pi-density') ? 'pi-density' : undefined);
-    map.setPaintProperty('bg', 'background-color', this.theme() === 'dark' ? '#0e1826' : '#dfe6ee');
-  }
-
   private lensColor(): maplibregl.ExpressionSpecification {
     const p = this.palette;
-    switch (this.lens()) {
-      case 'price':
-        return ['interpolate', ['linear'], ['get', 'price'], 35, p.green, 90, p.yellow, 160, p.amber, 250, p.red];
-      case 'risk':
-        return ['interpolate', ['linear'], ['get', 'growthScore'], 70, p.red, 80, p.amber, 90, p.green];
-      default:
-        return ['interpolate', ['linear'], ['get', 'growthScore'], 70, p.dim, 80, p.cyan, 90, p.green];
+    if (this.lens() === 'landPrice') {
+      const [a, b, c, d, e] = LAND_STOPS;
+      // Wards without a land price (−1) stay uncoloured.
+      return ['case', ['<', ['get', 'landPrice'], 0], 'rgba(0,0,0,0)', ['interpolate', ['linear'], ['get', 'landPrice'], a, p.green, b, p.yellow, c, p.amber, d, p.red, e, p.violet]];
     }
+    return ['interpolate', ['linear'], ['get', LENS_FIELD[this.lens()]], 0, p.dim, 35, p.yellow, 60, p.cyan, 85, p.green];
   }
 
-  /** (Re)creates every overlay layer — cheap, and keeps theme/lens changes simple. */
-  private rebuildOverlays(): void {
+  private applyLens(): void {
+    if (this.map?.getLayer('pi-lens')) this.map.setPaintProperty('pi-lens', 'fill-color', this.lensColor());
+  }
+
+  /** Creates every overlay layer on the current basemap. */
+  private addOverlays(): void {
     const map = this.map!;
     this.palette = overlayPalette(this.theme());
     const p = this.palette;
-    for (const id of Object.keys(LAYER_TOGGLES)) if (map.getLayer(id)) map.removeLayer(id);
+    const add = (layer: maplibregl.LayerSpecification) => map.addLayer(layer, UNDER_LABELS.has(layer.id) ? this.beforeLabels : undefined);
 
-    map.addLayer({
+    add({
       id: 'pi-density',
       type: 'fill',
-      source: 'districts',
-      paint: { 'fill-color': p.violet, 'fill-opacity': ['interpolate', ['linear'], ['get', 'density'], 2000, 0.06, 40000, 0.42] },
+      source: 'wards',
+      filter: ['>=', ['get', 'density'], 0],
+      paint: { 'fill-color': p.violet, 'fill-opacity': ['interpolate', ['linear'], ['get', 'density'], 0, 0.04, 10000, 0.22, 40000, 0.5] },
     });
-    map.addLayer({
-      id: 'pi-lens',
-      type: 'fill',
-      source: 'districts',
-      paint: { 'fill-color': this.lensColor(), 'fill-opacity': 0.1 },
-    });
-    map.addLayer({
-      id: 'pi-district-line',
-      type: 'line',
-      source: 'districts',
-      paint: { 'line-color': p.outline, 'line-width': 1, 'line-dasharray': [3, 3] },
-    });
-    map.addLayer({ id: 'pi-green', type: 'fill', source: 'green', paint: { 'fill-color': p.park, 'fill-opacity': 0.45 } });
-    map.addLayer({
-      id: 'pi-heat',
-      type: 'heatmap',
-      source: 'heat',
-      paint: {
-        'heatmap-weight': ['interpolate', ['linear'], ['get', 'price'], 35, 0.25, 250, 1],
-        'heatmap-intensity': 0.9,
-        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 9, 40, 12, 90, 15, 160],
-        'heatmap-opacity': 0.5,
-        'heatmap-color': [
-          'interpolate',
-          ['linear'],
-          ['heatmap-density'],
-          0,
-          'rgba(0,0,0,0)',
-          0.2,
-          hexA(p.green, 0.5),
-          0.45,
-          hexA(p.yellow, 0.6),
-          0.7,
-          hexA(p.amber, 0.7),
-          1,
-          hexA(p.red, 0.8),
-        ],
-      },
-    });
-    map.addLayer({
+    add({ id: 'pi-lens', type: 'fill', source: 'wards', paint: { 'fill-color': this.lensColor(), 'fill-opacity': 0.24 } });
+    add({ id: 'pi-ward-line', type: 'line', source: 'wards', paint: { 'line-color': p.outline, 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.5, 13, 1.3] } });
+    add({
       id: 'pi-planning-fill',
       type: 'fill',
       source: 'planning',
       filter: ['==', ['get', 'kind'], 'zone'],
-      paint: { 'fill-color': p.amber, 'fill-opacity': 0.16 },
+      paint: { 'fill-color': p.amber, 'fill-opacity': ['match', ['get', 'status'], 'active', 0.1, 0.05] },
     });
-    map.addLayer({
+    add({
       id: 'pi-planning-line',
       type: 'line',
       source: 'planning',
       filter: ['==', ['get', 'kind'], 'zone'],
-      paint: { 'line-color': p.amber, 'line-width': 1.2, 'line-dasharray': [4, 2] },
+      paint: { 'line-color': p.amber, 'line-width': 1.4, 'line-dasharray': [4, 2], 'line-opacity': ['match', ['get', 'status'], 'active', 0.9, 0.5] },
     });
-    map.addLayer({
-      id: 'pi-development',
-      type: 'line',
-      source: 'planning',
-      filter: ['==', ['get', 'kind'], 'development'],
-      paint: { 'line-color': p.amber, 'line-width': 2, 'line-opacity': 0.9 },
+    add({ id: 'pi-development', type: 'fill', source: 'planning', filter: ['==', ['get', 'kind'], 'development'], paint: { 'fill-color': p.amber, 'fill-opacity': 0.28 } });
+    add({ id: 'pi-development-line', type: 'line', source: 'planning', filter: ['==', ['get', 'kind'], 'development'], paint: { 'line-color': p.amber, 'line-width': 1, 'line-opacity': 0.8 } });
+    add({
+      id: 'pi-green',
+      type: 'circle',
+      source: 'green',
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, ['interpolate', ['linear'], ['get', 'ha'], 0, 2, 50, 8], 15, ['interpolate', ['linear'], ['get', 'ha'], 0, 6, 50, 40]],
+        'circle-color': p.park,
+        'circle-opacity': 0.45,
+      },
     });
-    map.addLayer({
-      id: 'pi-tod-fill',
-      type: 'fill',
-      source: 'tod',
-      paint: { 'fill-color': p.cyan, 'fill-opacity': ['match', ['get', 'status'], 'active', 0.1, 0.05] },
-    });
-    map.addLayer({
+    add({ id: 'pi-tod-fill', type: 'fill', source: 'tod', paint: { 'fill-color': p.cyan, 'fill-opacity': ['match', ['get', 'status'], 'active', 0.1, 0.04] } });
+    add({
       id: 'pi-tod-line',
       type: 'line',
       source: 'tod',
-      paint: { 'line-color': p.cyan, 'line-width': 1.2, 'line-dasharray': [3, 3], 'line-opacity': ['match', ['get', 'status'], 'active', 0.9, 0.5] },
+      paint: { 'line-color': p.cyan, 'line-width': 1.1, 'line-dasharray': [3, 3], 'line-opacity': ['match', ['get', 'status'], 'active', 0.85, 0.45] },
     });
-    map.addLayer({
+
+    const solid = ['==', ['get', 'status'], 'operating'] as maplibregl.FilterSpecification;
+    add({
       id: 'pi-infra',
       type: 'line',
       source: 'infrastructure',
-      layout: { 'line-cap': 'round' },
-      paint: { 'line-color': p.amber, 'line-width': ['match', ['get', 'status'], 'open', 4, 3], 'line-opacity': ['match', ['get', 'status'], 'open', 0.85, 0.6] },
+      filter: ['==', ['get', 'status'], 'open'],
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': p.amber, 'line-width': 3.5, 'line-opacity': 0.9 },
     });
-    map.addLayer({
-      id: 'pi-metro',
+    add({
+      id: 'pi-infra-dashed',
+      type: 'line',
+      source: 'infrastructure',
+      filter: ['!=', ['get', 'status'], 'open'],
+      layout: { 'line-join': 'round' },
+      paint: { 'line-color': p.amber, 'line-width': 3, 'line-opacity': 0.75, 'line-dasharray': [2.5, 1.5] },
+    });
+    const metroColor: maplibregl.ExpressionSpecification = ['coalesce', ['get', 'color'], p.cyan];
+    add({ id: 'pi-metro', type: 'line', source: 'metro', filter: solid, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': metroColor, 'line-width': 4 } });
+    add({
+      id: 'pi-metro-dashed',
       type: 'line',
       source: 'metro',
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: {
-        'line-color': this.theme() === 'dark' ? ['get', 'color'] : p.cyan,
-        'line-width': ['match', ['get', 'status'], 'operating', 4, 3],
-        'line-opacity': ['match', ['get', 'status'], 'operating', 1, 0.75],
-      },
+      filter: ['!', solid] as maplibregl.FilterSpecification,
+      layout: { 'line-join': 'round' },
+      paint: { 'line-color': metroColor, 'line-width': 3, 'line-opacity': ['match', ['get', 'status'], 'building', 0.9, 0.55], 'line-dasharray': [2, 1.5] },
     });
-    map.addLayer({
+    add({
       id: 'pi-stations',
       type: 'circle',
       source: 'stations',
       paint: {
-        'circle-radius': 5,
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 3.5, 14, 6],
         'circle-color': ['match', ['get', 'status'], 'operating', p.bg, p.cyan],
         'circle-stroke-color': ['match', ['get', 'status'], 'operating', p.cyan, p.bg],
-        'circle-stroke-width': 2.5,
+        'circle-stroke-width': 2.2,
       },
     });
-    map.addLayer({
+    add({
       id: 'pi-social',
       type: 'circle',
       source: 'social',
       minzoom: 11.5,
       paint: {
-        'circle-radius': 5,
+        'circle-radius': 4.5,
         'circle-color': 'rgba(0,0,0,0)',
         'circle-stroke-color': ['match', ['get', 'kind'], 'hospital', p.redSoft, p.ink2],
-        'circle-stroke-width': 1.5,
+        'circle-stroke-width': 1.4,
       },
     });
-    map.addLayer({
+    add({
       id: 'pi-projects',
       type: 'circle',
       source: 'projects',
-      paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 3.5, 14, 6], 'circle-color': p.projectDot, 'circle-stroke-color': p.bg, 'circle-stroke-width': 1.5 },
+      paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 4, 14, 7], 'circle-color': p.projectDot, 'circle-stroke-color': p.amber, 'circle-stroke-width': 2 },
     });
-    map.addLayer({
-      id: 'pi-selected-line',
-      type: 'line',
-      source: 'districts',
-      filter: ['==', ['get', 'slug'], ''],
-      paint: { 'line-color': p.green, 'line-width': 2.2 },
+    add({ id: 'pi-selected-line', type: 'line', source: 'wards', filter: ['==', ['get', 'slug'], ''], paint: { 'line-color': p.green, 'line-width': 2.6 } });
+    add({
+      id: 'pi-ward-labels',
+      type: 'symbol',
+      source: 'labels',
+      layout: {
+        'text-field': ['get', 'label'],
+        'text-font': LABEL_FONT,
+        'text-size': ['interpolate', ['linear'], ['zoom'], 9, 8.5, 10.5, 9.5, 12, 12, 14, 14],
+        'text-max-width': 5,
+        'text-line-height': 1.1,
+        'text-padding': 0,
+        'symbol-sort-key': ['-', 0, ['coalesce', ['get', 'population'], 0]],
+      },
+      paint: { 'text-color': p.ink, 'text-halo-color': p.halo, 'text-halo-width': 1.6 },
     });
-    // Dashed lines for planned metro / building roads need a separate dasharray (data-driven dasharray is unsupported).
-    this.addDashedTwin('pi-metro', 'metro', ['==', ['get', 'status'], 'planned'], [2, 1.5]);
-    this.addDashedTwin('pi-infra', 'infrastructure', ['==', ['get', 'status'], 'building'], [2.5, 1.5]);
     this.applyVisibility();
-    this.applySelection(this.selected(), false);
-  }
-
-  /** Splits a line layer into solid (filter negated) and dashed (filter) variants. */
-  private addDashedTwin(id: string, source: string, dashedFilter: maplibregl.FilterSpecification, dash: number[]): void {
-    const map = this.map!;
-    const layer = map.getStyle().layers.find((l) => l.id === id) as maplibregl.LineLayerSpecification;
-    const twinId = `${id}-dashed`;
-    if (map.getLayer(twinId)) map.removeLayer(twinId);
-    map.setFilter(id, ['!', dashedFilter] as maplibregl.FilterSpecification);
-    map.addLayer({ ...layer, id: twinId, source, filter: dashedFilter, paint: { ...layer.paint, 'line-dasharray': dash } }, id);
-    LAYER_TOGGLES[twinId] = LAYER_TOGGLES[id];
   }
 
   private applyVisibility(): void {
@@ -438,36 +378,34 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
   private applySelection(slug: string | null, fly: boolean): void {
     const map = this.map!;
     if (map.getLayer('pi-selected-line')) map.setFilter('pi-selected-line', ['==', ['get', 'slug'], slug ?? '']);
-    if (map.getLayer('pi-lens')) {
-      map.setPaintProperty('pi-lens', 'fill-opacity', ['case', ['==', ['get', 'slug'], slug ?? ''], 0.26, 0.1]);
-    }
+    if (map.getLayer('pi-lens')) map.setPaintProperty('pi-lens', 'fill-opacity', ['case', ['==', ['get', 'slug'], slug ?? ''], 0.42, 0.24]);
     this.callout?.remove();
-    const feature = this.data()?.layers.districts.features.find((f) => (f.properties as { slug: string }).slug === slug);
+    const ward = this.data()?.layers.wards.features.find((f) => (f.properties as { slug: string }).slug === slug);
     const label = this.data()?.layers.labels.features.find((f) => (f.properties as { slug: string }).slug === slug);
-    if (!feature || !label) return;
-    const props = label.properties as { name: string; growthScore: number; price: number; yoy: number };
+    if (!ward || !label) return;
+    const props = label.properties as { name: string; score: number; rank: number };
+    const land = (ward.properties as { landPrice: number }).landPrice;
     const el = document.createElement('div');
     el.className = 'pi-map-callout';
     const b = document.createElement('b');
     b.textContent = props.name;
     const line = document.createElement('span');
-    const score = document.createElement('span');
-    score.append('Score ');
     const em = document.createElement('em');
-    em.textContent = String(props.growthScore);
-    score.append(em);
-    const price = document.createElement('span');
-    price.textContent = `${this.formatPrice()(props.price)}`;
-    const yoy = document.createElement('em');
-    yoy.textContent = `${props.yoy > 0 ? '+' : ''}${props.yoy}%`;
-    line.append(score, price, yoy);
+    em.textContent = this.text().popup.ward(props.score, props.rank);
+    line.append(em);
+    if (land >= 0) {
+      const lp = document.createElement('span');
+      lp.textContent = this.text().popup.land(land.toLocaleString(this.lang() === 'en' ? 'en-US' : 'vi-VN'));
+      line.append(lp);
+    }
     el.append(b, line);
-    const [lng, lat] = (label.geometry as GeoJSON.Point).coordinates;
-    this.callout = new maplibregl.Marker({ element: el, anchor: 'top-left', offset: [18, 18] }).setLngLat([lng, lat]).addTo(map);
+    const at = (label.geometry as GeoJSON.Point).coordinates as [number, number];
+    this.callout = new maplibregl.Marker({ element: el, anchor: 'top-left', offset: [16, 14] }).setLngLat(at).addTo(map);
     if (fly) {
-      const ring = (feature.geometry as GeoJSON.Polygon).coordinates[0];
-      const bounds = ring.reduce((b, c) => b.extend(c as [number, number]), new maplibregl.LngLatBounds(ring[0] as [number, number], ring[0] as [number, number]));
-      map.fitBounds(bounds, { padding: { top: 70, bottom: 60, left: 60, right: 60 + this.rightInset() }, maxZoom: 13.2, duration: this.framed ? 900 : 0 });
+      const bounds = new maplibregl.LngLatBounds(at, at);
+      const polys = ward.geometry.type === 'Polygon' ? [ward.geometry.coordinates] : (ward.geometry as GeoJSON.MultiPolygon).coordinates;
+      for (const poly of polys) for (const c of poly[0]) bounds.extend(c as [number, number]);
+      map.fitBounds(bounds, { padding: { top: 70, bottom: 60, left: 60, right: 60 + this.rightInset() }, maxZoom: 13.6, duration: this.framed ? 900 : 0 });
     }
   }
 
@@ -475,61 +413,70 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
 
   private bindInteractions(): void {
     const map = this.map!;
-    const hoverable = ['pi-projects', 'pi-metro', 'pi-metro-dashed', 'pi-infra', 'pi-infra-dashed', 'pi-planning-fill', 'pi-development', 'pi-tod-fill', 'pi-stations', 'pi-social'];
-    this.hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10, maxWidth: '260px' });
+    const hoverable = ['pi-projects', 'pi-stations', 'pi-metro', 'pi-metro-dashed', 'pi-infra', 'pi-infra-dashed', 'pi-social', 'pi-green', 'pi-development', 'pi-planning-fill'];
+    this.hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10, maxWidth: '280px' });
+    const visible = (id: string) => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none';
 
     map.on('mousemove', (e) => {
-      const layers = hoverable.filter((id) => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none');
-      const hit = map.queryRenderedFeatures(e.point, { layers })[0];
-      const overDistrict = map.queryRenderedFeatures(e.point, { layers: ['pi-lens'] }).length > 0;
-      map.getCanvas().style.cursor = hit?.layer.id === 'pi-projects' || overDistrict ? 'pointer' : '';
+      if (!this.ready) return;
+      const hit = map.queryRenderedFeatures(e.point, { layers: hoverable.filter(visible) })[0];
+      const overWard = visible('pi-lens') && map.queryRenderedFeatures(e.point, { layers: ['pi-lens'] }).length > 0;
+      map.getCanvas().style.cursor = hit?.layer.id === 'pi-projects' || overWard ? 'pointer' : '';
       if (!hit) {
         this.hoverPopup!.remove();
         return;
       }
-      this.hoverPopup!.setLngLat(e.lngLat).setDOMContent(describe(hit)).addTo(map);
+      this.hoverPopup!.setLngLat(e.lngLat).setDOMContent(describe(hit, this.text())).addTo(map);
     });
     map.on('mouseout', () => this.hoverPopup?.remove());
 
     map.on('click', (e) => {
-      const project = map.queryRenderedFeatures(e.point, { layers: ['pi-projects'] })[0];
-      if (project && map.getLayoutProperty('pi-projects', 'visibility') !== 'none') {
+      if (!this.ready) return;
+      const project = visible('pi-projects') ? map.queryRenderedFeatures(e.point, { layers: ['pi-projects'] })[0] : undefined;
+      if (project) {
         const slug = (project.properties as { slug: string }).slug;
         this.zone.run(() => this.selectProject.emit(slug));
         return;
       }
-      const district = map.queryRenderedFeatures(e.point, { layers: ['pi-lens'] })[0];
-      if (district) {
-        const slug = (district.properties as { slug: string }).slug;
-        this.zone.run(() => this.selectDistrict.emit(slug));
+      const ward = map.queryRenderedFeatures(e.point, { layers: ['pi-lens'] })[0];
+      if (ward) {
+        const slug = (ward.properties as { slug: string }).slug;
+        this.zone.run(() => this.selectWard.emit(slug));
       }
     });
   }
 }
 
-function describe(f: maplibregl.MapGeoJSONFeature): HTMLElement {
-  const p = f.properties as Record<string, string | number>;
+function describe(f: maplibregl.MapGeoJSONFeature, t: PiText): HTMLElement {
+  const p = f.properties as Record<string, string | number | boolean | null>;
   const el = document.createElement('div');
   const title = document.createElement('strong');
   title.textContent = String(p['name'] ?? '');
   el.append(title);
+  const opens = typeof p['opens'] === 'number' ? (p['opens'] as number) : null;
+  const schematic = p['schematic'] === true ? t.popup.schematic : '';
   const extra = (() => {
     switch (f.layer.id) {
       case 'pi-projects':
-        return `${p['price']} tr/m² · ${p['soldPct']}% sold · click for deep dive`;
+        return t.popup.project(String(p['price']), String(p['kind']));
       case 'pi-metro':
+        return opens && opens > 2026 ? t.popup.metroExpected(opens) + schematic : t.popup.metroOperating;
       case 'pi-metro-dashed':
-        return p['status'] === 'operating' ? `Operating since ${p['opens']}` : `Planned · opens ${p['opens']}`;
+        return (p['status'] === 'building' ? t.popup.metroBuilding(opens) : t.popup.metroPlanned(opens)) + schematic;
       case 'pi-infra':
+        return t.popup.infraOpen(opens);
       case 'pi-infra-dashed':
-        return p['status'] === 'open' ? `Open ${p['opens']}` : `Under construction · ${p['opens']}`;
+        return t.popup.infraBuilding(opens);
       case 'pi-planning-fill':
+        return `${t.popup.pole(Number(p['from']))} · ${p['role'] ?? ''}`;
       case 'pi-development':
-        return `${p['kind'] === 'zone' ? 'Planning zone' : 'Development'} · from ${p['from']}`;
+        return t.popup.site(Number(p['areaHa']));
       case 'pi-stations':
-        return `${p['line']} · ${p['status']}`;
+        return t.popup.station(String(p['line']), p['status'] !== 'operating');
       case 'pi-social':
-        return p['kind'] === 'hospital' ? 'Hospital' : 'School';
+        return p['kind'] === 'hospital' ? t.popup.hospital : t.popup.school;
+      case 'pi-green':
+        return t.popup.park(Number(p['ha']));
       default:
         return '';
     }
@@ -541,9 +488,4 @@ function describe(f: maplibregl.MapGeoJSONFeature): HTMLElement {
     el.append(small);
   }
   return el;
-}
-
-function hexA(hex: string, alpha: number): string {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
 }

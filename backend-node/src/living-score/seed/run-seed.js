@@ -1,6 +1,6 @@
 'use strict';
 /**
- * `npm run seed:living` — inserts the Living Score SAMPLE DATA into PostgreSQL/PostGIS.
+ * `npm run seed:living` — inserts the Living Score data (computed from the OpenStreetMap snapshot) into PostgreSQL/PostGIS.
  * Set SEED_RESET=true to wipe and reload. Apply database/living-score/01-schema.sql first.
  */
 const { loadConfig } = require('../config');

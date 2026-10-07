@@ -13,38 +13,39 @@
         <span class="tm-brand-word"><b>HANOI TIME MACHINE</b><span>THEN · NOW · NEXT</span></span>
       </a>
       <nav class="tm-nav-links">
-        <a class="tm-nav-link" href="#tm-map">Bản đồ</a>
-        <a class="tm-nav-link" href="#tm-timeline">Dòng thời gian</a>
-        <a class="tm-nav-link" href="#tm-compare">Xưa &amp; Nay</a>
-        <a class="tm-nav-link" href="#tm-storyteller">AI kể chuyện</a>
-        <a class="tm-nav-link" href="#tm-ar">AR</a>
-        <a class="tm-nav-link" href="#tm-education">Giáo dục</a>
-        <a class="tm-nav-link" href="#tm-museum">Bảo tàng</a>
+        <a class="tm-nav-link" href="#tm-map" data-en="Map">Bản đồ</a>
+        <a class="tm-nav-link" href="#tm-timeline" data-en="Timeline">Dòng thời gian</a>
+        <a class="tm-nav-link" href="#tm-compare" data-en="Then &amp; Now">Xưa &amp; Nay</a>
+        <a class="tm-nav-link" href="#tm-storyteller" data-en="AI Storyteller">AI kể chuyện</a>
+        <a class="tm-nav-link" href="#tm-ar" data-en="Time Lens">Ống kính</a>
+        <a class="tm-nav-link" href="#tm-education" data-en="Education">Giáo dục</a>
+        <a class="tm-nav-link" href="#tm-museum" data-en="Museums">Bảo tàng</a>
       </nav>
+      <button type="button" class="tm-lang" id="tm-langToggle" aria-label="Switch to English" lang="en">EN</button>
       <a class="tm-btn tm-btn-primary tm-desktop-only" href="#tm-map">Enter Time Machine</a>
-      <button class="tm-nav-toggle" id="tm-navToggle" aria-expanded="false" aria-controls="tm-navMobile" aria-label="Mở menu"><span></span></button>
+      <button class="tm-nav-toggle" id="tm-navToggle" aria-expanded="false" aria-controls="tm-navMobile" aria-label="Mở menu" data-en-aria-label="Open menu"><span></span></button>
     </div>
     <div class="tm-nav-mobile" id="tm-navMobile" hidden>
-      <a href="#tm-map">Bản đồ</a>
-      <a href="#tm-timeline">Dòng thời gian</a>
-      <a href="#tm-compare">Xưa &amp; Nay</a>
-      <a href="#tm-storyteller">AI kể chuyện</a>
-      <a href="#tm-ar">AR</a>
-      <a href="#tm-education">Giáo dục</a>
-      <a href="#tm-museum">Bảo tàng</a>
+      <a href="#tm-map" data-en="Map">Bản đồ</a>
+      <a href="#tm-timeline" data-en="Timeline">Dòng thời gian</a>
+      <a href="#tm-compare" data-en="Then &amp; Now">Xưa &amp; Nay</a>
+      <a href="#tm-storyteller" data-en="AI Storyteller">AI kể chuyện</a>
+      <a href="#tm-ar" data-en="Time Lens">Ống kính</a>
+      <a href="#tm-education" data-en="Education">Giáo dục</a>
+      <a href="#tm-museum" data-en="Museums">Bảo tàng</a>
       <a class="tm-btn tm-btn-primary" href="#tm-map" style="justify-content:center;margin-top:.4rem;">Enter Time Machine</a>
     </div>
   </header>
 
   <aside class="tm-rail" aria-hidden="true" id="tm-rail">
-    <a class="tm-rail-dot" data-target="tm-hero" href="#tm-hero"><span class="tm-rail-label">Mở đầu</span></a>
-    <a class="tm-rail-dot" data-target="tm-map" href="#tm-map"><span class="tm-rail-label">01 · Bản đồ</span></a>
-    <a class="tm-rail-dot" data-target="tm-timeline" href="#tm-timeline"><span class="tm-rail-label">02 · Thời gian</span></a>
-    <a class="tm-rail-dot" data-target="tm-compare" href="#tm-compare"><span class="tm-rail-label">03 · Xưa &amp; Nay</span></a>
-    <a class="tm-rail-dot" data-target="tm-storyteller" href="#tm-storyteller"><span class="tm-rail-label">04 · AI kể chuyện</span></a>
-    <a class="tm-rail-dot" data-target="tm-ar" href="#tm-ar"><span class="tm-rail-label">05 · AR</span></a>
-    <a class="tm-rail-dot" data-target="tm-education" href="#tm-education"><span class="tm-rail-label">06 · Giáo dục</span></a>
-    <a class="tm-rail-dot" data-target="tm-museum" href="#tm-museum"><span class="tm-rail-label">07 · Bảo tàng</span></a>
+    <a class="tm-rail-dot" tabindex="-1" data-target="tm-hero" href="#tm-hero"><span class="tm-rail-label" data-en="Intro">Mở đầu</span></a>
+    <a class="tm-rail-dot" tabindex="-1" data-target="tm-map" href="#tm-map"><span class="tm-rail-label" data-en="01 · Map">01 · Bản đồ</span></a>
+    <a class="tm-rail-dot" tabindex="-1" data-target="tm-timeline" href="#tm-timeline"><span class="tm-rail-label" data-en="02 · Timeline">02 · Thời gian</span></a>
+    <a class="tm-rail-dot" tabindex="-1" data-target="tm-compare" href="#tm-compare"><span class="tm-rail-label" data-en="03 · Then &amp; Now">03 · Xưa &amp; Nay</span></a>
+    <a class="tm-rail-dot" tabindex="-1" data-target="tm-storyteller" href="#tm-storyteller"><span class="tm-rail-label" data-en="04 · AI Storyteller">04 · AI kể chuyện</span></a>
+    <a class="tm-rail-dot" tabindex="-1" data-target="tm-ar" href="#tm-ar"><span class="tm-rail-label" data-en="05 · Time Lens">05 · Ống kính</span></a>
+    <a class="tm-rail-dot" tabindex="-1" data-target="tm-education" href="#tm-education"><span class="tm-rail-label" data-en="06 · Education">06 · Giáo dục</span></a>
+    <a class="tm-rail-dot" tabindex="-1" data-target="tm-museum" href="#tm-museum"><span class="tm-rail-label" data-en="07 · Museums">07 · Bảo tàng</span></a>
   </aside>
 
   <main>
@@ -52,11 +53,11 @@
       <div class="tm-hero-grid">
         <div>
           <span class="tm-eyebrow">See Hanoi. Then. Now. Next.</span>
-          <h1 class="tm-hero-title">Chọn một điểm trên bản đồ.<br>Bước qua <em>cánh cổng thời gian</em> của Hà Nội.</h1>
-          <p class="tm-hero-sub">Hanoi Time Machine kết hợp bản đồ tương tác, timeline lịch sử và AI để đưa bạn từ Hà Nội 1926 đến những kịch bản tương lai năm 2100 — tại chính một địa điểm bạn chọn.</p>
+          <h1 class="tm-hero-title" data-en-html="Pick a place on the map.&lt;br&gt;Step through Hanoi’s &lt;em&gt;time portal&lt;/em&gt;.">Chọn một điểm trên bản đồ.<br>Bước qua <em>cánh cổng thời gian</em> của Hà Nội.</h1>
+          <p class="tm-hero-sub" data-en="Hanoi Time Machine combines an interactive map, a historical timeline and AI to take you from Hanoi in 1926 to future scenarios for 2100 — at the very place you choose.">Hanoi Time Machine kết hợp bản đồ tương tác, timeline lịch sử và AI để đưa bạn từ Hà Nội 1926 đến những kịch bản tương lai năm 2100 — tại chính một địa điểm bạn chọn.</p>
           <div class="tm-hero-actions">
             <a class="tm-btn tm-btn-primary" href="#tm-map">Enter Time Machine ⟶</a>
-            <a class="tm-btn tm-btn-ghost" href="#tm-timeline">Xem dòng thời gian</a>
+            <a class="tm-btn tm-btn-ghost" href="#tm-timeline" data-en="See the timeline">Xem dòng thời gian</a>
           </div>
           <p class="tm-hero-ticker" id="tm-heroTicker">ĐANG HIỆU CHỈNH DÒNG THỜI GIAN <b>1926 → 2100</b></p>
         </div>
@@ -113,18 +114,18 @@
         <span class="tm-chapter-index">01</span>
         <div>
           <p class="tm-chapter-kicker">Interactive Map</p>
-          <h2 class="tm-chapter-title">Chọn một địa danh của Hà Nội</h2>
-          <p class="tm-chapter-lede">Xem vị trí thật của 13 địa danh trên bản đồ Hà Nội, hoặc chuyển sang bản đồ minh hoạ cách điệu. Chọn một địa danh để đọc câu chuyện, nguồn tham khảo và chỉ đường tới đó.</p>
+          <h2 class="tm-chapter-title" data-en="Pick a Hanoi landmark">Chọn một địa danh của Hà Nội</h2>
+          <p class="tm-chapter-lede" data-en="See where the 13 landmarks really are on a map of Hanoi, or switch to the stylised illustrated map. Pick a landmark to read its story and sources and get directions there.">Xem vị trí thật của 13 địa danh trên bản đồ Hà Nội, hoặc chuyển sang bản đồ minh hoạ cách điệu. Chọn một địa danh để đọc câu chuyện, nguồn tham khảo và chỉ đường tới đó.</p>
         </div>
       </div>
 
       <div class="tm-map-layout">
         <div class="tm-map-left">
-        <div class="tm-map-mode" role="group" aria-label="Kiểu bản đồ">
-          <button type="button" class="tm-map-mode-btn" data-mode="real" aria-pressed="true">Bản đồ thật</button>
-          <button type="button" class="tm-map-mode-btn" data-mode="illustrated" aria-pressed="false">Bản đồ minh hoạ</button>
+        <div class="tm-map-mode" role="group" aria-label="Kiểu bản đồ" data-en-aria-label="Map type">
+          <button type="button" class="tm-map-mode-btn" data-mode="real" aria-pressed="true" data-en="Real map">Bản đồ thật</button>
+          <button type="button" class="tm-map-mode-btn" data-mode="illustrated" aria-pressed="false" data-en="Illustrated map">Bản đồ minh hoạ</button>
         </div>
-        <div class="tm-real-map" id="tm-realMap" role="region" aria-label="Bản đồ Hà Nội với vị trí các địa danh"></div>
+        <div class="tm-real-map" id="tm-realMap" role="region" aria-label="Bản đồ Hà Nội với vị trí các địa danh" data-en-aria-label="Map of Hanoi showing the landmarks"></div>
         <div class="tm-map-canvas" id="tm-mapCanvas" hidden>
           <svg viewBox="0 0 800 560" aria-hidden="true">
             <defs>
@@ -172,12 +173,17 @@
           <button class="tm-pin" style="left:56.9%;top:22.9%;" data-landmark="dong-xuan" aria-label="Chợ Đồng Xuân"><span class="tm-pin-tag">Chợ Đồng Xuân</span></button>
           <button class="tm-pin" style="left:38.1%;top:66.1%;" data-landmark="ga-ha-noi" aria-label="Ga Hà Nội"><span class="tm-pin-tag">Ga Hà Nội</span></button>
         </div>
-        <div class="tm-lm-list" id="tm-lmList" role="group" aria-label="Chọn địa danh"></div>
+        <div class="tm-lm-list" id="tm-lmList" role="group" aria-label="Chọn địa danh" data-en-aria-label="Choose a landmark"></div>
+        <div class="tm-tours">
+          <p class="tm-tours-title" data-en="Walking tours">Tuyến tham quan đi bộ</p>
+          <div class="tm-tour-chips" id="tm-tourChips" role="group" aria-label="Chọn tuyến tham quan" data-en-aria-label="Choose a walking tour"></div>
+          <div class="tm-tour-detail" id="tm-tourDetail" hidden></div>
+        </div>
         </div>
 
         <div class="tm-glass tm-map-detail">
           <figure class="tm-map-photo" id="tm-mapPhotoBox" hidden>
-            <img id="tm-mapPhoto" alt="" decoding="async">
+            <img id="tm-mapPhoto" loading="lazy" alt="" decoding="async">
             <figcaption class="tm-credit" id="tm-mapPhotoCredit"></figcaption>
           </figure>
           <span class="tm-era-badge" id="tm-mapEraBadge">HIỆN TẠI · 2026</span>
@@ -186,16 +192,19 @@
             <p class="tm-map-detail-sub" id="tm-mapSub">Hoàn Kiếm Lake &amp; Tháp Rùa</p>
           </div>
           <p class="tm-map-detail-story" id="tm-mapStory">Không gian đi bộ quanh hồ cuối tuần thu hút hàng chục nghìn người, xen giữa nhịp sống hiện đại là truyền thuyết vua Lê Lợi trả gươm thần cho rùa vàng vẫn được kể lại mỗi ngày.</p>
-          <p class="tm-scenario-note" id="tm-mapScenario">Đây là kịch bản tương lai do AI hình dung — không phải dự đoán chắc chắn.</p>
-          <a class="tm-btn tm-btn-ghost tm-directions" id="tm-mapDirections" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Chỉ đường tới đây ↗</a>
+          <p class="tm-scenario-note" id="tm-mapScenario" data-en="This is a future scenario imagined by AI — not a firm prediction.">Đây là kịch bản tương lai do AI hình dung — không phải dự đoán chắc chắn.</p>
+          <div class="tm-edu-row">
+            <a class="tm-btn tm-btn-ghost" id="tm-mapDirections" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" data-en="Directions ↗">Chỉ đường tới đây ↗</a>
+            <button type="button" class="tm-btn tm-btn-ghost" id="tm-mapShare" data-en="Share ↗">Chia sẻ ↗</button>
+          </div>
           <div class="tm-sources">
-            <p class="tm-sources-title">Nguồn tham khảo</p>
+            <p class="tm-sources-title" data-en="Sources">Nguồn tham khảo</p>
             <ul class="tm-sources-list" id="tm-mapSources"></ul>
-            <p class="tm-sources-note">Câu chuyện 1926 → 2026 được tóm tắt từ các nguồn trên. Mốc 2050 và 2100 là kịch bản, không có nguồn.</p>
+            <p class="tm-sources-note" data-en="The 1926 → 2026 stories are summarised from the sources above (Vietnamese Wikipedia, the official site of the relic, UNESCO) and translated into English. 2050 and 2100 are scenarios with no sources.">Câu chuyện 1926 → 2026 được tóm tắt từ các nguồn trên (Wikipedia, trang chính thức của di tích, UNESCO). Mốc 2050 và 2100 là kịch bản, không có nguồn.</p>
           </div>
           <div class="tm-map-legend">
-            <span class="tm-legend-chip">13 địa danh</span>
-            <span class="tm-legend-chip">Kéo timeline bên dưới để đổi mốc thời gian</span>
+            <span class="tm-legend-chip" data-en="13 landmarks">13 địa danh</span>
+            <span class="tm-legend-chip" data-en="Drag the timeline below to change era">Kéo timeline bên dưới để đổi mốc thời gian</span>
           </div>
         </div>
       </div>
@@ -206,14 +215,14 @@
         <span class="tm-chapter-index">02</span>
         <div>
           <p class="tm-chapter-kicker">Time Slider · Historical &amp; Future Mode</p>
-          <h2 class="tm-chapter-title">Kéo qua các mốc 1926 → 2100</h2>
-          <p class="tm-chapter-lede">Historical Mode dựng lại ảnh, bản đồ và câu chuyện có nguồn xác thực. Future Mode hình dung Hà Nội 2050–2100 bằng AI — luôn được đánh dấu rõ là kịch bản, không phải dự đoán.</p>
+          <h2 class="tm-chapter-title" data-en="Drag through 1926 → 2100">Kéo qua các mốc 1926 → 2100</h2>
+          <p class="tm-chapter-lede" data-en="Historical Mode brings back photos, maps and sourced stories. Future Mode imagines Hanoi in 2050–2100 with AI — always clearly marked as a scenario, not a prediction.">Historical Mode dựng lại ảnh, bản đồ và câu chuyện có nguồn xác thực. Future Mode hình dung Hà Nội 2050–2100 bằng AI — luôn được đánh dấu rõ là kịch bản, không phải dự đoán.</p>
         </div>
       </div>
 
       <div class="tm-glass tm-slider-panel">
         <div class="tm-slider-track-wrap">
-          <input type="range" class="tm-time-slider" id="tm-eraSlider" min="0" max="5" step="1" value="3" aria-label="Chọn mốc thời gian">
+          <input type="range" class="tm-time-slider" id="tm-eraSlider" min="0" max="5" step="1" value="3" aria-label="Chọn mốc thời gian" data-en-aria-label="Choose an era">
           <div class="tm-era-ticks" id="tm-eraTicks"></div>
         </div>
 
@@ -237,7 +246,7 @@
                 <circle cx="233.5" cy="62" r="9" fill="none" stroke="#050403" stroke-width="3"/>
               </g>
             </svg>
-            <img class="tm-era-photo" id="tm-eraPhoto" alt="" hidden decoding="async">
+            <img class="tm-era-photo" id="tm-eraPhoto" loading="lazy" alt="" hidden decoding="async">
             <p class="tm-credit" id="tm-eraCredit"></p>
           </div>
           <div>
@@ -247,6 +256,11 @@
             <p class="tm-era-sources" id="tm-eraSources"></p>
           </div>
         </div>
+        <div class="tm-events">
+          <p class="tm-events-title"><span data-en="Key events · ">Các mốc sự kiện · </span><span id="tm-eventsName">Hồ Gươm</span></p>
+          <ol class="tm-events-list" id="tm-events" aria-label="Các mốc sự kiện của địa danh" data-en-aria-label="Key events of the landmark"></ol>
+          <p class="tm-events-note" data-en="Click an event to move the timeline to the nearest era.">Bấm vào một sự kiện để chuyển timeline tới mốc gần nhất.</p>
+        </div>
       </div>
     </section>
 
@@ -255,20 +269,20 @@
         <span class="tm-chapter-index">03</span>
         <div>
           <p class="tm-chapter-kicker">Before / After</p>
-          <h2 class="tm-chapter-title">Xưa &amp; Nay — kéo để so sánh</h2>
-          <p class="tm-chapter-lede">Ảnh tư liệu và ảnh chụp ngày nay của cùng một địa danh, chồng lên nhau. Kéo thanh chia (hoặc dùng phím mũi tên) để thấy nơi ấy đã thay đổi thế nào. Hai ảnh không chụp cùng góc máy nên chỉ khớp tương đối.</p>
+          <h2 class="tm-chapter-title" data-en="Then &amp; Now — drag to compare">Xưa &amp; Nay — kéo để so sánh</h2>
+          <p class="tm-chapter-lede" data-en="An archive photo and a photo of today of the same landmark, laid over each other. Drag the divider (or use the arrow keys) to see how the place has changed. The two photos were not taken from the same spot, so they only line up roughly.">Ảnh tư liệu và ảnh chụp ngày nay của cùng một địa danh, chồng lên nhau. Kéo thanh chia (hoặc dùng phím mũi tên) để thấy nơi ấy đã thay đổi thế nào. Hai ảnh không chụp cùng góc máy nên chỉ khớp tương đối.</p>
         </div>
       </div>
 
       <div class="tm-glass tm-cmp-panel">
-        <div class="tm-cmp-chips" id="tm-cmpChips" role="group" aria-label="Chọn địa danh để so sánh"></div>
+        <div class="tm-cmp-chips" id="tm-cmpChips" role="group" aria-label="Chọn địa danh để so sánh" data-en-aria-label="Choose a landmark to compare"></div>
         <div class="tm-cmp" id="tm-cmp" style="--pos:50%">
-          <img class="tm-cmp-img tm-cmp-now" id="tm-cmpNow" alt="" decoding="async">
-          <img class="tm-cmp-img tm-cmp-old" id="tm-cmpOld" alt="" decoding="async">
+          <img class="tm-cmp-img tm-cmp-now" id="tm-cmpNow" loading="lazy" alt="" decoding="async">
+          <img class="tm-cmp-img tm-cmp-old" id="tm-cmpOld" loading="lazy" alt="" decoding="async">
           <span class="tm-cmp-label tm-cmp-label-old" id="tm-cmpOldLabel">1926</span>
           <span class="tm-cmp-label tm-cmp-label-now">2026</span>
           <span class="tm-cmp-handle" aria-hidden="true"><span class="tm-cmp-knob">⟷</span></span>
-          <input type="range" class="tm-cmp-range" id="tm-cmpRange" min="0" max="100" step="1" value="50" aria-label="Kéo để so sánh ảnh xưa và nay">
+          <input type="range" class="tm-cmp-range" id="tm-cmpRange" min="0" max="100" step="1" value="50" aria-label="Kéo để so sánh ảnh xưa và nay" data-en-aria-label="Drag to compare the old and new photos">
         </div>
         <p class="tm-cmp-empty" id="tm-cmpEmpty" hidden></p>
         <div class="tm-cmp-credits" id="tm-cmpCredits"></div>
@@ -280,30 +294,31 @@
         <span class="tm-chapter-index">04</span>
         <div>
           <p class="tm-chapter-kicker">AI Storyteller</p>
-          <h2 class="tm-chapter-title">Hỏi AI về bất kỳ mốc thời gian nào</h2>
-          <p class="tm-chapter-lede">AI kể chuyện dựa trên dữ liệu có nguồn xác thực cho quá khứ và hiện tại; với tương lai, mọi câu trả lời đều gắn nhãn rõ là hình dung do AI tạo ra.</p>
+          <h2 class="tm-chapter-title" data-en="Ask the AI about any era">Hỏi AI về bất kỳ mốc thời gian nào</h2>
+          <p class="tm-chapter-lede" data-en="The AI storyteller relies on sourced data for the past and present; for the future, every answer is clearly labelled as imagined by AI.">AI kể chuyện dựa trên dữ liệu có nguồn xác thực cho quá khứ và hiện tại; với tương lai, mọi câu trả lời đều gắn nhãn rõ là hình dung do AI tạo ra.</p>
         </div>
       </div>
 
       <div class="tm-story-layout">
         <div>
           <ul class="tm-story-intro-list">
-            <li><b>THEN</b><span>Trả lời có trích nguồn tư liệu lưu trữ, sách sử, bản đồ cổ.</span></li>
-            <li><b>NOW</b><span>Cập nhật thông tin thực tế: giờ mở cửa, sự kiện, mật độ dân cư.</span></li>
-            <li><b>NEXT</b><span>Kịch bản tương lai luôn kèm nhãn "AI hình dung — không phải dự đoán".</span></li>
+            <li><b>THEN</b><span data-en="Answers only from this page’s stories and key events, with sources.">Chỉ trả lời từ câu chuyện và các mốc sự kiện của trang, kèm nguồn tham khảo.</span></li>
+            <li><b>NOW</b><span data-en="Tells what each landmark is like in 2026.">Kể về hiện trạng từng địa danh năm 2026.</span></li>
+            <li><b>NEXT</b><span data-en="Future scenarios always carry the label “imagined by AI — not a prediction”.">Kịch bản tương lai luôn kèm nhãn "AI hình dung — không phải dự đoán".</span></li>
           </ul>
         </div>
 
         <div class="tm-glass tm-chat-panel">
           <div class="tm-chat-log" id="tm-chatLog">
-            <div class="tm-bubble tm-ai">Xin chào! Hỏi tôi về Hồ Gươm, Ba Đình, Phố Cổ, Chùa Một Cột, Cầu Long Biên, Hỏa Lò… ở bất kỳ mốc thời gian nào từ 1926 đến 2100.</div>
+            <div class="tm-bubble tm-ai" data-en="Hello! Ask me about Hoan Kiem Lake, Ba Đình, the Old Quarter, One Pillar Pagoda, Long Biên Bridge, Hỏa Lò… in any era from 1926 to 2100.">Xin chào! Hỏi tôi về Hồ Gươm, Ba Đình, Phố Cổ, Chùa Một Cột, Cầu Long Biên, Hỏa Lò… ở bất kỳ mốc thời gian nào từ 1926 đến 2100.</div>
           </div>
           <div class="tm-chip-row" id="tm-chatChips"></div>
           <form class="tm-chat-input-row" id="tm-chatForm">
-            <label for="tm-chatInput" style="position:absolute;left:-9999px;">Nhập câu hỏi</label>
-            <input class="tm-chat-input" id="tm-chatInput" type="text" placeholder="Nhập câu hỏi của bạn…" autocomplete="off">
-            <button class="tm-chat-send" type="submit">Gửi</button>
+            <label for="tm-chatInput" style="position:absolute;left:-9999px;" data-en="Type a question">Nhập câu hỏi</label>
+            <input class="tm-chat-input" id="tm-chatInput" type="text" placeholder="Nhập câu hỏi của bạn…" data-en-placeholder="Type your question…" autocomplete="off">
+            <button class="tm-chat-send" type="submit" data-en="Send">Gửi</button>
           </form>
+          <p class="tm-chat-note" data-en="Suggested questions use reviewed answers. Questions you type are answered by the AI only from this page’s data — beyond that, it will say it doesn’t know.">Câu hỏi gợi ý dùng câu trả lời đã biên soạn. Câu hỏi bạn tự nhập được AI trả lời chỉ từ dữ liệu của trang — ngoài phạm vi đó, AI sẽ nói là không biết.</p>
         </div>
       </div>
     </section>
@@ -312,33 +327,45 @@
       <div class="tm-chapter-head">
         <span class="tm-chapter-index">05</span>
         <div>
-          <p class="tm-chapter-kicker">AR Mode · Ưu tiên trải nghiệm di động</p>
-          <h2 class="tm-chapter-title">Đưa quá khứ &amp; tương lai vào không gian thật</h2>
-          <p class="tm-chapter-lede">Mở camera điện thoại tại địa điểm thực để overlay hình ảnh 3D của Hà Nội xưa hoặc kịch bản tương lai lên đúng khung cảnh bạn đang đứng.</p>
+          <p class="tm-chapter-kicker" data-en="Time Lens · Best on a phone, on site">Time Lens · Dùng trên điện thoại, tại địa danh</p>
+          <h2 class="tm-chapter-title" data-en="Hold the past up to today’s view">Đặt ảnh xưa lên khung cảnh hôm nay</h2>
+          <p class="tm-chapter-lede" data-en="Stand at a landmark and turn on the camera: the archive photo is laid semi-transparently over the camera view. Move until the old view lines up, then save your “Then vs Now” photo.">Đứng tại địa danh và bật camera: ảnh tư liệu được phủ mờ lên hình camera. Xoay máy cho đến khi khớp với góc chụp năm xưa, rồi lưu lại tấm ảnh “Xưa vs Nay”.</p>
         </div>
       </div>
 
       <div class="tm-ar-layout">
-        <div class="tm-phone">
-          <div class="tm-phone-notch"></div>
-          <div class="tm-viewfinder">
-            <div class="tm-ar-hud"><span>● REC</span><span>AR · 1926 OVERLAY</span></div>
-            <svg class="tm-ghost" viewBox="0 0 120 140" aria-hidden="true">
-              <rect x="46" y="70" width="28" height="60" fill="var(--tm-teal)" opacity=".55"/>
-              <polygon points="40,70 60,40 80,70" fill="var(--tm-teal)" opacity=".55"/>
-              <circle cx="60" cy="32" r="5" fill="var(--tm-teal)" opacity=".55"/>
-            </svg>
-            <div class="tm-scan-line"></div>
-            <div class="tm-ar-caption">Tháp Rùa · 1926 — chạm để so sánh với hiện tại</div>
+        <div class="tm-lens">
+          <div class="tm-lens-stage" id="tm-lensStage">
+            <video id="tm-lensVideo" playsinline muted></video>
+            <img id="tm-lensPhoto" loading="lazy" alt="" decoding="async">
+            <span class="tm-lens-year" id="tm-lensYear"></span>
+            <p class="tm-lens-hint" id="tm-lensHint" data-en="Turn on the camera to lay this photo over the real scene">Bật camera để chồng ảnh này lên khung cảnh thật</p>
           </div>
+          <label class="tm-lens-opacity">
+            <span data-en="Today">Hôm nay</span>
+            <input type="range" id="tm-lensOpacity" min="10" max="90" value="50" aria-label="Độ mờ của ảnh xưa" data-en-aria-label="Opacity of the old photo">
+            <span data-en="Old photo">Ảnh xưa</span>
+          </label>
+          <p class="tm-lens-credit" id="tm-lensCredit"></p>
         </div>
-        <div>
+
+        <div class="tm-lens-panel">
+          <label class="tm-lens-field">
+            <span data-en="Landmark">Địa danh</span>
+            <select id="tm-lensSelect"></select>
+          </label>
+          <div class="tm-edu-row">
+            <button type="button" class="tm-btn tm-btn-ghost" id="tm-lensLocate">Tìm địa danh gần tôi</button>
+            <button type="button" class="tm-btn tm-btn-primary" id="tm-lensCamera">Bật camera</button>
+            <button type="button" class="tm-btn tm-btn-ghost" id="tm-lensCapture" disabled>Chụp &amp; lưu ảnh</button>
+          </div>
+          <p class="tm-lens-status" id="tm-lensStatus" role="status" aria-live="polite"></p>
           <ul class="tm-ar-copy-list">
-            <li><span class="tm-n">01</span><div><h4>Hướng camera vào địa danh</h4><p>Ứng dụng nhận diện vị trí và địa danh thực tế bạn đang đứng trước.</p></div></li>
-            <li><span class="tm-n">02</span><div><h4>Chọn mốc thời gian muốn xem</h4><p>Overlay hình ảnh/3D quá khứ (có nguồn) hoặc kịch bản tương lai (do AI hình dung) lên đúng góc máy hiện tại.</p></div></li>
-            <li><span class="tm-n">03</span><div><h4>So sánh &amp; chia sẻ</h4><p>Trượt qua lại giữa các lớp thời gian, lưu ảnh so sánh "Then vs Next" để chia sẻ.</p></div></li>
+            <li><span class="tm-n">01</span><div><h4 data-en="Find or pick the landmark">Tìm hoặc chọn địa danh</h4><p data-en="Press “Find the landmark near me” when you are in Hanoi, or pick one from the list.">Bấm “Tìm địa danh gần tôi” khi đang ở Hà Nội, hoặc chọn trong danh sách.</p></div></li>
+            <li><span class="tm-n">02</span><div><h4 data-en="Turn on the camera and line it up">Bật camera và căn cho khớp</h4><p data-en="The archive photo is laid over the camera view. Step back or turn until the lines match; use the slider to fade between then and now.">Ảnh tư liệu phủ mờ lên hình camera. Lùi lại hoặc xoay máy cho đến khi các đường nét trùng nhau; kéo thanh trượt để chuyển giữa xưa và nay.</p></div></li>
+            <li><span class="tm-n">03</span><div><h4 data-en="Save your Then vs Now photo">Lưu ảnh Xưa vs Nay</h4><p data-en="Capture the combined view — the picture carries the landmark’s name and the archive photo’s credit, ready to save or share.">Chụp lại khung hình đã chồng ảnh — tấm ảnh kèm tên địa danh và nguồn ảnh tư liệu, sẵn sàng để lưu hoặc chia sẻ.</p></div></li>
           </ul>
-          <span class="tm-btn tm-btn-ghost" style="margin-top:1.6rem;display:inline-flex;">Trải nghiệm tốt nhất trên thiết bị di động</span>
+          <p class="tm-lens-note" data-en="Lining up is done by hand — the page does not recognise buildings. The camera image and your location are only processed on your device and are never sent anywhere. Camera and location need your permission and an HTTPS page. On a computer, use the Then & Now slider in chapter 03.">Việc căn chỉnh là thủ công — trang không tự nhận diện công trình. Hình camera và vị trí chỉ được xử lý trên máy bạn, không gửi đi đâu. Camera và định vị cần bạn cho phép và trang phải chạy qua HTTPS. Trên máy tính, hãy dùng khung Xưa &amp; Nay ở chương 03.</p>
         </div>
       </div>
     </section>
@@ -348,49 +375,49 @@
         <span class="tm-chapter-index">06</span>
         <div>
           <p class="tm-chapter-kicker">Education Mode</p>
-          <h2 class="tm-chapter-title">Dành cho trường học &amp; lớp học lịch sử</h2>
-          <p class="tm-chapter-lede">Bài học tương tác, quiz gamification và dashboard theo dõi tiến độ cho giáo viên — dữ liệu bên dưới là dữ liệu mẫu minh hoạ.</p>
+          <h2 class="tm-chapter-title" data-en="Learn Hanoi’s history through quizzes &amp; timelines">Học lịch sử Hà Nội qua quiz &amp; dòng thời gian</h2>
+          <p class="tm-chapter-lede" data-en="Questions and games are generated from this page’s own stories and sourced key events, in Vietnamese or English. Progress is kept only in this browser — no account needed.">Câu hỏi và trò chơi được tạo từ chính câu chuyện và các mốc sự kiện có nguồn trên trang, bằng tiếng Việt hoặc tiếng Anh. Tiến độ chỉ lưu trên trình duyệt này — không cần tài khoản.</p>
         </div>
       </div>
 
       <div class="tm-edu-grid">
         <div class="tm-glass tm-edu-card">
-          <span class="tm-tag">Bài học tương tác</span>
-          <h3>Thăng Long thời Lý – Trần</h3>
-          <div class="tm-stat-row"><span>Bài 3 / 12</span><span>42%</span></div>
-          <div class="tm-progress"><div class="tm-progress-bar" style="width:42%;"></div></div>
-          <p style="color:var(--tm-ink-dim);font-size:.86rem;">Kết hợp video, bản đồ cổ và câu hỏi kiểm tra nhanh sau mỗi phần.</p>
+          <span class="tm-tag">Quiz</span>
+          <h3 data-en="Quick questions">Câu hỏi nhanh</h3>
+          <div class="tm-edu-controls">
+            <label><span data-en="Topic">Chủ đề</span><select id="tm-quizScope"></select></label>
+            <label><span data-en="Questions">Số câu</span><select id="tm-quizCount"><option value="5">5</option><option value="10" selected>10</option></select></label>
+            <button type="button" class="tm-btn tm-btn-primary" id="tm-quizStart" data-en="Start">Bắt đầu</button>
+          </div>
+          <div class="tm-quiz-box" id="tm-quizBox" aria-live="polite"></div>
         </div>
 
         <div class="tm-glass tm-edu-card">
-          <span class="tm-tag">Quiz &amp; Gamification</span>
-          <h3>Câu hỏi nhanh</h3>
-          <div class="tm-quiz-mini">
-            <p style="margin-bottom:.6rem;">Ai đọc Tuyên ngôn Độc lập tại Ba Đình năm 1945?</p>
-            <div class="tm-quiz-opt">○ Vua Bảo Đại</div>
-            <div class="tm-quiz-opt tm-correct">● Hồ Chí Minh</div>
-            <div class="tm-quiz-opt">○ Ngô Đình Diệm</div>
+          <span class="tm-tag" data-en="Timeline game">Trò chơi</span>
+          <h3 data-en="Put the events in order">Xếp dòng thời gian</h3>
+          <p class="tm-edu-help" data-en="Move the events up or down until they are in time order (oldest first), then check. The events follow the quiz topic.">Đưa các sự kiện lên hoặc xuống cho đúng thứ tự thời gian (cũ nhất ở trên), rồi bấm kiểm tra. Sự kiện lấy theo chủ đề của quiz.</p>
+          <ol class="tm-tl-list" id="tm-tlList"></ol>
+          <div class="tm-edu-row">
+            <button type="button" class="tm-btn tm-btn-primary" id="tm-tlCheck" data-en="Check">Kiểm tra</button>
+            <button type="button" class="tm-btn tm-btn-ghost" id="tm-tlNew" data-en="New set">Bộ khác</button>
           </div>
-          <div class="tm-xp-row">
-            <span class="tm-xp-pill">+20 XP</span>
-            <span class="tm-xp-pill">🔥 Streak: 6 ngày</span>
-          </div>
+          <p class="tm-tl-result" id="tm-tlResult" role="status"></p>
         </div>
 
         <div class="tm-glass tm-edu-card">
-          <span class="tm-tag">Teacher Dashboard</span>
-          <h3>Lớp 8A (dữ liệu mẫu)</h3>
-          <div class="tm-table-scroll">
-            <table class="tm-table-mini">
-              <thead><tr><th>Học sinh</th><th>Bài học</th><th>Quiz TB</th><th>Streak</th></tr></thead>
-              <tbody>
-                <tr><td>Minh Anh</td><td>11/12</td><td>92%</td><td>9d</td></tr>
-                <tr><td>Gia Bảo</td><td>8/12</td><td>78%</td><td>3d</td></tr>
-                <tr><td>Thu Hà</td><td>10/12</td><td>85%</td><td>6d</td></tr>
-                <tr><td>Đức Huy</td><td>6/12</td><td>64%</td><td>1d</td></tr>
-              </tbody>
-            </table>
+          <span class="tm-tag" data-en="For teachers">Dành cho giáo viên</span>
+          <h3 data-en="Assign &amp; print">Giao bài &amp; in phiếu</h3>
+          <p class="tm-edu-help" data-en="The assignment link keeps the quiz’s topic, number of questions and question order — the whole class gets the same quiz. The worksheet has the questions, the timeline task and an answer key on the last page.">Link bài tập giữ nguyên chủ đề, số câu và thứ tự câu hỏi của quiz đang chọn — cả lớp nhận cùng một đề. Phiếu in gồm câu hỏi, bài xếp dòng thời gian và đáp án ở trang cuối.</p>
+          <div class="tm-edu-row">
+            <button type="button" class="tm-btn tm-btn-ghost" id="tm-eduLink" data-en="Create assignment link">Tạo link bài tập</button>
+            <button type="button" class="tm-btn tm-btn-ghost" id="tm-eduPrint" data-en="Print worksheet">In phiếu học tập</button>
           </div>
+          <div class="tm-edu-link" id="tm-eduLinkBox" hidden>
+            <input id="tm-eduLinkOut" readonly aria-label="Link bài tập" data-en-aria-label="Assignment link">
+            <button type="button" class="tm-btn tm-btn-ghost" id="tm-eduCopy" data-en="Copy">Sao chép</button>
+          </div>
+          <div class="tm-xp-row" id="tm-eduProgress"></div>
+          <p class="tm-edu-note" data-en="There is no class dashboard: that would need accounts and storing students’ data. Each student sees their score on their own screen.">Chưa có bảng theo dõi cả lớp: việc đó cần tài khoản và lưu dữ liệu học sinh. Mỗi em xem điểm ngay trên máy của mình.</p>
         </div>
       </div>
     </section>
@@ -400,37 +427,13 @@
         <span class="tm-chapter-index">07</span>
         <div>
           <p class="tm-chapter-kicker">Tourism / Museum Mode</p>
-          <h2 class="tm-chapter-title">Quét mã tại địa điểm để mở Time Machine</h2>
-          <p class="tm-chapter-lede">Mỗi địa danh có một tấm biển kèm mã QR minh hoạ — khách tham quan quét tại chỗ để mở đúng trải nghiệm thời gian của địa điểm đó.</p>
+          <h2 class="tm-chapter-title" data-en="Scan a code on site to open the Time Machine">Quét mã tại địa điểm để mở Time Machine</h2>
+          <p class="tm-chapter-lede" data-en="Every landmark has a real QR code that opens its own story. Download the code or print an A4 plaque to put up on site — visitors scan it with their phone camera, no app needed.">Mỗi địa danh có một mã QR thật, mở thẳng câu chuyện của nơi đó. Tải mã hoặc in biển khổ A4 để đặt tại di tích — khách quét bằng camera điện thoại, không cần cài ứng dụng.</p>
         </div>
       </div>
 
-      <div class="tm-museum-grid">
-        <div class="tm-glass tm-plaque">
-          <div class="tm-plaque-top"><div><h4>Hồ Gươm</h4><p class="tm-loc">Quận Hoàn Kiếm</p></div><div class="tm-qr" aria-hidden="true"></div></div>
-          <p>Truyền thuyết vua Lê Lợi &amp; Tháp Rùa qua 6 mốc thời gian.</p>
-        </div>
-        <div class="tm-glass tm-plaque">
-          <div class="tm-plaque-top"><div><h4>Văn Miếu</h4><p class="tm-loc">Quốc Tử Giám</p></div><div class="tm-qr" aria-hidden="true"></div></div>
-          <p>Trường đại học đầu tiên của Việt Nam, thành lập năm 1070.</p>
-        </div>
-        <div class="tm-glass tm-plaque">
-          <div class="tm-plaque-top"><div><h4>Nhà Hát Lớn</h4><p class="tm-loc">Tràng Tiền</p></div><div class="tm-qr" aria-hidden="true"></div></div>
-          <p>Kiến trúc Beaux-Arts 1911 — từ sân khấu thượng lưu đến hoà nhạc quốc tế.</p>
-        </div>
-        <div class="tm-glass tm-plaque">
-          <div class="tm-plaque-top"><div><h4>Ba Đình</h4><p class="tm-loc">Quảng trường</p></div><div class="tm-qr" aria-hidden="true"></div></div>
-          <p>Nơi Chủ tịch Hồ Chí Minh đọc Tuyên ngôn Độc lập, 2/9/1945.</p>
-        </div>
-        <div class="tm-glass tm-plaque">
-          <div class="tm-plaque-top"><div><h4>Phố Cổ</h4><p class="tm-loc">36 phố phường</p></div><div class="tm-qr" aria-hidden="true"></div></div>
-          <p>Từ phố nghề thời phong kiến đến phố đi bộ sầm uất hôm nay.</p>
-        </div>
-        <div class="tm-glass tm-plaque">
-          <div class="tm-plaque-top"><div><h4>Đăng ký điểm mới</h4><p class="tm-loc">Dành cho bảo tàng/di tích</p></div><div class="tm-qr" aria-hidden="true"></div></div>
-          <p>Liên hệ để thêm địa danh của bạn vào Hanoi Time Machine.</p>
-        </div>
-      </div>
+      <div class="tm-museum-grid" id="tm-plaques"></div>
+      <p class="tm-edu-note tm-plaque-note" id="tm-plaqueNote"></p>
     </section>
 
     <section class="tm-statement">
@@ -446,29 +449,29 @@
     <div class="tm-footer-grid">
       <div class="tm-footer-brand">
         <span class="tm-brand-word"><b>HANOI TIME MACHINE</b></span>
-        <p>Nền tảng tương tác khám phá Hà Nội qua quá khứ, hiện tại và tương lai bằng bản đồ, timeline, AI và AR.</p>
+        <p data-en="An interactive way to explore Hanoi’s past, present and future through maps, a timeline, AI and AR.">Nền tảng tương tác khám phá Hà Nội qua quá khứ, hiện tại và tương lai bằng bản đồ, timeline, AI và AR.</p>
       </div>
       <div>
-        <h5>Khám phá</h5>
+        <h5 data-en="Explore">Khám phá</h5>
         <ul>
-          <li><a href="#tm-map">Bản đồ tương tác</a></li>
-          <li><a href="#tm-timeline">Dòng thời gian</a></li>
-          <li><a href="#tm-storyteller">AI kể chuyện</a></li>
-          <li><a href="#tm-ar">Chế độ AR</a></li>
+          <li><a href="#tm-map" data-en="Interactive map">Bản đồ tương tác</a></li>
+          <li><a href="#tm-timeline" data-en="Timeline">Dòng thời gian</a></li>
+          <li><a href="#tm-storyteller" data-en="AI Storyteller">AI kể chuyện</a></li>
+          <li><a href="#tm-ar" data-en="Time Lens">Ống kính thời gian</a></li>
         </ul>
       </div>
       <div>
-        <h5>Đối tác</h5>
+        <h5 data-en="Partners">Đối tác</h5>
         <ul>
-          <li><a href="#tm-education">Trường học</a></li>
-          <li><a href="#tm-museum">Bảo tàng &amp; di tích</a></li>
-          <li><a routerLink="/opportunity-map">Bản đồ cơ hội kinh doanh</a></li>
-          <li><a routerLink="/">Trang chủ</a></li>
+          <li><a href="#tm-education" data-en="Schools">Trường học</a></li>
+          <li><a href="#tm-museum" data-en="Museums &amp; relic sites">Bảo tàng &amp; di tích</a></li>
+          <li><a routerLink="/opportunity-map" data-en="Business Opportunity Map">Bản đồ cơ hội kinh doanh</a></li>
+          <li><a routerLink="/" data-en="Home">Trang chủ</a></li>
         </ul>
       </div>
     </div>
     <div class="tm-footer-bottom">
-      <p class="tm-footer-disclaimer">Nội dung lịch sử (1926–2026) tổng hợp cho mục đích trình bày khái niệm; các mốc 2050 &amp; 2100 là kịch bản do AI hình dung, không phải dự đoán chắc chắn.</p>
+      <p class="tm-footer-disclaimer" data-en="Historical content (1926–2026) is compiled to present the concept; 2050 &amp; 2100 are scenarios imagined by AI, not firm predictions.">Nội dung lịch sử (1926–2026) tổng hợp cho mục đích trình bày khái niệm; các mốc 2050 &amp; 2100 là kịch bản do AI hình dung, không phải dự đoán chắc chắn.</p>
       <p>© 2026 Hanoi Time Machine</p>
     </div>
   </footer>

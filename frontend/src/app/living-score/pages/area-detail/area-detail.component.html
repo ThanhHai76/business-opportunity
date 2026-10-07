@@ -1,9 +1,9 @@
 <div class="ls-page ls-page--narrow">
-  <a class="back" routerLink="/living-score/explore"><ls-icon name="arrow-left" [size]="16" /> Quay lại bản đồ</a>
+  <a class="back" routerLink="/living-score/explore"><ls-icon name="arrow-left" [size]="16" /> {{ t().detail.back }}</a>
 
   @switch (state()) {
     @case ('loading') {
-      <div class="skeletons" aria-label="Đang tải">
+      <div class="skeletons" [attr.aria-label]="t().common.loading">
         <div class="ls-skeleton" style="height: 190px"></div>
         <div class="ls-skeleton" style="height: 260px"></div>
         <div class="ls-skeleton" style="height: 150px"></div>
@@ -11,13 +11,13 @@
     }
     @case ('notfound') {
       <div class="ls-card">
-        <ls-state kind="empty" icon="search" title="Không tìm thấy khu vực" [message]="errorMessage()" />
-        <p class="center"><a class="ls-btn ls-btn-primary" routerLink="/living-score/explore">Về bản đồ</a></p>
+        <ls-state kind="empty" icon="search" [title]="t().detail.notFound" [message]="errorMessage()" />
+        <p class="center"><a class="ls-btn ls-btn-primary" routerLink="/living-score/explore">{{ t().detail.toMap }}</a></p>
       </div>
     }
     @case ('error') {
       <div class="ls-card">
-        <ls-state kind="error" title="Không tải được khu vực" [message]="errorMessage()" actionLabel="Thử lại" (action)="retry()" />
+        <ls-state kind="error" [title]="t().detail.loadFailed" [message]="errorMessage()" [actionLabel]="t().common.retry" (action)="retry()" />
       </div>
     }
     @default {
@@ -27,7 +27,7 @@
             <div>
               <div class="head__title">
                 <h1>{{ a.name }}</h1>
-                <span class="ls-badge ls-badge--sample">SAMPLE DATA</span>
+                <span class="ls-badge ls-badge--source">OpenStreetMap · {{ meta.osmDate() }}</span>
               </div>
               <p class="head__en">{{ a.nameEn }} · {{ meta.bandLabel(a.band) }}</p>
             </div>
@@ -38,28 +38,39 @@
 
           <p class="head__desc">{{ a.description }}</p>
 
+          @if (a.facts.wards.length) {
+            <div class="wards">
+              <span class="wards__label">{{ t().detail.wards }}</span>
+              <ul>
+                @for (w of a.facts.wards; track w.name) {
+                  <li><span>{{ w.name }}</span> <small>{{ w.pct }}%</small></li>
+                }
+              </ul>
+            </div>
+          }
+
           @if (a.isPersonalized) {
             <p class="personal">
               <ls-icon name="sliders" [size]="15" />
-              Điểm cá nhân hoá <strong>{{ a.livingScore | number: '1.0-0' }}</strong> (điểm mặc định
-              {{ a.defaultLivingScore | number: '1.0-0' }}) — theo trọng số bạn đã chọn trong mục Cá nhân / Khám phá.
+              {{ t().detail.personalised(num(a.livingScore, 0), num(a.defaultLivingScore, 0)) }}
             </p>
           }
 
-          <dl class="stats">
-            <div><dt>Dân số</dt><dd>{{ a.population | num }}</dd></div>
-            <div><dt>Diện tích</dt><dd>{{ a.areaKm2 | number: '1.0-1' }} km²</dd></div>
-            <div><dt>Giá thuê TB</dt><dd>{{ a.avgRentVnd | vnd }}</dd></div>
-            <div><dt>Giá bán / m²</dt><dd>{{ a.avgPricePerM2Vnd | millions }}</dd></div>
+          <dl class="stats" [attr.aria-label]="t().detail.statsAria">
+            <div><dt>{{ t().detail.statMetro }}</dt><dd>{{ a.facts.metroStations.length }}</dd></div>
+            <div><dt>{{ t().detail.statBus }}</dt><dd>{{ a.facts.busStops | num: lang() }}</dd></div>
+            <div><dt>{{ t().detail.statCafes }}</dt><dd>{{ a.facts.cafes | num: lang() }}</dd></div>
+            <div><dt>{{ t().detail.statGreen }}</dt><dd>{{ a.facts.parkPct | num: lang() : 1 }}% · {{ a.facts.waterPct | num: lang() : 1 }}%</dd></div>
           </dl>
+          <p class="stats-note">{{ t().detail.statsNote }}</p>
 
           <div class="actions">
             <a class="ls-btn ls-btn-primary" [routerLink]="['/living-score/explore']" [queryParams]="{ area: a.slug }">
-              <ls-icon name="map" [size]="16" /> Xem trên bản đồ
+              <ls-icon name="map" [size]="16" /> {{ t().detail.viewOnMap }}
             </a>
             <button type="button" class="ls-btn ls-btn-ghost" [disabled]="compareFull()" (click)="toggleCompare()">
               <ls-icon [name]="inCompare() ? 'check' : 'plus'" [size]="16" />
-              {{ inCompare() ? 'Đã thêm vào so sánh' : compareFull() ? 'So sánh đã đủ 3 khu vực' : 'Thêm vào so sánh' }}
+              {{ inCompare() ? t().detail.inCompare : compareFull() ? t().detail.compareFull : t().detail.addCompare }}
             </button>
             <button
               type="button"
@@ -68,23 +79,37 @@
               [attr.aria-pressed]="prefs.isSaved(a.slug)"
               (click)="prefs.toggleSaved(a.slug)"
             >
-              <ls-icon name="bookmark" [size]="16" /> {{ prefs.isSaved(a.slug) ? 'Đã lưu' : 'Lưu' }}
+              <ls-icon name="bookmark" [size]="16" /> {{ prefs.isSaved(a.slug) ? t().detail.saved : t().detail.save }}
             </button>
           </div>
         </header>
 
         <section class="ls-card block">
-          <h2 class="ls-section-title">Chi tiết điểm theo tiêu chí</h2>
+          <h2 class="ls-section-title">{{ t().detail.breakdown }}</h2>
+          <p class="block__lead">{{ t().detail.breakdownLead(a.dataInfo.areaCount) }}</p>
           <div class="bars">
             @for (row of a.breakdown; track row.criterion) {
-              <ls-criterion-bar [criterion]="row.criterion" [value]="row.score" [weightPct]="row.weightPct" />
+              <div class="bar-row">
+                <ls-criterion-bar [criterion]="row.criterion" [value]="row.score" [weightPct]="row.weightPct" />
+                <p class="metric">{{ metricText(a, row.criterion) }}</p>
+              </div>
             }
           </div>
+          @if (a.missingCriteria.length) {
+            <div class="missing">
+              <h3>{{ t().detail.missing }}</h3>
+              <ul>
+                @for (c of a.missingCriteria; track c.key) {
+                  <li><ls-icon [name]="missingIcons[c.key]" [size]="15" /> <strong>{{ c.label }}:</strong> {{ c.reason }}</li>
+                }
+              </ul>
+            </div>
+          }
         </section>
 
         <section class="pc">
           <div class="pc__card pc__card--pro">
-            <h2><ls-icon name="check" [size]="18" /> Ưu điểm</h2>
+            <h2><ls-icon name="check" [size]="18" /> {{ t().detail.pros }}</h2>
             <ul>
               @for (item of a.pros; track item) {
                 <li>{{ item }}</li>
@@ -92,7 +117,7 @@
             </ul>
           </div>
           <div class="pc__card pc__card--con">
-            <h2><ls-icon name="alert" [size]="18" /> Nhược điểm</h2>
+            <h2><ls-icon name="alert" [size]="18" /> {{ t().detail.cons }}</h2>
             <ul>
               @for (item of a.cons; track item) {
                 <li>{{ item }}</li>
@@ -103,20 +128,21 @@
 
         <section class="ls-card block">
           <div class="block__head">
-            <h2 class="ls-section-title">Tiện ích xung quanh</h2>
-            <span class="ls-badge ls-badge--sample">SAMPLE DATA</span>
+            <h2 class="ls-section-title">{{ t().detail.places }}</h2>
+            <span class="ls-badge ls-badge--source">OpenStreetMap</span>
           </div>
+          <p class="block__lead">{{ t().detail.placesLead }}</p>
           <div class="amenities">
             @for (group of a.amenities; track group.type) {
               <div class="amenity">
                 <h3>
                   <ls-icon [name]="amenityMeta[group.type].icon" [size]="16" />
-                  {{ amenityMeta[group.type].plural }}
-                  <small>{{ group.count }} địa điểm</small>
+                  {{ t().amenity[group.type].plural }}
+                  <small>{{ t().detail.placesCount(group.count) }}</small>
                 </h3>
                 <ul>
                   @for (place of group.top; track place.name) {
-                    <li><span>{{ place.name }}</span><span class="rating">★ {{ place.rating | number: '1.1-1' }}</span></li>
+                    <li><span>{{ place.name }}</span></li>
                   }
                 </ul>
               </div>
@@ -124,7 +150,15 @@
           </div>
         </section>
 
-        <p class="foot"><ls-icon name="info" [size]="14" /> Dữ liệu minh hoạ (SAMPLE DATA) — không phải số liệu chính thức.</p>
+        <div class="foot">
+          <p><ls-icon name="info" [size]="14" /> {{ a.dataInfo.areaNote }}</p>
+          <p>{{ a.dataInfo.method }}</p>
+          <p>{{ a.dataInfo.caveat }}</p>
+          <p>
+            {{ t().detail.source }} <a [href]="a.dataInfo.licenseUrl" target="_blank" rel="noopener">{{ a.dataInfo.source }}</a>,
+            {{ t().detail.license }} {{ a.dataInfo.license }}, {{ t().detail.updated }} {{ meta.osmDate() }}.
+          </p>
+        </div>
       }
     }
   }

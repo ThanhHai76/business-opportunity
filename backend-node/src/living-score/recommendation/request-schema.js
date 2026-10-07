@@ -11,8 +11,6 @@ const PrioritiesSchema = z.strictObject(
 
 /** Strict on purpose: unknown fields are rejected instead of silently ignored. */
 const RecommendationRequestSchema = z.strictObject({
-  /** Monthly rent budget in VND. */
-  budgetVnd: z.number().int().min(1_000_000).max(200_000_000),
   /** Slug of the area where the user works/studies (used for commute distance). */
   workplaceAreaSlug: z
     .string()
@@ -28,6 +26,8 @@ const RecommendationRequestSchema = z.strictObject({
   priorities: PrioritiesSchema.optional(),
   /** Set false to skip the LLM and get rule-based explanations only. */
   useAi: z.boolean().optional(),
+  /** Language of the explanations (default vi). */
+  lang: z.enum(['vi', 'en']).optional(),
 });
 
 /** Validates a request body; throws a 400 with a readable message. */

@@ -1,0 +1,30 @@
+{
+ "generatedAt": "2026-09-30T02:34:32.879Z",
+ "from": "Hoàn Kiếm",
+ "times": {
+  "thai-nguyen": {
+   "minutes": 61,
+   "km": 71
+  },
+  "bac-ninh": {
+   "minutes": 35,
+   "km": 31
+  },
+  "hung-yen": {
+   "minutes": 45,
+   "km": 58
+  },
+  "hai-phong": {
+   "minutes": 81,
+   "km": 107
+  },
+  "ninh-binh": {
+   "minutes": 74,
+   "km": 95
+  },
+  "phu-tho": {
+   "minutes": 62,
+   "km": 70
+  }
+ }
+}

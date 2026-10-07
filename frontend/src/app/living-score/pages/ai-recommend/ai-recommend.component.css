@@ -304,11 +304,11 @@ h4 {
 }
 
 .pc__box--con {
-  background: var(--ls-danger-soft);
+  background: var(--ls-warn-soft);
 }
 
 .pc__box--con h4 {
-  color: var(--ls-danger);
+  color: var(--ls-warn);
 }
 
 .result__actions {
@@ -353,4 +353,41 @@ h4 {
   .result__head {
     flex-wrap: wrap;
   }
+}
+
+.measured {
+  margin: 0 0 14px;
+  border: 1px solid var(--ls-line);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+}
+.measured summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ls-ink-dim);
+}
+.measured ul {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.measured li {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  line-height: 1.45;
+}
+.measured li ls-icon {
+  flex: none;
+  color: var(--ls-accent);
+  transform: translateY(2px);
+}
+.foot p {
+  margin: 0 0 6px;
+}
+.foot a {
+  color: var(--ls-accent);
 }

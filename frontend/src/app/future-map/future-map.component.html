@@ -1,4 +1,4 @@
-<section class="fm" #root [attr.data-theme]="theme()" [class.is-3d]="mode3d()">
+<section class="fm" #root [attr.data-theme]="theme()" [class.is-3d]="mode3d()" [attr.lang]="lang()">
   <fm-map
     #canvas
     [scenario]="scenario()"
@@ -9,74 +9,118 @@
     [highlights]="highlights()"
     [viewToken]="viewToken()"
     [flyTarget]="flyTarget()"
+    [view]="view()"
+    [region]="region()"
+    [corridorSlug]="corridorSlug()"
+    [themeFilter]="themeFilter()"
     (hubSelect)="selectHub($event)"
+    (corridorSelect)="selectCorridor($event)"
   />
 
   @if (loading() && !scenario()) {
     <div class="fm-status fm-glass" role="status">
-      <span class="fm-spinner" aria-hidden="true"></span> Đang dựng bản đồ Hà Nội {{ year() }}…
+      <span class="fm-spinner" aria-hidden="true"></span> {{ t().loading(year()) }}
     </div>
   }
   @if (error(); as message) {
     <div class="fm-status fm-status--error fm-glass" role="alert">
       <ls-icon name="alert" [size]="18" />
       <span>{{ message }}</span>
-      <button type="button" class="fm-btn fm-btn--ghost" (click)="retry()">Thử lại</button>
+      <button type="button" class="fm-btn fm-btn--ghost" (click)="retry()">{{ t().retry }}</button>
     </div>
   }
 
-  <!-- Title + headline numbers for the selected year -->
+  <!-- Title + headline figures for the selected milestone -->
   <header class="fm-hero fm-glass">
-    <span class="fm-kicker" [class.is-future]="isFutureKind()">{{ kindLabel() }}</span>
-    <h1>HÀ NỘI <em>{{ year() }}</em></h1>
-    <p class="fm-hero__headline">{{ current()?.headline }}</p>
+    <div class="fm-seg fm-viewseg" role="group" [attr.aria-label]="t().region.viewAria">
+      <button type="button" [class.is-on]="view() === 'city'" [attr.aria-pressed]="view() === 'city'" (click)="setView('city')">{{ t().region.viewCity }}</button>
+      <button type="button" [class.is-on]="view() === 'region'" [attr.aria-pressed]="view() === 'region'" (click)="setView('region')">{{ t().region.viewRegion }}</button>
+    </div>
+    <span class="fm-kicker" [class.is-future]="isFutureKind()">{{ view() === 'region' ? t().region.kicker + ' · ' : '' }}{{ kindLabel() }}</span>
+    <h1>{{ view() === 'region' ? t().region.title : 'HÀ NỘI' }} <em>{{ year() }}</em></h1>
+    <p class="fm-hero__headline">{{ view() === 'region' ? t().region.headline : current()?.headline }}</p>
+    @if (view() === 'region') {
+      @if (regionStats(); as r) {
+        <ul class="fm-stats" [attr.aria-label]="t().statsLabel">
+          <li>
+            <ls-icon name="target" [size]="18" />
+            <span class="fm-stats__label">{{ t().region.corridors }}</span>
+            <strong>{{ r.corridors }}</strong>
+            <span class="fm-stats__sub">{{ t().region.corridorsSub }}</span>
+          </li>
+          <li>
+            <ls-icon name="building" [size]="18" />
+            <span class="fm-stats__label">{{ t().region.building }}</span>
+            <strong>{{ r.building }}</strong>
+            <span class="fm-stats__sub">{{ t().region.worksSub }}</span>
+          </li>
+          <li>
+            <ls-icon name="map" [size]="18" />
+            <span class="fm-stats__label">{{ t().region.planned }}</span>
+            <strong>{{ r.planned }}</strong>
+            <span class="fm-stats__sub">{{ t().region.worksSub }}</span>
+          </li>
+        </ul>
+      }
+    } @else {
     @if (stats(); as s) {
-      <ul class="fm-stats" aria-label="Chỉ số của kịch bản">
-        <li>
+      <ul class="fm-stats" [attr.aria-label]="t().statsLabel">
+        <li [title]="scenario()?.statNotes?.railKm?.note ?? ''">
           <ls-icon name="train" [size]="18" />
-          <span class="fm-stats__label">Mạng metro</span>
-          <strong>{{ s.metroLines }} tuyến</strong>
-          <span class="fm-stats__sub">≈ {{ s.metroKm }} km</span>
+          <span class="fm-stats__label">{{ t().rail }}</span>
+          <strong>{{ year() === 2026 ? '' : '~' }}{{ railText(s.railKm) }} {{ t().railUnit }}</strong>
+          <span class="fm-stats__sub">{{ year() === 2026 ? t().railNow : t().railTarget }}</span>
         </li>
-        <li>
-          <ls-icon name="leaf" [size]="18" />
-          <span class="fm-stats__label">Không gian xanh</span>
-          <strong>~{{ s.greenPct }}%</strong>
-          <span class="fm-stats__sub">diện tích</span>
-        </li>
-        <li>
+        <li [title]="scenario()?.statNotes?.population?.note ?? ''">
           <ls-icon name="users" [size]="18" />
-          <span class="fm-stats__label">Dân số (ước tính)</span>
-          <strong>{{ s.population }} triệu</strong>
-          <span class="fm-stats__sub">người</span>
+          <span class="fm-stats__label">{{ t().population }}</span>
+          <strong>{{ populationText(s.population) }} {{ t().million }}</strong>
+          <span class="fm-stats__sub">{{ year() === 2026 ? t().popNow : t().popForecast }}</span>
+        </li>
+        <li>
+          <ls-icon name="target" [size]="18" />
+          <span class="fm-stats__label">{{ t().poles }}</span>
+          <strong>{{ s.poles }} <span class="fm-stats__unit">{{ t().polesUnit }}</span></strong>
+          <span class="fm-stats__sub">{{ t().polesSub }}</span>
         </li>
       </ul>
+      @if (statSources().length) {
+        <p class="fm-hero__sources">
+          {{ t().sourcesShort }}:
+          @for (src of statSources(); track src.id; let last = $last) {
+            <a [attr.href]="src.url || null" target="_blank" rel="noopener noreferrer" [title]="src.publisher">{{ src.title }}</a>{{ last ? '' : ' · ' }}
+          }
+        </p>
+      }
+    }
     }
     <button type="button" class="fm-btn fm-btn--primary" (click)="togglePlay()">
       <ls-icon [name]="playing() ? 'pause' : 'play'" [size]="16" />
-      {{ playing() ? 'Dừng lộ trình' : 'Phát lộ trình 2026 → 2100' }}
+      {{ playing() ? t().stop : t().play }}
     </button>
   </header>
 
   <!-- Camera and view tools -->
-  <div class="fm-rail fm-glass" role="toolbar" aria-label="Công cụ bản đồ">
-    <button type="button" class="fm-rail__zoom" (click)="canvas.zoomBy(1)" aria-label="Phóng to" title="Phóng to"><ls-icon name="plus" [size]="18" /></button>
-    <button type="button" class="fm-rail__zoom" (click)="canvas.zoomBy(-1)" aria-label="Thu nhỏ" title="Thu nhỏ">
+  <div class="fm-rail fm-glass" role="toolbar" [attr.aria-label]="t().layersBtn">
+    <button type="button" class="fm-rail__zoom" (click)="canvas.zoomBy(1)" [attr.aria-label]="t().zoomIn" [title]="t().zoomIn"><ls-icon name="plus" [size]="18" /></button>
+    <button type="button" class="fm-rail__zoom" (click)="canvas.zoomBy(-1)" [attr.aria-label]="t().zoomOut" [title]="t().zoomOut">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
     </button>
-    <button type="button" (click)="overview()" aria-label="Xem toàn cảnh Hà Nội" title="Toàn cảnh"><ls-icon name="target" [size]="18" /></button>
-    <button type="button" (click)="toggle3d()" [class.is-on]="mode3d()" [attr.aria-pressed]="mode3d()" aria-label="Chế độ 3D" title="2D / 3D"><ls-icon name="cube" [size]="18" /></button>
-    <button type="button" (click)="toggleFullscreen()" [class.is-on]="isFullscreen()" aria-label="Toàn màn hình" title="Toàn màn hình"><ls-icon name="expand" [size]="18" /></button>
-    <button type="button" class="fm-rail__layers" (click)="layersOpen.set(!layersOpen())" [class.is-on]="layersOpen()" [attr.aria-expanded]="layersOpen()" aria-label="Lớp bản đồ và công cụ" title="Lớp bản đồ"><ls-icon name="layers" [size]="18" /></button>
+    <button type="button" (click)="overview()" [attr.aria-label]="t().overview" [title]="t().overview"><ls-icon name="target" [size]="18" /></button>
+    <button type="button" (click)="toggle3d()" [class.is-on]="mode3d()" [attr.aria-pressed]="mode3d()" [attr.aria-label]="t().mode3d" title="2D / 3D"><ls-icon name="cube" [size]="18" /></button>
+    <button type="button" (click)="toggleFullscreen()" [class.is-on]="isFullscreen()" [attr.aria-label]="t().fullscreen" [title]="t().fullscreen"><ls-icon name="expand" [size]="18" /></button>
+    <button type="button" (click)="share()" [class.is-on]="shareCopied()" [attr.aria-label]="t().share" [title]="shareCopied() ? t().shared : t().share"><ls-icon [name]="shareCopied() ? 'check' : 'share'" [size]="18" /></button>
+    <button type="button" (click)="toggleLang()" [attr.aria-label]="t().languageAria" [title]="t().language" [attr.lang]="lang() === 'vi' ? 'en' : 'vi'"><ls-icon name="globe" [size]="18" /></button>
+    <button type="button" class="fm-rail__layers" (click)="layersOpen.set(!layersOpen())" [class.is-on]="layersOpen()" [attr.aria-expanded]="layersOpen()" [attr.aria-label]="t().layersBtn" [title]="t().layersTitle"><ls-icon name="layers" [size]="18" /></button>
   </div>
 
-  <!-- Jump to a growth hub -->
+  <!-- Jump to a development pole -->
   <div class="fm-search fm-glass">
     <ls-icon name="search" [size]="17" />
     <input
       type="search"
-      placeholder="Tìm cực phát triển (Đông Anh, Hòa Lạc…)"
-      aria-label="Tìm cực phát triển"
+      [placeholder]="view() === 'region' ? t().region.searchPlaceholder : t().searchPlaceholder"
+      [attr.aria-label]="t().searchAria"
       autocomplete="off"
       [value]="query()"
       (input)="onQuery($event)"
@@ -86,17 +130,17 @@
     />
     @if (suggestions().length && searchFocused()) {
       <ul class="fm-suggest fm-glass" role="listbox">
-        @for (h of suggestions(); track h.slug) {
-          <li role="option" (mousedown)="selectHub(h.slug)">
-            <strong>{{ h.name }}</strong>
-            <span>{{ h.role }}</span>
+        @for (sug of suggestions(); track sug.type + sug.slug) {
+          <li role="option" (mousedown)="pick(sug)">
+            <strong>{{ sug.name }}</strong>
+            <span>{{ sug.sub }}</span>
           </li>
         }
       </ul>
     }
   </div>
 
-  <!-- Selected growth hub -->
+  <!-- Selected development pole -->
   @if (selectedSlug()) {
     <aside class="fm-hubcard fm-glass" aria-live="polite">
       @if (hub(); as h) {
@@ -106,105 +150,201 @@
             <h2>{{ h.name }}</h2>
             <p>{{ h.role }}</p>
           </div>
-          <button type="button" class="fm-x" (click)="closeHub()" aria-label="Đóng thẻ chi tiết"><ls-icon name="x" [size]="16" /></button>
+          <button type="button" class="fm-x" (click)="closeHub()" [attr.aria-label]="t().close"><ls-icon name="x" [size]="16" /></button>
         </div>
 
-        @if (h.presentInYear) {
-          <ul class="fm-tags">
-            @for (tag of h.tags ?? []; track tag) {
-              <li [attr.data-tag]="tag">{{ tagLabel(tag) }}</li>
-            }
-          </ul>
-
-          <h3 class="fm-eyebrow">Tổng quan · kịch bản {{ h.year }}</h3>
-          <div class="fm-tiles">
-            @for (t of hubTiles(); track t.key) {
-              <div class="fm-tile" [attr.data-tone]="tileTone(t.value)" [title]="t.hint">
-                <span>{{ t.label }}</span>
-                <strong>{{ t.value }}<small>/100</small></strong>
-              </div>
-            }
-          </div>
-
-          @if (h.facts; as f) {
-            <ul class="fm-facts">
-              <li [class.is-on]="f.metroLines > 0"><ls-icon name="train" [size]="18" /><span>Metro</span><b>{{ f.metroLines }} tuyến</b></li>
-              <li [class.is-on]="f.newUrbanArea"><ls-icon name="building" [size]="18" /><span>Đô thị mới</span><b>{{ f.newUrbanArea ? 'Có' : '—' }}</b></li>
-              <li [class.is-on]="f.airportConnection"><ls-icon name="plane" [size]="18" /><span>Sân bay</span><b>{{ f.airportConnection ? 'Kết nối' : '—' }}</b></li>
-              <li [class.is-on]="f.commercialLogistics"><ls-icon name="box" [size]="18" /><span>Logistics</span><b>{{ f.commercialLogistics ? 'Có' : '—' }}</b></li>
-            </ul>
+        <ul class="fm-tags">
+          <li class="fm-status-chip" [attr.data-status]="h.status">{{ t().poleStatus[h.status] }}</li>
+          @for (tag of h.tags; track tag) {
+            <li [attr.data-tag]="tag">{{ t().tag[tag] }}</li>
           }
-        } @else {
-          <p class="fm-hubcard__later">
-            <ls-icon name="clock" [size]="16" /> Cực này chỉ xuất hiện từ kịch bản {{ h.firstYear }}. Chọn mốc {{ h.firstYear }} trở đi để xem chỉ số.
-          </p>
+        </ul>
+
+        @if (!h.presentInYear) {
+          <p class="fm-hubcard__later"><ls-icon name="clock" [size]="16" /> {{ t().poleLater(h.firstYear) }}</p>
         }
 
-        <p class="fm-hubcard__blurb">{{ h.blurb }}</p>
-
-        @if (h.byYear.length) {
-          <button type="button" class="fm-btn fm-btn--primary fm-btn--block" (click)="hubExpanded.set(!hubExpanded())" [attr.aria-expanded]="hubExpanded()">
-            {{ hubExpanded() ? 'Thu gọn' : 'Khám phá chi tiết' }}
-            <ls-icon [name]="hubExpanded() ? 'chevron-up' : 'arrow-right'" [size]="16" />
-          </button>
-        }
-
-        @if (hubExpanded()) {
-          <div class="fm-byyear">
-            <h3 class="fm-eyebrow">Điểm theo từng mốc</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col"><span class="fm-vh">Chỉ số</span></th>
-                  @for (row of h.byYear; track row.year) {
-                    <th scope="col" [class.is-active]="row.year === h.year">{{ row.year }}</th>
-                  }
-                </tr>
-              </thead>
-              <tbody>
-                @for (t of scoreTiles; track t.key) {
-                  <tr>
-                    <th scope="row">{{ t.label }}</th>
-                    @for (row of h.byYear; track row.year) {
-                      <td [class.is-active]="row.year === h.year">
-                        <span class="fm-bar" [style.--v]="row.scores[t.key] + '%'"></span>
-                        {{ row.scores[t.key] }}
-                      </td>
-                    }
-                  </tr>
+        <dl class="fm-hubcard__facts">
+          <dt>{{ t().area }}</dt>
+          <dd>{{ h.area }}</dd>
+          <dt>{{ t().relatedLines }}</dt>
+          <dd>
+            @if (h.lines.length) {
+              <ul class="fm-hubcard__list">
+                @for (l of h.lines; track l.name) {
+                  <li>
+                    <span class="fm-line-dot" [style.--c]="l.color" aria-hidden="true"></span>
+                    {{ l.name }}
+                    <small class="fm-status-chip" [attr.data-status]="l.status">{{ t().statusLabel[l.status] }}{{ l.schematic ? ' · ' + t().schematic : '' }}</small>
+                  </li>
                 }
-                <tr>
-                  <th scope="row">Tuyến metro tới cực</th>
-                  @for (row of h.byYear; track row.year) {
-                    <td [class.is-active]="row.year === h.year">{{ row.metroLines }}</td>
-                  }
-                </tr>
-              </tbody>
-            </table>
-            @if (h.facts?.metroLineNames?.length) {
-              <p class="fm-hubcard__lines">Tuyến phục vụ: {{ h.facts?.metroLineNames?.join(' · ') }}</p>
+              </ul>
+            } @else {
+              {{ t().noLines }}
             }
-          </div>
-        }
+          </dd>
+          @if (h.corridors.length) {
+            <dt>{{ t().region.hubCorridors }}</dt>
+            <dd>
+              <div class="fm-chips fm-chips--corridors">
+                @for (c of h.corridors; track c.slug) {
+                  <button type="button" [style.--c]="themeColors()[c.theme]" [title]="t().region.openRegion" (click)="selectCorridor(c.slug)">
+                    <i aria-hidden="true"></i>{{ c.direction }} · {{ c.province }}
+                  </button>
+                }
+              </div>
+            </dd>
+          }
+          @if (h.axes.length) {
+            <dt>{{ t().axes }}</dt>
+            <dd>
+              <ul class="fm-hubcard__list">
+                @for (a of h.axes; track a.name) {
+                  <li>{{ a.name }} <small>— {{ a.theme }}</small></li>
+                }
+              </ul>
+            </dd>
+          }
+        </dl>
+
+        <p class="fm-hubcard__sources">
+          {{ t().sources }}:
+          @for (src of h.sourceList; track src.id; let last = $last) {
+            <a [attr.href]="src.url || null" target="_blank" rel="noopener noreferrer" [title]="src.title">{{ src.publisher }}</a>{{ last ? '' : ' · ' }}
+          }
+        </p>
       } @else {
-        <div class="fm-hubcard__loading"><span class="fm-spinner" aria-hidden="true"></span> Đang tải…</div>
+        <div class="fm-hubcard__loading"><span class="fm-spinner" aria-hidden="true"></span> {{ t().loadingShort }}</div>
+      }
+    </aside>
+  }
+
+  <!-- Selected Capital Region direction -->
+  @if (view() === 'region' && corridorSlug()) {
+    <aside class="fm-hubcard fm-corridorcard fm-glass" aria-live="polite">
+      @if (corridor(); as c) {
+        <div class="fm-hubcard__top">
+          <span class="fm-hubcard__icon" [style.--c]="themeColors()[c.theme]" aria-hidden="true"><ls-icon name="arrow-right" [size]="22" /></span>
+          <div>
+            <p class="fm-corridorcard__dir">{{ c.direction }} · {{ c.themeLabel }}</p>
+            <h2>{{ c.province }}</h2>
+            <p>{{ c.label }}</p>
+          </div>
+          <button type="button" class="fm-x" (click)="closeCorridor()" [attr.aria-label]="t().close"><ls-icon name="x" [size]="16" /></button>
+        </div>
+        @if (c.labelSource === 'vtv24Region') {
+          <p class="fm-corridorcard__quote"><ls-icon name="info" [size]="14" /> {{ t().region.vtvNote }}</p>
+        }
+        <dl class="fm-hubcard__facts">
+          @if (c.travel; as tr) {
+            <dt>{{ t().region.travelShort(tr.minutes) }}</dt>
+            <dd>{{ t().region.travel(tr.minutes, tr.km) }}</dd>
+          }
+          <dt>{{ t().region.formerly }}</dt>
+          <dd>{{ c.formerly }} — {{ nodeNames(c) }}</dd>
+          <dt>{{ t().region.facts }}</dt>
+          <dd>
+            <ul class="fm-hubcard__list">
+              @for (f of c.facts; track f.text) {
+                <li>{{ f.text }}
+                  <small>
+                    @for (src of sourcesOf(f.sources); track src.id; let last = $last) {
+                      <a [attr.href]="src.url || null" target="_blank" rel="noopener noreferrer" [title]="src.title">{{ src.publisher }}</a>{{ last ? '' : ', ' }}
+                    }
+                  </small>
+                </li>
+              }
+            </ul>
+          </dd>
+          <dt>{{ t().region.infra }}</dt>
+          <dd>
+            <ul class="fm-hubcard__list">
+              @for (i of c.infrastructure; track i.id) {
+                <li>
+                  {{ i.name }}
+                  <small class="fm-status-chip" [attr.data-status]="i.status">{{ t().statusLabel[i.status] }}{{ i.openYear && i.status !== 'operating' ? ' · ' + t().region.opens(i.openYear) : '' }}{{ i.schematic ? ' · ' + t().schematic : '' }}</small>
+                  @if (i.note) {
+                    <small class="fm-infra-note">{{ i.note }}</small>
+                  }
+                </li>
+              }
+            </ul>
+          </dd>
+          <dt>{{ t().region.poles }}</dt>
+          <dd>
+            <div class="fm-chips">
+              @for (pole of c.poles; track pole.slug) {
+                <button type="button" (click)="showPole(pole.slug)">{{ pole.name }}</button>
+              }
+            </div>
+          </dd>
+          <dt>{{ t().region.links }}</dt>
+          <dd>
+            <ul class="fm-links">
+              @if (c.gateway.living) {
+                <li><a routerLink="/living-score/ai" [queryParams]="{ workplace: c.gateway.living }"><ls-icon name="sparkles" [size]="14" /> {{ t().region.linkLiving }}</a></li>
+                <li><a [routerLink]="['/living-score/area', c.gateway.living]"><ls-icon name="pin" [size]="14" /> {{ t().region.linkArea }}</a></li>
+              }
+              @if (c.gateway.business) {
+                <li><a [routerLink]="['/business-copilot/location', c.gateway.business]"><ls-icon name="bag" [size]="14" /> {{ t().region.linkBusiness }}</a></li>
+              }
+            </ul>
+          </dd>
+        </dl>
+        <p class="fm-hubcard__sources">
+          {{ t().sources }}:
+          @for (src of c.sourceList; track src.id; let last = $last) {
+            <a [attr.href]="src.url || null" target="_blank" rel="noopener noreferrer" [title]="src.title">{{ src.publisher }}</a>{{ last ? '' : ' · ' }}
+          }
+        </p>
+      } @else {
+        <div class="fm-hubcard__loading"><span class="fm-spinner" aria-hidden="true"></span> {{ t().loadingShort }}</div>
       }
     </aside>
   }
 
   <!-- Layers + quick tools -->
   <aside class="fm-side" [class.is-open]="layersOpen()">
+    @if (view() === 'region' && region(); as r) {
+      <section class="fm-layers fm-glass fm-themes" aria-labelledby="fm-themes-title">
+        <div class="fm-panel-head">
+          <h2 id="fm-themes-title">{{ t().region.themesTitle }}</h2>
+          <button type="button" class="fm-link" (click)="themeFilter.set([])" [disabled]="!themeFilter().length">{{ t().region.themesAll }}</button>
+        </div>
+        <div class="fm-chips fm-chips--corridors">
+          @for (th of corridorThemes; track th) {
+            <button type="button" [style.--c]="themeColors()[th]" [class.is-on]="themeFilter().includes(th)" [attr.aria-pressed]="themeFilter().includes(th)" (click)="toggleTheme(th)">
+              <i aria-hidden="true"></i>{{ r.themes[th] }}
+            </button>
+          }
+        </div>
+        <ul class="fm-corridor-list">
+          @for (c of shownCorridors(); track c.slug) {
+            <li>
+              <button type="button" [class.is-on]="corridorSlug() === c.slug" [style.--c]="themeColors()[c.theme]" (click)="selectCorridor(c.slug)">
+                <i aria-hidden="true"></i>
+                <span><strong>{{ c.province }}</strong><small>{{ c.label }}</small></span>
+                @if (c.travel; as tr) {
+                  <em>{{ t().region.travelShort(tr.minutes) }}</em>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+        <p class="fm-legend__note">{{ t().region.legendArrows }}</p>
+      </section>
+    }
     <section class="fm-layers fm-glass" aria-labelledby="fm-layers-title">
       <div class="fm-panel-head">
-        <h2 id="fm-layers-title">Lớp bản đồ</h2>
-        <button type="button" class="fm-link" (click)="resetLayers()" [disabled]="allOn()">Đặt lại</button>
+        <h2 id="fm-layers-title">{{ t().layersTitle }}</h2>
+        <button type="button" class="fm-link" (click)="resetLayers()" [disabled]="allOn()">{{ t().reset }}</button>
       </div>
       <ul>
         @for (l of layers; track l.key) {
           <li>
             <label>
               <span class="fm-swatch" [style.--c]="l.color" aria-hidden="true"></span>
-              <span class="fm-layers__name">{{ l.label }}</span>
+              <span class="fm-layers__name">{{ t().layerLabel[l.key] }}</span>
               @if (layerCount(l.key); as n) {
                 <span class="fm-layers__count">{{ n }}</span>
               }
@@ -214,36 +354,50 @@
           </li>
         }
       </ul>
+      <div class="fm-legend">
+        <span class="fm-legend__title">{{ t().legendTitle }}</span>
+        @for (s of statuses; track s) {
+          <span class="fm-legend__item" [attr.data-status]="s"><i aria-hidden="true"></i>{{ t().statusLabel[s] }}</span>
+        }
+      </div>
     </section>
 
     <section class="fm-tools fm-glass" aria-labelledby="fm-tools-title">
-      <h2 id="fm-tools-title" class="fm-panel-head__title">Công cụ nhanh</h2>
+      <h2 id="fm-tools-title" class="fm-panel-head__title">{{ t().toolsTitle }}</h2>
       <button type="button" (click)="openCompare()">
         <span class="fm-tools__icon"><ls-icon name="scale" [size]="18" /></span>
-        <span>So sánh các mốc<small>2030 · 2050 · 2100</small></span>
+        <span>{{ t().compareTool }}<small>{{ t().compareToolSub }}</small></span>
       </button>
       <button type="button" (click)="toggle3d()" [class.is-on]="mode3d()">
         <span class="fm-tools__icon"><ls-icon name="cube" [size]="18" /></span>
-        <span>Thành phố 3D<small>{{ mode3d() ? 'Đang bật — bấm để về 2D' : 'Nâng khối các khu phát triển' }}</small></span>
+        <span>{{ t().tool3d }}<small>{{ mode3d() ? t().tool3dOn : t().tool3dOff }}</small></span>
       </button>
       <button type="button" (click)="openAsk()">
         <span class="fm-tools__icon fm-tools__icon--accent"><ls-icon name="message" [size]="18" /></span>
-        <span>Hỏi đáp Hà Nội tương lai<small>Trả lời từ dữ liệu kịch bản</small></span>
+        <span>{{ t().askTool }}<small>{{ t().askToolSub }}</small></span>
       </button>
     </section>
   </aside>
 
   <!-- Timeline -->
   @if (timeline(); as tl) {
-    <section class="fm-timeline fm-glass" aria-label="Dòng thời gian">
+    <section class="fm-timeline fm-glass" [attr.aria-label]="t().timelineTitle">
       <div class="fm-timeline__head">
-        <h2><ls-icon name="clock" [size]="16" /> Dòng thời gian</h2>
-        <p>Xem Hà Nội thay đổi qua từng mốc</p>
+        <h2><ls-icon name="clock" [size]="16" /> {{ t().timelineTitle }}</h2>
+        <p>{{ t().timelineSub }}</p>
       </div>
       <ol class="fm-years" [style.--progress]="(yearIndex() / (tl.years.length - 1)) * 100 + '%'">
         @for (y of tl.years; track y.year; let i = $index) {
           <li>
-            <button type="button" class="fm-year" [class.is-active]="y.year === year()" [attr.aria-pressed]="y.year === year()" (click)="selectYear(y.year)">
+            <button
+              type="button"
+              class="fm-year"
+              [class.is-active]="y.year === year()"
+              [class.is-past]="i < yearIndex()"
+              [attr.aria-pressed]="y.year === year()"
+              [attr.aria-current]="y.year === year() ? 'step' : null"
+              (click)="selectYear(y.year)"
+            >
               <span class="fm-orb" [attr.data-kind]="y.kind">
                 <svg viewBox="0 0 40 40" aria-hidden="true">
                   @for (r of rings[i]; track r) {
@@ -258,49 +412,49 @@
         }
       </ol>
       <div class="fm-timeline__mode">
-        <div class="fm-seg" role="group" aria-label="Chế độ hiển thị">
+        <div class="fm-seg" role="group" [attr.aria-label]="t().viewMode">
           <button type="button" [class.is-on]="!mode3d()" (click)="mode3d.set(false)">2D</button>
           <button type="button" [class.is-on]="mode3d()" (click)="mode3d.set(true)">3D</button>
         </div>
         <button type="button" class="fm-btn fm-btn--ghost" (click)="togglePlay()" [attr.aria-pressed]="playing()">
           <ls-icon [name]="playing() ? 'pause' : 'play'" [size]="15" />
-          {{ playing() ? 'Dừng' : 'Phát' }}
+          {{ playing() ? t().stopShort : t().playShort }}
         </button>
       </div>
     </section>
   }
 
-  <!-- Scenario disclaimer -->
+  <!-- Data note + sources -->
   <footer class="fm-foot">
     <span class="fm-foot__note fm-glass">
       <ls-icon name="info" [size]="15" />
-      <span>Kịch bản minh hoạ — không phải bản đồ quy hoạch chính thức.</span>
-      <button type="button" class="fm-link" (click)="sourcesOpen.set(!sourcesOpen())" [attr.aria-expanded]="sourcesOpen()">Nguồn dữ liệu</button>
+      <span>{{ view() === 'region' ? t().region.footNote : t().footNote }}</span>
+      <button type="button" class="fm-link" (click)="sourcesOpen.set(!sourcesOpen())" [attr.aria-expanded]="sourcesOpen()">{{ t().dataSources }}</button>
     </span>
     @if (sourcesOpen()) {
-      <div class="fm-sources fm-glass" role="dialog" aria-label="Nguồn dữ liệu">
-        <button type="button" class="fm-x" (click)="sourcesOpen.set(false)" aria-label="Đóng"><ls-icon name="x" [size]="15" /></button>
-        <h3>Nguồn dữ liệu</h3>
+      <div class="fm-sources fm-glass" role="dialog" [attr.aria-label]="t().dataSources">
+        <button type="button" class="fm-x" (click)="sourcesOpen.set(false)" [attr.aria-label]="t().close"><ls-icon name="x" [size]="15" /></button>
+        <h3>{{ t().dataSources }}</h3>
         <p>{{ note() }}</p>
         <ul>
-          <li>Bản đồ nền: © OpenStreetMap contributors.</li>
-          <li>Các lớp metro, vành đai, vùng phát triển, TOD, xanh, sân bay: dữ liệu minh hoạ do dự án tạo, vị trí xấp xỉ.</li>
-          <li>Dân số, tỷ lệ xanh và điểm số của cực: giả định của kịch bản, chưa đối chiếu số liệu chính thức.</li>
-          <li>Tuyến 1, 2, 2A, 3: hình học lấy từ dữ liệu mẫu của Hanoi Living Score.</li>
+          @for (src of allSources(); track src.id) {
+            <li><a [attr.href]="src.url || null" target="_blank" rel="noopener noreferrer">{{ src.title }}</a> <small>— {{ src.publisher }}</small></li>
+          }
+          <li>{{ t().baseMap }}</li>
         </ul>
       </div>
     }
   </footer>
 
-  <!-- Compare years -->
+  <!-- Compare milestones -->
   @if (compareOpen()) {
     <div class="fm-modal" (click)="compareOpen.set(false)">
       <div class="fm-dialog fm-glass" role="dialog" aria-modal="true" aria-labelledby="fm-compare-title" (click)="$event.stopPropagation()">
         <div class="fm-panel-head">
-          <h2 id="fm-compare-title">So sánh các mốc</h2>
-          <button type="button" class="fm-x" (click)="compareOpen.set(false)" aria-label="Đóng"><ls-icon name="x" [size]="16" /></button>
+          <h2 id="fm-compare-title">{{ t().compareTitle }}</h2>
+          <button type="button" class="fm-x" (click)="compareOpen.set(false)" [attr.aria-label]="t().close"><ls-icon name="x" [size]="16" /></button>
         </div>
-        <div class="fm-chips" role="group" aria-label="Chọn 2–3 mốc để so sánh">
+        <div class="fm-chips" role="group" [attr.aria-label]="t().comparePick">
           @for (y of timeline()?.years ?? []; track y.year) {
             <button type="button" [class.is-on]="compareYears().includes(y.year)" [attr.aria-pressed]="compareYears().includes(y.year)" (click)="toggleCompareYear(y.year)">{{ y.year }}</button>
           }
@@ -313,26 +467,29 @@
             <table class="fm-compare">
               <thead>
                 <tr>
-                  <th scope="col"><span class="fm-vh">Chỉ số</span></th>
+                  <th scope="col"><span class="fm-vh">{{ t().statsLabel }}</span></th>
                   @for (col of c.years; track col.year) {
                     <th scope="col">{{ col.year }}<small>{{ col.label }}</small></th>
                   }
-                  <th scope="col" class="fm-compare__delta">{{ c.from }} → {{ c.to }}<small>thay đổi</small></th>
+                  <th scope="col" class="fm-compare__delta">{{ c.from }} → {{ c.to }}<small>{{ t().change }}</small></th>
                 </tr>
               </thead>
               <tbody>
-                <tr><th scope="row">Tuyến metro</th>@for (col of c.years; track col.year) {<td>{{ col.stats.metroLines }}</td>}<td class="fm-compare__delta">{{ delta(c.delta.metroLines) }}</td></tr>
-                <tr><th scope="row">Chiều dài metro (km)</th>@for (col of c.years; track col.year) {<td>{{ col.stats.metroKm }}</td>}<td class="fm-compare__delta">{{ delta(c.delta.metroKm) }}</td></tr>
-                <tr><th scope="row">Cực phát triển</th>@for (col of c.years; track col.year) {<td>{{ col.stats.hubs }}</td>}<td class="fm-compare__delta">{{ delta(c.delta.hubs) }}</td></tr>
-                <tr><th scope="row">Sân bay</th>@for (col of c.years; track col.year) {<td>{{ col.stats.airports }}</td>}<td class="fm-compare__delta">{{ delta(c.delta.airports) }}</td></tr>
-                <tr><th scope="row">Diện tích xanh (%)</th>@for (col of c.years; track col.year) {<td>{{ col.stats.greenPct }}</td>}<td class="fm-compare__delta">{{ delta(c.delta.greenPct, ' điểm %') }}</td></tr>
-                <tr><th scope="row">Dân số (triệu, ước tính)</th>@for (col of c.years; track col.year) {<td>{{ col.stats.population }}</td>}<td class="fm-compare__delta">{{ delta(c.delta.population) }}</td></tr>
+                <tr><th scope="row">{{ t().rowRail }}</th>@for (col of c.years; track col.year) {<td>{{ railText(col.stats.railKm) }}</td>}<td class="fm-compare__delta">{{ delta(c.delta.railKm) }}</td></tr>
+                <tr><th scope="row">{{ t().rowPopulation }}</th>@for (col of c.years; track col.year) {<td>{{ populationText(col.stats.population) }}</td>}<td class="fm-compare__delta">{{ delta(c.delta.populationMin) }}{{ c.delta.populationMin === c.delta.populationMax ? '' : ' … ' + delta(c.delta.populationMax) }}</td></tr>
+                <tr><th scope="row">{{ t().rowPoles }}</th>@for (col of c.years; track col.year) {<td>{{ col.stats.poles }}</td>}<td class="fm-compare__delta">{{ delta(c.delta.poles) }}</td></tr>
+                <tr><th scope="row">{{ t().rowLines }}</th>@for (col of c.years; track col.year) {<td>{{ col.stats.linesOperating }}</td>}<td class="fm-compare__delta">{{ delta(c.delta.linesOperating) }}</td></tr>
               </tbody>
             </table>
           </div>
-          <p class="fm-dialog__note">{{ c.note }}</p>
+          <p class="fm-dialog__note">
+            {{ t().sources }}:
+            @for (src of c.sourceList; track src.id; let last = $last) {
+              <a [attr.href]="src.url || null" target="_blank" rel="noopener noreferrer" [title]="src.title">{{ src.publisher }}</a>{{ last ? '' : ' · ' }}
+            }
+          </p>
         } @else if (!compareError()) {
-          <div class="fm-hubcard__loading"><span class="fm-spinner" aria-hidden="true"></span> Đang tải…</div>
+          <div class="fm-hubcard__loading"><span class="fm-spinner" aria-hidden="true"></span> {{ t().loadingShort }}</div>
         }
       </div>
     </div>
@@ -343,14 +500,19 @@
     <div class="fm-modal fm-modal--side" (click)="closeAsk()">
       <div class="fm-dialog fm-dialog--ask fm-glass" role="dialog" aria-modal="true" aria-labelledby="fm-ask-title" (click)="$event.stopPropagation()">
         <div class="fm-panel-head">
-          <h2 id="fm-ask-title">Hỏi đáp Hà Nội tương lai</h2>
-          <button type="button" class="fm-x" (click)="closeAsk()" aria-label="Đóng"><ls-icon name="x" [size]="16" /></button>
+          <h2 id="fm-ask-title">{{ t().askTitle }}</h2>
+          <button type="button" class="fm-x" (click)="closeAsk()" [attr.aria-label]="t().close"><ls-icon name="x" [size]="16" /></button>
         </div>
-        <p class="fm-dialog__note">Chọn một câu hỏi — câu trả lời được tính từ dữ liệu kịch bản của mốc {{ year() }}, không do mô hình AI viết.</p>
+        <p class="fm-dialog__note">{{ t().askIntro(year()) }}</p>
+        <form class="fm-askform" (submit)="askFree($event)">
+          <input type="text" [placeholder]="t().askPlaceholder" [attr.aria-label]="t().askPlaceholder" maxlength="500" [value]="askText()" (input)="onAskInput($event)" />
+          <button type="submit" class="fm-btn fm-btn--primary" [disabled]="asking() || askText().trim().length < 2">{{ t().askSend }}</button>
+        </form>
+        <span class="fm-eyebrow">{{ t().askSuggested }}</span>
         <ul class="fm-questions">
           @for (q of questions(); track q.id) {
             <li>
-              <button type="button" (click)="ask(q)" [disabled]="asking()" [class.is-on]="answer()?.id === q.id">{{ q.text }}</button>
+              <button type="button" (click)="ask(q)" [disabled]="asking()" [class.is-on]="askedId() === q.id">{{ q.text }}</button>
             </li>
           }
         </ul>
@@ -358,20 +520,28 @@
           <p class="fm-error" role="alert">{{ message }}</p>
         }
         @if (asking()) {
-          <div class="fm-hubcard__loading"><span class="fm-spinner" aria-hidden="true"></span> Đang tính…</div>
+          <div class="fm-hubcard__loading"><span class="fm-spinner" aria-hidden="true"></span> {{ t().thinking }}</div>
         }
         @if (answer(); as a) {
           <div class="fm-answer" aria-live="polite">
             <span class="fm-eyebrow">{{ a.question }} · {{ a.year }}</span>
             <p>{{ a.answer }}</p>
-            @if (a.highlights.length) {
+            @if (answerPoles().length) {
               <div class="fm-chips">
-                @for (slug of a.highlights; track slug) {
-                  <button type="button" (click)="selectHub(slug)">{{ hubName(slug) }}</button>
+                @for (pole of answerPoles(); track pole.slug) {
+                  <button type="button" (click)="selectHub(pole.slug)">{{ pole.name }}</button>
                 }
               </div>
             }
-            <small>Nguồn: quy tắc áp dụng trên dữ liệu kịch bản minh hoạ.</small>
+            <small>
+              {{ answeredBy(a) }}
+              @if (a.sources.length) {
+                · {{ t().sources }}:
+                @for (src of a.sources; track src.id; let last = $last) {
+                  <a [attr.href]="src.url || null" target="_blank" rel="noopener noreferrer" [title]="src.title">{{ src.publisher }}</a>{{ last ? '' : ', ' }}
+                }
+              }
+            </small>
           </div>
         }
       </div>

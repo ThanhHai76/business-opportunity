@@ -1,20 +1,8 @@
-import { ChangeDetectionStrategy, Component, ElementRef, HostListener, ViewChild, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, ViewChild, computed, effect, inject, input, signal } from '@angular/core';
 import { AskIntent } from '../pi.models';
 import { PiStateService } from '../pi.service';
 
-interface QuickAction {
-  label: string;
-  intent: AskIntent;
-  question: (district: string) => string;
-}
-
-const ACTIONS: QuickAction[] = [
-  { label: 'Analyze Area', intent: 'analyze', question: (d) => `Is ${d} a good area to buy property for the next 5 years?` },
-  { label: 'Compare Areas', intent: 'compare', question: (d) => `Compare ${d} with the top-ranked districts` },
-  { label: 'Price Analysis', intent: 'price', question: (d) => `How are property prices moving in ${d}?` },
-  { label: 'Future Scenario', intent: 'future', question: (d) => `What are the 5-year scenarios for ${d}?` },
-  { label: 'Investment Report', intent: 'report', question: (d) => `Write an investment brief for ${d}` },
-];
+const ACTIONS: Exclude<AskIntent, 'project'>[] = ['analyze', 'compare', 'future', 'price', 'report'];
 
 /** "Ask Property AI" — the floating analyst panel of the Map Intelligence dashboard. */
 @Component({
@@ -23,12 +11,13 @@ const ACTIONS: QuickAction[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './pi-ai-panel.component.css',
   template: `
-    <section class="ai" aria-label="Ask Property AI">
+    @let tx = state.t();
+    <section class="ai" [attr.aria-label]="tx.ai.title">
       <header class="ai__head">
         <span class="ai__mark" aria-hidden="true"><i></i></span>
         <div class="ai__title">
-          <strong>Ask Property AI</strong>
-          <span>Rule-based analyst · sample data · planning to 2045</span>
+          <strong>{{ tx.ai.title }}</strong>
+          <span>{{ tx.ai.sub(usesClaude()) }}</span>
         </div>
         <kbd>{{ isMac ? '⌘J' : 'Ctrl J' }}</kbd>
       </header>
@@ -36,10 +25,10 @@ const ACTIONS: QuickAction[] = [
       <div class="ai__log" #log aria-live="polite">
         @if (!state.chat().length) {
           <div class="ai__empty">
-            <p>Ask about any district or project in Hà Nội — growth, prices, scenarios or a head-to-head comparison.</p>
-            <button type="button" class="ai__suggest" (click)="state.ask(actions[0].question(districtName()), 'analyze')">
-              {{ actions[0].question(districtName()) }}
-            </button>
+            <p>{{ tx.ai.empty }}</p>
+            @if (wardName()) {
+              <button type="button" class="ai__suggest" (click)="run('analyze')">{{ tx.ai.questions.analyze(wardName()) }}</button>
+            }
           </div>
         }
         @for (turn of state.chat(); track turn.id) {
@@ -47,14 +36,14 @@ const ACTIONS: QuickAction[] = [
           @if (turn.error) {
             <div class="ai__error" role="alert">{{ turn.error }}</div>
           } @else if (!turn.answer) {
-            <div class="ai__thinking" aria-label="Analysing"><i></i><i></i><i></i></div>
+            <div class="ai__thinking" [attr.aria-label]="tx.ai.thinking"><i></i><i></i><i></i></div>
           } @else {
             @let a = turn.answer;
             <article class="ai__a">
               <div class="ai__rule">
-                <span class="ai__tag">AI INSIGHT</span>
+                <span class="ai__tag">{{ tx.ai.insight }}</span>
                 <span class="ai__line"></span>
-                <span class="ai__outlook" [attr.data-tone]="a.outlook.tone">{{ a.outlook.label }}</span>
+                <span class="ai__outlook" [attr.data-tone]="a.outlook.tone">{{ a.outOfScope ? tx.ai.outOfScope : a.outlook.label }}</span>
               </div>
               <p class="ai__summary">{{ a.summary }}</p>
 
@@ -76,7 +65,7 @@ const ACTIONS: QuickAction[] = [
               }
 
               <dl class="ai__rows">
-                @for (r of a.rows; track r.label) {
+                @for (r of a.rows; track $index) {
                   <div [class]="'pi-tone-' + r.tone">
                     <dt>{{ r.label }}</dt>
                     <dd>{{ r.text }}</dd>
@@ -84,22 +73,35 @@ const ACTIONS: QuickAction[] = [
                 }
               </dl>
 
-              @if (a.scenarios?.length) {
-                <div class="ai__scenarios">
-                  @for (s of a.scenarios; track s.key) {
-                    <div class="ai__scenario" [attr.data-kind]="s.key">
-                      <span class="ai__scenario-k">{{ s.label?.toUpperCase() }} · {{ s.probability }}%</span>
-                      <span class="ai__scenario-v">{{ s.change > 0 ? '+' : '' }}{{ s.change }}%</span>
-                      <span class="ai__scenario-n">{{ s.note }}</span>
-                    </div>
-                  }
-                </div>
-              }
-
               @if (a.callout) {
                 <div class="ai__callout">
                   <span>{{ a.callout.title.toUpperCase() }}</span>
                   <p>{{ a.callout.text }}</p>
+                </div>
+              }
+
+              @if (a.sources.length) {
+                <details class="ai__sources">
+                  <summary>{{ tx.ai.sources }} ({{ a.sources.length }})</summary>
+                  <ul>
+                    @for (s of a.sources; track s.id) {
+                      <li>
+                        @if (s.url) {
+                          <a [href]="s.url" target="_blank" rel="noopener">{{ s.title }}</a>
+                        } @else {
+                          {{ s.title }}
+                        }
+                      </li>
+                    }
+                  </ul>
+                </details>
+              }
+
+              @if ($last && a.followUps.length) {
+                <div class="ai__follow">
+                  @for (f of a.followUps; track f) {
+                    <button type="button" [disabled]="state.asking()" (click)="run(f, a.ward.name)">{{ tx.ai.actions[f] }} →</button>
+                  }
                 </div>
               }
             </article>
@@ -109,8 +111,8 @@ const ACTIONS: QuickAction[] = [
 
       <footer class="ai__foot">
         <div class="ai__actions">
-          @for (action of actions; track action.label; let first = $first) {
-            <button type="button" [class.is-primary]="first" [disabled]="state.asking()" (click)="run(action)">{{ action.label }}</button>
+          @for (action of actions; track action; let first = $first) {
+            <button type="button" [class.is-primary]="first" [disabled]="state.asking() || !wardName()" (click)="run(action)">{{ tx.ai.actions[action] }}</button>
           }
         </div>
         <form class="ai__input" (submit)="$event.preventDefault(); send()">
@@ -118,12 +120,12 @@ const ACTIONS: QuickAction[] = [
             #input
             type="text"
             maxlength="500"
-            placeholder="Ask about any area, project or address…"
-            aria-label="Ask Property AI"
+            [placeholder]="tx.ai.inputPlaceholder"
+            [attr.aria-label]="tx.ai.inputAria"
             [value]="draft()"
             (input)="draft.set($any($event.target).value)"
           />
-          <button type="submit" aria-label="Send" [disabled]="!draft().trim() || state.asking()">↑</button>
+          <button type="submit" [attr.aria-label]="tx.ai.send" [disabled]="!draft().trim() || state.asking()">↑</button>
         </form>
       </footer>
     </section>
@@ -131,7 +133,7 @@ const ACTIONS: QuickAction[] = [
 })
 export class PiAiPanelComponent {
   protected readonly state = inject(PiStateService);
-  readonly districtName = input('Gia Lâm');
+  readonly wardName = input('');
 
   @ViewChild('log', { static: true }) private log!: ElementRef<HTMLDivElement>;
   @ViewChild('input', { static: true }) private inputEl!: ElementRef<HTMLInputElement>;
@@ -139,6 +141,8 @@ export class PiAiPanelComponent {
   protected readonly actions = ACTIONS;
   protected readonly draft = signal('');
   protected readonly isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+  /** Whether the last answer came from Claude (the server falls back to template answers without a key). */
+  protected readonly usesClaude = computed(() => [...this.state.chat()].reverse().find((t) => t.answer)?.answer?.provider === 'anthropic');
 
   constructor() {
     // Keep the newest exchange in view.
@@ -160,8 +164,10 @@ export class PiAiPanelComponent {
     }
   }
 
-  protected run(action: QuickAction): void {
-    this.state.ask(action.question(this.districtName()), action.intent);
+  protected run(intent: AskIntent, ward = this.wardName()): void {
+    const q = this.state.t().ai.questions;
+    const question = intent === 'project' ? q.project(this.state.project()) : q[intent](ward);
+    this.state.ask(question, intent);
   }
 
   protected send(): void {

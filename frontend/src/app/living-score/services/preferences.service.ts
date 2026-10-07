@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { ThemeChoice, ThemeService } from '../../services/theme.service';
 import { CRITERION_KEYS, CriterionMap, PartialWeights } from '../models/living-score.models';
 
@@ -33,8 +33,14 @@ export class PreferencesService {
   readonly theme = this.themeService.choice;
   readonly effectiveTheme = this.themeService.effective;
 
-  /** Personalised weights (percent-like values 0-100), or null when the user keeps the defaults. */
-  readonly weights = signal<PartialWeights | null>(read<PartialWeights | null>('weights', null));
+  /** The user's own personalised weights (percent-like values 0-100), or null for the defaults. */
+  private readonly ownWeights = signal<PartialWeights | null>(knownWeights(read<Record<string, number> | null>('weights', null)));
+  /** Weights from a shared link (`?w=`): used for viewing until adopted or dismissed; never saved on their own. */
+  readonly sharedWeights = signal<PartialWeights | null>(null);
+  /** The weights every page scores with. */
+  readonly weights = computed<PartialWeights | null>(() => this.sharedWeights() ?? this.ownWeights());
+  /** The user's own weights, for building a share link. */
+  readonly myWeights = this.ownWeights.asReadonly();
   readonly saved = signal<string[]>(read<string[]>('saved', []));
   readonly compareSelection = signal<string[]>(read<string[]>('compare', []));
 
@@ -43,8 +49,31 @@ export class PreferencesService {
   }
 
   setWeights(weights: PartialWeights | null): void {
-    this.weights.set(weights);
+    this.sharedWeights.set(null);
+    this.ownWeights.set(weights);
     write('weights', weights);
+  }
+
+  /** Shows the weights of a shared link (from `?w=transportation:30,…`); ignores anything malformed. */
+  viewShared(param: string | null): void {
+    if (!param) return;
+    const parsed: Record<string, number> = {};
+    for (const part of param.split(',')) {
+      const [key, value] = part.split(':');
+      const n = Number(value);
+      if (key && Number.isFinite(n) && n >= 0 && n <= 100) parsed[key] = n;
+    }
+    const weights = knownWeights(parsed);
+    if (weights && Object.values(weights).some((v) => v > 0)) this.sharedWeights.set(weights);
+  }
+
+  adoptShared(): void {
+    const shared = this.sharedWeights();
+    if (shared) this.setWeights(shared);
+  }
+
+  dismissShared(): void {
+    this.sharedWeights.set(null);
   }
 
   resetWeights(): void {
@@ -85,6 +114,16 @@ export class PreferencesService {
     write('saved', []);
     this.setCompare([]);
   }
+}
+
+/**
+ * Keeps only the current criteria: weights saved by an older version may still hold criteria that were
+ * removed (safety, environment, cost — no open data). Returns null when nothing is left.
+ */
+function knownWeights(saved: Record<string, number> | null): PartialWeights | null {
+  if (!saved) return null;
+  const kept = Object.fromEntries(CRITERION_KEYS.filter((key) => Number.isFinite(saved[key])).map((key) => [key, saved[key]]));
+  return Object.keys(kept).length ? (kept as PartialWeights) : null;
 }
 
 export function fullWeights(partial: PartialWeights | null, defaults: CriterionMap): CriterionMap {

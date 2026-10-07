@@ -12,45 +12,48 @@ export const CRITERION_ICONS: Record<CriterionKey, string> = {
   healthcare: 'health',
   greenSpace: 'tree',
   amenities: 'bag',
+};
+
+/** Icons for the criteria that have no data yet (shown greyed out as "chưa có dữ liệu"). */
+export const MISSING_CRITERION_ICONS: Record<'safety' | 'environment' | 'cost', string> = {
   safety: 'shield',
   environment: 'leaf',
   cost: 'wallet',
 };
 
-export const AMENITY_META: Record<AmenityType, { label: string; plural: string; icon: string; color: string }> = {
-  school: { label: 'Trường học', plural: 'Trường học', icon: 'graduation', color: '#6366f1' },
-  hospital: { label: 'Cơ sở y tế', plural: 'Bệnh viện / y tế', icon: 'health', color: '#e5484d' },
-  park: { label: 'Công viên', plural: 'Công viên', icon: 'tree', color: '#1a8f5c' },
-  shopping: { label: 'Mua sắm', plural: 'Mua sắm', icon: 'bag', color: '#d9820b' },
+/** Icons and colours; labels are in i18n/ls-i18n.ts. */
+export const AMENITY_META: Record<AmenityType, { icon: string; color: string }> = {
+  school: { icon: 'graduation', color: '#6366f1' },
+  hospital: { icon: 'health', color: '#e5484d' },
+  park: { icon: 'tree', color: '#1a8f5c' },
+  shopping: { icon: 'bag', color: '#d9820b' },
 };
 
 export const AMENITY_TYPES: AmenityType[] = ['school', 'hospital', 'park', 'shopping'];
 
-export const STATUS_META: Record<InfrastructureStatus, { label: string; color: string }> = {
-  operating: { label: 'Đang vận hành', color: '#0f5ff2' },
-  under_construction: { label: 'Đang xây dựng', color: '#f59e0b' },
-  planned: { label: 'Dự kiến', color: '#8b95a7' },
+export const STATUS_META: Record<InfrastructureStatus, { color: string }> = {
+  operating: { color: '#0f5ff2' },
+  under_construction: { color: '#f59e0b' },
+  planned: { color: '#8b95a7' },
 };
 
-export const HOUSEHOLD_OPTIONS: Array<{ value: HouseholdType; label: string }> = [
-  { value: 'single', label: 'Độc thân' },
-  { value: 'couple', label: 'Cặp đôi' },
-  { value: 'family_with_kids', label: 'Gia đình có con nhỏ' },
+export const HOUSEHOLD_OPTIONS: Array<{ value: HouseholdType }> = [
+  { value: 'single' },
+  { value: 'couple' },
+  { value: 'family_with_kids' },
 ];
 
-export const INTEREST_OPTIONS: Array<{ value: InterestKey; label: string }> = [
-  { value: 'cafes', label: 'Nhiều quán cà phê' },
-  { value: 'metro_access', label: 'Dễ tiếp cận metro' },
-  { value: 'international_schools', label: 'Gần trường quốc tế' },
-  { value: 'high_safety', label: 'Khu vực an ninh cao' },
-  { value: 'green_space', label: 'Nhiều cây xanh' },
-  { value: 'quiet_environment', label: 'Yên tĩnh, trong lành' },
+export const INTEREST_OPTIONS: Array<{ value: InterestKey }> = [
+  { value: 'cafes' },
+  { value: 'metro_access' },
+  { value: 'international_schools' },
+  { value: 'green_space' },
 ];
 
 /** Colours used to tell up to three compared areas apart. */
 export const COMPARE_COLORS = ['#0f5ff2', '#d9820b', '#1a8f5c'];
 
-/** Approximate map view that frames all of the sample areas. */
+/** Approximate map view that frames all of the areas. */
 export const HANOI_BOUNDS: [[number, number], [number, number]] = [
   [105.69, 20.93],
   [105.96, 21.21],

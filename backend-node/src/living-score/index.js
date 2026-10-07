@@ -8,7 +8,7 @@
  *   ...
  *   await living.close();  // on shutdown
  *
- * All data is SAMPLE DATA (see seed/seed-data.js).
+ * Scores are computed from an OpenStreetMap snapshot (see seed/seed-data.js, `npm run data:living`).
  */
 const express = require('express');
 const helmet = require('helmet');
@@ -25,6 +25,7 @@ const {
   parseSlug,
   parseSlugList,
   parseSort,
+  parseLang,
   parseWeights,
 } = require('./common/query-parsers');
 
@@ -32,7 +33,8 @@ const { CacheService } = require('./cache/cache.service');
 const { MemoryDataSource } = require('./data/memory-data-source');
 const { PostgresDataSource } = require('./data/postgres-data-source');
 const { seedPostgres } = require('./seed/postgres-seeder');
-const { CRITERIA, SCORE_BANDS } = require('./scoring/criteria');
+const { CRITERIA, MISSING_CRITERIA, SCORE_BANDS } = require('./scoring/criteria');
+const { DATA_INFO, dataInfo } = require('./seed/seed-data');
 const { ScoringService } = require('./scoring/scoring.service');
 const { AreasService } = require('./areas/areas.service');
 const { AmenitiesService } = require('./amenities/amenities.service');
@@ -96,24 +98,24 @@ function createLivingScore(options = {}) {
         dataSource: { kind: data.kind, reachable },
         cache: cache.backend,
         ai: { enabled: narrative.enabled, model: narrative.enabled ? narrative.model : undefined },
-        sampleData: true,
+        data: DATA_INFO,
       });
     }),
   );
 
   // Criteria metadata + default weights + score bands, so clients never hard-code them.
   router.get('/scoring/criteria', (req, res) => {
-    res.json({ criteria: CRITERIA, bands: SCORE_BANDS });
+    res.json({ criteria: CRITERIA, missing: MISSING_CRITERIA, bands: SCORE_BANDS, data: dataInfo(parseLang(req.query.lang)) });
   });
 
-  // GET /areas?q=cau&sort=score|name|rent&weights=transportation:30,cost:5
+  // GET /areas?q=cau&sort=score|name&weights=transportation:30,amenities:5
   router.get(
     '/areas',
     asyncHandler(async (req, res) => {
       const q = parseSearchText(req.query.q, { max: 60 });
       const sort = parseSort(req.query.sort);
       const weights = parseWeights(req.query.weights);
-      res.json(await areas.list({ q, sort, weights }));
+      res.json(await areas.list({ q, sort, weights, lang: parseLang(req.query.lang) }));
     }),
   );
 
@@ -123,7 +125,7 @@ function createLivingScore(options = {}) {
     asyncHandler(async (req, res) => {
       const visual = parseCriterion(req.query.criterion);
       const weights = parseWeights(req.query.weights);
-      res.json(await areas.geojson({ visual, weights }));
+      res.json(await areas.geojson({ visual, weights, lang: parseLang(req.query.lang) }));
     }),
   );
 
@@ -132,7 +134,7 @@ function createLivingScore(options = {}) {
     asyncHandler(async (req, res) => {
       const slug = parseSlug(req.params.slug);
       const weights = parseWeights(req.query.weights);
-      res.json(await areas.detail(slug, weights));
+      res.json(await areas.detail(slug, weights, parseLang(req.query.lang)));
     }),
   );
 
@@ -142,7 +144,7 @@ function createLivingScore(options = {}) {
     asyncHandler(async (req, res) => {
       const slugs = parseSlugList(req.query.slugs, { min: 2, max: 3 });
       const weights = parseWeights(req.query.weights);
-      res.json(await compare.compare(slugs, weights));
+      res.json(await compare.compare(slugs, weights, parseLang(req.query.lang)));
     }),
   );
 
@@ -174,7 +176,7 @@ function createLivingScore(options = {}) {
     }),
   );
 
-  // POST /recommendations — Top 3 areas for a person's budget, household, interests and priorities.
+  // POST /recommendations — Top 3 areas for a person's household, interests, priorities and workplace.
   router.post(
     '/recommendations',
     rateLimit({ windowMs: 60_000, limit: limits.recommendations, standardHeaders: true, legacyHeaders: false, handler: tooManyRequests }),
@@ -200,7 +202,7 @@ function createLivingScore(options = {}) {
     config,
     services: { scoring, areas, amenities, infrastructure, compare, search, recommendations, cache, data },
 
-    /** Loads the SAMPLE DATA into PostgreSQL on first start (no-op for the in-memory source). */
+    /** Loads the OpenStreetMap-derived data into PostgreSQL on first start (no-op for the in-memory source). */
     async init() {
       if (!pool || !config.autoSeed) return;
       try {

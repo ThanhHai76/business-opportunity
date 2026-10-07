@@ -246,3 +246,19 @@ td.best {
     grid-template-columns: 1fr;
   }
 }
+
+.facts-head th {
+  padding-top: 14px;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ls-ink-faint);
+}
+tr.missing th,
+tr.missing td {
+  color: var(--ls-ink-faint);
+  font-style: italic;
+}
+.foot a {
+  color: var(--ls-accent);
+}

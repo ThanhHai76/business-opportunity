@@ -17,38 +17,37 @@ import {
 import * as maplibregl from 'maplibre-gl';
 import { HANOI_BOUNDS, AMENITY_META, STATUS_META } from '../../living-score.constants';
 import { AmenityGeoJson, AreaGeoJson, InfrastructureGeoJson } from '../../models/living-score.models';
+import { LangService } from '../../services/lang.service';
 import { BAND_COLORS } from '../../services/living-meta.service';
 
 const BAND_KEYS = ['excellent', 'good', 'fair', 'low'] as const;
 const SRC_AREAS = 'areas';
 const SRC_INFRA = 'infra';
 const SRC_AMENITIES = 'amenities';
+const SRC_MEASURE = 'measure';
+/** Radius the scores are measured in (see the API's data.walkKm). */
+const MEASURE_KM = 1.5;
+
+/** A 64-point circle of `km` around a centre, as a GeoJSON polygon (equirectangular — fine at city scale). */
+function circle(lng: number, lat: number, km: number): GeoJSON.Feature<GeoJSON.Polygon> {
+  const dLat = km / 110.574;
+  const dLng = km / (111.32 * Math.cos((lat * Math.PI) / 180));
+  const ring = Array.from({ length: 65 }, (_, i) => {
+    const a = (i / 64) * 2 * Math.PI;
+    return [lng + dLng * Math.cos(a), lat + dLat * Math.sin(a)];
+  });
+  return { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } };
+}
 const EMPTY: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 
-const OSM_TILES = ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'];
-const ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-
-/** Softens the OpenStreetMap raster so the score colours stand out; darker for the dark theme. */
-const BASE_PAINT: Record<'light' | 'dark', Record<string, number>> = {
-  light: { 'raster-saturation': -0.3, 'raster-contrast': -0.05, 'raster-brightness-min': 0, 'raster-brightness-max': 1 },
-  dark: { 'raster-saturation': -0.8, 'raster-contrast': 0.15, 'raster-brightness-min': 0, 'raster-brightness-max': 0.36 },
+/**
+ * OpenFreeMap vector base maps (free, no key; data © OpenStreetMap contributors). The raster
+ * tile.openstreetmap.org is not meant for app traffic and is refused on some networks.
+ */
+const STYLE_URL: Record<'light' | 'dark', string> = {
+  light: 'https://tiles.openfreemap.org/styles/positron',
+  dark: 'https://tiles.openfreemap.org/styles/dark',
 };
-
-const BACKGROUND = { light: '#e9edf0', dark: '#16130f' };
-
-function buildStyle(): maplibregl.StyleSpecification {
-  return {
-    version: 8,
-    sources: {
-      osm: { type: 'raster', tiles: OSM_TILES, tileSize: 256, maxzoom: 19, attribution: ATTRIBUTION },
-    },
-    layers: [
-      // Shown while tiles load (or if the tile server is unreachable) so the map never looks broken.
-      { id: 'background', type: 'background', paint: { 'background-color': BACKGROUND.light } },
-      { id: 'base', type: 'raster', source: 'osm', paint: { ...BASE_PAINT.light } },
-    ],
-  };
-}
 
 /**
  * MapLibre wrapper: area polygons coloured by score band, score pins, metro/infrastructure and
@@ -59,7 +58,7 @@ function buildStyle(): maplibregl.StyleSpecification {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  template: `<div #host class="ls-map__host" role="application" aria-label="Bản đồ Hà Nội với điểm Living Score"></div>`,
+  template: `<div #host class="ls-map__host" role="application" [attr.aria-label]="t().map.aria"></div>`,
   styles: [
     `
       ls-area-map {
@@ -91,21 +90,21 @@ function buildStyle(): maplibregl.StyleSpecification {
         font-size: 14px;
         font-weight: 800;
         font-variant-numeric: tabular-nums;
-        background: var(--ls-band-fair, #f0a020);
+        background: var(--ls-band-fair, #f2b134);
         box-shadow: 0 4px 12px rgba(16, 24, 40, 0.3);
         transition: transform 0.15s ease, box-shadow 0.15s ease;
       }
       .ls-root .ls-pin--excellent .ls-pin__score {
-        background: var(--ls-band-excellent, #1a8f5c);
+        background: var(--ls-band-excellent, #16a06f);
       }
       .ls-root .ls-pin--good .ls-pin__score {
-        background: var(--ls-band-good, #46b37e);
+        background: var(--ls-band-good, #5bbf8a);
       }
       .ls-root .ls-pin--fair .ls-pin__score {
-        background: var(--ls-band-fair, #f0a020);
+        background: var(--ls-band-fair, #f2b134);
       }
       .ls-root .ls-pin--low .ls-pin__score {
-        background: var(--ls-band-low, #e5484d);
+        background: var(--ls-band-low, #f08a4b);
       }
       .ls-root .ls-pin__name {
         padding: 1px 7px;
@@ -184,6 +183,7 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
   readonly theme = input<'light' | 'dark'>('light');
   readonly padding = input<maplibregl.PaddingOptions>({ top: 40, right: 40, bottom: 40, left: 40 });
 
+  protected readonly t = inject(LangService).t;
   readonly areaSelect = output<string>();
 
   private map?: maplibregl.Map;
@@ -191,6 +191,7 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
   private readonly pins = new Map<string, { marker: maplibregl.Marker; element: HTMLElement }>();
   private hoveredId: number | string | null = null;
   private fitted = false;
+  private styleTheme: 'light' | 'dark' = 'light';
 
   constructor() {
     effect(() => this.syncAreas(this.areas(), this.ready()));
@@ -201,10 +202,11 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    this.styleTheme = untracked(() => this.theme());
     this.zone.runOutsideAngular(() => {
       const map = new maplibregl.Map({
         container: this.host.nativeElement,
-        style: buildStyle(),
+        style: STYLE_URL[this.styleTheme],
         bounds: HANOI_BOUNDS,
         fitBoundsOptions: { padding: this.padding() },
         attributionControl: false,
@@ -217,10 +219,15 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
       this.map = map;
       map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
-      map.on('load', () => {
+      this.bindInteractions(map);
+      // Fires for the first style and again after every theme swap (setStyle drops custom layers).
+      map.on('style.load', () => {
         this.addSourcesAndLayers(map);
-        this.zone.run(() => this.ready.set(true));
+        if (untracked(() => this.ready())) this.resync();
       });
+      // Ready as soon as the style is: 'load' would also wait for every base-map tile, and one hung tile would
+      // keep the scores off the map.
+      map.once('style.load', () => this.zone.run(() => this.ready.set(true)));
     });
   }
 
@@ -231,9 +238,12 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
   }
 
   private addSourcesAndLayers(map: maplibregl.Map): void {
+    // Score polygons go under the base map's labels so street and place names stay readable.
+    const beforeLabels = map.getStyle().layers.find((layer) => layer.type === 'symbol')?.id;
     map.addSource(SRC_AREAS, { type: 'geojson', data: EMPTY });
     map.addSource(SRC_INFRA, { type: 'geojson', data: EMPTY });
     map.addSource(SRC_AMENITIES, { type: 'geojson', data: EMPTY });
+    map.addSource(SRC_MEASURE, { type: 'geojson', data: EMPTY });
 
     const bandColor: maplibregl.ExpressionSpecification = [
       'match',
@@ -255,20 +265,33 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
         'fill-color': bandColor,
         'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.6, 0.44],
       },
-    });
+    }, beforeLabels);
     map.addLayer({
       id: 'areas-line',
       type: 'line',
       source: SRC_AREAS,
       paint: { 'line-color': '#ffffff', 'line-width': 1.6, 'line-opacity': 0.9 },
-    });
+    }, beforeLabels);
     map.addLayer({
       id: 'areas-selected',
       type: 'line',
       source: SRC_AREAS,
       filter: ['==', ['get', 'slug'], ''],
       paint: { 'line-color': '#0f5ff2', 'line-width': 3.5 },
-    });
+    }, beforeLabels);
+    // The walking circle the selected area's scores were counted in.
+    map.addLayer({
+      id: 'measure-fill',
+      type: 'fill',
+      source: SRC_MEASURE,
+      paint: { 'fill-color': '#0f5ff2', 'fill-opacity': 0.08 },
+    }, beforeLabels);
+    map.addLayer({
+      id: 'measure-line',
+      type: 'line',
+      source: SRC_MEASURE,
+      paint: { 'line-color': '#0f5ff2', 'line-width': 2, 'line-dasharray': [2, 1.5] },
+    }, beforeLabels);
 
     const statusColor: maplibregl.ExpressionSpecification = [
       'match',
@@ -281,7 +304,8 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
     ];
     const lineFilter = (status: string): maplibregl.FilterSpecification => [
       'all',
-      ['==', ['geometry-type'], 'LineString'],
+      // OSM lines are MultiLineStrings (one piece per mapped way); planned lines are LineStrings.
+      ['in', ['geometry-type'], ['literal', ['LineString', 'MultiLineString']]],
       ['==', ['get', 'status'], status],
     ];
     map.addLayer({
@@ -338,8 +362,15 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
         'circle-stroke-width': 1.8,
       },
     });
+  }
 
-    this.bindInteractions(map);
+  /** Puts the current data back on freshly re-created layers (after a theme swap). */
+  private resync(): void {
+    this.source(SRC_AREAS)?.setData((untracked(() => this.areas()) ?? EMPTY) as unknown as GeoJSON.FeatureCollection);
+    this.map?.setFilter('areas-selected', ['==', ['get', 'slug'], untracked(() => this.selectedSlug()) ?? '']);
+    this.drawMeasureCircle(untracked(() => this.selectedSlug()));
+    this.syncInfrastructure(untracked(() => this.infrastructure()), untracked(() => this.showInfrastructure()), true);
+    this.syncAmenities(untracked(() => this.amenities()), true);
   }
 
   private bindInteractions(map: maplibregl.Map): void {
@@ -365,16 +396,17 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
     map.on('click', 'amenities', (event) => {
       const feature = event.features?.[0];
       if (!feature || feature.geometry.type !== 'Point') return;
-      const props = feature.properties as { name: string; type: keyof typeof AMENITY_META; rating: number };
+      const props = feature.properties as { name: string; type: keyof typeof AMENITY_META };
       const body = document.createElement('div');
       const type = document.createElement('div');
       type.className = 'ls-popup__type';
-      type.textContent = AMENITY_META[props.type]?.label ?? '';
+      type.textContent = this.t().amenity[props.type]?.label ?? '';
       const name = document.createElement('strong');
       name.textContent = props.name;
-      const rating = document.createElement('div');
-      rating.textContent = `★ ${props.rating} · dữ liệu mẫu`;
-      body.append(type, name, rating);
+      const source = document.createElement('div');
+      source.className = 'ls-popup__type';
+      source.textContent = this.t().common.osmSource;
+      body.append(type, name, source);
       new maplibregl.Popup({ closeButton: false, offset: 10 })
         .setLngLat(feature.geometry.coordinates as [number, number])
         .setDOMContent(body)
@@ -392,6 +424,7 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
     if (!ready || !this.map) return;
     this.source(SRC_AREAS)?.setData((data ?? EMPTY) as unknown as GeoJSON.FeatureCollection);
     this.rebuildPins(data);
+    this.drawMeasureCircle(untracked(() => this.selectedSlug()));
     if (data && !this.fitted) {
       this.fitted = true;
       this.map.fitBounds(HANOI_BOUNDS, { padding: untracked(() => this.padding()), duration: 0 });
@@ -427,7 +460,7 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
       // classList (not className): MapLibre put its own `maplibregl-marker` class on this element.
       for (const band of BAND_KEYS) pin.element.classList.toggle(`ls-pin--${band}`, band === p.band);
       pin.element.classList.toggle('is-selected', p.slug === untracked(() => this.selectedSlug()));
-      pin.element.setAttribute('aria-label', `${p.name}, điểm ${Math.round(p.value)}`);
+      pin.element.setAttribute('aria-label', this.t().map.pin(p.name, Math.round(p.value)));
       pin.element.querySelector('.ls-pin__score')!.textContent = String(Math.round(p.value));
       pin.element.querySelector('.ls-pin__name')!.textContent = p.name;
     }
@@ -443,6 +476,7 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
     if (!ready || !this.map) return;
     this.map.setFilter('areas-selected', ['==', ['get', 'slug'], slug ?? '']);
     for (const [key, pin] of this.pins) pin.element.classList.toggle('is-selected', key === slug);
+    this.drawMeasureCircle(slug);
     const feature = untracked(() => this.areas())?.features.find((f) => f.properties.slug === slug);
     if (feature) {
       const padding = untracked(() => this.padding());
@@ -450,12 +484,17 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  private drawMeasureCircle(slug: string | null): void {
+    const feature = untracked(() => this.areas())?.features.find((f) => f.properties.slug === slug);
+    const data = feature ? circle(feature.properties.lng, feature.properties.lat, MEASURE_KM) : EMPTY;
+    this.source(SRC_MEASURE)?.setData(data);
+  }
+
   private syncTheme(theme: 'light' | 'dark', ready: boolean): void {
-    if (!ready || !this.map) return;
-    for (const [property, value] of Object.entries(BASE_PAINT[theme])) {
-      this.map.setPaintProperty('base', property, value);
-    }
-    this.map.setPaintProperty('background', 'background-color', BACKGROUND[theme]);
+    if (!ready || !this.map || theme === this.styleTheme) return;
+    this.styleTheme = theme;
+    // diff: false → a full reload that fires 'style.load', where our layers and data are added back.
+    this.map.setStyle(STYLE_URL[theme], { diff: false });
   }
 
   private syncInfrastructure(data: InfrastructureGeoJson | null, visible: boolean, ready: boolean): void {

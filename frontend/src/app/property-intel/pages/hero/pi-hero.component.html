@@ -1,12 +1,14 @@
+@let tx = t();
+@let lang = state.lang();
 <section class="hero">
   <div #mapHost class="hero__map" aria-hidden="true"></div>
   <div class="hero__shade" aria-hidden="true"></div>
   <div class="hero__glow" aria-hidden="true"></div>
 
   <div class="hero__copy">
-    <div class="hero__kicker"><i aria-hidden="true"></i>AI PROPERTY INTELLIGENCE · HÀ NỘI</div>
-    <h1 class="pi-display">See the data behind every property.</h1>
-    <p class="hero__sub">Understand where Hanoi is growing, why it is growing, and what it means for property value.</p>
+    <div class="hero__kicker"><i aria-hidden="true"></i>{{ tx.hero.kicker }}</div>
+    <h1 class="pi-display">{{ tx.hero.title }}</h1>
+    <p class="hero__sub">{{ tx.hero.sub }}</p>
 
     <form class="hero__ask" (submit)="$event.preventDefault(); ask()">
       <i class="hero__diamond" aria-hidden="true"></i>
@@ -14,53 +16,59 @@
         type="text"
         maxlength="500"
         [placeholder]="placeholder()"
-        aria-label="Ask Property AI a question"
+        [attr.aria-label]="tx.hero.askAria"
         [value]="question()"
         (input)="question.set($any($event.target).value)"
       />
-      <button type="submit" class="hero__ask-btn">Ask Property AI</button>
+      <button type="submit" class="hero__ask-btn">{{ tx.hero.ask }}</button>
     </form>
 
     <div class="hero__stats">
       <div>
-        <strong>{{ overview()?.stats?.districts ?? '—' }}</strong>
-        <span>districts scored</span>
+        <strong>{{ overview()?.stats?.wards ?? '—' }}</strong>
+        <span>{{ tx.hero.stats.wards }}</span>
       </div>
       <div>
-        <strong>{{ overview() ? formatInt(overview()!.stats.projects) : '—' }}</strong>
-        <span>projects tracked</span>
+        <strong>{{ overview()?.stats?.infra ?? '—' }}</strong>
+        <span>{{ tx.hero.stats.infra }}</span>
       </div>
       <div>
-        <strong>{{ overview()?.stats?.horizon ?? 2045 }}</strong>
-        <span>planning horizon</span>
+        <strong>{{ overview()?.stats?.poles ?? '—' }}</strong>
+        <span>{{ tx.hero.stats.poles }}</span>
       </div>
     </div>
 
     <div class="hero__links">
-      <a routerLink="/property-intelligence/map" class="hero__link">Open Map Intelligence →</a>
-      <a routerLink="/property-intelligence/projects/riverside-aurora" class="hero__link hero__link--muted">See a project deep dive →</a>
+      <a routerLink="/property-intelligence/map" class="hero__link">{{ tx.hero.open }}</a>
+      <a routerLink="/property-intelligence/projects/vinhomes-skylake" class="hero__link hero__link--muted">{{ tx.hero.project }}</a>
     </div>
 
     @if (offline()) {
-      <p class="hero__offline" role="alert">Không kết nối được máy chủ. Hãy chắc chắn backend-node đang chạy (cổng 8000).</p>
+      <p class="hero__offline" role="alert">{{ tx.offline }}</p>
     }
   </div>
 
   @if (overview(); as o) {
-    <div class="hero__tod pi-mono">TOD · +{{ o.featured.topUplift.uplift }}% within 800 m</div>
-    <a class="hero__card" routerLink="/property-intelligence/map">
+    @if (o.featured.topInfra; as top) {
+      <div class="hero__tod pi-mono">{{ tx.hero.nearby(top.name, top.openYear, formatDistance((top.distanceKm ?? 0) * 1000, lang)) }}</div>
+    }
+    <button type="button" class="hero__card" (click)="openFeatured()">
       <div class="hero__card-head">
-        <span class="pi-display">{{ o.featured.name.toUpperCase() }}</span>
-        <strong class="pi-display">{{ o.featured.growthScore }}</strong>
+        <span class="pi-display">{{ o.featured.name }}</span>
+        <strong class="pi-display">{{ o.featured.score }}</strong>
       </div>
+      <small class="hero__card-rank">{{ tx.ward.score }} · {{ tx.hero.rank(o.featured.rank, o.stats.wards) }}</small>
+      @if (o.featured.landPrice; as l) {
+        <small class="hero__card-rank">{{ tx.hero.land(formatNum(l.medianVT1, state.lang())) }}</small>
+      }
       @for (c of o.featured.criteria; track c.key) {
         <div class="hero__bar" [class]="'pi-tone-' + c.tone">
           <span>{{ c.label }}</span>
-          <div class="pi-bar"><i [style.width.%]="c.value"></i></div>
+          <div class="pi-bar"><i [style.width.%]="c.value ?? 0"></i></div>
         </div>
       }
-    </a>
+    </button>
   }
 
-  <p class="hero__note pi-sample-note">SAMPLE DATA · scores, prices and projects are illustrative · basemap © Esri / OpenStreetMap</p>
+  <p class="hero__note pi-sample-note">{{ tx.hero.note }}</p>
 </section>

@@ -1,22 +1,21 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { ThemeService } from '../../../services/theme.service';
 import { PiProjectMapComponent } from '../../components/pi-project-map.component';
-import { PiDistancePipe, PiPerM2Pipe, PiTotalPipe, areaPoints, formatPerM2, linePoints } from '../../pi-format';
+import { PiDistancePipe, formatBillion, formatNum } from '../../pi-format';
 import { ProjectDetail } from '../../pi.models';
-import { PiApiService, PiStateService, describeError } from '../../pi.service';
+import { DEFAULT_STATE, PiApiService, PiStateService, describeError } from '../../pi.service';
 
 type Load<T> = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ok'; value: T };
-type Range = '1Y' | '3Y' | '5Y';
-const RANGE_POINTS: Record<Range, number> = { '1Y': 5, '3Y': 13, '5Y': 21 };
 
-/** 02 · Property deep dive — one project, its location, valuation and AI take. */
+/** 02 · Project deep dive — a project with a published price, in its real surroundings. */
 @Component({
   selector: 'pi-project',
   standalone: true,
-  imports: [PiProjectMapComponent, PiPerM2Pipe, PiTotalPipe, PiDistancePipe],
+  imports: [PiProjectMapComponent, PiDistancePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pi-project.component.html',
   styleUrl: './pi-project.component.css',
@@ -27,15 +26,24 @@ export class PiProjectComponent {
   private readonly api = inject(PiApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  protected readonly t = this.state.t;
 
   private readonly slug = toSignal(this.route.paramMap.pipe(map((p) => p.get('slug') ?? '')), { initialValue: '' });
 
   protected readonly load = toSignal(
-    toObservable(this.slug).pipe(
-      switchMap((slug) =>
-        this.api.project(slug).pipe(
+    toObservable(computed(() => ({ slug: this.slug(), lang: this.state.lang() }))).pipe(
+      switchMap(({ slug, lang }) =>
+        this.api.project(slug, lang).pipe(
           map((value): Load<ProjectDetail> => ({ status: 'ok', value })),
-          catchError((err) => of<Load<ProjectDetail>>({ status: 'error', message: describeError(err) })),
+          catchError((err) => {
+            // A link or saved state naming a project that no longer exists: open the default project instead.
+            if (err instanceof HttpErrorResponse && err.status === 404 && slug !== DEFAULT_STATE.project) {
+              this.state.set('project', DEFAULT_STATE.project);
+              void this.router.navigate(['/property-intelligence/projects', DEFAULT_STATE.project], { replaceUrl: true });
+              return of<Load<ProjectDetail>>({ status: 'loading' });
+            }
+            return of<Load<ProjectDetail>>({ status: 'error', message: describeError(err, lang) });
+          }),
           startWith<Load<ProjectDetail>>({ status: 'loading' }),
         ),
       ),
@@ -48,54 +56,29 @@ export class PiProjectComponent {
   });
 
   protected readonly show = signal({ tod: true, walk: false, drive: false });
-  protected readonly range = signal<Range>('3Y');
-  protected readonly ranges: Range[] = ['1Y', '3Y', '5Y'];
 
-  protected readonly priceFormatter = computed(() => {
-    const currency = this.state.currency();
-    const rate = this.state.vndPerUsd();
-    return (tr: number) => `${formatPerM2(tr, currency, rate)}/m²`;
-  });
-
-  protected readonly chart = computed(() => {
+  /** "9,8–12,46 tỷ" for the 70 m² example unit. */
+  protected readonly unitPrice = computed(() => {
     const p = this.p();
-    if (!p) return null;
-    const all = p.history.points;
-    const n = RANGE_POINTS[this.range()];
-    const pts = all.slice(-n);
-    const values = pts.map((x) => x.value);
-    const min = Math.min(...values) * 0.95;
-    const max = Math.max(...values) * 1.03;
-    const startIndex = all.length - n;
-    const m = p.history.milestone.quarter - startIndex;
-    const milestoneX = m >= 0 && m < n ? (m / (n - 1)) * 320 : null;
-    const lastY = Number(linePoints(values, 320, 120, min, max).split(' ').at(-1)!.split(',')[1]);
-    return {
-      line: linePoints(values, 320, 120, min, max),
-      area: areaPoints(values, 320, 120, min, max),
-      first: pts[0],
-      last: pts.at(-1)!,
-      lastY,
-      milestoneX,
-      milestone: p.history.milestone.label,
-    };
+    if (!p) return '';
+    const lang = this.state.lang();
+    return p.unit.max === null ? `> ${formatBillion(p.unit.min, lang)}` : p.unit.min === p.unit.max ? formatBillion(p.unit.min, lang) : `${formatNum(p.unit.min, lang, 2)}–${formatBillion(p.unit.max, lang)}`;
   });
 
-  protected readonly base5y = computed(() => {
-    const p = this.p();
-    return p ? Math.round(p.estimate.value * (1 + p.baseScenario.change / 100) * 100) / 100 : 0;
-  });
+  /** The project's price source (the first source of the response). */
+  protected readonly priceSource = computed(() => this.p()?.sources[0] ?? null);
 
   protected readonly watching = computed(() => this.state.watchlist().includes(this.slug()));
+  protected readonly formatNum = formatNum;
 
   constructor() {
-    // Remember the project (Projects tab, breadcrumb) and its district (dashboard selection).
+    // Remember the project (Projects tab, breadcrumb) and its ward (dashboard selection).
     effect(
       () => {
         const p = this.p();
         if (!p) return;
         this.state.set('project', p.slug);
-        this.state.set('district', p.district);
+        if (p.ward) this.state.set('ward', p.ward.slug);
       },
       { allowSignalWrites: true },
     );
@@ -114,13 +97,13 @@ export class PiProjectComponent {
     void this.router.navigate(['/property-intelligence/projects', slug]);
   }
 
-  protected openDistrict(slug: string): void {
-    this.state.set('district', slug);
+  protected openWard(slug: string): void {
+    this.state.set('ward', slug);
     void this.router.navigate(['/property-intelligence/map']);
   }
 
   protected askAbout(p: ProjectDetail): void {
-    this.state.ask(`Tell me about ${p.name}`, 'project');
+    this.state.ask(this.t().ai.questions.project(p.name), 'project');
     void this.router.navigate(['/property-intelligence/map']);
   }
 
@@ -129,6 +112,6 @@ export class PiProjectComponent {
   }
 
   protected today(): string {
-    return new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    return new Date().toLocaleDateString(this.state.lang() === 'en' ? 'en-GB' : 'vi-VN', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 }

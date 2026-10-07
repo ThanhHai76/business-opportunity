@@ -1,9 +1,18 @@
 'use strict';
 const { notFound } = require('../common/http');
+const { haversineKm } = require('../common/geo');
 const { normalizeText } = require('../common/text');
 const { AMENITY_TYPES } = require('../data/living.types');
+const { MISSING_CRITERIA } = require('../scoring/criteria');
+const { dataInfo } = require('../seed/seed-data');
 
-const BOUNDARY_NOTE = 'Ranh giới minh hoạ, không phải ranh giới hành chính chính thức.';
+const BOUNDARY_NOTE = {
+  vi: 'Khu vực quanh trung tâm các quận cũ (trước sắp xếp năm 2025); ranh giới minh hoạ, không phải địa giới hành chính.',
+  en: 'Areas around the centres of the former districts (before the 2025 reorganisation); illustrative shapes, not administrative boundaries.',
+};
+
+/** Picks one language out of a { vi, en } text (plain strings pass through). */
+const pick = (text, lang) => (text && typeof text === 'object' ? (text[lang] ?? text.vi) : text);
 
 class AreasService {
   /**
@@ -38,33 +47,41 @@ class AreasService {
       livingScore: result.score,
       band: result.band,
       scores: area.scores,
-      avgRentVnd: area.avgRentVnd,
-      population: area.population,
+      facts: area.facts,
       centroid: area.centroid,
       dataSource: area.dataSource,
     };
   }
 
-  /** @param options { q?: string, sort: 'score'|'name'|'rent', weights?: PartialWeights } */
+  /** What each score was computed from, in one language. */
+  localMetrics(area, lang) {
+    return area.metrics.map((m) => ({ criterion: m.criterion, text: pick(m.text, lang) }));
+  }
+
+  /** @param options { q?: string, sort: 'score'|'name', weights?: PartialWeights, lang?: 'vi'|'en' } */
   async list(options) {
-    const key = `areas:list:${options.sort}:${normalizeText(options.q ?? '')}:${this.scoring.cacheKey(options.weights)}`;
+    const lang = options.lang ?? 'vi';
+    const key = `areas:list:${lang}:${options.sort}:${normalizeText(options.q ?? '')}:${this.scoring.cacheKey(options.weights)}`;
     return this.cache.wrap(key, async () => {
       const query = normalizeText(options.q ?? '');
-      const records = (await this.getAllRecords()).filter((a) => !query || normalizeText(`${a.name} ${a.nameEn}`).includes(query));
+      const records = (await this.getAllRecords()).filter((a) => !query || (a.searchText ?? normalizeText(`${a.name} ${a.nameEn}`)).includes(query));
       const data = records.map((a) => this.toSummary(a, options.weights));
+      // When searching, areas whose own name matches come before areas that only contain a matching ward.
+      const byName = (a) => (query && !normalizeText(`${a.name} ${a.nameEn}`).includes(query) ? 1 : 0);
       data.sort((a, b) => {
+        if (byName(a) !== byName(b)) return byName(a) - byName(b);
         if (options.sort === 'name') return a.name.localeCompare(b.name, 'vi');
-        if (options.sort === 'rent') return a.avgRentVnd - b.avgRentVnd;
         return b.livingScore - a.livingScore || a.name.localeCompare(b.name, 'vi');
       });
-      return { data, meta: { total: data.length, isPersonalized: this.scoring.isPersonalized(options.weights), sampleData: true } };
+      return { data, meta: { total: data.length, isPersonalized: this.scoring.isPersonalized(options.weights), data: dataInfo(lang) } };
     });
   }
 
   /** Polygons coloured by Living Score (or one criterion), ready for the map. */
   async geojson(options) {
     const visual = options.visual ?? 'livingScore';
-    const key = `areas:geojson:${visual}:${this.scoring.cacheKey(options.weights)}`;
+    const lang = options.lang ?? 'vi';
+    const key = `areas:geojson:${lang}:${visual}:${this.scoring.cacheKey(options.weights)}`;
     return this.cache.wrap(key, async () => {
       const records = await this.getAllRecords();
       const features = records.map((area) => {
@@ -81,7 +98,6 @@ class AreasService {
             band: this.scoring.bandFor(value),
             visual,
             livingScore: summary.livingScore,
-            avgRentVnd: area.avgRentVnd,
             lng: area.centroid.lng,
             lat: area.centroid.lat,
           },
@@ -93,48 +109,52 @@ class AreasService {
         meta: {
           isPersonalized: this.scoring.isPersonalized(options.weights),
           visual,
-          sampleData: true,
-          boundaryNote: BOUNDARY_NOTE,
+          data: dataInfo(lang),
+          boundaryNote: BOUNDARY_NOTE[lang],
         },
       };
     });
   }
 
-  async detail(slug, overrides) {
-    const key = `areas:detail:${slug}:${this.scoring.cacheKey(overrides)}`;
+  async detail(slug, overrides, lang = 'vi') {
+    const key = `areas:detail:${lang}:${slug}:${this.scoring.cacheKey(overrides)}`;
     return this.cache.wrap(key, async () => {
       const area = await this.getRecordOrThrow(slug);
       const weights = this.scoring.resolveWeights(overrides);
       const result = this.scoring.compute(area.scores, weights);
       const defaultResult = this.scoring.compute(area.scores, this.scoring.getDefaultWeights());
-      const amenities = await this.data.listAmenities({ areaSlug: slug });
+      const info = dataInfo(lang);
+      // Same circle as the scores, so the listed places and the counts agree.
+      const nearby = (await this.data.listAmenities({})).filter((m) => haversineKm(area.centroid, m) <= info.walkKm);
       return {
         ...this.toSummary(area, overrides),
-        description: area.description,
+        description: pick(area.description, lang),
         areaKm2: area.areaKm2,
-        populationDensity: Math.round(area.population / area.areaKm2),
-        avgPricePerM2Vnd: area.avgPricePerM2Vnd,
+        metrics: this.localMetrics(area, lang),
+        missingCriteria: MISSING_CRITERIA.map((c) => ({ key: c.key, label: lang === 'en' ? c.labelEn : c.label, labelEn: c.labelEn, reason: lang === 'en' ? c.reasonEn : c.reason })),
+        dataInfo: info,
         defaultLivingScore: defaultResult.score,
         isPersonalized: this.scoring.isPersonalized(overrides),
         weights: this.scoring.normalizeWeights(weights),
         breakdown: result.breakdown,
-        pros: area.pros,
-        cons: area.cons,
-        amenities: this.groupAmenities(amenities),
+        pros: area.pros.map((p) => pick(p, lang)),
+        cons: area.cons.map((c) => pick(c, lang)),
+        amenities: this.groupAmenities(nearby),
       };
     });
   }
 
   groupAmenities(amenities) {
     return AMENITY_TYPES.map((type) => {
-      const ofType = amenities.filter((m) => m.type === type);
-      const top = [...ofType]
-        .sort((a, b) => b.rating - a.rating || a.name.localeCompare(b.name, 'vi'))
+      // OSM sometimes maps one place twice (e.g. a building and its entrance): each name counts once.
+      const unique = [...new Map(amenities.filter((m) => m.type === type).map((m) => [normalizeText(m.name), m])).values()];
+      const top = unique
+        .sort((a, b) => a.name.localeCompare(b.name, 'vi'))
         .slice(0, 3)
-        .map(({ name, rating, lng, lat }) => ({ name, rating, lng, lat }));
-      return { type, count: ofType.length, top };
+        .map(({ name, lng, lat }) => ({ name, lng, lat }));
+      return { type, count: unique.length, top };
     }).filter((group) => group.count > 0);
   }
 }
 
-module.exports = { AreasService };
+module.exports = { AreasService, pick };

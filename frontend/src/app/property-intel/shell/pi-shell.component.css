@@ -292,7 +292,7 @@
     max-width: none;
   }
 
-  .pi-topbar__right .pi-btn:not(.pi-btn--primary) {
+  .pi-topbar__right .pi-btn:not(.pi-btn--primary):not(.pi-lang) {
     display: none;
   }
 }
@@ -305,4 +305,10 @@
   .pi-topbar__right .pi-btn--primary {
     display: none;
   }
+}
+
+.pi-lang {
+  padding: 5px 10px;
+  font-size: 11.5px;
+  white-space: nowrap;
 }

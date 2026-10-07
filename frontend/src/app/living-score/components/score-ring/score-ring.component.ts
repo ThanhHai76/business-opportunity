@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { LangService } from '../../services/lang.service';
 import { LivingMetaService } from '../../services/living-meta.service';
 
 const CIRCUMFERENCE = 2 * Math.PI * 42;
@@ -9,7 +10,7 @@ const CIRCUMFERENCE = 2 * Math.PI * 42;
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="ring" [style.width.px]="size()" [style.height.px]="size()" role="img" [attr.aria-label]="'Điểm ' + score() + ' trên 100'">
+    <div class="ring" [style.width.px]="size()" [style.height.px]="size()" role="img" [attr.aria-label]="t().common.scoreAria(score())">
       <svg viewBox="0 0 100 100" [attr.width]="size()" [attr.height]="size()">
         <circle class="track" cx="50" cy="50" r="42" fill="none" stroke-width="9" />
         <circle
@@ -70,6 +71,7 @@ const CIRCUMFERENCE = 2 * Math.PI * 42;
   ],
 })
 export class ScoreRingComponent {
+  protected readonly t = inject(LangService).t;
   private readonly meta = inject(LivingMetaService);
   protected readonly Math = Math;
   protected readonly circumference = CIRCUMFERENCE;
