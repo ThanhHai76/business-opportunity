@@ -103,7 +103,8 @@ const ORIGIN = [105.8542, 21.0285];
 const MERGED = ['nq202'];
 /**
  * The six directions. `poles` link to the 9 development poles of data.js (which part of Hanoi faces this way);
- * `gateway` names the Hanoi area to live in / look at for this direction on the other pages.
+ * `gateway` names the Hanoi area to live in (Living Score area) and the ward to open a business in (Opportunity Map)
+ * for this direction on the other pages.
  */
 const CORRIDORS = [
   {
@@ -131,7 +132,7 @@ const CORRIDORS = [
     ],
     via: ['exp-thai-nguyen', 'ring5'],
     poles: ['bac'],
-    gateway: { living: 'dong-anh', business: null },
+    gateway: { living: 'xa-dong-anh', business: null },
   },
   {
     slug: 'bac-ninh',
@@ -164,7 +165,7 @@ const CORRIDORS = [
     ],
     via: ['airport-gia-binh', 'ring4', 'ring5'],
     poles: ['bac', 'dong'],
-    gateway: { living: 'long-bien', business: 'long-bien' },
+    gateway: { living: 'phuong-long-bien', business: 'phuong-long-bien' },
   },
   {
     slug: 'hung-yen',
@@ -197,7 +198,7 @@ const CORRIDORS = [
     ],
     via: ['ring4', 'exp-hai-phong', 'ring5'],
     poles: ['dong', 'thuong-tin-phu-xuyen'],
-    gateway: { living: 'long-bien', business: 'gia-lam' },
+    gateway: { living: 'xa-gia-lam', business: 'xa-gia-lam' },
   },
   {
     slug: 'hai-phong',
@@ -226,7 +227,7 @@ const CORRIDORS = [
     ],
     via: ['exp-hai-phong', 'rail-lao-cai-hai-phong', 'ring4', 'ring5'],
     poles: ['dong'],
-    gateway: { living: 'long-bien', business: 'gia-lam' },
+    gateway: { living: 'xa-gia-lam', business: 'xa-gia-lam' },
   },
   {
     slug: 'ninh-binh',
@@ -253,7 +254,7 @@ const CORRIDORS = [
     ],
     via: ['exp-phap-van', 'hsr', 'ring4', 'ring5'],
     poles: ['thuong-tin-phu-xuyen', 'van-dinh-dai-nghia'],
-    gateway: { living: 'hoang-mai', business: null },
+    gateway: { living: 'phuong-hoang-mai', business: null },
   },
   {
     slug: 'phu-tho',
@@ -279,7 +280,7 @@ const CORRIDORS = [
     ],
     via: ['exp-lao-cai', 'rail-lao-cai-hai-phong', 'ring5'],
     poles: ['son-tay-ba-vi', 'hoa-lac', 'xuan-mai', 'bac'],
-    gateway: { living: 'bac-tu-liem', business: 'nam-tu-liem' },
+    gateway: { living: 'phuong-tay-mo', business: 'phuong-tay-mo' },
   },
 ].map((c) => ({ ...c, year: 2026, sources: [...new Set([...(c.labelSource ? [c.labelSource] : []), 'qd2512Scope', ...MERGED, ...c.facts.flatMap((f) => f.sources)])] }));
 

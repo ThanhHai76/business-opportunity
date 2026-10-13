@@ -5,7 +5,7 @@ const { CRITERIA, CRITERION_KEYS } = require('../scoring/criteria');
 const { HOUSEHOLD_LABELS, INTEREST_EFFECTS } = require('./recommendation.types');
 const { parseRecommendationRequest } = require('./request-schema');
 const { dataInfo } = require('../seed/seed-data');
-const { pick } = require('../areas/areas.service');
+const { pick, resolveSlug } = require('../areas/areas.service');
 
 const RESULT_COUNT = 3;
 const CACHE_TTL_SECONDS = 600;
@@ -76,7 +76,8 @@ class RecommendationService {
 
   async compute(input) {
     const records = await this.areas.getAllRecords();
-    const workplace = input.workplaceAreaSlug ? (records.find((a) => a.slug === input.workplaceAreaSlug) ?? null) : null;
+    const workplaceSlug = input.workplaceAreaSlug ? resolveSlug(input.workplaceAreaSlug) : null;
+    const workplace = workplaceSlug ? (records.find((a) => a.slug === workplaceSlug) ?? null) : null;
     if (input.workplaceAreaSlug && !workplace) {
       throw badRequest(`Không tìm thấy khu vực làm việc/học tập "${input.workplaceAreaSlug}".`);
     }

@@ -9,7 +9,16 @@
  *             the price is: an asking price for new units ('offer'), an expected launch price ('expected') or resale
  *             asking prices surveyed by the newspaper ('listing'). Not transaction prices.
  *
- * Lumiere Essence Peak (140–170 million VND/m², same article) is left out: the article gives no location.
+ *           'broker' is a broker's quote reported by the press; 'social' is a social-housing price (provisional until the
+ *           Department of Construction appraises it).
+ * A project whose location the price article does not give takes it from another cited article (`locationSource`).
+ *
+ * Quarterly update (CBRE briefs the press in the first weeks after each quarter, Savills a few weeks later):
+ *   1. add the article to SOURCES (title with the date, publisher, url);
+ *   2. append the quarter to QUARTERS (primary, secondary or its change, launched, sold, absorption) and/or update SAVILLS;
+ *      mark derived figures (`launchedDerived`);
+ *   3. add projects whose price the press published, with their OpenStreetMap location;
+ *   4. `npm run data:travel` for the new projects' driving times, then `npm test`.
  */
 
 const SOURCES = {
@@ -49,6 +58,42 @@ const SOURCES = {
     publisher: 'VietNamNet',
     url: 'https://vietnamnet.vn/gia-can-ho-ha-noi-len-128-trieu-dong-m2-thi-truong-thu-cap-bat-dau-giam-gia-2509927.html',
   },
+  listingsAug2026: {
+    title: 'Chung cư Hà Nội lên tới 123 triệu đồng/m² — giá rao bán một số dự án căn hộ (21/8/2026)',
+    titleEn: 'Hanoi condominiums up to VND 123 million/m² — asking prices at several apartment projects (21/08/2026)',
+    publisher: 'VietNamNet',
+    url: 'https://vietnamnet.vn/chung-cu-ha-noi-len-toi-123-trieu-dong-m2-xuat-hien-dieu-dang-chu-y-2547628.html',
+  },
+  parkCentric2026: {
+    title: 'Chung cư Hà Nội Park Centric: mới bắt đầu thi công, môi giới đã chào giá tới 150 triệu đồng/m² (21/3/2026)',
+    titleEn: 'Hà Nội Park Centric: construction just started, brokers already quote up to VND 150 million/m² (21/03/2026)',
+    publisher: 'VietnamFinance',
+    url: 'https://vietnamfinance.vn/chung-cu-ha-noi-park-centric-moi-bat-dau-thi-cong-moi-gioi-da-chao-gia-toi-150-trieu-dong-m2-d141858.html',
+  },
+  social2026: {
+    title: 'Điểm danh loạt dự án nhà ở xã hội ở Hà Nội mở bán, khởi công năm 2026 (4/3/2026)',
+    titleEn: 'Social housing projects in Hanoi opening for sale or starting construction in 2026 (04/03/2026)',
+    publisher: 'Báo Xây dựng',
+    url: 'https://batdongsan.baoxaydung.vn/diem-danh-loat-du-an-nha-o-xa-hoi-o-ha-noi-mo-ban-khoi-cong-nam-2026-192260304181649362.htm',
+  },
+  socialPrices2026: {
+    title: 'Nhà ở xã hội tại Hà Nội thiết lập mặt bằng giá mới (4/3/2026)',
+    titleEn: 'Social housing in Hanoi sets a new price level (04/03/2026)',
+    publisher: 'CafeF',
+    url: 'https://cafef.vn/nha-o-xa-hoi-tai-ha-noi-thiet-lap-mat-bang-gia-moi-188260304101733767.chn',
+  },
+  minhGiang2026: {
+    title: 'Hà Nội sắp mở bán căn hộ chung cư giá 24 triệu/m² — nhà ở xã hội Minh Giang – Đầm Và, xã Mê Linh (18/8/2026)',
+    titleEn: 'Hanoi to sell apartments at VND 24 million/m² — Minh Giang – Đầm Và social housing, Mê Linh (18/08/2026)',
+    publisher: 'Vietstock',
+    url: 'https://vietstock.vn/2026/08/ha-noi-sap-mo-ban-can-ho-chung-cu-gia-24-trieum2-4222-1482398.htm',
+  },
+  savillsProjects2026: {
+    title: 'Savills: Top 15 chung cư mới đáng chú ý tại Hà Nội 2026 — vị trí dự án (16/7/2026)',
+    titleEn: 'Savills: 15 notable new condominiums in Hanoi 2026 — project locations (16/07/2026)',
+    publisher: 'Savills Việt Nam',
+    url: 'https://www.savills.co.nz/blog/article/237994-0/vietnam-viet/du-an-moi-tai-ha-noi.aspx',
+  },
 };
 
 /** City-wide quarters (CBRE). `launched` for Q2/2026 is derived: 16,600 in H1 − 8,010 in Q1. */
@@ -64,6 +109,8 @@ const KIND = {
   offer: { vi: 'giá chào bán sơ cấp', en: 'primary asking price' },
   expected: { vi: 'giá dự kiến mở bán', en: 'expected launch price' },
   listing: { vi: 'giá rao bán do báo khảo sát', en: 'asking price surveyed by the press' },
+  broker: { vi: 'giá môi giới chào, báo đưa tin', en: 'broker quote reported by the press' },
+  social: { vi: 'nhà ở xã hội, giá tạm tính', en: 'social housing, provisional price' },
 };
 
 /** `osm` is the OpenStreetMap object the location comes from; `approx` marks a location taken from the ward named in the article. */
@@ -136,6 +183,126 @@ const PROJECTS = [
     source: 'launches2026',
     street: 'Hoài Đức',
     note: { vi: 'giá "trên 70 triệu đồng/m²"; vị trí là khu đô thị Hinode Royal Park', en: 'price "over VND 70 million/m²"; location is the Hinode Royal Park urban area' },
+  },
+  // ---------------------------------------------------------------- added 10/2026
+  { slug: 'hateco-laroma', name: 'Hateco Laroma', coords: [105.80395, 21.02171], osm: 'way/1128134179', min: 133, max: 140, kind: 'listing', source: 'listingsAug2026', street: 'Huỳnh Thúc Kháng' },
+  {
+    slug: 'bamboo-airways-tower',
+    name: 'Bamboo Airways Tower',
+    coords: [105.79472, 21.0342],
+    osm: 'way/843817901',
+    min: 97,
+    max: 103,
+    kind: 'listing',
+    source: 'listingsAug2026',
+    street: '265 Cầu Giấy',
+    note: { vi: 'toà tại 265 Cầu Giấy (OpenStreetMap ghi tên The West)', en: 'the tower at 265 Cầu Giấy (named The West on OpenStreetMap)' },
+  },
+  { slug: 'song-hong-park-view', name: 'Sông Hồng Park View', coords: [105.81713, 21.01461], osm: 'way/1082814006', min: 98, max: 105, kind: 'listing', source: 'listingsAug2026', street: 'Thái Hà' },
+  { slug: 'sunshine-garden', name: 'Sunshine Garden', coords: [105.87092, 20.99237], osm: 'way/872186252', min: 80, max: 87, kind: 'listing', source: 'listingsAug2026', street: 'Dương Văn Bé' },
+  {
+    slug: 'hanoi-park-centric',
+    name: 'Hà Nội Park Centric',
+    coords: null,
+    approxWard: 'phuong-bo-de',
+    osm: null,
+    min: 130,
+    max: 150,
+    kind: 'broker',
+    source: 'parkCentric2026',
+    street: 'Lý Sơn',
+    note: { vi: 'lô N0-22, cầu vượt nút giao Long Biên; mới bắt đầu thi công', en: 'plot N0-22 by the Long Biên interchange; construction just started' },
+  },
+  {
+    slug: 'lumiere-essence-peak',
+    name: 'Lumiere Essence Peak',
+    coords: [105.86464, 21.08938],
+    osm: 'way/1332178977',
+    approx: true,
+    min: 140,
+    max: 170,
+    kind: 'offer',
+    source: 'launches2026',
+    locationSource: 'savillsProjects2026',
+    street: 'Global Gate, Đông Anh',
+    note: { vi: 'căn có thang máy riêng khoảng 200 triệu đồng/m²; vị trí là khu đô thị Global Gate', en: 'private-lift units about VND 200 million/m²; location is the Global Gate urban area' },
+  },
+  {
+    slug: 'noxh-ha-dinh-n01',
+    name: 'Nhà ở xã hội N01 Hạ Đình',
+    coords: [105.80378, 20.98527],
+    osm: 'way/1209467129',
+    min: 25,
+    max: 25,
+    kind: 'social',
+    source: 'social2026',
+    street: 'Hạ Đình',
+    note: { vi: 'giá khoảng 25 triệu đồng/m²; dự kiến hoàn thành quý IV/2027', en: 'about VND 25 million/m²; due to be completed Q4/2027' },
+  },
+  {
+    slug: 'noxh-486-ngoc-hoi',
+    name: 'Nhà ở xã hội 486 Ngọc Hồi',
+    coords: null,
+    approxWard: 'xa-ngoc-hoi',
+    osm: null,
+    min: 24.7,
+    max: 24.7,
+    kind: 'social',
+    source: 'socialPrices2026',
+    street: '486 Ngọc Hồi',
+    note: { vi: '160 căn nhà ở xã hội trong toà 15 tầng; căn 40–59 m² từ 988 triệu đồng', en: '160 social-housing units in a 15-storey block; 40–59 m² units from VND 988 million' },
+  },
+  {
+    slug: 'noxh-tay-nam-kim-giang',
+    name: 'Nhà ở xã hội KĐT Tây Nam Kim Giang',
+    coords: null,
+    approxWard: 'phuong-dinh-cong',
+    osm: null,
+    min: 28,
+    max: 28,
+    kind: 'social',
+    source: 'social2026',
+    street: '300 Nguyễn Xiển',
+    note: { vi: 'giá khoảng 28 triệu đồng/m²; dự kiến bàn giao quý II/2027', en: 'about VND 28 million/m²; handover due Q2/2027' },
+  },
+  {
+    slug: 'noxh-kim-hoa-ct2',
+    name: 'Nhà ở xã hội CT2 KĐT Kim Hoa',
+    coords: [105.73649, 21.22835],
+    osm: 'node/13230585339',
+    approx: true,
+    min: 19.8,
+    max: 19.8,
+    kind: 'social',
+    source: 'socialPrices2026',
+    street: 'Kim Hoa, Mê Linh',
+    note: { vi: '648 căn bán và 72 căn thuê mua; căn 62,8–69,8 m² giá 1,24–1,38 tỷ đồng', en: '648 units for sale and 72 for rent-to-own; 62.8–69.8 m² units at VND 1.24–1.38 billion' },
+  },
+  {
+    slug: 'noxh-tan-lap',
+    name: 'Nhà ở xã hội Tân Lập (Đan Phượng)',
+    coords: [105.71225, 21.08545],
+    osm: 'relation/17985280',
+    approx: true,
+    min: 29,
+    max: 29,
+    kind: 'social',
+    source: 'socialPrices2026',
+    street: 'Tân Lập, Ô Diên',
+    note: { vi: '459 căn trong toà 21 tầng; vị trí là xã Tân Lập cũ', en: '459 units in a 21-storey block; location is the former Tân Lập commune' },
+  },
+  {
+    slug: 'noxh-minh-giang-dam-va',
+    name: 'Nhà ở xã hội Minh Giang – Đầm Và',
+    coords: null,
+    approxWard: 'xa-me-linh',
+    osm: null,
+    min: 24,
+    max: 24,
+    kind: 'social',
+    source: 'minhGiang2026',
+    street: 'Mê Linh',
+    note: { vi: '793 căn (713 căn bán); dự kiến mở bán quý I/2027', en: '793 units (713 for sale); sales expected Q1/2027' },
   },
 ];
 

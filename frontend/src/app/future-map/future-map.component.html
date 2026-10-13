@@ -286,7 +286,7 @@
                 <li><a [routerLink]="['/living-score/area', c.gateway.living]"><ls-icon name="pin" [size]="14" /> {{ t().region.linkArea }}</a></li>
               }
               @if (c.gateway.business) {
-                <li><a [routerLink]="['/business-copilot/location', c.gateway.business]"><ls-icon name="bag" [size]="14" /> {{ t().region.linkBusiness }}</a></li>
+                <li><a routerLink="/opportunity-map" [queryParams]="{ ward: c.gateway.business, lang: lang() === 'en' ? 'en' : null }"><ls-icon name="bag" [size]="14" /> {{ t().region.linkBusiness }}</a></li>
               }
             </ul>
           </dd>

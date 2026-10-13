@@ -23,6 +23,31 @@
     </header>
     <p class="op-question">{{ t().question }}</p>
 
+    <details class="op-plan" [open]="planOn()">
+      <summary>{{ t().plan.title }}</summary>
+      <p class="op-plan__intro">{{ t().plan.intro }}</p>
+      <form class="op-plan__form" (submit)="$event.preventDefault(); runPlan()">
+        <input type="text" maxlength="300" [placeholder]="t().plan.placeholder" [value]="planText()" (input)="planText.set($any($event.target).value)" [attr.aria-label]="t().plan.title" />
+        <button type="submit" class="op-btn" [disabled]="parsing() || !planText().trim()">{{ t().plan.run }}</button>
+      </form>
+      @if (planNote(); as n) {
+        <p class="op-plan__note">{{ n }}</p>
+      }
+      @if (planOn() && type()) {
+        <div class="op-plan__opts">
+          <label>
+            <span>{{ t().plan.budget }}</span>
+            <input type="number" min="0" step="50000000" [value]="planBudget()" (change)="setPlanBudget($any($event.target).value)" />
+          </label>
+          <label class="op-plan__check" [title]="t().plan.adjustHint">
+            <input type="checkbox" [checked]="planAdjust()" (change)="planAdjust.set($any($event.target).checked)" />
+            <span>{{ t().plan.adjust }}</span>
+          </label>
+          <button type="button" class="op-link" (click)="exitPlan()">{{ t().plan.exit }}</button>
+        </div>
+      }
+    </details>
+
     <div class="op-seg" role="group" [attr.aria-label]="t().horizonAria">
       <button type="button" [class.is-on]="horizon() === 'now'" [attr.aria-pressed]="horizon() === 'now'" (click)="setHorizon('now')">{{ t().horizon.now }}</button>
       <button type="button" [class.is-on]="horizon() === '2030'" [attr.aria-pressed]="horizon() === '2030'" (click)="setHorizon('2030')">{{ t().horizon['2030'] }}</button>
@@ -70,6 +95,30 @@
       }
     </div>
 
+    @if (planOn() && planRows().length && selectedType()) {
+      <h2 class="op-h">{{ t().plan.rankingTitle(selectedType()!.name, money(planBudget())) }}</h2>
+      <ol class="op-ranking op-ranking--plan">
+        @for (r of planRows().slice(0, 12); track r.slug; let i = $index) {
+          <li>
+            <button type="button" [class.is-on]="selected() === r.slug" (click)="selectWard(r.slug, true)">
+              <span class="op-ranking__n">{{ i + 1 }}</span>
+              <span class="op-ranking__name">
+                <strong>{{ shortName(r.name) }}</strong>
+                <small>
+                  <b [class]="'op-risk op-risk--' + r.risk.level" [title]="riskTitle(r.risk.reasons)">{{ t().risk.label[r.risk.level] }}</b>
+                  {{ r.result.paybackMonths === null ? t().plan.noPayback : t().plan.payback(r.result.paybackMonths) }}
+                  @if (!r.fits) {
+                    · <em class="op-plan__short">{{ t().plan.short }}</em>
+                  }
+                </small>
+              </span>
+              <span class="op-plan__profit" [class.is-loss]="r.result.profit < 0">{{ money(r.result.profit) }}<small>{{ t().plan.profit }}</small></span>
+            </button>
+          </li>
+        }
+      </ol>
+      <p class="op-plan__note">{{ t().plan.note }} {{ t().risk.note }}</p>
+    }
     <h2 class="op-h">{{ selectedType() ? t().rankingTitle(selectedType()!.name) : t().rankingAll }}</h2>
     @if (error(); as message) {
       <p class="op-error">{{ message }} <button type="button" class="op-link" (click)="retry()">{{ t().retry }}</button></p>
@@ -100,7 +149,9 @@
   <div class="op-tools op-glass" role="toolbar">
     <button type="button" (click)="map?.zoomBy(1)" [attr.aria-label]="'+'"><ls-icon name="plus" [size]="16" /></button>
     <button type="button" (click)="map?.overview()" [attr.aria-label]="'overview'"><ls-icon name="target" [size]="16" /></button>
-    <button type="button" class="op-tools__wide" [class.is-on]="compare().length > 0" (click)="openCompare()"><ls-icon name="scale" [size]="16" /> {{ t().compareOpen(compare().length) }}</button>
+    <button type="button" class="op-tools__wide" (click)="reportsOpen.set(true)" [title]="t().saved.title" [attr.aria-label]="t().saved.open(reports.list().length)"><ls-icon name="bookmark" [size]="16" /><span class="op-tools__label">{{ t().saved.open(reports.list().length) }}</span></button>
+    <button type="button" class="op-tools__wide" (click)="marketOpen.set(true)" [title]="t().market.open" [attr.aria-label]="t().market.open"><ls-icon name="layers" [size]="16" /><span class="op-tools__label">{{ t().market.open }}</span></button>
+    <button type="button" class="op-tools__wide" [class.is-on]="compare().length > 0" (click)="openCompare()" [title]="t().compareTitle" [attr.aria-label]="t().compareOpen(compare().length)"><ls-icon name="scale" [size]="16" /><span class="op-tools__label">{{ t().compareOpen(compare().length) }}</span></button>
     <button type="button" class="op-tools__wide op-tools__accent" (click)="askOpen.set(true)"><ls-icon name="sparkles" [size]="16" /> {{ t().ask }}</button>
     <button type="button" (click)="share()" [title]="copied() ? t().shared : t().share" [attr.aria-label]="t().share"><ls-icon [name]="copied() ? 'check' : 'share'" [size]="16" /></button>
     <button type="button" (click)="toggleLang()" [title]="t().language" [attr.aria-label]="t().language"><ls-icon name="globe" [size]="16" /></button>
@@ -185,8 +236,33 @@
                 <button type="button" class="op-btn" [class.is-on]="inCompare(d.slug)" (click)="toggleCompare(d.slug)" [disabled]="!inCompare(d.slug) && compare().length >= 3">
                   <ls-icon [name]="inCompare(d.slug) ? 'check' : 'plus'" [size]="14" /> {{ inCompare(d.slug) ? t().compareAdded : t().compareAdd }}
                 </button>
+                <button type="button" class="op-btn" (click)="reportOpen.set(true)"><ls-icon name="chart" [size]="14" /> {{ t().report.open }}</button>
               </div>
             </section>
+
+            <details class="op-rivals" [open]="rivalsOpen()" (toggle)="rivalsOpen.set($any($event.target).open)">
+              <summary>{{ t().rivals.title(f.count) }}</summary>
+              @if (f.count === 0) {
+                <p class="op-muted">{{ t().rivals.none }}</p>
+              } @else {
+                @if (rivals(); as rv) {
+                  <ul>
+                    @for (n of rv.named; track n) {
+                      <li>{{ n }}</li>
+                    }
+                  </ul>
+                  @if (rv.unnamed) {
+                    <p class="op-muted">{{ t().rivals.unnamed(rv.unnamed) }}</p>
+                  }
+                  <button type="button" class="op-btn" [class.is-on]="showPlaces()" (click)="showPlaces.set(true)"><ls-icon name="pin" [size]="14" /> {{ t().rivals.show }}</button>
+                  <p class="op-muted">{{ t().rivals.note }}</p>
+                } @else {
+                  <p class="op-muted">{{ t().loading }}</p>
+                }
+              }
+            </details>
+
+            <op-feasibility [type]="f.type" [typeName]="f.name" [competitors]="f.count" [factors]="wardFactors()" [text]="t()" [lang]="lang()" />
           }
 
           <section>
@@ -206,10 +282,8 @@
         }
 
         <p class="op-note">{{ d.caveat }}</p>
-        @if (d.copilot; as cp) {
-          <a class="op-link-card" [routerLink]="['/business-copilot/location', cp.slug]"><ls-icon name="chart" [size]="15" /> {{ t().copilot(cp.name) }}</a>
-        }
         <a class="op-link-card" routerLink="/property-intelligence/map" [queryParams]="{ ward: d.slug, lang: lang() === 'en' ? 'en' : null }"><ls-icon name="pin" [size]="15" /> {{ t().property }}</a>
+        <a class="op-link-card" [routerLink]="['/living-score/area', d.slug]"><ls-icon name="home" [size]="15" /> {{ t().living }}</a>
         <p class="op-sources">
           {{ t().sources }}:
           @for (s of d.sources; track s.id; let last = $last) {
@@ -272,6 +346,13 @@
           <p class="op-muted">{{ t().compareNeed }}</p>
         } @else {
           @if (compareResult(); as c) {
+          @if (radar(); as rd) {
+            <section class="op-radar">
+              <span class="op-eyebrow">{{ t().radar.title }}</span>
+              <op-radar [axes]="rd.axes" [series]="rd.series" [label]="t().radar.title + ': ' + compareNames().join(', ')" />
+              <p class="op-muted">{{ t().radar.note }}</p>
+            </section>
+          }
           <div class="op-tablewrap">
             <table class="op-table">
               <thead>
@@ -326,6 +407,129 @@
     </div>
   }
 
+  <!-- Market table -->
+  @if (marketOpen()) {
+    <div class="op-modal" (click)="marketOpen.set(false)">
+      <div class="op-dialog op-dialog--wide op-glass" role="dialog" aria-modal="true" aria-labelledby="op-market-title" (click)="$event.stopPropagation()">
+        <div class="op-dialog__head">
+          <h2 id="op-market-title">{{ t().market.title(selectedType()?.name ?? null) }} · {{ t().horizon[horizon()] }}</h2>
+          <button type="button" class="op-icon" (click)="marketOpen.set(false)" [attr.aria-label]="t().close"><ls-icon name="x" [size]="16" /></button>
+        </div>
+        <p class="op-muted">{{ t().market.intro }}</p>
+        @if (!type()) {
+          <p class="op-warn"><ls-icon name="info" [size]="14" /> {{ t().market.needType }}</p>
+        } @else if (marketOld()) {
+          <p class="op-warn"><ls-icon name="alert" [size]="14" /> {{ t().market.oldBackend }}</p>
+        }
+        <div class="op-market__bar">
+          <input type="search" [placeholder]="t().market.filter" [attr.aria-label]="t().market.filter" [value]="marketQuery()" (input)="marketQuery.set($any($event.target).value)" />
+          @if (type() && !marketOld()) {
+            <label class="op-plan__check" [title]="t().market.gapHint">
+              <input type="checkbox" [checked]="marketGaps()" (change)="marketGaps.set($any($event.target).checked)" />
+              <span>{{ t().market.gapsOnly }}</span>
+            </label>
+          }
+          <small>{{ t().market.count(marketView().length, marketCount()) }}</small>
+          <button type="button" class="op-btn" (click)="downloadCsv()" [disabled]="!marketView().length"><ls-icon name="download" [size]="14" /> {{ t().market.csv }}</button>
+        </div>
+        <div class="op-tablewrap op-market">
+          <table class="op-table op-table--market">
+            <thead>
+              <tr>
+                @for (k of shownCols(); track k) {
+                  <th [attr.aria-sort]="ariaSort(k)" [class.is-num]="k !== 'name'">
+                    <button type="button" (click)="sortBy(k)">
+                      {{ t().market.cols[k] }}
+                      <span aria-hidden="true">{{ marketSort().key === k ? (marketSort().desc ? '▼' : '▲') : '' }}</span>
+                    </button>
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of marketView(); track r.slug) {
+                <tr [class.is-on]="selected() === r.slug" (click)="openFromMarket(r.slug)">
+                  <th>
+                    <button type="button" class="op-market__name" (click)="$event.stopPropagation(); openFromMarket(r.slug)">{{ shortName(r.name) }}</button>
+                    @if (r.gap) {
+                      <span class="op-market__gap" [title]="t().market.gapHint">{{ t().market.gap }}</span>
+                    }
+                  </th>
+                  <td class="is-num"><span class="op-score" [style.--c]="bandColor(r.score)">{{ num(r.score, 0) }}</span></td>
+                  @if (type()) {
+                    <td class="is-num">{{ num(r.demand) }}</td>
+                    <td class="is-num">{{ num(r.competition) }}</td>
+                    <td class="is-num">{{ num(r.count, 0) }}</td>
+                    <td class="is-num">{{ num(r.per10k) }}</td>
+                  }
+                  <td class="is-num">{{ num(r.population, 0) }}</td>
+                  <td class="is-num">{{ num(r.landMedian) }}</td>
+                </tr>
+              } @empty {
+                <tr><td [attr.colspan]="shownCols().length" class="op-muted">{{ wards() ? '—' : t().loading }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="op-muted">{{ t().market.landNote }}</p>
+      </div>
+    </div>
+  }
+
+  <!-- Saved reports -->
+  @if (reportsOpen()) {
+    <div class="op-modal" (click)="reportsOpen.set(false)">
+      <div class="op-dialog op-glass" role="dialog" aria-modal="true" aria-labelledby="op-saved-title" (click)="$event.stopPropagation()">
+        <div class="op-dialog__head">
+          <h2 id="op-saved-title">{{ t().saved.title }}</h2>
+          <button type="button" class="op-icon" (click)="reportsOpen.set(false)" [attr.aria-label]="t().close"><ls-icon name="x" [size]="16" /></button>
+        </div>
+        @if (account.user(); as u) {
+          <p class="op-muted">{{ t().saved.inAccount(u.email) }}</p>
+        } @else {
+          <p class="op-muted">{{ t().saved.intro }}</p>
+          @if (account.enabled()) {
+            <button type="button" class="op-btn op-saved__signin" (click)="account.dialogOpen.set(true)"><ls-icon name="user" [size]="14" /> {{ t().saved.signIn }}</button>
+          }
+        }
+        @if (reports.syncing()) {
+          <p class="op-muted">{{ t().saved.syncing }}</p>
+        }
+        @if (reports.syncError(); as e) {
+          <p class="op-error">{{ e }}</p>
+        }
+        <ul class="op-saved">
+          @for (r of reports.list(); track r.id) {
+            <li>
+              <div class="op-saved__main">
+                <strong>{{ r.icon }} {{ r.typeName }} · {{ shortName(r.wardName) }}</strong>
+                <small>
+                  {{ t().horizon[r.horizon] }} · {{ t().saved.savedOn(savedDate(r.savedAt)) }}
+                </small>
+                <small>
+                  <span class="op-score" [style.--c]="bandColor(r.score)">{{ num(r.score, 0) }}</span>
+                  <b [class]="'op-risk op-risk--' + r.risk">{{ t().risk.label[r.risk] }}</b>
+                  <span [class.op-loss]="r.result.profit < 0">{{ money(r.result.profit) }} {{ t().plan.profit }}</span>
+                  · {{ r.result.paybackMonths === null ? t().plan.noPayback : t().plan.payback(r.result.paybackMonths) }}
+                  · {{ t().saved.budget }} {{ money(r.assumptions.budget) }}
+                </small>
+              </div>
+              <div class="op-saved__actions">
+                <button type="button" class="op-btn" (click)="reopenReport(r)">{{ t().saved.reopen }}</button>
+                <button type="button" class="op-icon" (click)="reports.remove(r.id)" [attr.aria-label]="t().saved.remove + ' ' + r.typeName + ' · ' + r.wardName" [title]="t().saved.remove"><ls-icon name="trash" [size]="15" /></button>
+              </div>
+            </li>
+          } @empty {
+            <li class="op-muted">{{ t().saved.empty }}</li>
+          }
+        </ul>
+        @if (reports.list().length > 1) {
+          <button type="button" class="op-link op-saved__clear" (click)="clearReports()">{{ t().saved.clear }}</button>
+        }
+      </div>
+    </div>
+  }
+
   <!-- Ask AI -->
   @if (askOpen()) {
     <div class="op-modal" (click)="askOpen.set(false)">
@@ -347,8 +551,38 @@
         }
         @if (answer(); as a) {
           <div class="op-answer">
-            <p>{{ a.answer }}</p>
+            @if (a.verdict && !a.outOfScope) {
+              <div class="op-answer__part">
+                <span class="op-eyebrow">{{ t().answer.verdict }}</span>
+                <p class="op-answer__verdict">{{ a.verdict }}</p>
+              </div>
+              @if (a.reasons?.length) {
+                <div class="op-answer__part">
+                  <span class="op-eyebrow">{{ t().answer.reasons }}</span>
+                  <ul>
+                    @for (r of a.reasons; track $index) {
+                      <li>{{ r }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+              @if (a.risks?.length) {
+                <div class="op-answer__part op-answer__part--risk">
+                  <span class="op-eyebrow">{{ t().answer.risks }}</span>
+                  <ul>
+                    @for (r of a.risks; track $index) {
+                      <li>{{ r }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+            } @else {
+              <p>{{ a.verdict || a.answer }}</p>
+            }
             @if (a.wards.length) {
+              @if (a.verdict && !a.outOfScope) {
+                <span class="op-eyebrow">{{ t().answer.wards }}</span>
+              }
               <div class="op-chips">
                 @for (w of a.wards; track w.slug) {
                   <button type="button" (click)="askOpen.set(false); selectWard(w.slug, true)">{{ w.name }}</button>
@@ -370,3 +604,81 @@
     </div>
   }
 </section>
+
+@if (reportOpen() && detail(); as d) {
+  @if (focus(); as f) {
+    <div class="op-report-backdrop" (click)="reportOpen.set(false)"></div>
+    <div class="op-report" role="dialog" aria-modal="true" aria-labelledby="op-report-title">
+      <header class="op-report__head">
+        <div>
+          <span class="op-eyebrow">{{ t().report.kicker }}</span>
+          <h2 id="op-report-title">{{ f.icon }} {{ f.name }} · {{ d.name }}</h2>
+          <p>{{ t().horizon[horizon()] }} · {{ t().report.generated(today()) }}</p>
+        </div>
+        <div class="op-report__actions">
+          <button type="button" class="op-btn" [class.is-on]="justSaved()" (click)="saveReport()">{{ justSaved() ? t().saved.done : t().saved.save }}</button>
+          <button type="button" class="op-btn" (click)="print()">{{ t().report.print }}</button>
+          <button type="button" class="op-btn" (click)="reportOpen.set(false)" [attr.aria-label]="t().report.close">✕</button>
+        </div>
+      </header>
+      <section>
+        <h3>{{ t().report.sections.score }}: {{ num(f.opportunity, 0) }}/100</h3>
+        <ul>
+          <li>{{ t().demand }} {{ num(f.demand) }} · {{ t().competition }} {{ num(f.competition) }} · {{ t().places(f.count) }} ({{ t().per10k(num(f.per10k)) }})</li>
+          @for (dv of f.drivers; track dv.signal) {
+            <li>{{ t().signals[dv.signal] }}: {{ num(dv.value, 0) }}/100 × {{ num(dv.weight, 2) }} = +{{ num(dv.points) }}</li>
+          }
+          @if (f.confidence === 'low') {
+            <li>{{ t().lowConfidence }}</li>
+          }
+          @if (d.facts.population) {
+            <li>{{ t().population }}: {{ num(d.facts.population, 0) }}</li>
+          }
+        </ul>
+      </section>
+      @if (feasibility(); as fe) {
+        <section>
+          <h3>{{ t().report.sections.feas }}</h3>
+          <ul>
+            <li>{{ t().feas.results.revenue }}: {{ money(fe.r.revenue) }} · {{ t().feas.results.costs }}: {{ money(fe.r.costs.total) }}</li>
+            <li>{{ t().feas.results.profit }}: {{ money(fe.r.profit) }} ({{ t().feas.results.margin(num(fe.r.marginPct, 0)) }})</li>
+            <li>{{ t().feas.results.investment }}: {{ money(fe.r.investment) }} · {{ t().feas.results.payback }}: {{ fe.r.paybackMonths === null ? t().feas.results.noPayback : t().feas.results.paybackValue(fe.r.paybackMonths) }}</li>
+            @if (fe.r.breakEvenCustomers !== null) {
+              <li>{{ t().feas.results.breakEven }}: {{ t().feas.results.breakEvenValue(num(fe.r.breakEvenCustomers, 0), fe.a.basis === 'day') }}</li>
+            }
+            <li>{{ fe.r.budgetGap >= 0 ? t().feas.results.budgetOk(money(fe.r.budgetGap)) : t().feas.results.budgetShort(money(-fe.r.budgetGap)) }}</li>
+            @if (reportRisk(); as rk) {
+              <li><strong>{{ t().risk.label[rk.level] }}</strong>: {{ riskTitle(rk.reasons) }}</li>
+            }
+          </ul>
+          <h3>{{ t().report.sections.assumptions }} ({{ feasStore.isDefault(fe.type) ? t().feas.assumed : t().feas.yours }})</h3>
+          <ul class="op-report__cols">
+            <li>{{ fe.a.basis === 'day' ? t().feas.fields.customersDay : t().feas.fields.customersMonth }}: {{ num(fe.a.customers, 0) }}</li>
+            <li>{{ t().feas.fields.ticket }}: {{ num(fe.a.ticket, 0) }}</li>
+            @if (fe.a.basis === 'day') {
+              <li>{{ t().feas.fields.daysOpen }}: {{ fe.a.daysOpen }}</li>
+            }
+            <li>{{ t().feas.fields.sizeM2 }}: {{ fe.a.sizeM2 }}</li>
+            <li>{{ t().feas.fields.rentPerM2 }}: {{ num(fe.a.rentPerM2, 0) }}</li>
+            <li>{{ t().feas.fields.cogsPct }}: {{ fe.a.cogsPct }}</li>
+            <li>{{ t().feas.fields.staff }}: {{ fe.a.staff }} × {{ num(fe.a.salary, 0) }}</li>
+            <li>{{ t().feas.fields.utilitiesPerM2 }}: {{ num(fe.a.utilitiesPerM2, 0) }}</li>
+            <li>{{ t().feas.fields.otherPct }}: {{ fe.a.otherPct }}</li>
+            <li>{{ t().feas.fields.setupPerM2 }}: {{ num(fe.a.setupPerM2, 0) }}</li>
+            <li>{{ t().feas.fields.depositMonths }}: {{ fe.a.depositMonths }}</li>
+            <li>{{ t().feas.fields.budget }}: {{ num(fe.a.budget, 0) }}</li>
+          </ul>
+        </section>
+      }
+      <section>
+        <h3>{{ t().report.sections.sources }}</h3>
+        <ul>
+          @for (s of d.sources; track s.id) {
+            <li>{{ s.title }} — {{ s.publisher }} · <a [href]="s.url" target="_blank" rel="noopener noreferrer">{{ s.url }}</a></li>
+          }
+        </ul>
+      </section>
+      <p class="op-report__note">{{ t().report.disclaimer }}</p>
+    </div>
+  }
+}

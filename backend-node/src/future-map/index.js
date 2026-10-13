@@ -19,7 +19,7 @@ const { z } = require('zod');
 const { HttpError, asyncHandler, badRequest, errorBody, singleString } = require('../living-score/common/http');
 const { parseSlug } = require('../living-score/common/query-parsers');
 const { createLogger } = require('../living-score/common/logger');
-const { loadConfig } = require('../business-copilot');
+const { loadConfig } = require('../ai-config');
 const scenarios = require('./scenario');
 const { createAnswerers, ask } = require('./ai');
 

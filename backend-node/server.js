@@ -4,8 +4,8 @@
  *   /api/opportunity/...                               Business Opportunity Map — Hanoi wards (2025), OSM data (src/opportunity).
  *   /api/living-score/...                              Hanoi Living Score (src/living-score).
  *   /api/future-map/...                                Hanoi Future Map — sourced plan milestones 2026-2065 (src/future-map).
- *   /api/business-copilot/...                          Hanoi Business Copilot — location intelligence (src/business-copilot).
  *   /api/property-intel/...                            AI Property Intelligence — area and project intelligence (src/property-intel).
+ *   /api/account/...                                   Accounts and saved reports, PostgreSQL (src/accounts).
  */
 try {
   process.loadEnvFile(); // optional .env (Node >= 20.12); real environment variables win
@@ -18,9 +18,9 @@ const cors = require('cors');
 const { createOpportunityMap } = require('./src/opportunity');
 const { createLivingScore } = require('./src/living-score');
 const { createFutureMap } = require('./src/future-map');
-const { createBusinessCopilot } = require('./src/business-copilot');
 const { createPropertyIntel } = require('./src/property-intel');
 const { createTimeMachine } = require('./src/time-machine');
+const { createAccounts } = require('./src/accounts');
 
 const PORT = process.env.PORT || 8000;
 
@@ -33,22 +33,26 @@ const EXTRA_CORS_ORIGINS = (process.env.CORS_ORIGIN || '')
   .map((o) => o.trim())
   .filter(Boolean);
 const LOCALHOST_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+// Localhost is trusted only outside production (a deployed site must list its origin in CORS_ORIGIN).
+const isAllowedOrigin = (origin) =>
+  EXTRA_CORS_ORIGINS.includes(origin) || (process.env.NODE_ENV !== 'production' && LOCALHOST_ORIGIN.test(origin));
 
 function createApp(options = {}) {
   const app = express();
+  // Behind nginx / a load balancer: the client IP (rate limits) comes from X-Forwarded-For.
+  if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
 
   app.use(
     cors({
       origin(origin, callback) {
-        const allowed =
-          !origin || // same-origin / non-browser requests (curl, health checks) send no Origin header
-          LOCALHOST_ORIGIN.test(origin) ||
-          EXTRA_CORS_ORIGINS.includes(origin);
+        // Same-origin / non-browser requests (curl, health checks) send no Origin header.
         // Pass `false` (never an Error) for a disallowed origin: the cors
         // middleware then just omits Access-Control-Allow-Origin and lets the
         // request continue, instead of failing it with a 500.
-        callback(null, allowed);
+        callback(null, !origin || isAllowedOrigin(origin));
       },
+      // The account session is a cookie: the browser sends it to the API on another port only with credentials.
+      credentials: true,
     })
   );
 
@@ -78,17 +82,17 @@ function createApp(options = {}) {
   const futureMap = createFutureMap(options.futureMap);
   app.use('/api/future-map', futureMap.router);
 
-  // Hanoi Business Copilot (demo data; mock AI unless ANTHROPIC_API_KEY / AI_PROVIDER is set).
-  const businessCopilot = createBusinessCopilot(options.businessCopilot);
-  app.use('/api/business-copilot', businessCopilot.router);
-
-  // AI Property Intelligence (sample data; rule-based analyst).
+  // AI Property Intelligence (real data; Claude when ANTHROPIC_API_KEY is set, template answers otherwise).
   const propertyIntel = createPropertyIntel(options.propertyIntel);
   app.use('/api/property-intel', propertyIntel.router);
 
   // Hanoi Time Machine AI Storyteller (grounded in the page's own landmark data; mock unless ANTHROPIC_API_KEY is set).
   const timeMachine = createTimeMachine(options.timeMachine);
   app.use('/api/time-machine', timeMachine.router);
+
+  // Accounts and saved reports (PostgreSQL when DATABASE_URL is set; off otherwise).
+  const accounts = createAccounts({ isAllowedOrigin, ...options.accounts });
+  app.use('/api/account', accounts.router);
 
   // Unmatched routes and uncaught errors still respond with JSON, matching
   // every other endpoint's contract (the frontend never has to special-case
@@ -102,24 +106,25 @@ function createApp(options = {}) {
     res.status(500).json({ detail: 'Internal server error' });
   });
 
-  return { app, living };
+  return { app, living, accounts };
 }
 
 async function main() {
-  const { app, living } = createApp();
+  const { app, living, accounts } = createApp();
   await living.init();
+  await accounts.init();
   const server = app.listen(PORT, () => {
     console.log(`Opportunity Map API (Node/Express) listening on http://localhost:${PORT}`);
     console.log('  Business Opportunity Map  /api/opportunity (Hanoi wards, OSM data)');
     console.log(`  Hanoi Living Score        /api/living-score  (data source: ${living.config.dataSource})`);
     console.log('  Hanoi Future Map          /api/future-map    (sourced plan data)');
-    console.log('  Hanoi Business Copilot    /api/business-copilot (demo data)');
     console.log('  AI Property Intelligence  /api/property-intel (79 wards, land prices 2026, market briefings)');
+    console.log(`  Accounts                  /api/account       (${accounts.enabled ? accounts.store.kind : 'off — set DATABASE_URL'})`);
     if (!living.config.anthropicApiKey) console.log('  ANTHROPIC_API_KEY not set — AI recommendations use rule-based explanations.');
   });
 
   const shutdown = () => {
-    server.close(() => living.close().finally(() => process.exit(0)));
+    server.close(() => Promise.allSettled([living.close(), accounts.close()]).finally(() => process.exit(0)));
     setTimeout(() => process.exit(1), 5000).unref();
   };
   process.on('SIGINT', shutdown);

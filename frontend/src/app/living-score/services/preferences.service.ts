@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { ThemeChoice, ThemeService } from '../../services/theme.service';
+import { migrateAreaSlugs } from '../living-score.constants';
 import { CRITERION_KEYS, CriterionMap, PartialWeights } from '../models/living-score.models';
 
 export type { ThemeChoice };
@@ -41,8 +42,8 @@ export class PreferencesService {
   readonly weights = computed<PartialWeights | null>(() => this.sharedWeights() ?? this.ownWeights());
   /** The user's own weights, for building a share link. */
   readonly myWeights = this.ownWeights.asReadonly();
-  readonly saved = signal<string[]>(read<string[]>('saved', []));
-  readonly compareSelection = signal<string[]>(read<string[]>('compare', []));
+  readonly saved = signal<string[]>(readSlugs('saved'));
+  readonly compareSelection = signal<string[]>(readSlugs('compare').slice(0, MAX_COMPARE));
 
   setTheme(choice: ThemeChoice): void {
     this.themeService.setChoice(choice);
@@ -114,6 +115,15 @@ export class PreferencesService {
     write('saved', []);
     this.setCompare([]);
   }
+}
+
+/** A saved slug list, with the former district slugs moved to their ward (and written back once). */
+function readSlugs(key: string): string[] {
+  const raw = read<unknown>(key, []);
+  const list = Array.isArray(raw) ? raw.filter((s): s is string => typeof s === 'string') : [];
+  const migrated = migrateAreaSlugs(list);
+  if (migrated.length !== list.length || migrated.some((s, i) => s !== list[i])) write(key, migrated);
+  return migrated;
 }
 
 /**

@@ -59,7 +59,11 @@
               <div class="kpi kpi--wide">
                 <span>{{ tx.project.price }} · {{ p.price.kindLabel }}</span>
                 <strong>{{ p.price.label }} <small>{{ tx.perM2 }}</small></strong>
-                <em [class]="p.vsMarket.pct > 0 ? 'pi-warn' : 'pi-up'">{{ tx.project.vsMarket(p.vsMarket.pct, p.vsMarket.market, p.vsMarket.quarter) }}</em>
+                @if (p.vsMarket; as v) {
+                  <em [class]="v.pct > 0 ? 'pi-warn' : 'pi-up'">{{ tx.project.vsMarket(v.pct, v.market, v.quarter) }}</em>
+                } @else {
+                  <em class="pi-up">{{ tx.project.social }}</em>
+                }
               </div>
               <div class="kpi">
                 <span>{{ tx.project.unit(p.unit.m2) }}</span>
@@ -118,6 +122,29 @@
               </div>
             </section>
 
+            @if (p.travel; as tr) {
+              <section>
+                <span class="pi-kicker section-title">{{ tx.project.travel }}</span>
+                <div class="prox">
+                  @for (it of tr.items; track it.id) {
+                    <div class="prox__row">
+                      <span>{{ it.name }}</span>
+                      <span class="prox__detail">{{ it.km === null ? '' : formatNum(it.km, lang) + ' km' }}</span>
+                      <span class="prox__d pi-tone-mobility">{{ it.minutes === null ? '—' : tx.ward.travel.minutes(it.minutes) }}</span>
+                    </div>
+                  }
+                  @if (tr.metro; as m) {
+                    <div class="prox__row">
+                      <span>{{ tx.ward.travel.metro(m.station, m.line) }}</span>
+                      <span class="prox__detail">{{ formatNum(m.km, lang) }} km</span>
+                      <span class="prox__d pi-tone-mobility">{{ tx.ward.travel.minutes(m.minutes) }}</span>
+                    </div>
+                  }
+                </div>
+                <p class="muted">{{ tr.note }}</p>
+              </section>
+            }
+
             <section>
               <span class="pi-kicker section-title">{{ tx.project.infra }}</span>
               <div class="infra">
@@ -163,7 +190,11 @@
               <h3>{{ tx.project.sections.price }}</h3>
               <ul>
                 <li>{{ p.price.label }} {{ tx.perM2 }} ({{ p.price.kindLabel }})</li>
-                <li>{{ tx.project.vsMarket(p.vsMarket.pct, p.vsMarket.market, p.vsMarket.quarter) }}</li>
+                @if (p.vsMarket; as v) {
+                  <li>{{ tx.project.vsMarket(v.pct, v.market, v.quarter) }}</li>
+                } @else {
+                  <li>{{ tx.project.social }}</li>
+                }
                 <li>{{ tx.project.unit(p.unit.m2) }}: {{ unitPrice() }}</li>
                 @if (p.landPrice; as l) {
                   <li>{{ tx.project.land }}: {{ formatNum(l.medianVT1, lang) }} {{ tx.perM2 }} ({{ tx.project.landSub(l.rank, l.ranked) }})</li>
@@ -178,6 +209,20 @@
                 }
               </ul>
             </section>
+            @if (p.travel; as tr) {
+              <section>
+                <h3>{{ tx.project.travel }}</h3>
+                <ul>
+                  @for (it of tr.items; track it.id) {
+                    <li>{{ it.name }}: {{ it.minutes === null ? '—' : tx.ward.travel.minutes(it.minutes) }}</li>
+                  }
+                  @if (tr.metro; as m) {
+                    <li>{{ tx.ward.travel.metro(m.station, m.line) }}: {{ tx.ward.travel.minutes(m.minutes) }}</li>
+                  }
+                  <li>{{ tr.note }}</li>
+                </ul>
+              </section>
+            }
             <section>
               <h3>{{ tx.project.sections.infra }}</h3>
               <ul>

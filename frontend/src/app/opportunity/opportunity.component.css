@@ -766,6 +766,10 @@ button:disabled {
     font-size: 12px;
     white-space: nowrap;
   }
+  /* Icons only on phones (the label stays as aria-label / title); "Ask AI" keeps its text. */
+  .op-tools__label {
+    display: none;
+  }
   .op-tools button {
     min-width: 30px;
     padding: 0 6px;
@@ -783,4 +787,394 @@ button:disabled {
   .op-bars li {
     grid-template-columns: 104px 1fr 40px;
   }
+}
+
+/* report (former Business Copilot report) */
+.op-report-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(5, 9, 18, 0.5);
+}
+
+.op-report {
+  position: fixed;
+  z-index: 1301;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(720px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  padding: 20px 22px;
+  border-radius: 14px;
+  background: var(--app-surface);
+  color: var(--app-ink);
+  box-shadow: var(--app-shadow);
+}
+
+.op-report__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.op-report__head h2 {
+  margin: 4px 0;
+  font-size: 20px;
+}
+
+.op-report__head p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--app-ink-dim);
+}
+
+.op-report__actions {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.op-report h3 {
+  margin: 14px 0 6px;
+  font-size: 14px;
+}
+
+.op-report ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.op-report__cols {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 24px;
+}
+
+.op-report a {
+  color: var(--op-accent);
+  word-break: break-all;
+}
+
+.op-report__note {
+  margin-top: 14px;
+  font-size: 11px;
+  color: var(--app-ink-faint);
+}
+
+@media print {
+  .op-report-backdrop,
+  .op-report__actions {
+    display: none;
+  }
+
+  .op-report {
+    position: static;
+    transform: none;
+    width: auto;
+    max-height: none;
+    box-shadow: none;
+  }
+}
+
+/* business plan (former Business Copilot: idea + budget → wards) */
+.op-plan {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--op-line);
+  border-radius: 12px;
+}
+
+.op-plan summary {
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--op-accent);
+}
+
+.op-plan__intro,
+.op-plan__note {
+  margin: 6px 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--op-ink-dim);
+}
+
+.op-plan__form {
+  display: flex;
+  gap: 6px;
+}
+
+.op-plan__form input,
+.op-plan__opts input[type='number'] {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--op-line);
+  border-radius: 8px;
+  background: var(--app-surface);
+  color: var(--op-ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.op-plan__opts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.op-plan__opts label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.op-plan__opts input[type='number'] {
+  width: 140px;
+  flex: none;
+}
+
+.op-plan__profit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--op-accent);
+}
+
+.op-plan__profit small {
+  font-weight: 500;
+  font-size: 10px;
+  color: var(--op-ink-faint);
+}
+
+.op-plan__profit.is-loss {
+  color: var(--op-warn);
+}
+
+.op-plan__short {
+  font-style: normal;
+  color: var(--op-warn);
+}
+
+/* competitors list */
+.op-rivals {
+  margin: 4px 0;
+  font-size: 12.5px;
+}
+
+.op-rivals summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.op-rivals ul {
+  margin: 6px 0;
+  padding-left: 18px;
+  max-height: 180px;
+  overflow-y: auto;
+  columns: 2;
+  column-gap: 16px;
+  font-size: 12px;
+}
+
+/* risk level of a plan */
+.op-risk {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 16px;
+}
+.op-risk--low {
+  background: var(--op-accent-soft);
+  color: var(--op-accent);
+}
+.op-risk--medium {
+  background: var(--op-warn-soft);
+  color: var(--op-warn);
+}
+.op-risk--high {
+  background: color-mix(in srgb, #dc2626 14%, transparent);
+  color: #dc2626;
+}
+
+/* market table */
+.op-market__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.op-market__bar input[type='search'] {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--op-line);
+  border-radius: 10px;
+  background: var(--app-surface);
+  color: var(--op-ink);
+  font: inherit;
+  font-size: 13px;
+}
+.op-market__bar small {
+  color: var(--op-ink-dim);
+  font-size: 12px;
+}
+.op-market {
+  max-height: min(56vh, 520px);
+  overflow-y: auto;
+  border: 1px solid var(--op-line);
+  border-radius: 10px;
+}
+.op-table--market {
+  min-width: 640px;
+}
+.op-table--market thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0;
+  background: var(--app-surface);
+}
+.op-table--market thead th button {
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--op-ink);
+  font: inherit;
+  font-weight: 700;
+  font-size: 12px;
+  text-align: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.op-table--market thead th button span {
+  color: var(--op-accent);
+  font-size: 9px;
+}
+.op-table--market .is-num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.op-table--market tbody tr {
+  cursor: pointer;
+}
+.op-table--market tbody tr:hover,
+.op-table--market tbody tr.is-on {
+  background: var(--op-accent-soft);
+}
+.op-table--market tbody th {
+  color: var(--op-ink);
+}
+.op-market__name {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.op-market__gap {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--op-accent-soft);
+  color: var(--op-accent);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* compare radar */
+.op-radar {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+}
+.op-radar .op-eyebrow {
+  justify-self: start;
+}
+
+/* structured AI answer */
+.op-answer__part {
+  display: grid;
+  gap: 3px;
+}
+.op-answer__part ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 3px;
+  font-size: 13px;
+}
+.op-answer__verdict {
+  font-weight: 700;
+}
+.op-answer__part--risk li::marker {
+  color: var(--op-warn);
+}
+
+/* saved reports */
+.op-saved {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.op-saved li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--op-line);
+  border-radius: 12px;
+}
+.op-saved li.op-muted {
+  display: block;
+}
+.op-saved__main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.op-saved__main small {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  color: var(--op-ink-dim);
+  font-size: 12px;
+}
+.op-saved__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.op-saved__clear {
+  justify-self: start;
+}
+.op-loss {
+  color: var(--op-warn);
+}
+.op-saved__signin {
+  justify-self: start;
 }

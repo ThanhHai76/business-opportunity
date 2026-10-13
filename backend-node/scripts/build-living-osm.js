@@ -1,8 +1,7 @@
 'use strict';
 /**
  * `npm run data:living` — downloads the places the Living Score is computed from (schools, health care, shops,
- * cafés, parks, lakes, metro lines and stations, bus stops, and the new wards/communes of 2025) from OpenStreetMap
- * via the Overpass API, and writes a compact
+ * cafés, parks, lakes, metro lines and stations, bus stops) from OpenStreetMap via the Overpass API, and writes a compact
  * snapshot to src/living-score/data/osm-hanoi.json. The server only reads that file, never Overpass.
  *
  * Parks and lakes are stored twice: as named points (for the map) and as a coverage raster of about 100 m cells
@@ -16,8 +15,11 @@ const path = require('node:path');
 const OUT_FILE = path.join(__dirname, '..', 'src', 'living-score', 'data', 'osm-hanoi.json');
 /** The main instance first: mirrors can lag weeks behind. */
 const ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
-/** south, west, north, east — covers every Living Score area. */
-const BBOX = [20.9, 105.7, 21.24, 105.98];
+/**
+ * south, west, north, east — covers the 1.5 km walking circle of every Living Score area, i.e. every ward/commune of
+ * src/opportunity/data/hanoi-wards.json (the 2025 wards, shared with the Opportunity Map and Property Intelligence).
+ */
+const BBOX = [20.85, 105.63, 21.27, 106.02];
 /** Raster cell size in degrees (≈ 111 m north-south, ≈ 104 m east-west in Hanoi). */
 const CELL_DEG = 0.001;
 /** Water that is not somewhere to walk around: rivers, canals, drains and treatment basins. */
@@ -150,41 +152,6 @@ function inRings([x, y], rings) {
   return inside;
 }
 
-/** Row/column window of the raster covered by a shape's bounding box. */
-function cellWindow(rings) {
-  const [south, west] = BBOX;
-  const xs = rings.flat().map((p) => p[0]);
-  const ys = rings.flat().map((p) => p[1]);
-  const { rows, cols } = gridSize();
-  return {
-    r0: Math.max(0, Math.floor((Math.min(...ys) - south) / CELL_DEG)),
-    r1: Math.min(rows - 1, Math.floor((Math.max(...ys) - south) / CELL_DEG)),
-    c0: Math.max(0, Math.floor((Math.min(...xs) - west) / CELL_DEG)),
-    c1: Math.min(cols - 1, Math.floor((Math.max(...xs) - west) / CELL_DEG)),
-  };
-}
-function gridSize() {
-  const [south, west, north, east] = BBOX;
-  return { rows: Math.round((north - south) / CELL_DEG), cols: Math.round((east - west) / CELL_DEG) };
-}
-const cellCentre = (r, c) => [BBOX[1] + (c + 0.5) * CELL_DEG, BBOX[0] + (r + 0.5) * CELL_DEG];
-
-/**
- * Index raster: each cell holds 1 + the index of the shape covering its centre (0 = none), one byte per cell,
- * base64. Used for wards, so an area can say which new wards it overlaps and by how much.
- */
-function rasteriseIndex(shapes) {
-  const { rows, cols } = gridSize();
-  const cells = new Uint8Array(rows * cols);
-  shapes.forEach((rings, index) => {
-    const { r0, r1, c0, c1 } = cellWindow(rings);
-    for (let r = r0; r <= r1; r++) {
-      for (let c = c0; c <= c1; c++) if (inRings(cellCentre(r, c), rings)) cells[r * cols + c] = index + 1;
-    }
-  });
-  return { rows, cols, cells: Buffer.from(cells).toString('base64') };
-}
-
 /** Marks every raster cell whose centre lies inside one of the shapes. Returns a base64 bitset (row-major, from the south-west). */
 function rasterise(shapes) {
   const [south, west, north, east] = BBOX;
@@ -266,9 +233,6 @@ async function main() {
   const waterQuery = `[out:json][timeout:240];(way["natural"="water"](${bbox});relation["natural"="water"](${bbox}););out geom;`;
   // Operating lines as mapped routes (one direction each), plus track that is still under construction.
   const metroQuery = `[out:json][timeout:120];(relation["route"~"^(subway|light_rail)$"](${bbox});way["railway"="construction"]["construction"~"^(subway|light_rail)$"](${bbox}););out geom;`;
-  // Wards and communes created by the 2025 reorganisation (admin_level 6), and Hanoi itself to drop neighbouring provinces.
-  const wardsQuery = `[out:json][timeout:240];relation["boundary"="administrative"]["admin_level"="6"](${bbox});out geom;`;
-  const cityQuery = `[out:json][timeout:240];relation["boundary"="administrative"]["admin_level"="4"]["name"="Thành phố Hà Nội"];out geom;`;
 
   console.log('Downloading places…');
   const points = await overpass(pointsQuery);
@@ -278,10 +242,6 @@ async function main() {
   const water = await overpass(waterQuery);
   console.log('Downloading metro lines…');
   const metro = await overpass(metroQuery);
-  console.log('Downloading wards (2025) and the city boundary…');
-  const wards = await overpass(wardsQuery);
-  await pause(5_000);
-  const city = await overpass(cityQuery);
 
   const pois = [];
   const seen = new Set();
@@ -302,28 +262,11 @@ async function main() {
   console.log(`Rasterising ${park.shapes.length} parks and ${lake.shapes.length} bodies of water…`);
 
   const metroLines = metroLinesOf(metro.json.elements);
-  const cityRings = ringsOf(city.json.elements[0] ?? {});
-  const cityShape = [...cityRings.outer, ...cityRings.inner];
-  if (!cityShape.length) throw new Error('Hanoi city boundary not found');
-  const wardShapes = [];
-  const wardNames = [];
-  for (const e of wards.json.elements) {
-    const { outer, inner } = ringsOf(e);
-    if (!outer.length || !e.tags?.name) continue;
-    const all = outer.flat();
-    const centre = [all.reduce((s, p) => s + p[0], 0) / all.length, all.reduce((s, p) => s + p[1], 0) / all.length];
-    if (!inRings(centre, cityShape)) continue; // a ward of Bắc Ninh or Hưng Yên inside the bounding box
-    wardShapes.push([...outer, ...inner]);
-    wardNames.push(e.tags.name);
-  }
-  if (wardShapes.length > 255) throw new Error('too many wards for a one-byte raster');
-  console.log(`Rasterising ${wardShapes.length} wards of Hanoi…`);
 
   const counts = pois.reduce((acc, [t]) => ({ ...acc, [t]: (acc[t] ?? 0) + 1 }), {
     park: park.points.length,
     water: lake.points.length,
     metroLines: metroLines.length,
-    wards: wardNames.length,
   });
   const snapshot = {
     source: 'OpenStreetMap contributors',
@@ -343,8 +286,6 @@ async function main() {
     raster: { cellDeg: CELL_DEG, south: BBOX[0], west: BBOX[1], park: rasterise(park.shapes), water: rasterise(lake.shapes) },
     /** { ref, name, status: 'operating' | 'under_construction', coords: [[lng, lat], …][] } — track as mapped on OSM */
     metroLines,
-    /** New wards/communes (2025) of Hanoi in the bounding box; `raster.cells` holds 1 + index into `names`. */
-    wards: { names: wardNames, raster: rasteriseIndex(wardShapes) },
   };
   fs.writeFileSync(OUT_FILE, `${JSON.stringify(snapshot)}\n`);
   console.log(`Wrote ${path.relative(process.cwd(), OUT_FILE)} — OSM data as of ${snapshot.osmBase}`, counts);

@@ -43,7 +43,7 @@ async function seedPostgres(pool, options = {}, seed = getSeedData()) {
                             metrics, facts, centroid, boundary, data_source)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb,
                  ST_SetSRID(ST_MakePoint($10::float8, $11::float8), 4326),
-                 ST_SetSRID(ST_GeomFromGeoJSON($12::text), 4326),
+                 ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON($12::text), 4326)),
                  $13)
          RETURNING id`,
         [

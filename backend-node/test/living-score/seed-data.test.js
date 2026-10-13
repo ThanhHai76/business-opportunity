@@ -2,63 +2,64 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { CRITERION_KEYS } = require('../../src/living-score/scoring/criteria');
-const { getSeedData } = require('../../src/living-score/seed/seed-data');
+const { getSeedData, LEGACY_SLUGS } = require('../../src/living-score/seed/seed-data');
+const WARDS = require('../../src/opportunity/data/hanoi-wards.json').wards;
 
-function pointInRing([x, y], ring) {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i];
-    const [xj, yj] = ring[j];
-    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
+/** Even-odd point-in-polygon over a GeoJSON Polygon / MultiPolygon. */
+function inGeometry([x, y], geometry) {
+  const polygons = geometry.type === 'MultiPolygon' ? geometry.coordinates : [geometry.coordinates];
+  return polygons.some((rings) => {
+    let inside = false;
+    for (const ring of rings) {
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i];
+        const [xj, yj] = ring[j];
+        if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+      }
+    }
+    return inside;
+  });
 }
 
 describe('seed data (from the OpenStreetMap snapshot)', () => {
   const seed = getSeedData();
-  const ringOf = (slug) => seed.areas.find((a) => a.slug === slug).boundary.coordinates[0];
+  const area = (slug) => seed.areas.find((a) => a.slug === slug);
 
-  it('covers the thirteen areas with complete, in-range scores', () => {
-    assert.deepEqual(
-      seed.areas.map((a) => a.slug).sort(),
-      ['ba-dinh', 'bac-tu-liem', 'cau-giay', 'dong-anh', 'dong-da', 'ha-dong', 'hai-ba-trung', 'hoan-kiem', 'hoang-mai', 'long-bien', 'nam-tu-liem', 'tay-ho', 'thanh-xuan'],
-    );
-    for (const area of seed.areas) {
-      for (const key of CRITERION_KEYS) {
-        assert.ok(area.scores[key] >= 0 && area.scores[key] <= 100, `${area.slug}.${key}`);
-      }
-      assert.ok(area.pros.length > 0);
-      assert.ok(area.cons.length > 0);
-      assert.deepEqual(area.metrics.map((m) => m.criterion), CRITERION_KEYS);
+  it('covers the 2025 wards of the Opportunity Map, slug for slug, with complete, in-range scores', () => {
+    assert.deepEqual(seed.areas.map((a) => a.slug).sort(), WARDS.map((w) => w.slug).sort());
+    for (const a of seed.areas) {
+      for (const key of CRITERION_KEYS) assert.ok(a.scores[key] >= 0 && a.scores[key] <= 100, `${a.slug}.${key}`);
+      assert.ok(a.pros.length > 0);
+      assert.ok(a.cons.length > 0);
+      assert.deepEqual(a.metrics.map((m) => m.criterion), CRITERION_KEYS);
+      assert.match(a.name, /^(Phường|Xã) /);
     }
   });
 
-  it('scores relative to the best area: every criterion has a 100', () => {
-    for (const key of CRITERION_KEYS) {
-      assert.equal(Math.max(...seed.areas.map((a) => a.scores[key])), 100, key);
-    }
+  it('scores relative to the best ward: every measured criterion has a 100', () => {
+    // Transportation mixes bus (60%) and metro (40%) scores, so its best ward need not top both.
+    for (const key of CRITERION_KEYS.filter((k) => k !== 'transportation')) assert.equal(Math.max(...seed.areas.map((a) => a.scores[key])), 100, key);
+    assert.ok(Math.max(...seed.areas.map((a) => a.scores.transportation)) >= 80);
   });
 
   it('measures lakes: Tây Hồ has the most water and names Hồ Tây', () => {
-    const tayHo = seed.areas.find((a) => a.slug === 'tay-ho');
-    assert.ok(tayHo.facts.waterPct > 20);
+    const tayHo = area('phuong-tay-ho');
+    assert.equal(Math.max(...seed.areas.map((a) => a.facts.waterPct)), tayHo.facts.waterPct);
     assert.ok(tayHo.facts.lakes.includes('Hồ Tây'));
-    assert.ok(seed.areas.find((a) => a.slug === 'hoan-kiem').facts.lakes.includes('Hồ Hoàn Kiếm'));
+    assert.ok(area('phuong-hoan-kiem').facts.lakes.includes('Hồ Hoàn Kiếm'));
   });
 
-  it('names the new (2025) wards each circle falls in', () => {
-    const cauGiay = seed.areas.find((a) => a.slug === 'cau-giay');
-    assert.equal(cauGiay.facts.wards[0].name, 'Phường Cầu Giấy');
-    for (const area of seed.areas) {
-      assert.ok(area.facts.wards.length > 0, area.slug);
-      assert.ok(area.facts.wards.every((w) => /^(Phường|Xã) /.test(w.name) && w.pct >= 8));
-    }
+  it('maps every former district area to the ward that contains its centre', () => {
+    assert.equal(Object.keys(LEGACY_SLUGS).length, 13);
+    assert.equal(LEGACY_SLUGS['cau-giay'], 'phuong-cau-giay');
+    assert.equal(LEGACY_SLUGS['hoan-kiem'], 'phuong-hoan-kiem');
+    for (const slug of Object.values(LEGACY_SLUGS)) assert.ok(area(slug), slug);
   });
 
   it('writes every text in Vietnamese and English', () => {
-    for (const area of seed.areas) {
-      for (const text of [area.description, ...area.pros, ...area.cons, ...area.metrics.map((m) => m.text)]) {
-        assert.ok(text.vi && text.en && text.vi !== text.en, area.slug);
+    for (const a of seed.areas) {
+      for (const text of [a.description, ...a.pros, ...a.cons, ...a.metrics.map((m) => m.text)]) {
+        assert.ok(text.vi && text.en && text.vi !== text.en, a.slug);
       }
     }
   });
@@ -75,28 +76,21 @@ describe('seed data (from the OpenStreetMap snapshot)', () => {
     assert.ok(stations.every((name) => !/^S\d/.test(name)));
   });
 
-  it('builds closed boundary rings that contain their own centroid', () => {
-    for (const area of seed.areas) {
-      const ring = ringOf(area.slug);
-      assert.ok(ring.length > 4);
-      assert.deepEqual(ring[0], ring[ring.length - 1]);
-      assert.equal(pointInRing([area.centroid.lng, area.centroid.lat], ring), true, area.slug);
-    }
+  it('measures each ward from a centre inside it, even when its centroid falls outside an odd shape', () => {
+    for (const a of seed.areas) assert.equal(inGeometry([a.centroid.lng, a.centroid.lat], a.boundary), true, a.slug);
   });
 
-  it('keeps neighbouring illustrative areas from overlapping', () => {
-    for (const area of seed.areas) {
+  it('keeps the wards apart: no ward contains the centre of another', () => {
+    for (const a of seed.areas) {
       for (const other of seed.areas) {
-        if (other.slug === area.slug) continue;
-        assert.equal(pointInRing([other.centroid.lng, other.centroid.lat], ringOf(area.slug)), false, `${other.slug} in ${area.slug}`);
+        if (other.slug !== a.slug) assert.equal(inGeometry([other.centroid.lng, other.centroid.lat], a.boundary), false, `${other.slug} in ${a.slug}`);
       }
     }
   });
 
-  it('places every generated amenity inside its own area', () => {
-    for (const amenity of seed.amenities) {
-      assert.equal(pointInRing([amenity.lng, amenity.lat], ringOf(amenity.areaSlug)), true, amenity.name);
-    }
+  it('places every listed amenity inside its own ward', () => {
+    assert.ok(seed.amenities.length > 1000);
+    for (const m of seed.amenities) assert.equal(inGeometry([m.lng, m.lat], area(m.areaSlug).boundary), true, m.name);
   });
 
   it('is deterministic between calls', () => {

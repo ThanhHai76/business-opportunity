@@ -1,7 +1,7 @@
 'use strict';
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { price, streetKey, parseZones } = require('../scripts/build-landprice');
+const { price, streetKey, parseZones, refKeys, TYPOS } = require('../scripts/build-landprice');
 const LAND = require('../src/property-intel/data/land-price.json');
 
 describe('Land price table (Resolution 52/2025/NQ-HĐND)', () => {
@@ -18,6 +18,14 @@ describe('Land price table (Resolution 52/2025/NQ-HĐND)', () => {
     assert.equal(streetKey('An Dương Vương (đường gom chân đê) đoạn ngoài đê'), 'an dương vương');
     assert.equal(streetKey('Phố Hàng Ngang'), 'hàng ngang');
     assert.equal(streetKey('- Đường 23B'), '23b');
+  });
+
+  it('matches the numbered roads of communes and fixes the known ward typo', () => {
+    assert.deepEqual(refKeys('QL.32'), ['quốc lộ 32']);
+    assert.deepEqual(refKeys('ĐT.422'), ['tỉnh lộ 422', 'đường tỉnh 422', '422']);
+    assert.deepEqual(refKeys('CT.38'), []);
+    assert.equal(TYPOS['dong son'], 'son dong');
+    assert.ok(LAND.wards['xa-son-dong'] && LAND.wards['xa-son-dong'].zone === 9);
   });
 
   it('parses a zone sheet: the wards it applies to and the residential VT1 price of each street', () => {
@@ -44,6 +52,6 @@ describe('Land price table (Resolution 52/2025/NQ-HĐND)', () => {
     assert.equal(LAND.zones[0].maxVT1, 702.2);
     assert.equal(LAND.wards['phuong-hoan-kiem'].maxVT1, 702.2);
     const withOwnStreets = Object.values(LAND.wards).filter((w) => w && !w.zoneOnly);
-    assert.ok(withOwnStreets.length >= 60);
+    assert.ok(withOwnStreets.length >= 70);
   });
 });

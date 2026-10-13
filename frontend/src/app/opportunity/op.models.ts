@@ -41,12 +41,18 @@ export interface WardProps {
   topName?: string;
   confidence: 'ok' | 'low' | null;
   count?: number;
+  /** With a type selected: the figures behind the score (0-100 relative; per10k = places per 10,000 residents). */
+  demand?: number;
+  competition?: number;
+  per10k?: number;
+  /** Official land price of the ward (2026 table, median VT1, million VND/m²). */
+  landMedian: number | null;
   lng: number;
   lat: number;
 }
 
 export interface WardsResponse extends GeoJSON.FeatureCollection {
-  meta: { type: BusinessType | null; horizon: Horizon; scoredWards: number; method: string; caveat: string; osmDate: string; sources: SourceRef[] };
+  meta: { type: BusinessType | null; horizon: Horizon; scoredWards: number; landCityMedian: number | null; method: string; caveat: string; osmDate: string; sources: SourceRef[] };
 }
 
 export interface Driver {
@@ -95,7 +101,6 @@ export interface WardDetail {
   coverage: { ratio: number; low: boolean; perTenThousand: number } | null;
   growth: number | null;
   opportunities: Opportunity[];
-  copilot: { slug: string; name: string } | null;
   method: string;
   caveat: string;
   sources: SourceRef[];
@@ -109,6 +114,8 @@ export interface CompareWard {
   coverage: WardDetail['coverage'];
   focus: Opportunity | null;
   top3: Array<{ type: string; icon: string; name: string; opportunity: number }>;
+  /** Every demand signal of the ward (0-100, relative between wards); absent from older backends. */
+  signals?: Record<Signal, number> | null;
 }
 
 export interface CompareResponse {
@@ -122,10 +129,22 @@ export interface AskAnswer {
   question: string;
   horizon: Horizon;
   answer: string;
+  /** Structured parts (absent from older backends): one-sentence verdict, reasons with figures, risks. */
+  verdict?: string;
+  reasons?: string[];
+  risks?: string[];
   wards: Array<{ slug: string; name: string }>;
   types: string[];
   sources: SourceRef[];
   outOfScope: boolean;
   provider: string;
   model: string | null;
+}
+
+/** A business idea read from plain words (POST /parse). */
+export interface ParsedIdea {
+  type: string | null;
+  typeName: string | null;
+  budget: number | null;
+  ward: { slug: string; name: string } | null;
 }

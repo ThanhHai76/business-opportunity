@@ -4,12 +4,15 @@ const { haversineKm } = require('../common/geo');
 const { normalizeText } = require('../common/text');
 const { AMENITY_TYPES } = require('../data/living.types');
 const { MISSING_CRITERIA } = require('../scoring/criteria');
-const { dataInfo } = require('../seed/seed-data');
+const { dataInfo, LEGACY_SLUGS } = require('../seed/seed-data');
 
 const BOUNDARY_NOTE = {
-  vi: 'Khu vực quanh trung tâm các quận cũ (trước sắp xếp năm 2025); ranh giới minh hoạ, không phải địa giới hành chính.',
-  en: 'Areas around the centres of the former districts (before the 2025 reorganisation); illustrative shapes, not administrative boundaries.',
+  vi: 'Phường/xã sau sắp xếp năm 2025, ranh giới theo OpenStreetMap.',
+  en: 'Wards and communes after the 2025 reorganisation, boundaries from OpenStreetMap.',
 };
+
+/** Slugs of the former district areas (before 10/2026) → the ward that contains their centre. */
+const resolveSlug = (slug) => LEGACY_SLUGS[slug] ?? slug;
 
 /** Picks one language out of a { vi, en } text (plain strings pass through). */
 const pick = (text, lang) => (text && typeof text === 'object' ? (text[lang] ?? text.vi) : text);
@@ -32,7 +35,7 @@ class AreasService {
   }
 
   async getRecordOrThrow(slug) {
-    const area = (await this.getAllRecords()).find((a) => a.slug === slug);
+    const area = (await this.getAllRecords()).find((a) => a.slug === resolveSlug(slug));
     if (!area) throw notFound(`Không tìm thấy khu vực "${slug}".`);
     return area;
   }
@@ -157,4 +160,4 @@ class AreasService {
   }
 }
 
-module.exports = { AreasService, pick };
+module.exports = { AreasService, pick, resolveSlug };

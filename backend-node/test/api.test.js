@@ -80,7 +80,7 @@ describe('Opportunity Map backend', () => {
 
     it('lists areas sorted by Living Score and searches without accents', async () => {
       const all = await get(`${LS}/areas`);
-      assert.equal(all.body.data.length, 13);
+      assert.equal(all.body.data.length, 79);
       const scores = all.body.data.map((a) => a.livingScore);
       assert.deepEqual([...scores].sort((a, b) => b - a), scores);
       assert.equal(all.body.meta.data.walkKm, 1.5);
@@ -88,18 +88,17 @@ describe('Opportunity Map backend', () => {
       assert.equal((await get(`${LS}/areas?sort=rent`)).status, 400);
 
       const found = await get(`${LS}/areas?q=cau%20giay`);
-      assert.deepEqual(found.body.data.map((a) => a.slug), ['cau-giay']);
-      // New (2025) ward names find the areas they are in.
+      assert.deepEqual(found.body.data.map((a) => a.slug), ['phuong-cau-giay']);
       const ward = await get(`${LS}/areas?q=phuong%20nghia%20do`);
-      assert.ok(ward.body.data.some((a) => a.slug === 'cau-giay'));
-      assert.ok(all.body.data[0].facts.wards.length > 0);
+      assert.deepEqual(ward.body.data.map((a) => a.slug), ['phuong-nghia-do']);
     });
 
     it('answers in English with ?lang=en and rejects unknown languages', async () => {
-      const vi = await get(`${LS}/areas/cau-giay`);
-      const en = await get(`${LS}/areas/cau-giay?lang=en`);
-      assert.match(vi.body.description, /Khu vực quanh trung tâm quận Cầu Giấy cũ/);
-      assert.match(en.body.description, /former Cau Giay district/);
+      const vi = await get(`${LS}/areas/phuong-cau-giay`);
+      const en = await get(`${LS}/areas/phuong-cau-giay?lang=en`);
+      assert.match(vi.body.description, /^Phường Cầu Giấy \(đơn vị hành chính từ 2025/);
+      assert.match(en.body.description, /^Cầu Giấy ward \(administrative unit since 2025/);
+      assert.equal(en.body.nameEn, 'Cầu Giấy ward');
       assert.match(en.body.metrics[0].text, /within 1\.5 km/);
       assert.match(en.body.dataInfo.method, /OpenStreetMap/);
       assert.equal(en.body.missingCriteria[0].reason, 'No open data on safety per area yet.');
@@ -108,15 +107,23 @@ describe('Opportunity Map backend', () => {
     });
 
     it('lists the places of the same 1.5 km circle as the scores', async () => {
-      const { body } = await get(`${LS}/areas/tay-ho`);
+      const { body } = await get(`${LS}/areas/phuong-tay-ho`);
       const names = body.amenities.flatMap((g) => g.top.map((p) => p.name));
       assert.equal(new Set(names).size, names.length);
       assert.ok(body.amenities.every((g) => g.count >= g.top.length));
     });
 
+    it('still answers the slugs of the former district areas with the ward that contains their centre', async () => {
+      const old = await get(`${LS}/areas/cau-giay`);
+      assert.equal(old.status, 200);
+      assert.equal(old.body.slug, 'phuong-cau-giay');
+      const cmp = await get(`${LS}/compare?slugs=hoan-kiem,tay-ho`);
+      assert.deepEqual(cmp.body.areas.map((a) => a.slug), ['phuong-hoan-kiem', 'phuong-tay-ho']);
+    });
+
     it('personalises scores through the weights parameter', async () => {
-      const def = await get(`${LS}/areas/cau-giay`);
-      const amenitiesFirst = await get(`${LS}/areas/cau-giay?weights=amenities:100,transportation:0,greenSpace:0,education:0`);
+      const def = await get(`${LS}/areas/phuong-cau-giay`);
+      const amenitiesFirst = await get(`${LS}/areas/phuong-cau-giay?weights=amenities:100,transportation:0,greenSpace:0,education:0`);
       assert.equal(def.body.isPersonalized, false);
       assert.equal(amenitiesFirst.body.isPersonalized, true);
       assert.ok(amenitiesFirst.body.livingScore < def.body.livingScore);
@@ -145,32 +152,34 @@ describe('Opportunity Map backend', () => {
     it('returns GeoJSON polygons for the map, optionally by criterion', async () => {
       const { body } = await get(`${LS}/areas/geojson?criterion=transportation`);
       assert.equal(body.type, 'FeatureCollection');
-      assert.equal(body.features.length, 13);
-      const feature = body.features.find((x) => x.properties.slug === 'hoan-kiem');
-      assert.equal(feature.geometry.type, 'Polygon');
-      assert.equal(feature.properties.value, 60);
+      assert.equal(body.features.length, 79);
+      const feature = body.features.find((x) => x.properties.slug === 'phuong-hoan-kiem');
+      assert.equal(feature.geometry.type, 'MultiPolygon');
+      assert.ok(feature.properties.value >= 0 && feature.properties.value <= 100);
+      assert.equal(feature.properties.value, feature.properties.value | 0);
       assert.equal(body.meta.visual, 'transportation');
       assert.equal((await get(`${LS}/areas/geojson?criterion=nope`)).status, 400);
     });
 
     it('compares two or three areas and validates the count', async () => {
-      const ok = await get(`${LS}/compare?slugs=cau-giay,tay-ho,dong-anh`);
+      const ok = await get(`${LS}/compare?slugs=phuong-cau-giay,phuong-tay-ho,xa-dong-anh`);
       assert.equal(ok.status, 200);
       assert.equal(ok.body.areas.length, 3);
       assert.equal(ok.body.criteria.length, 5);
       const green = ok.body.criteria.find((c) => c.criterion === 'greenSpace');
-      assert.deepEqual(green.best, ['tay-ho']);
-      assert.equal((await get(`${LS}/compare?slugs=cau-giay`)).status, 400);
+      assert.deepEqual(green.best, ['phuong-tay-ho']);
+      assert.equal((await get(`${LS}/compare?slugs=phuong-cau-giay`)).status, 400);
       assert.equal((await get(`${LS}/compare?slugs=a,b,c,d`)).status, 400);
-      assert.equal((await get(`${LS}/compare?slugs=cau-giay,nowhere`)).status, 404);
+      assert.equal((await get(`${LS}/compare?slugs=phuong-cau-giay,nowhere`)).status, 404);
     });
 
     it('filters amenities by type, area and viewport', async () => {
       const schools = await get(`${LS}/amenities?types=school`);
       assert.ok(schools.body.features.length > 0);
       assert.ok(schools.body.features.every((f) => f.properties.type === 'school'));
-      const inArea = await get(`${LS}/amenities?area=tay-ho`);
-      assert.ok(inArea.body.features.every((f) => f.properties.areaSlug === 'tay-ho'));
+      const inArea = await get(`${LS}/amenities?area=phuong-tay-ho`);
+      assert.ok(inArea.body.features.length > 0);
+      assert.ok(inArea.body.features.every((f) => f.properties.areaSlug === 'phuong-tay-ho'));
       const box = await get(`${LS}/amenities?bbox=105.7,20.9,105.75,21.2`);
       assert.ok(box.body.features.every((f) => f.geometry.coordinates[0] <= 105.75));
       assert.equal((await get(`${LS}/amenities?types=casino`)).status, 400);
@@ -190,7 +199,7 @@ describe('Opportunity Map backend', () => {
 
     it('searches areas and places', async () => {
       const { body } = await get(`${LS}/search?q=T%C3%A2y%20H%E1%BB%93`);
-      assert.equal(body.areas[0].slug, 'tay-ho');
+      assert.equal(body.areas[0].slug, 'phuong-tay-ho');
       const places = await get(`${LS}/search?q=cong%20vien`);
       assert.ok(places.body.places.length > 0);
       assert.equal((await get(`${LS}/search`)).status, 400);
@@ -198,18 +207,18 @@ describe('Opportunity Map backend', () => {
 
     const request = {
       household: 'single',
-      workplaceAreaSlug: 'cau-giay',
+      workplaceAreaSlug: 'phuong-cau-giay',
       interests: ['cafes', 'metro_access'],
       priorities: { transportation: 5, amenities: 5, education: 1, greenSpace: 3 },
     };
 
     it('uses road travel times to the workplace when the OSRM table has them', async () => {
-      const { body } = await post(`${LS}/recommendations`, { household: 'couple', workplaceAreaSlug: 'dong-anh', useAi: false });
+      const { body } = await post(`${LS}/recommendations`, { household: 'couple', workplaceAreaSlug: 'xa-dong-anh', useAi: false });
       const commute = body.results[0].commute;
       assert.equal(commute.mode, 'road');
       assert.ok(commute.minutes > 0);
       assert.ok(body.sources.some((s) => /OSRM/.test(s.title)));
-      const en = await post(`${LS}/recommendations`, { household: 'couple', workplaceAreaSlug: 'dong-anh', useAi: false, lang: 'en' });
+      const en = await post(`${LS}/recommendations`, { household: 'couple', workplaceAreaSlug: 'dong-anh', useAi: false, lang: 'en' }); // former slug still works
       assert.match(en.body.results[0].reasons.join(' '), /min by road|Match/);
       assert.equal((await post(`${LS}/recommendations`, { household: 'couple', lang: 'fr' })).status, 400);
     });

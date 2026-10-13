@@ -16,8 +16,10 @@ export interface Source {
   url: string | null;
 }
 
+export type CriterionKey = 'connectivity' | 'infrastructure' | 'planning' | 'amenities' | 'population' | 'development';
+
 export interface Criterion {
-  key: 'connectivity' | 'infrastructure' | 'planning' | 'amenities' | 'population' | 'development';
+  key: CriterionKey;
   code: string;
   label: string;
   tone: Tone;
@@ -86,6 +88,13 @@ export interface Quarter {
   source: Source;
 }
 
+/** Driving times (OSRM, free-flow) to three destinations and to the nearest metro station by road. */
+export interface Travel {
+  items: { id: 'centre' | 'offices' | 'airport'; name: string; minutes: number | null; km: number | null }[];
+  metro: { station: string; line: string; minutes: number; km: number } | null;
+  note: string;
+}
+
 /** City-wide apartment market as published (CBRE quarters, Savills). */
 export interface CityMarket {
   quarters: Quarter[];
@@ -105,6 +114,11 @@ export interface WardSummary {
   population: number | null;
   density: number | null;
   metro: { name: string; line: string; distanceM: number };
+  /** Criterion values (0–100, null = no data), so the page can re-weight the score. */
+  values: Record<CriterionKey, number | null>;
+  /** Median official land price (VT1, million VND/m²). */
+  landMedian: number | null;
+  drive: { centre: number | null; metro: number | null } | null;
 }
 
 export interface ProjectSummary {
@@ -114,7 +128,7 @@ export interface ProjectSummary {
   ward: { slug: string; name: string } | null;
   coords: LngLat;
   approx: boolean;
-  price: { min: number; max: number | null; label: string; kind: 'offer' | 'expected' | 'listing'; kindLabel: string };
+  price: { min: number; max: number | null; label: string; kind: 'offer' | 'expected' | 'listing' | 'broker' | 'social'; kindLabel: string };
   sourceId: string;
   distanceM?: number;
   inWard?: boolean;
@@ -135,6 +149,7 @@ export interface WardDetail extends WardSummary {
   };
   infra: InfraItem[];
   poles: { slug: string; name: string; role: string; inside: boolean; distanceKm: number }[];
+  travel: Travel | null;
   landPrice: LandPrice | null;
   market: CityMarket;
   projects: ProjectSummary[];
@@ -142,7 +157,6 @@ export interface WardDetail extends WardSummary {
     opportunity: string;
     livingScore: { slug: string; name: string } | null;
     futureMap: { hub: string; name: string } | null;
-    copilot: { slug: string; name: string } | null;
   };
   method: string;
   caveat: string;
@@ -162,8 +176,10 @@ export interface ProjectDetail extends ProjectSummary {
   note: string | null;
   /** A 70 m² unit at the published price (billion VND): plain multiplication. */
   unit: { m2: number; min: number; max: number | null };
-  vsMarket: { pct: number; market: number; quarter: string };
+  /** Null for social housing (appraised prices are not compared with the commercial average). */
+  vsMarket: { pct: number; market: number; quarter: string } | null;
   landPrice: LandPrice | null;
+  travel: Travel | null;
   station: { name: string; line: string; coords: LngLat; distanceM: number };
   todRadiusM: number;
   proximity: { key: string; label: string; detail: string; distanceM: number; tone?: Tone }[];
@@ -212,7 +228,6 @@ export interface MapLayers {
     infrastructure: FC;
     planning: FC;
     projects: FC;
-    social: FC;
     green: FC;
   };
 }

@@ -2,7 +2,7 @@
 #
 #   docker compose up --build
 #
-#   Front-end  http://localhost:8080   (Home, /opportunity-map, /time-machine, /living-score)
+#   Front-end  http://localhost:8080   (every tool; /api is forwarded to the backend by nginx)
 #   API        http://localhost:8000/api/living-score/health
 #
 # The front-end calls the API at http://localhost:8000 (frontend/src/app/config.ts), so the API port is published.
@@ -16,6 +16,8 @@ services:
       POSTGRES_USER: living
       POSTGRES_PASSWORD: living
       POSTGRES_DB: living_score
+      # Vietnamese text and emoji (account names, saved reports) need UTF8.
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8'
     ports:
       - '5432:5432'
     volumes:
@@ -51,6 +53,12 @@ services:
       REDIS_URL: redis://redis:6379
       CACHE_TTL_SECONDS: '300'
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Accounts and saved reports use the same PostgreSQL (DATABASE_URL); tables are created on start.
+      ACCOUNTS: auto
+      # Secure cookies need HTTPS: keep false for http://localhost:8080, set true behind HTTPS in production.
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      # nginx (frontend) forwards /api: take the client IP from X-Forwarded-For for rate limits.
+      TRUST_PROXY: '1'
       LLM_MODEL: ${LLM_MODEL:-claude-opus-5}
     depends_on:
       db:

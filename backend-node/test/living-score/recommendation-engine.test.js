@@ -38,16 +38,17 @@ describe('RecommendationEngine', () => {
     const areas = await data.listAreas();
     const input = { ...base, priorities: { greenSpace: 5, transportation: 0, education: 0, healthcare: 0, amenities: 0 } };
     const ranked = engine.rank(areas, input, engine.buildWeights(input), null);
-    assert.equal(ranked[0].area.slug, 'tay-ho');
+    const greenest = [...areas].sort((a, b) => b.scores.greenSpace - a.scores.greenSpace)[0];
+    assert.equal(ranked[0].area.slug, greenest.slug);
     for (const r of ranked) assert.equal(r.matchScore, r.personalizedScore);
   });
 
   it('computes commute distance and never returns scores outside 0-100', async () => {
     const areas = await data.listAreas();
-    const workplace = areas.find((a) => a.slug === 'cau-giay');
-    const ranked = engine.rank(areas, { ...base, workplaceAreaSlug: 'cau-giay' }, engine.buildWeights(base), workplace);
-    const self = ranked.find((r) => r.area.slug === 'cau-giay');
-    const far = ranked.find((r) => r.area.slug === 'dong-anh');
+    const workplace = areas.find((a) => a.slug === 'phuong-cau-giay');
+    const ranked = engine.rank(areas, { ...base, workplaceAreaSlug: 'phuong-cau-giay' }, engine.buildWeights(base), workplace);
+    const self = ranked.find((r) => r.area.slug === 'phuong-cau-giay');
+    const far = ranked.find((r) => r.area.slug === 'xa-dong-anh');
     assert.equal(self.commuteKm, 0);
     assert.ok(far.commuteKm > 8);
     assert.ok(far.commuteFactor < 1);

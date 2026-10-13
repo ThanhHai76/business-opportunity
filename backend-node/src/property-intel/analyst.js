@@ -72,6 +72,19 @@ const criteriaRow = (d, key, tone) => {
 };
 
 // ---------------------------------------------------------------- template answers (real data)
+function travelRow(t, lang) {
+  const en = lang === 'en';
+  const [centre, offices, airport] = t.items;
+  const mins = (x) => (x.minutes === null ? '—' : `${x.minutes} ${en ? 'min' : 'phút'}`);
+  return {
+    label: en ? 'Driving (no traffic)' : 'Lái xe (chưa tính kẹt xe)',
+    tone: 'mobility',
+    text:
+      `${centre.name} ${mins(centre)} · ${offices.name} ${mins(offices)} · ${airport.name} ${mins(airport)}` +
+      (t.metro ? ` · ${en ? 'metro' : 'ga'} ${t.metro.station} ${t.metro.minutes} ${en ? 'min' : 'phút'}` : ''),
+  };
+}
+
 function analyze(slug, lang) {
   const en = lang === 'en';
   const d = E.getWard(slug, lang);
@@ -84,6 +97,7 @@ function analyze(slug, lang) {
       ? `${d.name}: potential ${d.score}/100, #${d.rank} of ${d.total} wards/communes. Strongest on ${best.map((c) => `${lower(c.label)} (${c.value})`).join(' and ')}; weakest on ${lower(worst.label)} (${worst.value}).`
       : `${d.name}: điểm tiềm năng ${d.score}/100, hạng ${d.rank}/${d.total} phường/xã. Mạnh nhất về ${best.map((c) => `${lower(c.label)} (${c.value})`).join(' và ')}; yếu nhất về ${lower(worst.label)} (${worst.value}).`,
     rows: [
+      ...(d.travel ? [travelRow(d.travel, lang)] : []),
       criteriaRow(d, 'connectivity', 'mobility'),
       criteriaRow(d, 'infrastructure', 'mobility'),
       criteriaRow(d, 'planning', 'planning'),
@@ -92,7 +106,7 @@ function analyze(slug, lang) {
     ],
     callout: { title: en ? 'Before you decide' : 'Trước khi quyết định', text: E.CAVEAT[lang] },
     wardSlugs: [slug],
-    sourceIds: ['osmAmenities', 'population', 'qd2512Poles', ...M.FACTS.get(slug).infra.flatMap((x) => x.item.sources)],
+    sourceIds: ['osrm', 'osmAmenities', 'population', 'qd2512Poles', ...M.FACTS.get(slug).infra.flatMap((x) => x.item.sources)],
   };
 }
 
@@ -251,16 +265,22 @@ function project(slug, lang) {
   const en = lang === 'en';
   const p = E.getProject(slug, lang);
   const unit = p.unit.max === null ? `${en ? 'over' : 'từ'} ${fmt(p.unit.min, lang, 2)}` : `${fmt(p.unit.min, lang, 2)}–${fmt(p.unit.max, lang, 2)}`;
+  const v = p.vsMarket;
+  const where = p.ward ? ` (${p.ward.name})` : '';
   return {
-    outlook: {
-      label: en ? `${p.vsMarket.pct >= 0 ? '+' : ''}${p.vsMarket.pct}% vs market` : `${p.vsMarket.pct >= 0 ? '+' : ''}${p.vsMarket.pct}% so với thị trường`,
-      tone: p.vsMarket.pct > 25 ? 'bad' : p.vsMarket.pct < -10 ? 'good' : 'neutral',
-    },
-    summary: en
-      ? `${p.name}${p.ward ? ` (${p.ward.name})` : ''}: ${p.price.label} million VND/m² (${p.price.kindLabel}), ${Math.abs(p.vsMarket.pct)}% ${p.vsMarket.pct >= 0 ? 'above' : 'below'} the Hanoi primary average of ${p.vsMarket.market} million (CBRE, ${p.vsMarket.quarter}). A ${p.unit.m2} m² unit at that price is ${unit} bn VND.`
-      : `${p.name}${p.ward ? ` (${p.ward.name})` : ''}: ${p.price.label} triệu/m² (${p.price.kindLabel}), ${p.vsMarket.pct >= 0 ? 'cao hơn' : 'thấp hơn'} ${Math.abs(p.vsMarket.pct)}% so với giá sơ cấp trung bình Hà Nội ${p.vsMarket.market} triệu (CBRE, ${p.vsMarket.quarter}). Căn ${p.unit.m2} m² theo giá này khoảng ${unit} tỷ đồng.`,
+    outlook: v
+      ? { label: en ? `${v.pct >= 0 ? '+' : ''}${v.pct}% vs market` : `${v.pct >= 0 ? '+' : ''}${v.pct}% so với thị trường`, tone: v.pct > 25 ? 'bad' : v.pct < -10 ? 'good' : 'neutral' }
+      : { label: en ? 'Social housing' : 'Nhà ở xã hội', tone: 'good' },
+    summary: v
+      ? en
+        ? `${p.name}${where}: ${p.price.label} million VND/m² (${p.price.kindLabel}), ${Math.abs(v.pct)}% ${v.pct >= 0 ? 'above' : 'below'} the Hanoi primary average of ${v.market} million (CBRE, ${v.quarter}). A ${p.unit.m2} m² unit at that price is ${unit} bn VND.`
+        : `${p.name}${where}: ${p.price.label} triệu/m² (${p.price.kindLabel}), ${v.pct >= 0 ? 'cao hơn' : 'thấp hơn'} ${Math.abs(v.pct)}% so với giá sơ cấp trung bình Hà Nội ${v.market} triệu (CBRE, ${v.quarter}). Căn ${p.unit.m2} m² theo giá này khoảng ${unit} tỷ đồng.`
+      : en
+        ? `${p.name}${where}: social housing at ${p.price.label} million VND/m² (provisional until appraised). Buyers must meet the social-housing eligibility rules. A ${p.unit.m2} m² unit at that price is ${unit} bn VND.`
+        : `${p.name}${where}: nhà ở xã hội giá ${p.price.label} triệu/m² (tạm tính, chờ thẩm định). Người mua phải thuộc đối tượng được mua nhà ở xã hội. Căn ${p.unit.m2} m² theo giá này khoảng ${unit} tỷ đồng.`,
     rows: [
       { label: en ? 'Metro' : 'Metro', tone: 'mobility', text: `${p.station.name} (${en ? 'line' : 'tuyến'} ${p.station.line}) · ${km(p.station.distanceM / 1000, lang)}` },
+      ...(p.travel ? [travelRow(p.travel, lang)] : []),
       ...(p.plannedInfra.length ? [{ label: en ? 'Coming nearby' : 'Sắp có gần đó', tone: 'planning', text: p.plannedInfra.slice(0, 3).map((i) => `${i.name} (${i.openYear ?? '—'}, ${km(i.distanceKm, lang)})`).join('; ') }] : []),
       ...p.proximity.filter((r) => ['school', 'hospital', 'park'].includes(r.key)).map((r) => ({ label: r.label, tone: r.tone ?? 'growth', text: `${r.detail} · ${km(r.distanceM / 1000, lang)}` })),
       ...(p.landPrice
@@ -343,6 +363,7 @@ function knowledge(lang) {
         apartments: w.counts.apartments,
         infraWithin4km: f.infra.map((x) => [x.item.id, Math.round(x.d * 10) / 10]),
         poles: f.poles.filter((x) => x.d <= x.pole.radiusKm).map((x) => x.pole.slug),
+        driveMinutes: M.TRAVEL.wards[slug] ? [M.TRAVEL.wards[slug].centre?.minutes, M.TRAVEL.wards[slug].offices?.minutes, M.TRAVEL.wards[slug].airport?.minutes, M.TRAVEL.wards[slug].metro?.minutes] : null,
         landPriceVT1: M.LAND.wards[slug] ? [M.LAND.wards[slug].medianVT1, M.LAND.wards[slug].maxVT1, M.LAND.wards[slug].top[0]?.name ?? null] : null,
       };
     }),
@@ -352,7 +373,7 @@ function knowledge(lang) {
     apartmentMarket: { quarters: MK.QUARTERS, savills: { ...MK.SAVILLS, note: L(MK.SAVILLS.note, lang) }, unit: 'million VND/m², before VAT and discounts' },
     projects: M.PROJECTS.map((p) => ({ slug: p.slug, name: p.name, ward: M.PROJECT_WARD.get(p.slug)?.slug ?? null, priceMin: p.min, priceMax: p.max, priceKind: L(MK.KIND[p.kind], lang), note: L(p.note, lang), source: p.source })),
     sourceIds: Object.keys(M.SOURCES),
-    arrays: { nearestMetro: '[station, line, metres]', infraWithin4km: '[infrastructure id, km]', landPriceVT1: '[median, max, top street]' },
+    arrays: { nearestMetro: '[station, line, metres]', infraWithin4km: '[infrastructure id, km]', landPriceVT1: '[median, max, top street]', driveMinutes: '[to Hoàn Kiếm Lake, to Cầu Giấy – Duy Tân offices, to Nội Bài airport, to nearest metro station] by car, free-flow (no traffic)' },
   };
 }
 
@@ -409,7 +430,7 @@ class ClaudeAnalyst {
   }
 }
 
-function createAnalysts(config = require('../business-copilot').loadConfig()) {
+function createAnalysts(config = require('../ai-config').loadConfig()) {
   const fallback = new TemplateAnalyst();
   if ((config.aiProvider ?? 'auto') === 'mock' || !config.anthropicApiKey) return { primary: fallback, fallback };
   return { primary: new ClaudeAnalyst({ apiKey: config.anthropicApiKey, model: config.llmModel, timeoutMs: config.llmTimeoutMs }), fallback };

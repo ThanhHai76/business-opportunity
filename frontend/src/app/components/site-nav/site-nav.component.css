@@ -134,6 +134,32 @@ button:focus-visible {
   background: color-mix(in srgb, var(--app-ink) 8%, transparent);
 }
 
+/* Account: a pill "Đăng nhập" when signed out, the user's initial when signed in. */
+.account-btn:not(.is-in) {
+  display: inline-flex;
+  gap: 6px;
+  width: auto;
+  padding: 0 12px 0 9px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+.account-btn.is-in {
+  border-color: transparent;
+  background: var(--app-biz);
+  color: #fff;
+}
+.account-btn.is-in:hover {
+  background: var(--app-biz);
+  color: #fff;
+  filter: brightness(1.08);
+}
+.account-initial {
+  font-size: 14px;
+  font-weight: 800;
+}
+
 /* ---------- Mobile-only pieces (hidden on wide screens) ---------- */
 
 .menu-btn,
@@ -228,6 +254,16 @@ button:focus-visible {
 }
 
 @media (max-width: 480px) {
+  /* Phones: the account button is an icon like the others. */
+  .account-btn:not(.is-in) {
+    width: 36px;
+    padding: 0;
+    border-radius: 50%;
+  }
+  .account-label {
+    display: none;
+  }
+
   .brand-word {
     display: none;
   }

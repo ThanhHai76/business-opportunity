@@ -38,16 +38,13 @@
 
           <p class="head__desc">{{ a.description }}</p>
 
-          @if (a.facts.wards.length) {
-            <div class="wards">
-              <span class="wards__label">{{ t().detail.wards }}</span>
-              <ul>
-                @for (w of a.facts.wards; track w.name) {
-                  <li><span>{{ w.name }}</span> <small>{{ w.pct }}%</small></li>
-                }
-              </ul>
-            </div>
-          }
+          <nav class="wards" [attr.aria-label]="t().detail.otherTools">
+            <span class="wards__label">{{ t().detail.otherTools }}</span>
+            <ul>
+              <li><a routerLink="/opportunity-map" [queryParams]="{ ward: a.slug, lang: lang() === 'en' ? 'en' : null }">{{ t().detail.toOpportunity }} →</a></li>
+              <li><a routerLink="/property-intelligence/map" [queryParams]="{ ward: a.slug }">{{ t().detail.toProperty }} →</a></li>
+            </ul>
+          </nav>
 
           @if (a.isPersonalized) {
             <p class="personal">

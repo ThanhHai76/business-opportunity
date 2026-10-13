@@ -306,8 +306,10 @@ h1 {
   font-size: 12.5px;
   font-weight: 600;
 }
-.wards small {
-  margin-left: 4px;
-  color: var(--ls-ink-faint);
-  font-weight: 500;
+.wards a {
+  color: var(--ls-accent);
+  text-decoration: none;
+}
+.wards a:hover {
+  text-decoration: underline;
 }

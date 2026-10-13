@@ -14,7 +14,7 @@ const { rateLimit } = require('express-rate-limit');
 const { z } = require('zod');
 const { HttpError, asyncHandler, badRequest, errorBody } = require('../living-score/common/http');
 const { createLogger } = require('../living-score/common/logger');
-const { loadConfig } = require('../business-copilot');
+const { loadConfig } = require('../ai-config');
 const { createStorytellers, tell, LANDMARK_KEYS, ERA_IDS } = require('./storyteller');
 
 const logger = createLogger('TimeMachine');

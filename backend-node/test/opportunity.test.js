@@ -108,7 +108,7 @@ describe('Business Opportunity Map API', () => {
     const cafe = body.opportunities.find((o) => o.type === 'cafe');
     assert.ok(cafe.drivers.length >= 4 && cafe.drivers.every((d) => d.points <= 100));
     assert.ok(cafe.growth !== null);
-    assert.equal(body.copilot.slug, 'cau-giay');
+    assert.equal(body.copilot, undefined); // the Business Copilot was merged into this map
     assert.ok(body.coverage.ratio > 0);
     assert.equal((await get('/wards/khong-co')).status, 404);
   });
@@ -123,6 +123,8 @@ describe('Business Opportunity Map API', () => {
     const ok = await get('/compare?slugs=phuong-cau-giay,phuong-ha-dong,phuong-tay-ho&type=cafe');
     assert.equal(ok.body.wards.length, 3);
     assert.ok(ok.body.wards.every((w) => w.focus.type === 'cafe' && w.top3.length === 3));
+    assert.deepEqual(Object.keys(ok.body.wards[0].signals).sort(), [...M.SIGNALS].sort());
+    assert.ok(Object.values(ok.body.wards[0].signals).every((v) => v >= 0 && v <= 100));
     assert.equal((await get('/compare?slugs=phuong-cau-giay')).status, 400);
     assert.equal((await get('/compare?slugs=phuong-cau-giay,khong-co')).status, 404);
   });
@@ -139,13 +141,57 @@ describe('Business Opportunity Map API', () => {
     assert.doesNotMatch(where.body.answer, /\d\.\d(?!\d{2})/);
     const one = await post('/ask', { question: 'Mở quán cà phê ở Phường Cầu Giấy thì sao?', lang: 'en' });
     assert.match(one.body.answer, /Phường Cầu Giấy: opportunity/);
+    // Structured parts: one-sentence verdict, reasons with figures, risks, the ward first among the suggestions.
+    assert.match(one.body.verdict, /Phường Cầu Giấy.*\/100, ranked \d+ of \d+/);
+    assert.ok(one.body.reasons.length >= 2 && one.body.reasons.length <= 4);
+    assert.match(one.body.reasons[0], /^Demand [\d.]+\/100, driven by /);
+    assert.ok(one.body.risks.length >= 1 && one.body.risks.length <= 3);
+    assert.equal(one.body.wards[0].slug, 'phuong-cau-giay');
+    assert.doesNotMatch(where.body.reasons.join(' '), /\d\.\d(?!\d{2})/);
+    assert.equal(where.body.reasons.length, 3);
     fakeAnswer = { answer: 'Theo dữ liệu…', sourceIds: ['osm', 'made-up'], wardSlugs: ['phuong-lang', 'nowhere'], typeKeys: ['cafe', 'casino'], outOfScope: false };
     const ai = await post('/ask', { question: 'Láng có hợp mở cà phê?' });
     assert.equal(ai.body.provider, 'fake');
     assert.deepEqual(ai.body.sources.map((s) => s.id), ['osm']);
     assert.deepEqual(ai.body.wards.map((w) => w.slug), ['phuong-lang']);
     assert.deepEqual(ai.body.types, ['cafe']);
+    assert.equal(ai.body.verdict, 'Theo dữ liệu…'); // a model answer without parts still has a verdict
+    fakeAnswer = { verdict: 'Có thể.', reasons: ['Điểm 71.8/100.', ' ', 'a', 'b', 'c', 'd'], risks: ['OSM thiếu.'], sourceIds: [], wardSlugs: [], typeKeys: [], outOfScope: false };
+    const parts = (await post('/ask', { question: 'Láng có hợp mở cà phê?' })).body;
+    assert.deepEqual(parts.reasons, ['Điểm 71,8/100.', 'a', 'b', 'c']);
+    assert.equal(parts.answer, 'Có thể. Điểm 71,8/100. a b c');
     assert.equal((await post('/ask', { question: 'x' })).status, 400);
     assert.equal((await post('/ask', { question: 'abc', ward: 'khong-co' })).status, 404);
+  });
+
+  it('reads a business idea in plain words: type, budget and ward', async () => {
+    const parse = async (text, lang) => {
+      const res = await fetch(`${base}/api/opportunity/parse`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text, lang }) });
+      return { status: res.status, body: await res.json() };
+    };
+    const a = (await parse('Tôi có 1,2 tỷ, muốn mở nhà hàng ở Cầu Giấy')).body;
+    assert.equal(a.type, 'fnb');
+    assert.equal(a.budget, 1_200_000_000);
+    assert.equal(a.ward.slug, 'phuong-cau-giay');
+    assert.equal(a.typeName, 'Nhà hàng / ăn uống');
+    const b = (await parse('I have 800M VND for a pharmacy', 'en')).body;
+    assert.deepEqual([b.type, b.budget, b.ward], ['pharmacy', 800_000_000, null]);
+    assert.equal((await parse('1.500.000.000 đồng mở quán cà phê')).body.budget, 1_500_000_000);
+    assert.equal((await parse('x')).status, 400);
+  });
+
+  it('gives each ward its official land price for the business plan', async () => {
+    const res = await fetch(`${base}/api/opportunity/wards?type=cafe`);
+    const body = await res.json();
+    assert.ok(body.meta.landCityMedian > 10);
+    const hk = body.features.find((f) => f.properties.slug === 'phuong-hoan-kiem');
+    assert.ok(hk.properties.landMedian > body.meta.landCityMedian);
+  });
+
+  it('gives each ward the market figures behind the score when a type is chosen', async () => {
+    const body = await (await fetch(`${base}/api/opportunity/wards?type=cafe`)).json();
+    const w = body.features.find((f) => f.properties.scored).properties;
+    for (const k of ['demand', 'competition', 'per10k', 'count']) assert.equal(typeof w[k], 'number', k);
+    assert.ok(Math.abs(w.score - Math.max(0, Math.min(100, w.demand - 0.4 * w.competition))) < 0.2);
   });
 });

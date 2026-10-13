@@ -10,6 +10,17 @@ describe('PreferencesService', () => {
     return TestBed.inject(PreferencesService);
   }
 
+  it('moves saved and compared areas from the former district slugs to their 2025 ward', () => {
+    localStorage.setItem('hls.saved', JSON.stringify(['cau-giay', 'phuong-cau-giay', 'phuong-lang', 42]));
+    localStorage.setItem('hls.compare', JSON.stringify(['tay-ho', 'dong-anh']));
+    const prefs = create();
+    expect(prefs.saved()).toEqual(['phuong-cau-giay', 'phuong-lang']);
+    expect(prefs.compareSelection()).toEqual(['phuong-tay-ho', 'xa-dong-anh']);
+    expect(JSON.parse(localStorage.getItem('hls.saved')!)).toEqual(['phuong-cau-giay', 'phuong-lang']);
+    localStorage.removeItem('hls.saved');
+    localStorage.removeItem('hls.compare');
+  });
+
   it('drops criteria saved by older versions (safety, environment, cost)', () => {
     localStorage.setItem('hls.weights', JSON.stringify({ transportation: 30, safety: 10, cost: 5 }));
     expect(create().weights()).toEqual({ transportation: 30 });

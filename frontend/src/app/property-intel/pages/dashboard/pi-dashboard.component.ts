@@ -4,11 +4,12 @@ import { Router, RouterLink } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { ThemeService } from '../../../services/theme.service';
 import { PiAiPanelComponent } from '../../components/pi-ai-panel.component';
-import { PiAreaMapComponent } from '../../components/pi-area-map.component';
-import { LAND_STOPS } from '../../components/pi-area-map.component';
+import { LAND_STOPS, PiAreaMapComponent } from '../../components/pi-area-map.component';
+import { PiCompareComponent } from '../../components/pi-compare.component';
 import { PiDistancePipe, PiNumPipe, areaPoints, formatInt, formatNum, linePoints } from '../../pi-format';
 import { PiText } from '../../pi-i18n';
-import { Basemap, Horizon, LayerKey, Lens, MapLayers, WardDetail } from '../../pi.models';
+import { CRITERIA_KEYS, DEFAULT_WEIGHTS, rankWards } from '../../pi-weights';
+import { Basemap, CriterionKey, Horizon, LayerKey, Lens, MapLayers, WardDetail, WardSummary } from '../../pi.models';
 import { PiApiService, PiStateService, describeError } from '../../pi.service';
 
 type Load<T> = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ok'; value: T };
@@ -38,7 +39,7 @@ const LENSES: Lens[] = ['potential', 'connectivity', 'infrastructure', 'landPric
 @Component({
   selector: 'pi-dashboard',
   standalone: true,
-  imports: [RouterLink, PiAreaMapComponent, PiAiPanelComponent, PiNumPipe, PiDistancePipe],
+  imports: [RouterLink, PiAreaMapComponent, PiAiPanelComponent, PiCompareComponent, PiNumPipe, PiDistancePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pi-dashboard.component.html',
   styleUrl: './pi-dashboard.component.css',
@@ -61,6 +62,11 @@ export class PiDashboardComponent {
   protected readonly layersOpen = signal(false);
   protected readonly is3d = signal(false);
   protected readonly methodOpen = signal(false);
+  protected readonly weightsOpen = signal(false);
+  protected readonly compareOpen = signal(this.state.compare().length > 0);
+  protected readonly reportOpen = signal(false);
+  protected readonly criteriaKeys = CRITERIA_KEYS;
+  protected readonly defaultWeights = DEFAULT_WEIGHTS;
 
   protected readonly layers = toSignal(
     toObservable(computed(() => ({ horizon: this.state.horizon(), lang: this.state.lang() }))).pipe(
@@ -74,10 +80,29 @@ export class PiDashboardComponent {
     ),
     { initialValue: { status: 'loading' } as Load<MapLayers> },
   );
+  /** The map layers, with ward scores and ranks recomputed when the user changed the weights. */
   protected readonly layerData = computed(() => {
     const l = this.layers();
-    return l.status === 'ok' ? l.value : null;
+    if (l.status !== 'ok') return null;
+    const rk = this.ranking();
+    if (!this.state.customWeights() || !rk) return l.value;
+    const restyle = (fc: GeoJSON.FeatureCollection) => ({
+      ...fc,
+      features: fc.features.map((f) => {
+        const r = rk.get((f.properties as { slug: string }).slug);
+        return r ? { ...f, properties: { ...f.properties, score: r.score, rank: r.rank } } : f;
+      }),
+    });
+    return { ...l.value, layers: { ...l.value.layers, wards: restyle(l.value.layers.wards), labels: restyle(l.value.layers.labels) } };
   });
+
+  /** Schools and health facilities: requested only while that layer is on. */
+  protected readonly social = toSignal(
+    toObservable(computed(() => ({ on: this.state.layers().social, lang: this.state.lang() }))).pipe(
+      switchMap(({ on, lang }) => (on ? this.api.mapSocial(lang).pipe(catchError(() => of(null))) : of(null))),
+    ),
+    { initialValue: null },
+  );
   protected readonly layerError = computed(() => {
     const l = this.layers();
     return l.status === 'error' ? l.message : null;
@@ -103,6 +128,25 @@ export class PiDashboardComponent {
 
   /** Median density of the wards with a population figure (for the population chart). */
   private readonly wards = toSignal(this.api.wards().pipe(catchError(() => of(null))), { initialValue: null });
+  /** Score and rank of every ward under the user's weights. */
+  protected readonly ranking = computed(() => {
+    const list = this.wards()?.wards;
+    return list ? rankWards(list, this.state.weights()) : null;
+  });
+  /** The selected ward's score: the user's weighting when it differs from the default. */
+  protected readonly scoreView = computed(() => {
+    const d = this.d();
+    if (!d) return null;
+    const r = this.state.customWeights() ? this.ranking()?.get(d.slug) : undefined;
+    return { score: r?.score ?? d.score, rank: r?.rank ?? d.rank, custom: !!r, defaultScore: d.score };
+  });
+  protected readonly weightTotal = computed(() => CRITERIA_KEYS.reduce((s, k) => s + this.state.weights()[k], 0));
+  protected readonly compareWards = computed<WardSummary[]>(() => {
+    const list = this.wards()?.wards ?? [];
+    return this.state.compare().map((slug) => list.find((w) => w.slug === slug)).filter((w): w is WardSummary => !!w);
+  });
+  protected readonly inCompare = computed(() => this.state.compare().includes(this.state.ward()));
+  protected readonly watchingWard = computed(() => this.state.watchWards().includes(this.state.ward()));
   protected readonly medianDensity = computed(() => {
     const values = (this.wards()?.wards ?? []).map((w) => w.density).filter((v): v is number => v !== null).sort((a, b) => a - b);
     return values.length ? values[Math.floor(values.length / 2)] : null;
@@ -161,7 +205,7 @@ export class PiDashboardComponent {
   });
 
   protected readonly ringDash = computed(() => {
-    const score = this.d()?.score ?? 0;
+    const score = this.scoreView()?.score ?? 0;
     const c = 2 * Math.PI * 44;
     return `${(score / 100) * c} ${c}`;
   });
@@ -205,6 +249,19 @@ export class PiDashboardComponent {
 
   protected setLens(value: string): void {
     this.state.set('lens', value as Lens);
+  }
+
+  protected setWeight(key: CriterionKey, value: string): void {
+    this.state.setWeight(key, Number(value));
+  }
+
+  protected toggleCompare(): void {
+    this.state.toggleCompare(this.state.ward());
+    this.compareOpen.set(true);
+  }
+
+  protected print(): void {
+    window.print();
   }
 
   protected share(): void {

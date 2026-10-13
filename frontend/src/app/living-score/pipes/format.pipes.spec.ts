@@ -9,7 +9,7 @@ const facts: AreaFacts = {
   waterPct: 29.9,
   lakes: [],
   busStops: 97,
-  wards: [],
+  population: 50_000,
 };
 
 describe('NumPipe', () => {

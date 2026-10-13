@@ -404,6 +404,31 @@ function hubTone(tags: readonly string[]): string {
       .fm-map__host.fm-labels-off .fm-hub:not(.is-selected) .fm-hub__label {
         display: none;
       }
+      /* Side chosen by placeLabels() so labels never overlap each other, a hub or a floating panel. */
+      .fm-hub.is-label-left .fm-hub__label {
+        left: auto;
+        right: 22px;
+      }
+      .fm-hub.is-label-top .fm-hub__label {
+        left: 50%;
+        top: auto;
+        bottom: 22px;
+        transform: translateX(-50%);
+      }
+      .fm-hub.is-label-bottom .fm-hub__label {
+        left: 50%;
+        top: 22px;
+        transform: translateX(-50%);
+      }
+      /* No free side: the label shows on hover or keyboard focus only. */
+      .fm-hub.is-label-hidden:not(.is-selected):not(:hover):not(:focus-visible) .fm-hub__label {
+        display: none;
+      }
+      .fm-hub:hover,
+      .fm-hub:focus-visible,
+      .fm-hub.is-selected {
+        z-index: 2;
+      }
       @keyframes fm-pulse {
         from {
           transform: scale(0.7);
@@ -525,6 +550,7 @@ export class FutureMapCanvasComponent implements AfterViewInit, OnDestroy {
   private resizeObserver?: ResizeObserver;
   private readonly ready = signal(false);
   private hubMarkers = new Map<string, { marker: maplibregl.Marker; el: HTMLElement }>();
+  private labelFrame = 0;
   private poiMarkers: maplibregl.Marker[] = [];
   private regionMarkers = new Map<string, { marker: maplibregl.Marker; el: HTMLElement; theme: CorridorTheme }>();
   private regionPois: maplibregl.Marker[] = [];
@@ -647,13 +673,18 @@ export class FutureMapCanvasComponent implements AfterViewInit, OnDestroy {
         this.host.nativeElement.classList.toggle('fm-labels-off', map.getZoom() < 8.4);
         this.host.nativeElement.classList.toggle('fm-labels-compact', map.getZoom() < 7.9);
       });
-      this.resizeObserver = new ResizeObserver(() => map.resize());
+      map.on('move', () => this.scheduleLabels());
+      this.resizeObserver = new ResizeObserver(() => {
+        map.resize();
+        this.scheduleLabels();
+      });
       this.resizeObserver.observe(this.host.nativeElement);
     });
   }
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    cancelAnimationFrame(this.labelFrame);
     this.resizeObserver?.disconnect();
     this.hubMarkers.forEach(({ marker }) => marker.remove());
     this.poiMarkers.forEach((marker) => marker.remove());
@@ -735,6 +766,71 @@ export class FutureMapCanvasComponent implements AfterViewInit, OnDestroy {
       el.innerHTML = props.kind === 'airport' ? ICON_PLANE : ICON_BOX;
       const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
       this.poiMarkers.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map));
+    }
+    this.scheduleLabels();
+  }
+
+  /** One label placement per frame, whatever triggered it (move, resize, selection, new markers). */
+  private scheduleLabels(): void {
+    if (this.labelFrame || this.destroyed) return;
+    this.labelFrame = requestAnimationFrame(() => {
+      this.labelFrame = 0;
+      this.placeLabels();
+    });
+  }
+
+  /**
+   * Puts each hub label on the first free side — right, left, above, below — clear of the other labels, the hub dots,
+   * the floating panels (.fm-glass) and the edge of the map; with no free side it is hidden (shown on hover/focus).
+   * The selected hub goes first and always keeps its label; dimmed hubs go last.
+   */
+  private placeLabels(): void {
+    const host = this.host.nativeElement;
+    const entries = [...this.hubMarkers.entries()].map(([slug, { el }]) => ({ slug, el, label: el.querySelector<HTMLElement>('.fm-hub__label') }));
+    const sides = ['is-label-left', 'is-label-top', 'is-label-bottom', 'is-label-hidden'];
+    for (const { el } of entries) el.classList.remove(...sides);
+    if (!this.map || host.classList.contains('fm-labels-off')) return;
+
+    const area = host.getBoundingClientRect();
+    const margin = 4;
+    const gap = 3;
+    type Box = { l: number; t: number; r: number; b: number };
+    const box = (l: number, t: number, w: number, h: number): Box => ({ l, t, r: l + w, b: t + h });
+    const hits = (a: Box, z: Box) => a.l < z.r + gap && a.r + gap > z.l && a.t < z.b + gap && a.b + gap > z.t;
+    const inside = (a: Box) => a.l >= area.left + margin && a.r <= area.right - margin && a.t >= area.top + margin && a.b <= area.bottom - margin;
+    const panels: Box[] = Array.from(document.querySelectorAll<HTMLElement>('.fm-glass'))
+      .filter((p) => !host.contains(p))
+      .map((p) => p.getBoundingClientRect())
+      .filter((r) => r.width > 0 && r.height > 0)
+      .map((r) => box(r.left, r.top, r.width, r.height));
+
+    // Measure everything first (labels are all on the right and visible now), then place.
+    const measured = entries.map((e) => ({ ...e, dot: e.el.getBoundingClientRect(), w: e.label?.offsetWidth ?? 0, h: e.label?.offsetHeight ?? 0 }));
+    const selected = this.selectedSlug();
+    const rank = (e: (typeof measured)[number]) => (e.slug === selected ? 0 : e.el.classList.contains('is-dim') ? 2 : 1);
+    const order = [...measured].sort((a, b) => rank(a) - rank(b));
+    const placed: Box[] = [...panels];
+    for (const e of order) {
+      if (!e.label || !e.w) continue;
+      const { dot, w, h } = e;
+      const cx = dot.left + dot.width / 2;
+      const cy = dot.top + dot.height / 2;
+      const candidates: Array<[string | null, Box]> = [
+        [null, box(dot.left + 22, cy - h / 2, w, h)],
+        ['is-label-left', box(dot.right - 22 - w, cy - h / 2, w, h)],
+        ['is-label-top', box(cx - w / 2, dot.bottom - 22 - h, w, h)],
+        ['is-label-bottom', box(cx - w / 2, dot.top + 22, w, h)],
+      ];
+      const otherDots = measured.filter((o) => o !== e).map((o) => box(o.dot.left, o.dot.top, o.dot.width, o.dot.height));
+      const free = candidates.find(([, b]) => inside(b) && !placed.some((z) => hits(b, z)) && !otherDots.some((z) => hits(b, z)));
+      if (free) {
+        if (free[0]) e.el.classList.add(free[0]);
+        placed.push(free[1]);
+      } else if (e.slug === selected) {
+        placed.push(candidates[0][1]);
+      } else {
+        e.el.classList.add('is-label-hidden');
+      }
     }
   }
 
@@ -859,6 +955,9 @@ export class FutureMapCanvasComponent implements AfterViewInit, OnDestroy {
       el.classList.toggle('is-selected', slug === selected);
       el.classList.toggle('is-dim', highlights.length > 0 && !slugs.includes(slug));
     });
+    this.scheduleLabels();
+    // The hub card opens after this; place again once it is on screen.
+    setTimeout(() => this.scheduleLabels(), 400);
   }
 }
 

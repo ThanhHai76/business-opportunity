@@ -292,7 +292,7 @@
     max-width: none;
   }
 
-  .pi-topbar__right .pi-btn:not(.pi-btn--primary):not(.pi-lang) {
+  .pi-topbar__right .pi-btn:not(.pi-btn--primary):not(.pi-lang):not(.pi-watch__btn) {
     display: none;
   }
 }
@@ -311,4 +311,69 @@
   padding: 5px 10px;
   font-size: 11.5px;
   white-space: nowrap;
+}
+
+/* watch list */
+.pi-watch {
+  position: relative;
+}
+
+.pi-watch__btn {
+  padding: 5px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.pi-watch__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 1500;
+  width: 300px;
+  max-height: 60vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--pi-panel);
+  border: 1px solid var(--pi-line-2);
+  box-shadow: var(--pi-shadow);
+  font-size: 12.5px;
+}
+
+.pi-watch__menu p {
+  margin: 0;
+  color: var(--pi-dim);
+  line-height: 1.45;
+}
+
+.pi-watch__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.pi-watch__open,
+.pi-watch__x {
+  border: 0;
+  background: none;
+  color: var(--pi-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.pi-watch__open:hover {
+  color: var(--pi-cyan);
+}
+
+.pi-watch__open small {
+  color: var(--pi-faint);
+}
+
+.pi-watch__x {
+  color: var(--pi-faint);
 }

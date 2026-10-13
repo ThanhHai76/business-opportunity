@@ -10,6 +10,7 @@
  *   GET  /projects/:slug           project deep dive: published price, the ward's land price, surroundings (metro,
  *                                  schools, health, parks, infrastructure)
  *   GET  /map?horizon=2030         GeoJSON layers for one planning horizon (2026 | 2030 | 2045)
+ *   GET  /map/social               schools and health facilities (GeoJSON, loaded when that layer is switched on)
  *   GET  /search?q=gia             wards and projects matching a query
  *   POST /ask { question, intent?, ward?, project?, lang? }   answer from the data (Claude when configured)
  *
@@ -26,7 +27,7 @@ const { createLogger } = require('../living-score/common/logger');
 const M = require('./model');
 const engine = require('./engine');
 const analyst = require('./analyst');
-const { buildLayers } = require('./map-layers');
+const { buildLayers, buildSocial } = require('./map-layers');
 
 const logger = createLogger('PropertyIntel');
 const LANGS = ['vi', 'en'];
@@ -82,6 +83,14 @@ function createPropertyIntel(options = {}) {
 
   router.get('/projects/:slug', (req, res) => {
     res.json(engine.getProject(parseSlug(req.params.slug, 'Mã dự án'), langOf(req)));
+  });
+
+  const socialCache = new Map();
+  router.get('/map/social', (req, res) => {
+    const lang = langOf(req);
+    if (!socialCache.has(lang)) socialCache.set(lang, buildSocial(lang));
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.json(socialCache.get(lang));
   });
 
   router.get('/map', (req, res) => {

@@ -8,6 +8,7 @@
  *   GET  /wards/:slug/places?type=          the businesses of a type mapped in that ward (competition on the map)
  *   GET  /compare?slugs=a,b[,c]&type=&horizon=&lang=
  *   POST /ask      { question, type?, ward?, horizon?, lang? } → answer from the data (Claude when configured)
+ *   POST /parse    { text, lang? } → { type, budget, ward } from a business idea in plain words
  */
 const express = require('express');
 const { rateLimit } = require('express-rate-limit');
@@ -15,8 +16,11 @@ const { z } = require('zod');
 const { HttpError, asyncHandler, badRequest, errorBody, notFound, singleString } = require('../living-score/common/http');
 const { createLogger } = require('../living-score/common/logger');
 const M = require('./model');
-const { createAnswerers, ask } = require('./ai');
-const { LOCATIONS: COPILOT_LOCATIONS } = require('../business-copilot/data');
+const { createAnswerers, ask, parseIdea } = require('./ai');
+/** Official land price per ward (2026 table, median street-front VT1) — a relative rent indicator for the business plan. */
+const LAND = require('../property-intel/data/land-price.json');
+const LAND_MEDIANS = Object.values(LAND.wards).filter(Boolean).map((w) => w.medianVT1).sort((a, b) => a - b);
+const LAND_CITY_MEDIAN = LAND_MEDIANS[Math.floor(LAND_MEDIANS.length / 2)] ?? null;
 
 const logger = createLogger('OpportunityMap');
 const LANGS = ['vi', 'en'];
@@ -97,13 +101,6 @@ function typeView(key, lang) {
   };
 }
 
-const distanceKm = ([x1, y1], [x2, y2]) => Math.hypot((x2 - x1) * 111.32 * Math.cos((((y1 + y2) / 2) * Math.PI) / 180), (y2 - y1) * 110.574);
-/** The Business Copilot district nearest to the ward (within 4 km), for "analyse in depth". */
-function copilotFor(ward) {
-  const best = COPILOT_LOCATIONS.map((l) => ({ l, d: distanceKm(l.center, ward.centroid) })).sort((a, b) => a.d - b.d)[0];
-  return best && best.d <= 4 ? { slug: best.l.slug, name: best.l.name } : null;
-}
-
 function scoreView(s, lang) {
   return {
     type: s.type,
@@ -150,13 +147,13 @@ function wardsGeoJson(type, horizon, lang) {
       if (props.scored) {
         if (ranking) {
           const r = ranking.get(w.slug);
-          props = { ...props, score: r.opportunity, rank: r.rank, confidence: r.confidence, count: r.count };
+          props = { ...props, score: r.opportunity, rank: r.rank, confidence: r.confidence, count: r.count, demand: r.demand, competition: r.competition, per10k: r.per10k };
         } else {
           const top = M.scoresFor(w.slug, horizon)[0];
           props = { ...props, score: top.opportunity, topType: top.type, topIcon: M.TYPES[top.type].icon, topName: L(M.TYPES[top.type].name, lang), confidence: top.confidence };
         }
       }
-      return { type: 'Feature', geometry: w.geometry, properties: { ...props, lng: w.centroid[0], lat: w.centroid[1] } };
+      return { type: 'Feature', geometry: w.geometry, properties: { ...props, landMedian: LAND.wards[w.slug]?.medianVT1 ?? null, lng: w.centroid[0], lat: w.centroid[1] } };
     });
     return {
       type: 'FeatureCollection',
@@ -165,6 +162,7 @@ function wardsGeoJson(type, horizon, lang) {
         type: type ? typeView(type, lang) : null,
         horizon,
         scoredWards: features.filter((f) => f.properties.scored).length,
+        landCityMedian: LAND_CITY_MEDIAN,
         method: L(METHOD, lang),
         caveat: L(CAVEAT, lang),
         osmDate: M.DATA.osmBase,
@@ -189,7 +187,6 @@ function wardDetail(slug, horizon, lang) {
       coverage: M.coverageOf(slug),
       growth: M.growthOf(slug),
       opportunities: scores ? scores.map((s) => scoreView(s, lang)) : [],
-      copilot: copilotFor(w),
       method: L(METHOD, lang),
       caveat: L(CAVEAT, lang),
       sources: sourceList(['osm', 'population', 'metro'], lang),
@@ -256,9 +253,21 @@ function createOpportunityMap(options = {}) {
         coverage: w.coverage,
         focus: type ? (w.opportunities.find((o) => o.type === type) ?? null) : (w.opportunities[0] ?? null),
         top3: w.opportunities.filter((o) => !o.sparseType).slice(0, 3).map((o) => ({ type: o.type, icon: o.icon, name: o.name, opportunity: o.opportunity })),
+        // Every demand signal (0-100, relative between wards), whatever the type weighs — for the radar chart.
+        signals: w.scored ? Object.fromEntries(M.scoresFor(w.slug, horizon)[0].parts.map((p) => [p.signal, p.value])) : null,
       })),
       sources: sourceList(['osm', 'population', 'metro'], lang),
     });
+  });
+
+  /** A business idea in plain words → { type, budget, ward } (the page then ranks the wards for that plan). */
+  const ParseSchema = z.strictObject({ text: z.string().trim().min(2).max(300), lang: z.enum(LANGS).optional() });
+  router.post('/parse', (req, res) => {
+    const parsed = ParseSchema.safeParse(req.body);
+    if (!parsed.success) throw badRequest('Cần trường text (2–300 ký tự).');
+    const idea = parseIdea(parsed.data.text);
+    const lang = parsed.data.lang ?? 'vi';
+    res.json({ ...idea, typeName: idea.type ? L(M.TYPES[idea.type].name, lang) : null });
   });
 
   const AskSchema = z.strictObject({

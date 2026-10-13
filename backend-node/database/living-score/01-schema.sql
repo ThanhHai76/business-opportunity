@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS areas (
   -- raw OSM counts: metroStations[], internationalSchools, cafes, parkPct, busStops
   facts                JSONB       NOT NULL DEFAULT '{}',
   centroid             geometry(Point, 4326)   NOT NULL,
-  -- Illustrative outline around a former district centre, NOT an administrative boundary.
-  boundary             geometry(Polygon, 4326) NOT NULL,
+  -- Boundary of the ward/commune (2025 administrative units), from OpenStreetMap.
+  boundary             geometry(MultiPolygon, 4326) NOT NULL,
   data_source          TEXT        NOT NULL DEFAULT 'OpenStreetMap',
   created_at           TIMESTAMPTZ NOT NULL DEFAULT now()
 );

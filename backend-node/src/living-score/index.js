@@ -36,7 +36,7 @@ const { seedPostgres } = require('./seed/postgres-seeder');
 const { CRITERIA, MISSING_CRITERIA, SCORE_BANDS } = require('./scoring/criteria');
 const { DATA_INFO, dataInfo } = require('./seed/seed-data');
 const { ScoringService } = require('./scoring/scoring.service');
-const { AreasService } = require('./areas/areas.service');
+const { AreasService, resolveSlug } = require('./areas/areas.service');
 const { AmenitiesService } = require('./amenities/amenities.service');
 const { InfrastructureService } = require('./infrastructure/infrastructure.service');
 const { CompareService } = require('./compare/compare.service');
@@ -155,7 +155,7 @@ function createLivingScore(options = {}) {
       const types = parseAmenityTypes(req.query.types);
       const bbox = parseBbox(req.query.bbox);
       const area = singleString(req.query.area, 'area');
-      const areaSlug = area === undefined ? undefined : parseSlug(area, 'Tham số area');
+      const areaSlug = area === undefined ? undefined : resolveSlug(parseSlug(area, 'Tham số area'));
       res.json(await amenities.findAsGeoJson({ types, bbox, areaSlug }));
     }),
   );

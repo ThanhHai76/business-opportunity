@@ -46,9 +46,9 @@ describe('seedPostgres', () => {
     const areaInsert = pool.calls.find((c) => /^INSERT INTO areas/.test(c.sql));
     assert.equal(areaInsert.params.length, 13);
     assert.equal(areaInsert.params.at(-1), 'OpenStreetMap');
-    assert.equal(JSON.parse(areaInsert.params[11]).type, 'Polygon');
+    assert.equal(JSON.parse(areaInsert.params[11]).type, 'MultiPolygon');
     assert.equal(JSON.parse(areaInsert.params[7]).length, 5);
-    assert.match(areaInsert.params[5], /former/);
+    assert.match(areaInsert.params[5], /since 2025/);
   });
 
   it('does nothing when data already exists, unless reset is requested', async () => {

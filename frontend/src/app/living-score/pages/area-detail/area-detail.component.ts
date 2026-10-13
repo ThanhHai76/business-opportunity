@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -33,6 +34,7 @@ export class AreaDetailComponent {
   private readonly api = inject(LivingScoreApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly location = inject(Location);
   protected readonly prefs = inject(PreferencesService);
   protected readonly meta = inject(LivingMetaService);
   protected readonly missingIcons = MISSING_CRITERION_ICONS;
@@ -84,6 +86,11 @@ export class AreaDetailComponent {
       .subscribe((detail) => {
         this.area.set(detail);
         this.state.set('ready');
+        // A former district slug (e.g. /area/cau-giay) is answered with its ward: show the ward's own address.
+        if (detail.slug !== this.slug) {
+          this.slug = detail.slug;
+          this.location.replaceState(this.location.path().replace(/\/area\/[^/?#]+/, `/area/${detail.slug}`));
+        }
       });
   }
 

@@ -6,7 +6,6 @@
 const { normalizeText } = require('../living-score/common/text');
 const { notFound } = require('../living-score/common/http');
 const { getSeedData } = require('../living-score/seed/seed-data');
-const { LOCATIONS: COPILOT_LOCATIONS } = require('../business-copilot/data');
 const M = require('./model');
 const MK = require('./market');
 
@@ -53,6 +52,10 @@ function wardSummary(w) {
     population: w.population ?? null,
     density: f.density,
     metro: { name: f.station.item.name, line: f.station.item.line, distanceM: Math.round(f.station.d * 1000) },
+    /** Criterion values, so the page can re-weight the score (null = no data). */
+    values: s.values,
+    landMedian: M.LAND.wards[w.slug]?.medianVT1 ?? null,
+    drive: M.TRAVEL.wards[w.slug] ? { centre: M.TRAVEL.wards[w.slug].centre?.minutes ?? null, metro: M.TRAVEL.wards[w.slug].metro?.minutes ?? null } : null,
   };
 }
 
@@ -112,17 +115,15 @@ function criterionDetail(key, w, f, lang) {
   }
 }
 
-const seedAreas = getSeedData().areas;
+// Living Score areas are the same wards (same slugs) since 10/2026.
+const seedAreas = new Map(getSeedData().areas.map((a) => [a.slug, a]));
 function links(w, f, lang) {
-  const nearest = (list, at) => list.map((x) => ({ x, d: M.distKm(at(x), w.centroid) })).sort((a, b) => a.d - b.d)[0];
-  const ls = nearest(seedAreas, (a) => [a.centroid.lng, a.centroid.lat]);
-  const cp = nearest(COPILOT_LOCATIONS, (l) => l.center);
+  const ls = seedAreas.get(w.slug);
   const pole = f.poles.find((x) => x.d <= x.pole.radiusKm) ?? null;
   return {
     opportunity: w.slug,
-    livingScore: ls && ls.d <= 3 ? { slug: ls.x.slug, name: lang === 'en' ? ls.x.nameEn ?? ls.x.name : ls.x.name } : null,
+    livingScore: ls ? { slug: ls.slug, name: lang === 'en' ? ls.nameEn ?? ls.name : ls.name } : null,
     futureMap: pole ? { hub: pole.pole.slug, name: L(pole.pole.name, lang) } : null,
-    copilot: cp && cp.d <= 4 ? { slug: cp.x.slug, name: cp.x.name } : null,
   };
 }
 
@@ -147,6 +148,16 @@ function priceLabel(p, lang) {
   return p.min === p.max ? `~${fmt(p.min, lang)}` : `${fmt(p.min, lang)}–${fmt(p.max, lang)}`;
 }
 const midPrice = (p) => (p.max === null ? p.min : (p.min + p.max) / 2);
+
+/** Driving times from a ward centre or a project: three destinations and the nearest metro station by road. */
+function travelView(entry, lang) {
+  if (!entry) return null;
+  return {
+    items: M.TRAVEL.destinations.map((d) => ({ id: d.id, name: L(d.name, lang), minutes: entry[d.id]?.minutes ?? null, km: entry[d.id]?.km ?? null })),
+    metro: entry.metro,
+    note: lang === 'en' ? 'By car, free-flow (no traffic) — rush hour is usually much longer.' : 'Đi ô tô, đường thông thoáng (chưa tính kẹt xe) — giờ cao điểm thường lâu hơn nhiều.',
+  };
+}
 
 function getWard(slug, lang) {
   const w = findWard(slug);
@@ -173,6 +184,7 @@ function getWard(slug, lang) {
     },
     infra: f.infra.map((x) => infraView(x.item, x.d, lang)),
     poles: f.poles.map((x) => ({ slug: x.pole.slug, name: L(x.pole.name, lang), role: L(x.pole.role, lang), inside: x.d <= x.pole.radiusKm, distanceKm: round1(Math.max(0, x.d - x.pole.radiusKm)) })),
+    travel: travelView(M.TRAVEL.wards[slug], lang),
     landPrice: landView(slug),
     market: cityMarket(lang),
     projects,
@@ -183,6 +195,7 @@ function getWard(slug, lang) {
       [
         ...M.CRITERIA.flatMap((c) => M.CRITERION_SOURCES[c.key]),
         ...f.infra.flatMap((x) => x.item.sources),
+        'osrm',
         'landPrice',
         ...MK.QUARTERS.map((q) => q.source),
         MK.SAVILLS.source,
@@ -256,8 +269,10 @@ function getProject(slug, lang) {
       min: round2((p.min * UNIT_M2) / 1000),
       max: p.max === null ? null : round2((p.max * UNIT_M2) / 1000),
     },
-    vsMarket: { pct: Math.round((midPrice(p) / latest - 1) * 100), market: latest, quarter: MK.LATEST.quarter },
+    // Social housing has an appraised price: comparing it with the commercial average would mislead.
+    vsMarket: p.kind === 'social' ? null : { pct: Math.round((midPrice(p) / latest - 1) * 100), market: latest, quarter: MK.LATEST.quarter },
     landPrice: ward ? landView(ward.slug) : null,
+    travel: travelView(M.TRAVEL.projects[p.slug], lang),
     station: { name: a.station.name, line: a.station.line, coords: a.station.coords, distanceM: a.station.distanceM },
     todRadiusM: M.TOD_RADIUS_M,
     proximity: proximityRows(a, lang),
@@ -265,7 +280,7 @@ function getProject(slug, lang) {
     plannedInfra: a.infra.map((x) => infraView(x.item, x.d, lang)),
     nearby,
     market: cityMarket(lang),
-    sources: M.sourceList([p.source, MK.LATEST.source, 'landPrice', 'osmAmenities', 'viupRail', ...a.infra.flatMap((x) => x.item.sources)], lang),
+    sources: M.sourceList([p.source, ...(p.locationSource ? [p.locationSource] : []), MK.LATEST.source, 'landPrice', 'osrm', 'osmAmenities', 'viupRail', ...a.infra.flatMap((x) => x.item.sources)], lang),
   };
 }
 
@@ -334,6 +349,7 @@ module.exports = {
   priceLabel,
   midPrice,
   landView,
+  travelView,
   cityMarket,
   infraView,
   criterionDetail,

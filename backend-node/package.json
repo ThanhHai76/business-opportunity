@@ -15,7 +15,8 @@
     "data:provinces": "node scripts/build-future-provinces.js",
     "data:opportunity": "node scripts/build-opportunity-osm.js",
     "data:property": "node scripts/build-property-osm.js",
-    "data:landprice": "node scripts/build-landprice.js"
+    "data:landprice": "node scripts/build-landprice.js",
+    "data:travel": "node scripts/build-property-travel.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",

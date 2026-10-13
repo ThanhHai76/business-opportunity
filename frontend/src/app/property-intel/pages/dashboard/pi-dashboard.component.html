@@ -58,6 +58,7 @@
     <div class="map">
       <pi-area-map
         [data]="layerData()"
+        [social]="social()"
         [toggles]="state.layers()"
         [basemap]="state.basemap()"
         [lens]="state.lens()"
@@ -100,6 +101,14 @@
           }
         </div>
       </div>
+
+      @if (state.compare().length) {
+        @if (compareOpen()) {
+          <pi-compare class="compare-slot" [wards]="compareWards()" [ranking]="ranking()" (select)="selectWard($event)" (closed)="compareOpen.set(false)" />
+        } @else {
+          <button type="button" class="pi-glass map__pill compare-open" (click)="compareOpen.set(true)">{{ tx.compare.open(state.compare().length) }}</button>
+        }
+      }
 
       <div class="zoom" role="group" [attr.aria-label]="tx.mapAria">
         <button type="button" class="pi-glass" (click)="zoom(1)" [attr.aria-label]="tx.zoomIn">+</button>
@@ -235,6 +244,11 @@
               <span class="pi-kicker">{{ tx.ward.kicker }}</span>
               <button type="button" class="pi-btn pi-btn--small" (click)="share()" [attr.aria-label]="tx.shareAria">{{ copied() ? tx.shareCopied : tx.share }}</button>
             </div>
+            <div class="district__actions">
+              <button type="button" class="pi-btn pi-btn--small" [attr.aria-pressed]="inCompare()" (click)="toggleCompare()">{{ inCompare() ? tx.actions.compareOn : tx.actions.compareAdd }}</button>
+              <button type="button" class="pi-btn pi-btn--small" [attr.aria-pressed]="watchingWard()" (click)="state.toggleWatchWard(d.slug)">{{ watchingWard() ? tx.actions.watching : tx.actions.watch }}</button>
+              <button type="button" class="pi-btn pi-btn--small" (click)="reportOpen.set(true)">{{ tx.actions.report }}</button>
+            </div>
             <h1 class="pi-display">{{ d.name }}</h1>
             <p>
               @if (d.population !== null && d.density !== null) {
@@ -251,18 +265,21 @@
                 <circle cx="52" cy="52" r="44" class="score__track" />
                 <circle cx="52" cy="52" r="44" class="score__arc" [attr.stroke-dasharray]="ringDash()" transform="rotate(-90 52 52)" />
               </svg>
-              <div class="score__num"><strong>{{ d.score }}</strong><span>/100</span></div>
+              <div class="score__num"><strong>{{ scoreView()?.score ?? d.score }}</strong><span>/100</span></div>
             </div>
             <div class="score__text">
               <strong>{{ tx.ward.score }}</strong>
               <p>
-                {{ tx.ward.rank(d.rank, d.total) }}
+                {{ tx.ward.rank(scoreView()?.rank ?? d.rank, d.total) }}
+                @if (scoreView()?.custom) {
+                  <em class="score__custom">{{ tx.weights.custom(d.score) }}</em>
+                }
                 @if (d.partial) {
                   {{ tx.ward.partial }}
                 }
               </p>
               <div class="score__chips">
-                <span class="pi-chip pi-tone-growth">#{{ d.rank }}</span>
+                <span class="pi-chip pi-tone-growth">#{{ scoreView()?.rank ?? d.rank }}</span>
                 <span class="pi-chip pi-tone-mobility">{{ tx.realTag }}</span>
               </div>
             </div>
@@ -282,11 +299,51 @@
                 <p class="crit__detail">{{ c.detail }}</p>
               </div>
             }
-            <button type="button" class="layers__link" [attr.aria-expanded]="methodOpen()" (click)="methodOpen.set(!methodOpen())">{{ tx.ward.method }}</button>
+            <div class="crit__links">
+              <button type="button" class="layers__link" [attr.aria-expanded]="weightsOpen()" (click)="weightsOpen.set(!weightsOpen())">{{ weightsOpen() ? tx.weights.close : tx.weights.open }}</button>
+              <button type="button" class="layers__link" [attr.aria-expanded]="methodOpen()" (click)="methodOpen.set(!methodOpen())">{{ tx.ward.method }}</button>
+            </div>
+            @if (weightsOpen()) {
+              <div class="weights" role="group" [attr.aria-label]="tx.weights.title">
+                <span class="pi-kicker">{{ tx.weights.title }}</span>
+                @for (k of criteriaKeys; track k) {
+                  <label class="weights__row">
+                    <span>{{ tx.criteriaLabels[k] }}</span>
+                    <input type="range" min="0" max="50" step="5" [value]="state.weights()[k]" (input)="setWeight(k, $any($event.target).value)" />
+                    <span class="pi-mono">{{ state.weights()[k] }}%</span>
+                  </label>
+                }
+                <p class="muted">{{ tx.weights.total(weightTotal()) }} · {{ tx.weights.note }}</p>
+                @if (state.customWeights()) {
+                  <button type="button" class="pi-btn pi-btn--small" (click)="state.resetWeights()">{{ tx.weights.reset }}</button>
+                }
+              </div>
+            }
             @if (methodOpen()) {
               <p class="crit__method">{{ d.method }}</p>
             }
           </section>
+
+          @if (d.travel; as tr) {
+            <section class="travel">
+              <span class="pi-kicker">{{ tx.ward.travel.title }}</span>
+              @for (it of tr.items; track it.id) {
+                <div class="travel__row">
+                  <span>{{ it.name }}</span>
+                  <span class="pi-mono">{{ it.minutes === null ? '—' : tx.ward.travel.minutes(it.minutes) }}</span>
+                  <span class="pi-mono travel__km">{{ it.km === null ? '' : formatNum(it.km, lang) + ' km' }}</span>
+                </div>
+              }
+              @if (tr.metro; as m) {
+                <div class="travel__row">
+                  <span>{{ tx.ward.travel.metro(m.station, m.line) }}</span>
+                  <span class="pi-mono">{{ tx.ward.travel.minutes(m.minutes) }}</span>
+                  <span class="pi-mono travel__km">{{ formatNum(m.km, lang) }} km</span>
+                </div>
+              }
+              <p class="land__note">{{ tr.note }}</p>
+            </section>
+          }
 
           <section class="infra-list">
             <span class="pi-kicker">{{ tx.ward.infraTitle }}</span>
@@ -430,9 +487,6 @@
             @if (d.links.futureMap; as fm) {
               <a routerLink="/future-map" [queryParams]="{ hub: fm.hub, lang: lang === 'en' ? 'en' : null }">🧭 {{ tx.ward.links.future(fm.name) }} →</a>
             }
-            @if (d.links.copilot; as cp) {
-              <a [routerLink]="['/business-copilot/location', cp.slug]">📊 {{ tx.ward.links.copilot(cp.name) }} →</a>
-            }
           </section>
 
           <details class="sources">
@@ -456,3 +510,113 @@
     }
   </aside>
 </div>
+
+@if (reportOpen() && d(); as d) {
+  @let tx = t();
+  @let lang = state.lang();
+  <div class="report-backdrop" (click)="reportOpen.set(false)"></div>
+  <div class="report" role="dialog" aria-modal="true" aria-labelledby="ward-report-title">
+    <header class="report__head">
+      <div>
+        <span class="pi-kicker">{{ tx.wardReport.kicker }}</span>
+        <h2 id="ward-report-title" class="pi-display">{{ d.name }}</h2>
+        <p>
+          @if (d.population !== null && d.density !== null) {
+            {{ tx.ward.population(formatInt(d.population, lang), formatInt(d.density, lang)) }} ·
+          }
+          {{ formatNum(d.areaKm2, lang) }} km²
+        </p>
+      </div>
+      <div class="report__actions">
+        <button type="button" class="pi-btn" (click)="print()">{{ tx.project.print }}</button>
+        <button type="button" class="pi-btn" (click)="reportOpen.set(false)" [attr.aria-label]="tx.project.close">✕</button>
+      </div>
+    </header>
+    <div class="report__body">
+      <section>
+        <h3>{{ tx.wardReport.sections.score }}: {{ scoreView()?.score ?? d.score }}/100 · #{{ scoreView()?.rank ?? d.rank }}/{{ d.total }}</h3>
+        <ul>
+          @for (c of d.criteria; track c.key) {
+            <li><b>{{ c.label }}</b> ({{ tx.ward.weight(state.weights()[c.key]) }}): {{ c.value ?? '—' }}/100 — {{ c.detail }}</li>
+          }
+        </ul>
+      </section>
+      @if (d.travel; as tr) {
+        <section>
+          <h3>{{ tx.wardReport.sections.travel }}</h3>
+          <ul>
+            @for (it of tr.items; track it.id) {
+              <li>{{ it.name }}: {{ it.minutes === null ? '—' : tx.ward.travel.minutes(it.minutes) }}</li>
+            }
+            @if (tr.metro; as m) {
+              <li>{{ tx.ward.travel.metro(m.station, m.line) }}: {{ tx.ward.travel.minutes(m.minutes) }}</li>
+            }
+            <li>{{ tr.note }}</li>
+          </ul>
+        </section>
+      }
+      <section>
+        <h3>{{ tx.wardReport.sections.infra }}</h3>
+        <ul>
+          @for (i of d.infra; track i.id) {
+            <li>{{ i.name }} — {{ tx.ward.status[i.status] }}@if (i.openYear) { · {{ tx.ward.due(i.openYear) }} } · {{ (i.distanceKm ?? 0) * 1000 | piDistance: lang }}</li>
+          } @empty {
+            <li>{{ tx.ward.infraNone }}</li>
+          }
+        </ul>
+      </section>
+      @if (d.poles.length) {
+        <section>
+          <h3>{{ tx.wardReport.sections.poles }}</h3>
+          <ul>
+            @for (p of d.poles.slice(0, 3); track p.slug) {
+              <li>{{ p.name }} ({{ p.inside ? tx.ward.inside : tx.ward.outside((p.distanceKm * 1000 | piDistance: lang)) }}) — {{ p.role }}</li>
+            }
+          </ul>
+        </section>
+      }
+      <section>
+        <h3>{{ tx.wardReport.sections.land }}</h3>
+        @if (d.landPrice; as l) {
+          <ul>
+            <li>{{ tx.compare.rows.land }}: {{ formatNum(l.medianVT1, lang) }} · {{ tx.compare.rows.rank }} {{ l.rank }}/{{ l.ranked }}</li>
+            @for (st of l.top.slice(0, 4); track st.name) {
+              <li>{{ st.name }}: {{ formatNum(st.vt1, lang) }} {{ tx.perM2 }}</li>
+            }
+            <li>{{ tx.ward.land.note }}</li>
+          </ul>
+        } @else {
+          <p>{{ tx.ward.land.none }}</p>
+        }
+      </section>
+      @if (d.market.quarters.at(-1); as q) {
+        <section>
+          <h3>{{ tx.wardReport.sections.market }} · {{ q.quarter }}</h3>
+          <ul>
+            <li>{{ tx.ward.market.cbre }}: {{ q.primary }} {{ tx.perM2 }} · {{ tx.ward.market.sold }} {{ formatInt(q.sold, lang) }}+</li>
+            <li>{{ tx.ward.market.savills }}: {{ d.market.savills.primary }} {{ tx.perM2 }}</li>
+          </ul>
+        </section>
+      }
+      @if (d.projects.length) {
+        <section>
+          <h3>{{ tx.wardReport.sections.projects }}</h3>
+          <ul>
+            @for (p of d.projects.slice(0, 6); track p.slug) {
+              <li>{{ p.name }}: {{ p.price.label }} {{ tx.perM2 }} ({{ p.price.kindLabel }})</li>
+            }
+          </ul>
+        </section>
+      }
+      <section>
+        <h3>{{ tx.wardReport.sections.sources }}</h3>
+        <ul>
+          @for (s of d.sources; track s.id) {
+            <li>{{ s.title }} — {{ s.publisher }}@if (s.url) { · <a [href]="s.url" target="_blank" rel="noopener">{{ s.url }}</a> }</li>
+          }
+        </ul>
+      </section>
+      <p class="report__disclaimer">{{ tx.wardReport.disclaimer }}</p>
+    </div>
+  </div>
+}

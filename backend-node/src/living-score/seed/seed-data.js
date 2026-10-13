@@ -2,42 +2,98 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSeedData = getSeedData;
 exports.dataInfo = dataInfo;
-exports.AREA_DEFINITIONS = exports.DATA_INFO = void 0;
+exports.LEGACY_SLUGS = exports.AREA_DEFINITIONS = exports.DATA_INFO = void 0;
 /**
  * Living Score data, computed from an OpenStreetMap snapshot (data/osm-hanoi.json, `npm run data:living`).
  *
- * - Areas: thirteen areas around the centres of former urban districts (before the 2025 reorganisation of
- *   administrative units, which removed the district level). Their outlines are illustrative cells, NOT
- *   administrative boundaries; each area also lists the new (2025) wards its measuring circle falls in.
- * - Five criteria are measured from OSM within WALK_KM of each area's centre (what someone living there can reach
+ * - Areas: the wards and communes of the 2025 reorganisation of administrative units, with their real boundaries —
+ *   the same set as the Business Opportunity Map and AI Property Intelligence (src/opportunity/data/hanoi-wards.json),
+ *   so a ward has the same slug in all three tools.
+ * - Five criteria are measured from OSM within WALK_KM of each ward's centre (what someone living there can reach
  *   on foot): places, park and lake share of that circle, metro stations and bus stops. Measuring a fixed circle
- *   keeps large, partly rural areas comparable with small central ones. Each score is relative: 100 = the highest
- *   of the areas. Safety, environment and cost have no open per-area data, so they are not scored at all
+ *   keeps large, partly rural communes comparable with small central wards. Each score is relative: 100 = the highest
+ *   of the wards. Safety, environment and cost have no open per-area data, so they are not scored at all
  *   (see MISSING_CRITERIA) rather than guessed.
  * - Text is bilingual ({ vi, en }); the services pick the language of the request.
- * - Places shown on the map are the named OSM places inside each area's cell.
+ * - Places shown on the map are the named OSM places inside each ward's boundary.
  */
 const text_1 = require("../common/text");
-const geometry_1 = require("./geometry");
 const osm = require("../data/osm-hanoi.json");
+const WARDS = require("../../opportunity/data/hanoi-wards.json").wards;
 
-exports.AREA_DEFINITIONS = [
-    { slug: 'cau-giay', name: 'Cầu Giấy', nameEn: 'Cau Giay', center: [105.796, 21.0333], radiusKm: 2.8 },
-    { slug: 'tay-ho', name: 'Tây Hồ', nameEn: 'Tay Ho', center: [105.8285, 21.0655], radiusKm: 3.5 },
-    { slug: 'ba-dinh', name: 'Ba Đình', nameEn: 'Ba Dinh', center: [105.815, 21.0355], radiusKm: 2.4 },
-    { slug: 'hoan-kiem', name: 'Hoàn Kiếm', nameEn: 'Hoan Kiem', center: [105.8542, 21.0285], radiusKm: 1.6 },
-    { slug: 'dong-da', name: 'Đống Đa', nameEn: 'Dong Da', center: [105.8285, 21.0175], radiusKm: 2.2 },
-    { slug: 'hai-ba-trung', name: 'Hai Bà Trưng', nameEn: 'Hai Ba Trung', center: [105.8555, 21.0055], radiusKm: 2 },
-    { slug: 'thanh-xuan', name: 'Thanh Xuân', nameEn: 'Thanh Xuan', center: [105.81, 20.993], radiusKm: 2.4 },
-    { slug: 'hoang-mai', name: 'Hoàng Mai', nameEn: 'Hoang Mai', center: [105.8455, 20.978], radiusKm: 3.2 },
-    { slug: 'bac-tu-liem', name: 'Bắc Từ Liêm', nameEn: 'Bac Tu Liem', center: [105.768, 21.066], radiusKm: 3.6 },
-    { slug: 'nam-tu-liem', name: 'Nam Từ Liêm', nameEn: 'Nam Tu Liem', center: [105.765, 21.013], radiusKm: 3.6 },
-    { slug: 'long-bien', name: 'Long Biên', nameEn: 'Long Bien', center: [105.89, 21.045], radiusKm: 5.5 },
-    { slug: 'ha-dong', name: 'Hà Đông', nameEn: 'Ha Dong', center: [105.77, 20.96], radiusKm: 5.5 },
-    { slug: 'dong-anh', name: 'Đông Anh', nameEn: 'Dong Anh', center: [105.845, 21.14], radiusKm: 8 },
-];
+/** "Phường Láng" -> "Láng ward", "Xã Đông Anh" -> "Đông Anh commune". */
+function wardNameEn(name) {
+    const m = /^(Phường|Xã)\s+(.+)$/.exec(name);
+    return m ? `${m[2]} ${m[1] === 'Phường' ? 'ward' : 'commune'}` : name;
+}
+
+/** Even-odd point-in-polygon over a GeoJSON Polygon / MultiPolygon (holes excluded). */
+function inGeometry([x, y], geometry) {
+    const polygons = geometry.type === 'MultiPolygon' ? geometry.coordinates : [geometry.coordinates];
+    return polygons.some((rings) => {
+        let inside = false;
+        for (const ring of rings) {
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                const [xi, yi] = ring[i];
+                const [xj, yj] = ring[j];
+                if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+            }
+        }
+        return inside;
+    });
+}
+
+/**
+ * Centre of the walking circle: the ward's centroid, or — for an oddly shaped ward whose centroid falls outside it —
+ * the point of a ~100 m grid inside the ward that lies deepest inside (farthest from any grid point outside).
+ */
+function centreOf(w) {
+    if (inGeometry(w.centroid, w.geometry)) return w.centroid;
+    const pts = (w.geometry.type === 'MultiPolygon' ? w.geometry.coordinates.flat(2) : w.geometry.coordinates.flat());
+    const [x0, y0, x1, y1] = [Math.min(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[1]))];
+    const step = 0.001;
+    const inside = [];
+    const outside = [];
+    for (let x = x0 - step; x <= x1 + step; x += step) {
+        for (let y = y0 - step; y <= y1 + step; y += step) (inGeometry([x, y], w.geometry) ? inside : outside).push([x, y]);
+    }
+    let best = w.centroid;
+    let bestDepth = -1;
+    for (const p of inside) {
+        let depth = Infinity;
+        for (const q of outside) depth = Math.min(depth, (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2);
+        if (depth > bestDepth) [best, bestDepth] = [p, depth];
+    }
+    return [Math.round(best[0] * 1e5) / 1e5, Math.round(best[1] * 1e5) / 1e5];
+}
+
+exports.AREA_DEFINITIONS = WARDS.map((w) => ({
+    slug: w.slug,
+    name: w.name,
+    nameEn: wardNameEn(w.name),
+    center: centreOf(w),
+    boundary: w.geometry,
+    areaKm2: w.areaKm2,
+    population: w.population ?? null,
+}));
+
+/**
+ * Before 10/2026 the areas were thirteen illustrative cells around the former district centres. Old links and saved
+ * lists keep working: each old slug points to the ward that now contains that centre.
+ */
+const FORMER_CENTRES = {
+    'cau-giay': [105.796, 21.0333], 'tay-ho': [105.8285, 21.0655], 'ba-dinh': [105.815, 21.0355],
+    'hoan-kiem': [105.8542, 21.0285], 'dong-da': [105.8285, 21.0175], 'hai-ba-trung': [105.8555, 21.0055],
+    'thanh-xuan': [105.81, 20.993], 'hoang-mai': [105.8455, 20.978], 'bac-tu-liem': [105.768, 21.066],
+    'nam-tu-liem': [105.765, 21.013], 'long-bien': [105.89, 21.045], 'ha-dong': [105.77, 20.96], 'dong-anh': [105.845, 21.14],
+};
+exports.LEGACY_SLUGS = Object.fromEntries(Object.entries(FORMER_CENTRES)
+    .map(([old, centre]) => [old, exports.AREA_DEFINITIONS.find((a) => inGeometry(centre, a.boundary))?.slug])
+    .filter(([, slug]) => slug));
 const AREAS = exports.AREA_DEFINITIONS;
 const N = AREAS.length;
+/** Pros and cons name a criterion when the ward is in the top / bottom tenth for it. */
+const EDGE = Math.max(3, Math.round(N / 10));
 
 /** OSM place types counted by each criterion. */
 const GROUPS = {
@@ -54,8 +110,6 @@ const MAP_TYPE = {
 const INTERNATIONAL = /quoc te|international|intl/;
 /** Radius (km) around an area's centre in which places are counted: about a 20-minute walk. */
 const WALK_KM = 1.5;
-/** A new ward is listed for an area when it covers at least this share of the measuring circle. */
-const WARD_MIN_PCT = 8;
 
 const round1 = (n) => Math.round(n * 10) / 10;
 const fmt = {
@@ -69,14 +123,14 @@ const osmDate = {
 
 const DATA_INFO_TEXT = {
     vi: {
-        method: `Đếm địa điểm và đo diện tích công viên, hồ ao trên OpenStreetMap trong bán kính 1,5 km (khoảng 20 phút đi bộ) quanh trung tâm mỗi khu vực. Điểm là tương đối giữa ${N} khu vực: 100 = khu vực cao nhất, theo thang căn bậc hai (địa điểm đầu tiên gần nhà có giá trị hơn địa điểm thứ một trăm). An ninh, môi trường và chi phí chưa có dữ liệu mở theo khu vực nên không được tính.`,
-        caveat: 'OpenStreetMap do cộng đồng đóng góp nên có thể thiếu địa điểm, nhất là ở vùng ven; số liệu phù hợp để so sánh tương đối giữa các khu vực, không phải thống kê chính thức.',
-        areaNote: 'Khu vực quanh trung tâm các quận cũ (trước khi sắp xếp đơn vị hành chính năm 2025); vùng tô màu là hình minh hoạ, không phải địa giới hành chính. Mỗi khu vực ghi kèm các phường mới mà vùng đo đi qua.',
+        method: `Đếm địa điểm và đo diện tích công viên, hồ ao trên OpenStreetMap trong bán kính 1,5 km (khoảng 20 phút đi bộ) quanh trung tâm mỗi phường/xã. Điểm là tương đối giữa ${N} phường/xã: 100 = nơi cao nhất, theo thang căn bậc hai (địa điểm đầu tiên gần nhà có giá trị hơn địa điểm thứ một trăm). An ninh, môi trường và chi phí chưa có dữ liệu mở theo khu vực nên không được tính.`,
+        caveat: 'OpenStreetMap do cộng đồng đóng góp nên có thể thiếu địa điểm, nhất là ở vùng ven; số liệu phù hợp để so sánh tương đối giữa các phường/xã, không phải thống kê chính thức.',
+        areaNote: `${N} phường/xã sau sắp xếp đơn vị hành chính năm 2025, ranh giới theo OpenStreetMap — cùng bộ với Bản đồ cơ hội kinh doanh và AI Property Intelligence. Với xã rộng, vòng đo 1,5 km chỉ phản ánh khu trung tâm.`,
     },
     en: {
-        method: `Places are counted, and park and lake areas measured, on OpenStreetMap within 1.5 km (about a 20-minute walk) of each area's centre. Scores are relative between the ${N} areas: 100 = the best area, on a square-root scale (the first places near home matter more than the hundredth). Safety, environment and cost have no open per-area data, so they are not scored.`,
-        caveat: 'OpenStreetMap is built by volunteers and can miss places, especially on the outskirts; the figures are for comparing areas with each other, not official statistics.',
-        areaNote: 'Areas around the centres of the former districts (before the 2025 reorganisation of administrative units); the shaded shapes are illustrative, not administrative boundaries. Each area lists the new wards its measuring circle falls in.',
+        method: `Places are counted, and park and lake areas measured, on OpenStreetMap within 1.5 km (about a 20-minute walk) of each ward's centre. Scores are relative between the ${N} wards and communes: 100 = the best one, on a square-root scale (the first places near home matter more than the hundredth). Safety, environment and cost have no open per-area data, so they are not scored.`,
+        caveat: 'OpenStreetMap is built by volunteers and can miss places, especially on the outskirts; the figures are for comparing wards with each other, not official statistics.',
+        areaNote: `${N} wards and communes of the 2025 reorganisation of administrative units, boundaries from OpenStreetMap — the same set as the Business Opportunity Map and AI Property Intelligence. For a large commune the 1.5 km circle only reflects its centre.`,
     },
 };
 /** Where the numbers come from, in the requested language. */
@@ -93,24 +147,6 @@ function dataInfo(lang = 'vi') {
 }
 /** Vietnamese data info (kept for callers that do not localise). */
 exports.DATA_INFO = dataInfo('vi');
-
-/** Ray-casting point-in-polygon on a [lng, lat] ring. */
-function inRing([x, y], ring) {
-    let inside = false;
-    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-        const [xi, yi] = ring[i];
-        const [xj, yj] = ring[j];
-        if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
-    }
-    return inside;
-}
-
-function ringAreaKm2(ring, frame) {
-    const pts = ring.map((p) => frame.project(p));
-    let sum = 0;
-    for (let i = 0; i < pts.length - 1; i++) sum += pts[i][0] * pts[i + 1][1] - pts[i + 1][0] * pts[i][1];
-    return Math.abs(sum) / 2;
-}
 
 /**
  * Relative 0-100 score: 100 for the highest value among the areas, on a square-root scale — the first cafés,
@@ -158,28 +194,6 @@ function coveragePct(layer, center) {
     return total ? round1((100 * set) / total) : 0;
 }
 
-/** New (2025) wards the walking circle falls in, largest share first: [{ name, pct }]. */
-function wardsOf(center) {
-    const wards = osm.wards;
-    if (!wards) return [];
-    const cells = decode(wards.raster.cells);
-    const counts = new Map();
-    let total = 0;
-    forEachCellInCircle(center, wards.raster.rows, wards.raster.cols, (i) => {
-        total++;
-        if (cells[i]) counts.set(cells[i], (counts.get(cells[i]) ?? 0) + 1);
-    });
-    return [...counts.entries()]
-        .map(([code, n]) => ({ name: wards.names[code - 1], pct: Math.round((100 * n) / total) }))
-        .filter((w) => w.pct >= WARD_MIN_PCT)
-        .sort((a, b) => b.pct - a.pct);
-}
-/** "Phường Láng" -> "Láng ward", "Xã Đông Anh" -> "Đông Anh commune". */
-function wardNameEn(name) {
-    const m = /^(Phường|Xã)\s+(.+)$/.exec(name);
-    return m ? `${m[2]} ${m[1] === 'Phường' ? 'ward' : 'commune'}` : name;
-}
-
 /** Raw measurements within WALK_KM of an area's centre, from the OSM snapshot. */
 function measure(center) {
     const near = (point) => distanceKm(center, point) <= WALK_KM;
@@ -206,12 +220,11 @@ function measure(center) {
         parkPct: coveragePct(osm.raster.park, center),
         waterPct: coveragePct(osm.raster.water, center),
         internationalSchools: international,
-        wards: wardsOf(center),
     };
 }
 
 /**
- * Schematic metro lines and stations (approximate routes). Other modules (Future Map, Business Copilot,
+ * Schematic metro lines and stations (approximate routes). Other modules (Future Map, Property Intelligence,
  * Property Intelligence) draw from this; the Living Score map uses `metro` below, built from OSM.
  */
 function buildInfrastructure() {
@@ -370,21 +383,17 @@ function metricsOf(m) {
     ];
 }
 
-function describe(d, m) {
-    const wardsVi = m.wards.map((w) => `${w.name} (${w.pct}%)`).join(', ');
-    const wardsEn = m.wards.map((w) => `${wardNameEn(w.name)} (${w.pct}%)`).join(', ');
+function describe(d) {
+    const pop = d.population ? { vi: `, khoảng ${d.population.toLocaleString('vi-VN')} dân`, en: `, about ${d.population.toLocaleString('en-US')} residents` } : { vi: '', en: '' };
+    const wide = d.areaKm2 > 15;
     return {
-        vi: `Khu vực quanh trung tâm quận ${d.name} cũ (trước khi sắp xếp đơn vị hành chính năm 2025). Điểm đo trong bán kính ${fmt.vi(WALK_KM)} km quanh trung tâm, từ dữ liệu OpenStreetMap ngày ${osmDate.vi}.${wardsVi ? ` Vùng đo nằm trong: ${wardsVi}.` : ''}`,
-        en: `The area around the centre of the former ${d.nameEn} district (before the 2025 reorganisation of administrative units). Measured within ${fmt.en(WALK_KM)} km of the centre, from OpenStreetMap data of ${osmDate.en}.${wardsEn ? ` The measuring circle lies in: ${wardsEn}.` : ''}`,
+        vi: `${d.name} (đơn vị hành chính từ 2025, ${fmt.vi(d.areaKm2)} km²${pop.vi}). Điểm đo trong bán kính ${fmt.vi(WALK_KM)} km quanh trung tâm, từ dữ liệu OpenStreetMap ngày ${osmDate.vi}.${wide ? ' Phường/xã rộng nên vòng đo chỉ phản ánh khu trung tâm.' : ''}`,
+        en: `${d.nameEn} (administrative unit since 2025, ${fmt.en(d.areaKm2)} km²${pop.en}). Measured within ${fmt.en(WALK_KM)} km of its centre, from OpenStreetMap data of ${osmDate.en}.${wide ? ' It is large, so the circle only reflects its centre.' : ''}`,
     };
 }
 
 function buildSeedData() {
-    const sites = AREAS.map((d) => ({ id: d.slug, center: d.center, radiusKm: d.radiusKm }));
-    const frame = new geometry_1.GeoFrame([105.83, 21.04]);
-    const cells = (0, geometry_1.buildIllustrativeCells)(sites, frame);
     const measured = AREAS.map((d) => measure(d.center));
-    const areaKm2 = AREAS.map((d) => round1(ringAreaKm2(cells.get(d.slug), frame)));
 
     // Counts within the walking circle (and park + water share) → relative 0-100 scores.
     const counts = (key) => measured.map((m) => m[key]);
@@ -413,33 +422,32 @@ function buildSeedData() {
         const keys = Object.keys(CRITERION_LABEL.vi);
         const metricText = (k, lang) => metrics.find((x) => x.criterion === k).text[lang];
         const byScore = [...keys].sort((a, b) => areaScores[b] - areaScores[a]);
-        // Top 3 / bottom 3 among the areas; otherwise the area's own strongest / weakest criterion.
-        const strong = keys.filter((k) => rankOf(k, i) <= 3);
-        const weak = keys.filter((k) => rankOf(k, i) > N - 3);
+        // Top / bottom tenth of the wards; otherwise the ward's own strongest / weakest criterion.
+        const strong = keys.filter((k) => rankOf(k, i) <= EDGE);
+        const weak = keys.filter((k) => rankOf(k, i) > N - EDGE);
         const pros = (strong.length ? strong : byScore.slice(0, 1)).map((k) => ({
-            vi: `${CRITERION_LABEL.vi[k]}: đứng thứ ${rankOf(k, i)}/${N} khu vực — ${metricText(k, 'vi')}.`,
-            en: `${CRITERION_LABEL.en[k]}: ranked ${rankOf(k, i)} of ${N} areas — ${metricText(k, 'en')}.`,
+            vi: `${CRITERION_LABEL.vi[k]}: đứng thứ ${rankOf(k, i)}/${N} phường/xã — ${metricText(k, 'vi')}.`,
+            en: `${CRITERION_LABEL.en[k]}: ranked ${rankOf(k, i)} of ${N} wards — ${metricText(k, 'en')}.`,
         }));
         const weakest = byScore.at(-1);
         const cons = weak.length
             ? weak.map((k) => ({
-                vi: `${CRITERION_LABEL.vi[k]}: đứng thứ ${rankOf(k, i)}/${N} khu vực.`,
-                en: `${CRITERION_LABEL.en[k]}: ranked ${rankOf(k, i)} of ${N} areas.`,
+                vi: `${CRITERION_LABEL.vi[k]}: đứng thứ ${rankOf(k, i)}/${N} phường/xã.`,
+                en: `${CRITERION_LABEL.en[k]}: ranked ${rankOf(k, i)} of ${N} wards.`,
             }))
             : [{
-                vi: `${CRITERION_LABEL.vi[weakest]} là tiêu chí yếu nhất của khu vực (thứ ${rankOf(weakest, i)}/${N}) — ${metricText(weakest, 'vi')}.`,
-                en: `${CRITERION_LABEL.en[weakest]} is the area's weakest criterion (${rankOf(weakest, i)} of ${N}) — ${metricText(weakest, 'en')}.`,
+                vi: `${CRITERION_LABEL.vi[weakest]} là tiêu chí yếu nhất ở đây (thứ ${rankOf(weakest, i)}/${N}) — ${metricText(weakest, 'vi')}.`,
+                en: `${CRITERION_LABEL.en[weakest]} is its weakest criterion (${rankOf(weakest, i)} of ${N}) — ${metricText(weakest, 'en')}.`,
             }];
         return {
             slug: d.slug,
             name: d.name,
             nameEn: d.nameEn,
-            // Searching for a new ward ("Phường Láng") finds the areas it falls in.
-            searchText: (0, text_1.normalizeText)(`${d.name} ${d.nameEn} ${m.wards.map((w) => w.name).join(' ')}`),
-            description: describe(d, m),
-            areaKm2: areaKm2[i],
+            searchText: (0, text_1.normalizeText)(`${d.name} ${d.nameEn}`),
+            description: describe(d),
+            areaKm2: d.areaKm2,
             centroid: { lng: d.center[0], lat: d.center[1] },
-            boundary: { type: 'Polygon', coordinates: [cells.get(d.slug)] },
+            boundary: d.boundary,
             scores: areaScores,
             metrics,
             facts: {
@@ -450,22 +458,28 @@ function buildSeedData() {
                 waterPct: m.waterPct,
                 lakes: m.lakes,
                 busStops: m.busStops,
-                wards: m.wards,
+                population: d.population,
             },
             pros,
             cons,
         };
     });
 
-    // Named OSM places inside each area's cell, as map points (unnamed ones are counted, not listed).
-    const amenities = AREAS.flatMap((d) => [
-        ...osm.pois
-            .filter(([t, lng, lat, name]) => MAP_TYPE[t] && name && inRing([lng, lat], cells.get(d.slug)))
-            .map(([t, lng, lat, name]) => ({ areaSlug: d.slug, type: MAP_TYPE[t], name, searchText: (0, text_1.normalizeText)(name), lng, lat })),
-        ...osm.parks
-            .filter(([lng, lat, , name]) => name && inRing([lng, lat], cells.get(d.slug)))
-            .map(([lng, lat, , name]) => ({ areaSlug: d.slug, type: 'park', name, searchText: (0, text_1.normalizeText)(name), lng, lat })),
-    ]);
+    // Named OSM places inside each ward's boundary, as map points (unnamed ones are counted, not listed).
+    const bboxOf = (g) => {
+        const pts = (g.type === 'MultiPolygon' ? g.coordinates.flat(2) : g.coordinates.flat());
+        return [Math.min(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1])), Math.max(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[1]))];
+    };
+    const named = [
+        ...osm.pois.filter(([t, , , name]) => MAP_TYPE[t] && name).map(([t, lng, lat, name]) => ({ type: MAP_TYPE[t], name, lng, lat })),
+        ...osm.parks.filter(([, , , name]) => name).map(([lng, lat, , name]) => ({ type: 'park', name, lng, lat })),
+    ];
+    const amenities = AREAS.flatMap((d) => {
+        const [w, s, e, n] = bboxOf(d.boundary);
+        return named
+            .filter((p) => p.lng >= w && p.lng <= e && p.lat >= s && p.lat <= n && inGeometry([p.lng, p.lat], d.boundary))
+            .map((p) => ({ areaSlug: d.slug, ...p, searchText: (0, text_1.normalizeText)(p.name) }));
+    });
 
     // Knowledge snippets for the AI (Vietnamese; the model answers in the language requested).
     const metricVi = (a, k) => a.metrics.find((x) => x.criterion === k).text.vi;

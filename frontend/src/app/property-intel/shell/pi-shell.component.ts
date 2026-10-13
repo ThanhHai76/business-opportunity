@@ -3,7 +3,8 @@ import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-i
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subject, catchError, debounceTime, distinctUntilChanged, filter, map, of, startWith, switchMap } from 'rxjs';
 import { Horizon, SearchResult } from '../pi.models';
-import { DEFAULT_STATE, PiApiService, PiStateService } from '../pi.service';
+import { DEFAULT_STATE, MAX_COMPARE, PiApiService, PiStateService } from '../pi.service';
+import { decodeWeights } from '../pi-weights';
 
 /**
  * Frame shared by the three Property Intelligence pages: the product bar (brand, tabs, ⌘K search with breadcrumb,
@@ -79,6 +80,37 @@ import { DEFAULT_STATE, PiApiService, PiStateService } from '../pi.service';
           } @else {
             <span class="pi-updated"><i aria-hidden="true"></i>{{ tx.updated(updated()) }}</span>
           }
+          <div class="pi-watch">
+            <button type="button" class="pi-btn pi-watch__btn" [attr.aria-expanded]="watchOpen()" [attr.aria-label]="tx.watchList.aria" (click)="watchOpen.set(!watchOpen())">
+              {{ tx.watchList.open(watchCount()) }}
+            </button>
+            @if (watchOpen()) {
+              <div class="pi-watch__menu" role="dialog" [attr.aria-label]="tx.watchList.title">
+                <strong>{{ tx.watchList.title }}</strong>
+                @if (!watchCount()) {
+                  <p>{{ tx.watchList.empty }}</p>
+                }
+                @if (watchedWards().length) {
+                  <span class="pi-kicker">{{ tx.watchList.wards }}</span>
+                  @for (w of watchedWards(); track w.slug) {
+                    <div class="pi-watch__row">
+                      <button type="button" class="pi-watch__open" (click)="openWard(w.slug)">{{ w.name }} <small>· {{ w.score }}</small></button>
+                      <button type="button" class="pi-watch__x" (click)="state.toggleWatchWard(w.slug)" [attr.aria-label]="tx.watchList.remove">×</button>
+                    </div>
+                  }
+                }
+                @if (watchedProjects().length) {
+                  <span class="pi-kicker">{{ tx.watchList.projects }}</span>
+                  @for (p of watchedProjects(); track p.slug) {
+                    <div class="pi-watch__row">
+                      <button type="button" class="pi-watch__open" (click)="openProject(p.slug)">{{ p.name }} <small>· {{ p.price.label }}</small></button>
+                      <button type="button" class="pi-watch__x" (click)="state.toggleWatch(p.slug)" [attr.aria-label]="tx.watchList.remove">×</button>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </div>
           <button type="button" class="pi-btn pi-lang" (click)="toggleLang()" [attr.aria-label]="tx.langAria">{{ tx.langSwitch }}</button>
         </div>
       </header>
@@ -163,9 +195,36 @@ export class PiShellComponent {
     if (ward && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(ward)) this.state.set('ward', ward);
     if ([2026, 2030, 2045].includes(horizon)) this.state.set('horizon', horizon);
     if (lang === 'vi' || lang === 'en') this.state.set('lang', lang);
-    if (ward || q.get('horizon') || lang) {
-      void this.router.navigate([], { queryParams: { ward: null, horizon: null, lang: null }, queryParamsHandling: 'merge', replaceUrl: true });
+    const weights = decodeWeights(q.get('w'));
+    if (weights) this.state.setWeights(weights);
+    const compare = (q.get('c') ?? '').split(',').filter((x) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(x)).slice(0, MAX_COMPARE);
+    if (compare.length) this.state.setCompare(compare);
+    if (ward || q.get('horizon') || lang || q.get('w') || q.get('c')) {
+      void this.router.navigate([], { queryParams: { ward: null, horizon: null, lang: null, w: null, c: null }, queryParamsHandling: 'merge', replaceUrl: true });
     }
+  }
+
+  protected readonly watchOpen = signal(false);
+  protected readonly watchedWards = computed(() => {
+    const list = this.wards()?.wards ?? [];
+    return this.state.watchWards().map((slug) => list.find((w) => w.slug === slug)).filter((w) => !!w);
+  });
+  protected readonly watchedProjects = computed(() => {
+    const list = this.projects()?.projects ?? [];
+    return this.state.watchlist().map((slug) => list.find((p) => p.slug === slug)).filter((p) => !!p);
+  });
+  /** Only entries that still exist (a project removed since it was watched does not count). */
+  protected readonly watchCount = computed(() => this.watchedWards().length + this.watchedProjects().length);
+
+  protected openWard(slug: string): void {
+    this.state.set('ward', slug);
+    this.watchOpen.set(false);
+    void this.router.navigate(['/property-intelligence/map']);
+  }
+
+  protected openProject(slug: string): void {
+    this.watchOpen.set(false);
+    void this.router.navigate(['/property-intelligence/projects', slug]);
   }
 
   protected toggleLang(): void {

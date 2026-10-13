@@ -108,6 +108,8 @@ export const LAND_STOPS = [10, 30, 60, 120, 250] as const;
 })
 export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
   readonly data = input<MapLayers | null>(null);
+  /** Schools and health facilities: loaded by the parent only when the layer is switched on. */
+  readonly social = input<GeoJSON.FeatureCollection | null>(null);
   readonly toggles = input.required<Record<LayerKey, boolean>>();
   readonly basemap = input<Basemap>('map');
   readonly lens = input<Lens>('potential');
@@ -137,6 +139,10 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
     effect(() => {
       const data = this.data();
       untracked(() => this.ready && this.applyData(data));
+    });
+    effect(() => {
+      const social = this.social();
+      untracked(() => this.ready && this.applySocial(social));
     });
     effect(() => {
       this.lens();
@@ -212,6 +218,7 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
         this.ready = true;
         this.addOverlays();
         this.applyData(this.data());
+        this.applySocial(this.social());
       });
     });
   }
@@ -221,10 +228,17 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
   private applyData(data: MapLayers | null): void {
     const map = this.map!;
     const l = data?.layers;
-    for (const id of SOURCES) (map.getSource(id) as maplibregl.GeoJSONSource | undefined)?.setData((l?.[id as SourceId] as GeoJSON.FeatureCollection | undefined) ?? EMPTY);
+    for (const id of SOURCES) {
+      if (id === 'social') continue;
+      (map.getSource(id) as maplibregl.GeoJSONSource | undefined)?.setData((l?.[id as Exclude<SourceId, 'social'>] as GeoJSON.FeatureCollection | undefined) ?? EMPTY);
+    }
     // Frame the selected ward the first time data arrives; later horizon switches keep the view.
     this.applySelection(this.selected(), !!l && !this.framed);
     if (l) this.framed = true;
+  }
+
+  private applySocial(social: GeoJSON.FeatureCollection | null): void {
+    (this.map!.getSource('social') as maplibregl.GeoJSONSource | undefined)?.setData(social ?? EMPTY);
   }
 
   private lensColor(): maplibregl.ExpressionSpecification {
@@ -345,7 +359,13 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
       id: 'pi-projects',
       type: 'circle',
       source: 'projects',
-      paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 4, 14, 7], 'circle-color': p.projectDot, 'circle-stroke-color': p.amber, 'circle-stroke-width': 2 },
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 4, 14, 7],
+        'circle-color': p.projectDot,
+        // Social housing in green, commercial projects in amber.
+        'circle-stroke-color': ['match', ['get', 'kindKey'], 'social', p.green, p.amber],
+        'circle-stroke-width': 2,
+      },
     });
     add({ id: 'pi-selected-line', type: 'line', source: 'wards', filter: ['==', ['get', 'slug'], ''], paint: { 'line-color': p.green, 'line-width': 2.6 } });
     add({

@@ -30,6 +30,11 @@ const ENDPOINTS = [
 ];
 const UA = 'hanoi100-property-intel/1.0 (data snapshot)';
 
+/**
+ * Ward names misspelt in the transcription. Zone 9 lists "Đông Sơn" among the communes of former Hoài Đức and Đan Phượng;
+ * no ward or commune of that name exists among Hanoi's 126 (2025) — it is Sơn Đồng (former Hoài Đức).
+ */
+const TYPOS = { 'dong son': 'son dong' };
 const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase().replace(/\s+/g, ' ').trim();
 const round1 = (n) => Math.round(n * 10) / 10;
 const median = (values) => {
@@ -59,6 +64,13 @@ function streetKey(name) {
 }
 /** Display name: without the section description ("Đường 23B (đoạn từ …)" → "Đường 23B"). */
 const shortName = (name) => name.replace(/\s*\(.*$/, '').replace(/\s*[:;].*$/, '').trim();
+/** "QL.32" → ["quốc lộ 32"]; "ĐT.422" → ["tỉnh lộ 422", "đường tỉnh 422", "422"]. */
+function refKeys(ref) {
+  const m = /^\s*(QL|ĐT|DT|TL)\.?\s*([0-9]+[A-Z]?)\s*$/i.exec(ref);
+  if (!m) return [];
+  const n = m[2].toLowerCase();
+  return /^QL$/i.test(m[1]) ? [`quốc lộ ${n}`] : [`tỉnh lộ ${n}`, `đường tỉnh ${n}`, n];
+}
 const osmKey = (name) => streetKey(String(name).replace(/^(phố|đường|đại lộ)\s+/i, ''));
 
 // ---------------------------------------------------------------- the table
@@ -143,8 +155,8 @@ async function main() {
   const zoneOfWard = new Map();
   for (const z of zones) {
     for (const n of z.wardNames) {
-      // The transcription has typos and cut-off names ("Đồng Đa", "Lán"): exact match first, then a unique prefix.
-      const key = fold(n) === 'dong da' ? 'dong da' : fold(n);
+      // The transcription has typos and cut-off names ("Đồng Đa", "Lán"): known fixes, exact match, then a unique prefix.
+      const key = TYPOS[fold(n)] ?? fold(n);
       const prefixed = [...wardByName.keys()].filter((k) => k.startsWith(key));
       const w = wardByName.get(key) ?? (prefixed.length === 1 ? wardByName.get(prefixed[0]) : null);
       if (w && !zoneOfWard.has(w.slug)) zoneOfWard.set(w.slug, z.zone);
@@ -154,13 +166,14 @@ async function main() {
   const xs = WARDS.flatMap((w) => (w.geometry.type === 'Polygon' ? [w.geometry.coordinates] : w.geometry.coordinates).flatMap((p) => p[0]));
   const bbox = [Math.min(...xs.map((p) => p[1])), Math.min(...xs.map((p) => p[0])), Math.max(...xs.map((p) => p[1])), Math.max(...xs.map((p) => p[0]))].map((n) => n.toFixed(3));
   console.log('Downloading named roads from OpenStreetMap…');
-  const roads = await overpass(`[out:json][timeout:240];way["highway"]["name"](${bbox.join(',')});out center tags;`);
+  const roads = await overpass(`[out:json][timeout:240];(way["highway"]["name"](${bbox.join(',')});way["highway"]["ref"](${bbox.join(',')}););out center tags;`);
   const byKey = new Map();
   for (const e of roads.json.elements) {
     if (!e.center) continue;
-    for (const tag of ['name', 'name:vi', 'alt_name', 'old_name']) {
-      if (!e.tags?.[tag]) continue;
-      const key = osmKey(e.tags[tag]);
+    const keys = new Set(['name', 'name:vi', 'alt_name', 'old_name'].filter((t) => e.tags?.[t]).map((t) => osmKey(e.tags[t])));
+    // Road numbers: the table names communes' roads "Quốc lộ 32", "Đường 23B", "Tỉnh lộ 422"; OSM tags them ref=QL.32, ĐT.422.
+    for (const ref of String(e.tags?.ref ?? '').split(';')) for (const k of refKeys(ref)) keys.add(k);
+    for (const key of keys) {
       if (!byKey.has(key)) byKey.set(key, []);
       byKey.get(key).push([e.center.lon, e.center.lat]);
     }
@@ -229,4 +242,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { price, streetKey, parseZones };
+module.exports = { price, streetKey, parseZones, refKeys, TYPOS };

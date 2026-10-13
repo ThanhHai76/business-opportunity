@@ -85,8 +85,8 @@ export interface AreaFacts {
   waterPct: number;
   lakes: string[];
   busStops: number;
-  /** New (2025) wards the 1.5 km circle falls in, with their share of it. */
-  wards: Array<{ name: string; pct: number }>;
+  /** Residents (latest published figure), when known. */
+  population?: number | null;
 }
 
 /** What one score was computed from, in words. */

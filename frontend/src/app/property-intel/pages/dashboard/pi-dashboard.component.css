@@ -1280,3 +1280,204 @@
 .tracked .tracked__row {
   grid-template-columns: minmax(0, 1fr) auto 14px;
 }
+
+/* driving times */
+.travel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.travel__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 52px;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 12.5px;
+}
+
+.travel__row .pi-mono {
+  text-align: right;
+  color: var(--pi-cyan);
+}
+
+.travel__row .travel__km {
+  font-size: 10.5px;
+  color: var(--pi-faint);
+}
+
+/* ================================================= weights, compare, ward report */
+.district__actions,
+.crit__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.crit__links {
+  gap: 14px;
+}
+
+.score__custom {
+  display: block;
+  margin-top: 4px;
+  font: 500 10.5px var(--pi-font-mono);
+  font-style: normal;
+  color: var(--pi-amber);
+}
+
+.weights {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--pi-fill);
+  border: 1px solid var(--pi-line);
+}
+
+.weights__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px 36px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.weights__row input {
+  width: 100%;
+  accent-color: var(--pi-green);
+}
+
+.weights__row .pi-mono {
+  text-align: right;
+}
+
+/* comparison: over the bottom-left of the map */
+.compare-slot {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 4;
+  /* Left of the floating AI panel (380 px + gaps; 340 px below 1560 px). */
+  width: min(560px, calc(100% - 32px - 396px));
+  max-height: 55%;
+  display: block;
+}
+
+.compare-open {
+  position: absolute;
+  left: 16px;
+  bottom: 120px;
+  z-index: 4;
+  cursor: pointer;
+}
+
+/* ward report dialog (same look as the project report) */
+.report-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(5, 9, 18, 0.55);
+}
+
+.report {
+  position: fixed;
+  z-index: 1301;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  padding: 22px 24px;
+  border-radius: 12px;
+  background: var(--pi-panel);
+  border: 1px solid var(--pi-line-2);
+  box-shadow: var(--pi-shadow);
+  color: var(--pi-ink);
+}
+
+.report__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.report__head h2 {
+  margin: 4px 0;
+  font-size: 22px;
+}
+
+.report__head p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--pi-dim);
+}
+
+.report__actions {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.report__body h3 {
+  margin: 14px 0 6px;
+  font-size: 13px;
+}
+
+.report__body ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.report__body a {
+  color: var(--pi-cyan);
+  word-break: break-all;
+}
+
+.report__disclaimer {
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--pi-faint);
+}
+
+@media print {
+  .report-backdrop,
+  .report__actions {
+    display: none;
+  }
+
+  .report {
+    position: static;
+    transform: none;
+    width: auto;
+    max-height: none;
+    box-shadow: none;
+    border: 0;
+  }
+}
+
+@media (max-width: 1560px) {
+  .compare-slot {
+    width: min(560px, calc(100% - 32px - 356px));
+  }
+}
+
+@media (max-width: 1280px) {
+  .compare-slot {
+    position: static;
+    width: auto;
+    margin: 16px;
+  }
+
+  .compare-open {
+    bottom: 16px;
+  }
+}

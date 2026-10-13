@@ -151,7 +151,9 @@ export class TmRealMap {
   }
 
   private async init(): Promise<void> {
-    const ml = await import('maplibre-gl');
+    // maplibre-gl is CommonJS: in the production build the dynamic import puts the API under `default`.
+    const mod = await import('maplibre-gl');
+    const ml = ((mod as unknown as { default?: typeof mod }).default ?? mod) as typeof mod;
     if (this.destroyed) return;
     const map = new ml.Map({
       container: this.host,

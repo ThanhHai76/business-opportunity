@@ -1,6 +1,6 @@
 'use strict';
 /**
- * `npm run data:commute` — road travel times between the Living Score areas, from the public OSRM demo server
+ * `npm run data:commute` — road travel times between the Living Score areas (the 2025 wards), from the public OSRM demo server
  * (routing on OpenStreetMap roads, driving profile, free-flow: no traffic). Writes
  * src/living-score/data/commute.json; the server only reads that file.
  *

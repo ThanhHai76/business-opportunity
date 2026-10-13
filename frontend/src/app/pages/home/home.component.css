@@ -13,8 +13,6 @@
   --accent-live-soft: var(--app-live-soft);
   --accent-future: var(--app-future);
   --accent-future-soft: var(--app-future-soft);
-  --accent-copilot: var(--app-copilot);
-  --accent-copilot-soft: var(--app-copilot-soft);
   --accent-property: var(--app-property);
   --accent-property-soft: var(--app-property-soft);
   --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
@@ -131,10 +129,6 @@ main {
   border-top-color: var(--accent-future);
 }
 
-.card-copilot {
-  border-top-color: var(--accent-copilot);
-}
-
 .card-property {
   border-top-color: var(--accent-property);
 }
@@ -167,10 +161,6 @@ main {
 
 .card-future .card-eyebrow {
   color: var(--accent-future);
-}
-
-.card-copilot .card-eyebrow {
-  color: var(--accent-copilot);
 }
 
 .card-property .card-eyebrow {
@@ -249,11 +239,6 @@ main {
 .card-future .cta {
   background: var(--accent-future-soft);
   color: var(--accent-future);
-}
-
-.card-copilot .cta {
-  background: var(--accent-copilot-soft);
-  color: var(--accent-copilot);
 }
 
 .card-property .cta {

@@ -97,13 +97,7 @@ function buildLayers(horizon, lang) {
 
   const projects = fc(
     M.PROJECTS.map((p) =>
-      feature({ type: 'Point', coordinates: p.coords }, { slug: p.slug, name: p.name, price: E.priceLabel(p, lang), kind: M.L(MK.KIND[p.kind], lang), approx: p.approx }),
-    ),
-  );
-
-  const social = fc(
-    M.POIS.filter((p) => SOCIAL[p.kind]).map((p) =>
-      feature({ type: 'Point', coordinates: p.coords }, { kind: SOCIAL[p.kind], name: p.name ?? (SOCIAL[p.kind] === 'school' ? (lang === 'en' ? 'School' : 'Trường học') : lang === 'en' ? 'Health facility' : 'Cơ sở y tế') }),
+      feature({ type: 'Point', coordinates: p.coords }, { slug: p.slug, name: p.name, price: E.priceLabel(p, lang), kind: M.L(MK.KIND[p.kind], lang), kindKey: p.kind, approx: p.approx }),
     ),
   );
 
@@ -114,8 +108,17 @@ function buildLayers(horizon, lang) {
   return {
     horizon,
     lang,
-    layers: { wards, labels, metro, stations, tod, infrastructure, planning, projects, social, green },
+    layers: { wards, labels, metro, stations, tod, infrastructure, planning, projects, green },
   };
 }
 
-module.exports = { buildLayers };
+/** Schools and health facilities (~2,000 points, ~300 kB): served apart, loaded only when the layer is switched on. */
+function buildSocial(lang) {
+  return fc(
+    M.POIS.filter((p) => SOCIAL[p.kind]).map((p) =>
+      feature({ type: 'Point', coordinates: p.coords }, { kind: SOCIAL[p.kind], name: p.name ?? (SOCIAL[p.kind] === 'school' ? (lang === 'en' ? 'School' : 'Trường học') : lang === 'en' ? 'Health facility' : 'Cơ sở y tế') }),
+    ),
+  );
+}
+
+module.exports = { buildLayers, buildSocial };

@@ -28,6 +28,9 @@ const { getSeedData } = require('../living-score/seed/seed-data');
 const FM = require('../future-map/data');
 const MK = require('./market');
 const LAND = require('./data/land-price.json');
+const TRAVEL_FILE = path.join(__dirname, 'data', 'travel.json');
+/** Driving times (OSRM, free-flow) from ward centres and projects — `npm run data:travel`. */
+const TRAVEL = fs.existsSync(TRAVEL_FILE) ? JSON.parse(fs.readFileSync(TRAVEL_FILE, 'utf8')) : { destinations: [], wards: {}, projects: {} };
 
 const INFRA_FILE = path.join(__dirname, 'data', 'infra-osm.json');
 const INFRA_OSM = fs.existsSync(INFRA_FILE)
@@ -134,6 +137,12 @@ const SOURCES = {
     titleEn: 'Resolution 52/2025/NQ-HĐND (26/11/2025) — Hanoi land price table from 01/01/2026 (residential, street-front VT1); Excel transcription by thuviennhadat.vn, streets placed in wards with OpenStreetMap',
     publisher: 'HĐND TP Hà Nội',
     url: 'https://luatvietnam.vn/dat-dai/nghi-quyet-52-2025-nq-hdnd-ha-noi-bang-gia-dat-lan-dau-ap-dung-tu-01-01-2026-420193-d2.html',
+  },
+  osrm: {
+    title: `Thời gian lái xe tính bằng OSRM trên mạng đường OpenStreetMap (đường thông thoáng, chưa tính kẹt xe; ${TRAVEL.generatedAt?.slice(0, 10) ?? '—'})`,
+    titleEn: `Driving times computed with OSRM on OpenStreetMap roads (free-flow, no traffic; ${TRAVEL.generatedAt?.slice(0, 10) ?? '—'})`,
+    publisher: 'OSRM / OpenStreetMap contributors',
+    url: 'https://project-osrm.org/',
   },
   ...MK.SOURCES,
 };
@@ -400,6 +409,7 @@ module.exports = {
   SOURCES,
   LAND,
   LAND_CITY_MEDIAN,
+  TRAVEL,
   landOf,
   PROJECTS,
   PROJECT_WARD,

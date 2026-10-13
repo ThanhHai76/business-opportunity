@@ -116,6 +116,24 @@ const STYLE_URL: Record<'light' | 'dark', string> = {
         white-space: nowrap;
         box-shadow: 0 1px 4px rgba(16, 24, 40, 0.18);
       }
+      /* Set by placePins(): a pin that would overlap a better-scored one shrinks to a dot; names show where they fit. */
+      .ls-root .ls-pin.is-dot:not(.is-selected):not(:hover):not(:focus-visible) .ls-pin__score {
+        min-width: 14px;
+        width: 14px;
+        height: 14px;
+        padding: 0;
+        border-width: 2px;
+        font-size: 0;
+      }
+      .ls-root .ls-pin.is-dot:not(.is-selected):not(:hover):not(:focus-visible) .ls-pin__name,
+      .ls-root .ls-pin.no-name:not(.is-selected):not(:hover):not(:focus-visible) .ls-pin__name {
+        display: none;
+      }
+      .ls-root .ls-pin:hover,
+      .ls-root .ls-pin:focus-visible,
+      .ls-root .ls-pin.is-selected {
+        z-index: 2;
+      }
       .ls-root .ls-pin:hover .ls-pin__score,
       .ls-root .ls-pin.is-selected .ls-pin__score {
         transform: scale(1.15);
@@ -188,7 +206,8 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
 
   private map?: maplibregl.Map;
   private readonly ready = signal(false);
-  private readonly pins = new Map<string, { marker: maplibregl.Marker; element: HTMLElement }>();
+  private readonly pins = new Map<string, { marker: maplibregl.Marker; element: HTMLElement; value: number }>();
+  private pinFrame = 0;
   private hoveredId: number | string | null = null;
   private fitted = false;
   private styleTheme: 'light' | 'dark' = 'light';
@@ -220,6 +239,8 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
       map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
       this.bindInteractions(map);
+      map.on('move', () => this.schedulePins());
+      map.on('resize', () => this.schedulePins());
       // Fires for the first style and again after every theme swap (setStyle drops custom layers).
       map.on('style.load', () => {
         this.addSourcesAndLayers(map);
@@ -232,6 +253,7 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    cancelAnimationFrame(this.pinFrame);
     this.pins.forEach(({ marker }) => marker.remove());
     this.pins.clear();
     this.map?.remove();
@@ -453,9 +475,10 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
           this.zone.run(() => this.areaSelect.emit(p.slug));
         });
         const marker = new maplibregl.Marker({ element, anchor: 'center' }).setLngLat([p.lng, p.lat]).addTo(map);
-        pin = { marker, element };
+        pin = { marker, element, value: p.value };
         this.pins.set(p.slug, pin);
       }
+      pin.value = p.value;
       pin.marker.setLngLat([p.lng, p.lat]);
       // classList (not className): MapLibre put its own `maplibregl-marker` class on this element.
       for (const band of BAND_KEYS) pin.element.classList.toggle(`ls-pin--${band}`, band === p.band);
@@ -470,12 +493,58 @@ export class AreaMapComponent implements AfterViewInit, OnDestroy {
         this.pins.delete(slug);
       }
     }
+    this.schedulePins();
+  }
+
+  /** One placement per frame, whatever triggered it (move, resize, new scores, selection). */
+  private schedulePins(): void {
+    if (this.pinFrame) return;
+    this.pinFrame = requestAnimationFrame(() => {
+      this.pinFrame = 0;
+      this.placePins();
+    });
+  }
+
+  /**
+   * With 79 wards the pins would pile up at city zoom: the selected ward, then the best scores, keep a full pin; a pin
+   * that would overlap one already placed becomes a small dot in its band colour (full again on hover/focus). Names
+   * show only where they fit inside the map without overlapping.
+   */
+  private placePins(): void {
+    const host = this.host.nativeElement;
+    const area = host.getBoundingClientRect();
+    const selected = untracked(() => this.selectedSlug());
+    const entries = [...this.pins.entries()].map(([slug, pin]) => ({ slug, ...pin }));
+    for (const { element } of entries) element.classList.remove('is-dot', 'no-name');
+    type Box = { l: number; t: number; r: number; b: number };
+    const boxOf = (el: Element | null): Box | null => {
+      const r = el?.getBoundingClientRect();
+      return r && r.width > 0 ? { l: r.left, t: r.top, r: r.right, b: r.bottom } : null;
+    };
+    const gap = 2;
+    const hits = (a: Box, z: Box) => a.l < z.r + gap && a.r + gap > z.l && a.t < z.b + gap && a.b + gap > z.t;
+    const inside = (a: Box) => a.l >= area.left && a.r <= area.right && a.t >= area.top && a.b <= area.bottom;
+    // Measure everything at full size first, then decide.
+    const measured = entries.map((e) => ({ ...e, score: boxOf(e.element.querySelector('.ls-pin__score')), name: boxOf(e.element.querySelector('.ls-pin__name')) }));
+    measured.sort((a, b) => Number(b.slug === selected) - Number(a.slug === selected) || b.value - a.value);
+    const placed: Box[] = [];
+    for (const e of measured) {
+      if (!e.score) continue;
+      if (e.slug !== selected && placed.some((z) => hits(e.score!, z))) {
+        e.element.classList.add('is-dot');
+        continue;
+      }
+      placed.push(e.score);
+      if (e.name && (e.slug === selected || (inside(e.name) && !placed.some((z) => hits(e.name!, z))))) placed.push(e.name);
+      else e.element.classList.add('no-name');
+    }
   }
 
   private syncSelection(slug: string | null, ready: boolean): void {
     if (!ready || !this.map) return;
     this.map.setFilter('areas-selected', ['==', ['get', 'slug'], slug ?? '']);
     for (const [key, pin] of this.pins) pin.element.classList.toggle('is-selected', key === slug);
+    this.schedulePins();
     this.drawMeasureCircle(slug);
     const feature = untracked(() => this.areas())?.features.find((f) => f.properties.slug === slug);
     if (feature) {

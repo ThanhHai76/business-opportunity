@@ -55,6 +55,31 @@ export const COMPARE_COLORS = ['#0f5ff2', '#d9820b', '#1a8f5c'];
 
 /** Approximate map view that frames all of the areas. */
 export const HANOI_BOUNDS: [[number, number], [number, number]] = [
-  [105.69, 20.93],
-  [105.96, 21.21],
+  [105.63, 20.86],
+  [106.01, 21.26],
 ];
+
+/**
+ * Until 10/2026 the areas were thirteen cells around the former district centres; saved lists and old links use
+ * those slugs. Each points to the 2025 ward that contains the old centre (as backend-node LEGACY_SLUGS).
+ */
+export const LEGACY_AREA_SLUGS: Record<string, string> = {
+  'cau-giay': 'phuong-cau-giay',
+  'tay-ho': 'phuong-tay-ho',
+  'ba-dinh': 'phuong-ngoc-ha',
+  'hoan-kiem': 'phuong-hoan-kiem',
+  'dong-da': 'phuong-dong-da',
+  'hai-ba-trung': 'phuong-bach-mai',
+  'thanh-xuan': 'phuong-khuong-dinh',
+  'hoang-mai': 'phuong-hoang-mai',
+  'bac-tu-liem': 'phuong-dong-ngac',
+  'nam-tu-liem': 'phuong-tu-liem',
+  'long-bien': 'phuong-long-bien',
+  'ha-dong': 'phuong-kien-hung',
+  'dong-anh': 'xa-dong-anh',
+};
+
+/** Old slugs replaced by their ward, duplicates dropped, order kept. */
+export function migrateAreaSlugs(slugs: readonly string[]): string[] {
+  return [...new Set(slugs.map((s) => LEGACY_AREA_SLUGS[s] ?? s))];
+}

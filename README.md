@@ -1,6 +1,6 @@
 # Hà Nội 100 năm — Bản đồ Cơ hội Kinh doanh và các công cụ đô thị
 
-Bộ công cụ về Hà Nội: **Bản đồ Cơ hội Kinh doanh**, Hanoi Time Machine, Hanoi Living Score, Hanoi Future Map, Hanoi Business Copilot,
+Bộ công cụ về Hà Nội: **Bản đồ Cơ hội Kinh doanh**, Hanoi Time Machine, Hanoi Living Score, Hanoi Future Map,
 AI Property Intelligence.
 
 - **Frontend**: Angular 18 (standalone components, signals) + MapLibre GL với nền OpenFreeMap.
@@ -24,29 +24,49 @@ theo điểm cơ hội của **12 ngành** (☕ cà phê, 🍜 ăn uống, 🏋�
   độ tin cậy thấp. Mọi màn hình đều ghi rõ OSM chưa đủ cửa hàng nhỏ — cần khảo sát thực địa.
 - **Hai cách dùng**: chọn ngành trước (bản đồ tô theo ngành đó, xếp hạng 10 phường tốt nhất có số trên bản đồ) hoặc chọn phường trước (gợi ý ngành).
   Thẻ phường giải thích điểm từng thành phần (dân số, văn phòng, chung cư, trường học, metro, tăng trưởng, trừ cạnh tranh), hiện đối thủ trên bản đồ,
-  thêm vào **so sánh 2–3 phường**, liên kết **Business Copilot** (khu vực gần nhất).
+  thêm vào **so sánh 2–3 phường**, liên kết AI Property Intelligence.
+- **Tính khả thi** (gộp từ Business Copilot cũ): máy tính lãi/lỗ cho ngành đang chọn — doanh thu, chi phí (thuê, lương, giá vốn, điện nước,
+  khác), lãi/tháng, vốn ban đầu, thời gian hoàn vốn, số khách cần để hoà vốn, vốn đủ hay thiếu. Đây là máy tính trên **giả định của người dùng**
+  (số mặc định theo ngành chỉ là điểm xuất phát, gắn nhãn "GIẢ ĐỊNH"), không phải dữ liệu thị trường. **Báo cáo** in/PDF cho phường + ngành
+  gồm điểm, phân rã, kết quả tính khả thi, giả định đã dùng và nguồn. Có **dòng tiền lũy kế 36 tháng** với giai đoạn khởi động (doanh thu
+  tăng dần trong vài tháng đầu) và tháng hoà vốn.
+- **Lập kế hoạch kinh doanh**: gõ ý tưởng tự nhiên (*"Tôi có 800 triệu, muốn mở nhà thuốc"*, *"I have 500M VND for a coffee shop"*) →
+  `POST /api/opportunity/parse` nhận ra ngành, vốn, phường → xếp hạng phường/xã theo **lãi mỗi tháng trên giả định của bạn**, phường đủ vốn
+  trước. Tuỳ chọn "Điều chỉnh theo từng phường": lượng khách theo điểm cơ hội (×0,6–1,4) và giá thuê theo giá đất Nhà nước 2026 (×0,5–2,5)
+  so với phường trung vị — là giả định tương đối, có ghi chú ở từng phường. Mỗi phường có nhãn **rủi ro Thấp/Vừa/Cao** theo điểm: vượt vốn +2,
+  không hoàn vốn trong 36 tháng +2 (sau 18 tháng +1), biên lãi < 10% +2 (< 20% +1), cạnh tranh ≥ 66 +1; từ 4 điểm là cao, 2–3 là vừa (cũng có trong báo cáo).
+  Nếu backend chưa có `/parse` (bản cũ, 404) hoặc không kết nối được, trình duyệt tự đọc ý tưởng (`op-parse.ts`, cùng quy tắc).
+- **Bảng thị trường**: mọi phường/xã đã chấm điểm trong một bảng — điểm, nhu cầu, cạnh tranh, số cơ sở, /10.000 dân, dân số, giá đất Nhà nước;
+  bấm tiêu đề để sắp xếp, lọc theo tên, lọc **"chỗ còn trống"** (nhu cầu ≥ trung vị và cạnh tranh < trung vị), tải **CSV** (UTF-8, mở được bằng Excel).
+- **So sánh** có **biểu đồ radar**: dân số, văn phòng, chung cư, trường học, metro, ít cạnh tranh, điểm cơ hội — mỗi trục 0–100 so với mọi phường.
+- **Đối thủ cùng ngành**: danh sách tên các cơ sở OpenStreetMap ghi nhận trong phường, nút hiện trên bản đồ.
 - **Hỏi AI**: Claude trả lời chỉ từ dữ liệu khi có `ANTHROPIC_API_KEY`, nếu không thì trả lời tự động từ dữ liệu; server chỉ giữ phường, ngành và nguồn có thật.
+  Câu trả lời có cấu trúc: **Kết luận** (một câu), **Lý do** (1–4 ý kèm số liệu), **Rủi ro** (0–3 ý), và các phường/xã để mở trên bản đồ
+  (trường `verdict`, `reasons[]`, `risks[]`; `answer` vẫn giữ toàn văn cho tương thích).
+- **Báo cáo đã lưu**: nút "Lưu báo cáo" trong báo cáo, danh sách "Đã lưu (n)" trên thanh công cụ để mở lại (khôi phục ngành, mốc, giả định) hoặc xoá.
+  Lưu **chỉ trong trình duyệt** (`localStorage`, tối đa 30, cùng ngành + phường + mốc thì thay bản cũ), không gửi lên server.
 - **Song ngữ** Việt/Anh, **link chia sẻ** giữ ngành, mốc, phường, danh sách so sánh (`?type=cafe&horizon=2030&ward=phuong-lang&compare=…&lang=en`).
 
 | Method | Đường dẫn | Mô tả |
 |---|---|---|
 | GET | `/api/opportunity/types` | 12 ngành, trọng số nhu cầu, độ đầy đủ dữ liệu |
-| GET | `/api/opportunity/wards?type=&horizon=now\|2030` | GeoJSON phường/xã + điểm (theo ngành, hoặc ngành tốt nhất), cách tính, nguồn |
-| GET | `/api/opportunity/wards/:slug?horizon=` | Một phường: số liệu, điểm 12 ngành kèm phân rã, độ phủ OSM, liên kết Copilot |
+| GET | `/api/opportunity/wards?type=&horizon=now\|2030` | GeoJSON phường/xã + điểm (theo ngành: kèm nhu cầu, cạnh tranh, số cơ sở, /10.000 dân; hoặc ngành tốt nhất), giá đất, cách tính, nguồn |
+| GET | `/api/opportunity/wards/:slug?horizon=` | Một phường: số liệu, điểm 12 ngành kèm phân rã, độ phủ OSM |
 | GET | `/api/opportunity/wards/:slug/places?type=` | Các cơ sở cùng ngành trong phường (đối thủ) |
-| GET | `/api/opportunity/compare?slugs=a,b[,c]&type=` | So sánh 2–3 phường |
-| POST | `/api/opportunity/ask` | `{ question, type?, ward?, horizon?, lang? }` → câu trả lời từ dữ liệu |
+| GET | `/api/opportunity/compare?slugs=a,b[,c]&type=` | So sánh 2–3 phường (kèm `signals` 0–100 cho biểu đồ radar) |
+| POST | `/api/opportunity/parse` | `{ text, lang? }` → `{ type, budget, ward }` từ ý tưởng kinh doanh |
+| POST | `/api/opportunity/ask` | `{ question, type?, ward?, horizon?, lang? }` → `{ answer, verdict, reasons[], risks[], wards[], types[], sources[] }` từ dữ liệu |
 
 ## Điều hướng chung
 
-Cả sáu công cụ (Bản đồ Cơ hội Kinh doanh, Hanoi Time Machine, Hanoi Living Score, Hanoi Future Map, Hanoi Business Copilot, AI Property Intelligence) dùng **một thanh điều hướng chung** `frontend/src/app/components/site-nav/`,
+Cả năm công cụ (Bản đồ Cơ hội Kinh doanh, Hanoi Time Machine, Hanoi Living Score, Hanoi Future Map, AI Property Intelligence) dùng **một thanh điều hướng chung** `frontend/src/app/components/site-nav/`,
 đặt trong `AppComponent`: logo "Hà Nội 100 năm" (về Trang chủ) và sáu tab. Mỗi trang chỉ giữ thanh phụ riêng cho việc của nó
 (chọn thành phố / mục lục chương / Khám phá · So sánh · AI · Đã lưu · Cá nhân). Chiều cao thanh chung là biến CSS `--site-nav-h` (`styles.css`);
 trang chiếm cả khung nhìn phải trừ biến này thay vì dùng `100vh`.
 
 ### Giao diện sáng / tối
 
-Nút mặt trăng/mặt trời trên thanh chung đổi giao diện cho **toàn bộ** ứng dụng (Trang chủ, Cơ hội Kinh doanh, Time Machine, Living Score, Future Map, Business Copilot, Property Intelligence).
+Nút mặt trăng/mặt trời trên thanh chung đổi giao diện cho **toàn bộ** ứng dụng (Trang chủ, Cơ hội Kinh doanh, Time Machine, Living Score, Future Map, Property Intelligence).
 `ThemeService` (`frontend/src/app/services/theme.service.ts`) lưu lựa chọn ở `localStorage` (`hanoi100.theme`: `light` | `dark` | `system`), mặc định theo hệ điều hành,
 và ghi kết quả vào `<html data-theme="light|dark">` (một script nhỏ trong `index.html` áp dụng trước khi vẽ để không bị nháy màu).
 Bộ màu dùng chung là các biến `--app-*` trong `frontend/src/styles.css`; mỗi trang đọc các biến này (Time Machine có bộ token sáng riêng `--tm-*`).
@@ -72,7 +92,6 @@ project/
 │   │   ├── opportunity/        # Bản đồ Cơ hội Kinh doanh (/api/opportunity/...) — phường/xã Hà Nội, dữ liệu OSM
 │   │   ├── living-score/       # Hanoi Living Score (/api/living-score/...) — xem mục bên dưới
 │   │   ├── future-map/         # Hanoi Future Map (/api/future-map/...) — quy hoạch có nguồn 2026-2065 + Vùng Thủ đô
-│   │   ├── business-copilot/   # Hanoi Business Copilot (/api/business-copilot/...) — dữ liệu demo
 │   │   └── property-intel/     # AI Property Intelligence (/api/property-intel/...) — phường/xã, giá đất 2026, thị trường, dự án
 │   ├── database/living-score/  # 01-schema.sql — schema PostgreSQL/PostGIS
 │   ├── test/                   # node --test: mọi API
@@ -87,7 +106,6 @@ project/
         ├── pages/                  # home, time-machine
         ├── living-score/           # Hanoi Living Score (lazy route /living-score, MapLibre)
         ├── future-map/             # Hanoi Future Map (lazy route /future-map, MapLibre)
-        ├── business-copilot/       # Hanoi Business Copilot (lazy route /business-copilot)
         └── property-intel/         # AI Property Intelligence (lazy route /property-intelligence, MapLibre)
 ```
 
@@ -99,7 +117,7 @@ npm install
 npm start        # hoặc: npm run dev (tự restart khi sửa code)
 ```
 
-Backend chạy tại `http://localhost:8000`; các API: `/api/opportunity`, `/api/living-score`, `/api/future-map`, `/api/business-copilot`,
+Backend chạy tại `http://localhost:8000`; các API: `/api/opportunity`, `/api/living-score`, `/api/future-map`,
 `/api/property-intel`, `/api/time-machine`.
 
 ## Chạy Frontend (Angular)
@@ -110,27 +128,70 @@ npm install
 npm start        # = ng serve, chạy tại http://localhost:4200
 ```
 
-Mặc định frontend gọi backend tại `http://localhost:8000` (cấu hình trong `frontend/src/app/config.ts`, đổi `API_BASE_URL` khi deploy).
+Trên localhost frontend gọi backend tại `http://localhost:8000`; khi deploy (tên miền khác localhost) frontend gọi `/api` trên **chính tên miền
+của trang** — nginx chuyển tiếp sang backend (`frontend/nginx.conf`). Cấu hình trong `frontend/src/app/config.ts`.
 
 **Lưu ý:** phải chạy backend trước (hoặc song song) thì bản đồ mới có dữ liệu — CORS đã được mở sẵn cho `http://localhost:4200`.
 
+## Tài khoản & lưu báo cáo (API `/api/account`, PostgreSQL)
+
+Đăng ký / đăng nhập bằng email + mật khẩu (nút **Đăng nhập** trên thanh chung). Báo cáo lưu trên Bản đồ Cơ hội Kinh doanh được giữ
+**trong tài khoản** và mở được trên mọi thiết bị; chưa đăng nhập thì vẫn lưu trong trình duyệt như trước. Khi đăng nhập, báo cáo đang có
+trong trình duyệt được **chuyển vào tài khoản** (bản mới hơn trong tài khoản không bị ghi đè) rồi xoá khỏi trình duyệt.
+
+- **Bảng** (`backend-node/database/accounts/01-schema.sql`, server tự tạo khi khởi động — chạy được cả trên Supabase/Neon/RDS):
+  `app_users` (email duy nhất không phân biệt hoa thường, mật khẩu băm **scrypt**), `app_sessions` (chỉ lưu **SHA-256** của token phiên),
+  `saved_items` (mỗi mục một dòng, nội dung `JSONB`, `kind` + `item_key` duy nhất theo người dùng — dùng chung cho các loại mục lưu sau này:
+  phường đã lưu của Living Score, danh sách theo dõi của Property Intel…). Xoá tài khoản xoá luôn phiên và mọi mục đã lưu (`ON DELETE CASCADE`).
+- **Phiên đăng nhập**: token ngẫu nhiên 32 byte trong cookie `h100_sid` — `HttpOnly`, `SameSite=Lax`, `Path=/api`, `Secure` khi production,
+  hạn 30 ngày. Đổi mật khẩu đăng xuất mọi thiết bị khác.
+- **Bảo mật**: chống CSRF (yêu cầu thay đổi dữ liệu phải đến từ origin của ứng dụng), giới hạn 10 lần đăng nhập / 15 phút và 10 lần đăng ký /
+  giờ theo IP, sai email hay sai mật khẩu trả cùng một thông báo và mất cùng thời gian, dữ liệu vào kiểm tra bằng Zod (`strictObject`),
+  tối đa 30 báo cáo mỗi người.
+- **Chế độ** (`ACCOUNTS`): `auto` (mặc định — bật khi có `DATABASE_URL`; nếu không kết nối được database thì tắt tài khoản, các công cụ khác vẫn
+  chạy), `postgres` (bắt buộc, server dừng nếu lỗi), `memory` (chỉ để phát triển, mất khi khởi động lại), `off`. Database phải dùng **UTF8**
+  (server kiểm tra khi khởi động).
+
+| Method | Đường dẫn | Mô tả |
+|---|---|---|
+| GET | `/api/account/me` | `{ enabled, user }` — không bao giờ 401 |
+| POST | `/register` · `/login` · `/logout` | Đăng ký · đăng nhập (đặt cookie) · đăng xuất |
+| PATCH · DELETE | `/me` | Đổi tên hiển thị · xoá tài khoản (cần mật khẩu) |
+| POST | `/me/password` | Đổi mật khẩu |
+| GET · PUT · DELETE | `/reports` | Danh sách · lưu (cùng ngành + phường + mốc thì thay bản cũ) · xoá tất cả |
+| POST · DELETE | `/reports/import` · `/reports/:id` | Chuyển báo cáo từ trình duyệt vào tài khoản · xoá một báo cáo |
+
+**Kiểm thử**: `npm test` chạy bộ kiểm thử tài khoản trên store trong bộ nhớ; đặt `TEST_DATABASE_URL=postgres://…` (database dùng một lần —
+bảng bị xoá sạch) để chạy cùng bộ đó trên PostgreSQL thật.
+
+### Đưa lên mạng
+
+1. **PostgreSQL 13+ (UTF8)**: tự chạy (`docker compose up`) hoặc dịch vụ quản lý (Supabase, Neon, Railway…) → đặt `DATABASE_URL`.
+2. **HTTPS** (Let's Encrypt / Cloudflare) rồi đặt `COOKIE_SECURE=true` (mặc định đã bật khi `NODE_ENV=production`).
+3. Phục vụ trang và API trên **cùng một tên miền**: nginx của frontend đã chuyển `/api/` sang backend; đặt `TRUST_PROXY=1` để giới hạn
+   tần suất theo IP thật, và `CORS_ORIGIN=https://<tên-miền>`.
+4. `NODE_ENV=production` (localhost không còn được tin cậy về CORS/CSRF). Sao lưu database định kỳ.
+5. Chưa có: **quên mật khẩu** (cần dịch vụ gửi email — SMTP/Resend/SES) và đăng nhập Google; nên thêm trước khi mở rộng người dùng.
+
 ## Hanoi Living Score (`/living-score`, API `/api/living-score`)
 
-Chấm điểm mức độ đáng sống quanh 13 quận cũ của Hà Nội (5 tiêu chí có dữ liệu), bản đồ MapLibre, so sánh 2–3 khu vực và AI gợi ý Top 3,
+Chấm điểm mức độ đáng sống của **79 phường/xã** Hà Nội sau sắp xếp 2025 (5 tiêu chí có dữ liệu), bản đồ MapLibre, so sánh 2–3 phường/xã và AI gợi ý Top 3,
 song ngữ Việt/Anh (`?lang=en` cho cả API lẫn giao diện) và link chia sẻ kèm trọng số (`?w=transportation:30,…`):
 `Bản đồ → Tìm khu vực → Living Score → Chi tiết khu vực → So sánh → AI gợi ý`.
 
 **Dữ liệu:** điểm được tính từ một bản chụp **OpenStreetMap** (© OpenStreetMap contributors, giấy phép ODbL) —
 `backend-node/src/living-score/data/osm-hanoi.json`, tạo lại bằng `npm run data:living` (Overpass API, trong `backend-node/`).
-Thời gian đi đường giữa các khu vực: `data/commute.json`, tạo bằng `npm run data:commute` (bảng OSRM trên đường bộ OSM, ô tô, khi đường thông thoáng).
+Thời gian đi đường giữa các phường/xã: `data/commute.json` (79 × 79), tạo bằng `npm run data:commute` (bảng OSRM trên đường bộ OSM, ô tô, khi đường thông thoáng).
 
-- Mỗi khu vực là vùng quanh trung tâm một **quận cũ** (trước khi sắp xếp đơn vị hành chính năm 2025, khi cấp quận không còn);
-  vùng tô màu trên bản đồ là hình minh hoạ, không phải địa giới hành chính. Mỗi khu vực ghi kèm các **phường/xã mới (2025)** mà vòng 1,5 km
-  đi qua và tỷ lệ của từng phường (ranh giới admin_level 6 trên OSM); tìm kiếm theo tên phường mới (VD "phường Láng") cũng ra khu vực.
+- Mỗi khu vực là một **phường/xã sau sắp xếp 2025**, ranh giới thật (OSM admin_level 6) lấy từ `src/opportunity/data/hanoi-wards.json` —
+  **cùng bộ, cùng slug** với Bản đồ Cơ hội Kinh doanh và AI Property Intelligence, nên ba công cụ liên kết thẳng tới nhau theo phường.
+  Phường có hình dạng lạ mà tâm hình học nằm ngoài ranh giới (Lĩnh Nam, Xuân Phương) được đo từ điểm nằm sâu nhất bên trong.
+- Trước 10/2026 Living Score dùng 13 vùng minh hoạ quanh quận cũ; slug cũ (`cau-giay`, `tay-ho`…) vẫn mở được — API trả về phường chứa
+  tâm quận cũ (`LEGACY_SLUGS`), giao diện sửa địa chỉ và tự chuyển danh sách đã lưu/so sánh trong trình duyệt sang slug mới.
 - Mọi số liệu được đo trong **bán kính 1,5 km** (khoảng 20 phút đi bộ) quanh trung tâm: số ga metro đang khai thác và điểm dừng xe buýt,
   trường học/mầm non/cơ sở đào tạo, bệnh viện/phòng khám, siêu thị/cửa hàng tiện lợi/chợ/TTTM/quán cà phê, và tỷ lệ diện tích công viên và hồ ao
   (từ lưới phủ ~100 m dựng từ polygon OSM; sông, kênh không tính).
-- Điểm là **tương đối** giữa 10 khu vực (100 = khu vực cao nhất) theo thang căn bậc hai — địa điểm đầu tiên gần nhà có giá trị hơn địa điểm thứ một trăm.
+- Điểm là **tương đối** giữa 79 phường/xã (100 = nơi cao nhất) theo thang căn bậc hai — địa điểm đầu tiên gần nhà có giá trị hơn địa điểm thứ một trăm.
 - **An ninh, môi trường (không khí, tiếng ồn) và chi phí (giá thuê/bán) chưa có dữ liệu mở theo khu vực** nên không được chấm và không có trọng số;
   giao diện hiển thị "chưa có dữ liệu" thay vì đoán.
 - OSM do cộng đồng đóng góp nên có thể thiếu địa điểm (nhất là vùng ven) — số liệu dùng để so sánh tương đối, không phải thống kê chính thức.
@@ -187,7 +248,7 @@ Nạp lại từ đầu: `SEED_RESET=true npm run seed:living` (trong `backend-n
 | `ANTHROPIC_API_KEY` | — | Trống = AI dùng giải thích theo quy tắc (`mode: "rules"`) |
 | `LLM_MODEL` | `claude-opus-5` | Model dùng cho lời giải thích |
 | `LLM_TIMEOUT_MS` | `45000` | Timeout gọi LLM |
-| `AI_PROVIDER` | `auto` | Business Copilot: `auto` (Claude nếu có key) hoặc `mock` |
+| `AI_PROVIDER` | `auto` | Hỏi AI của Cơ hội KD, Future Map, Time Machine, Property AI: `auto` (Claude nếu có key) hoặc `mock` (`src/ai-config.js`) |
 
 Cấu hình Living Score được validate bằng Zod khi khởi động — sai cấu hình sẽ báo lỗi rõ ràng và dừng ngay.
 
@@ -214,8 +275,8 @@ mức ưu tiên (0–5) cho từng tiêu chí và `lang` (`vi`/`en`). Không có
 2. **Retrieval (RAG)**: `KnowledgeService` lấy các đoạn kiến thức (bảng `area_knowledge`) phù hợp nhất với ưu tiên của người dùng.
    Retrieval hiện dựa trên chủ đề; hướng nâng cấp: thêm cột `embedding` (pgvector) và xếp hạng theo độ tương đồng.
 3. **LLM (Anthropic API)**: chỉ *diễn đạt lại* — nhận điểm, số liệu đo được (`measurements`, `facts`) và ngữ cảnh đã tính, trả về `summary`, `reasons`,
-   `pros`, `cons` theo JSON schema (Zod). Prompt cấm bịa số liệu, cấm bàn về giá thuê/an ninh/không khí (không có dữ liệu) và yêu cầu gọi đúng "khu vực quanh
-   quận cũ". LLM **không** được đổi điểm hay thứ hạng. Nguồn (OSM, ODbL, ngày dữ liệu) do server gắn vào `sources`, không do model viết.
+   `pros`, `cons` theo JSON schema (Zod). Prompt cấm bịa số liệu, cấm bàn về giá thuê/an ninh/không khí (không có dữ liệu) và yêu cầu gọi đúng tên
+   phường/xã (không gọi là quận). LLM **không** được đổi điểm hay thứ hạng. Nguồn (OSM, ODbL, ngày dữ liệu) do server gắn vào `sources`, không do model viết.
    Bật `fallbacks: "default"` để tự chuyển model nếu bị từ chối.
 4. Không có API key / LLM lỗi / bị từ chối → tự động dùng giải thích theo quy tắc (`mode: "rules"` + `notice`).
 
@@ -241,9 +302,10 @@ Lỗi luôn có dạng `{ statusCode, error, message, path, timestamp }`. Query/
 
 ### Dữ liệu & PostGIS
 
-Schema ở `backend-node/database/living-score/01-schema.sql`: `areas` (boundary `Polygon`, centroid `Point`), `area_scores`, `area_notes`, `amenities`,
+Schema ở `backend-node/database/living-score/01-schema.sql`: `areas` (boundary `MultiPolygon`, centroid `Point`), `area_scores`, `area_notes`, `amenities`,
 `infrastructure`, `area_knowledge`; index GIST trên các cột hình học. Backend đọc hình học bằng `ST_AsGeoJSON`, lọc viewport bằng `&&`/`ST_MakeEnvelope`.
-Ranh giới khu vực là **hình minh hoạ** (ô Voronoi cắt theo bán kính quanh tâm khu vực) — không phải ranh giới hành chính. Tuyến/ga metro chỉ xấp xỉ.
+Ranh giới là ranh giới phường/xã trên OSM. Database tạo trước 10/2026: chạy `03-wards-2025.sql` rồi nạp lại với `SEED_RESET=true` (slug đổi).
+Tuyến/ga metro dự kiến chỉ xấp xỉ.
 
 ### Kiểm thử
 
@@ -254,7 +316,7 @@ cd backend-node && npm test      # node --test: scoring, seed, recommendation en
 ### Giới hạn hiện tại
 
 - An ninh, môi trường, giá thuê chưa có nguồn dữ liệu mở theo khu vực.
-- Điểm vẫn chấm theo 13 khu vực quanh quận cũ (mỗi khu vực ghi kèm phường mới); chấm điểm riêng cho từng phường/xã mới là bước tiếp theo.
+- Với xã rộng (> 15 km²), vòng đo 1,5 km chỉ phản ánh khu trung tâm; xã vùng ven điểm thấp một phần vì OSM còn thiếu địa điểm.
 - Thời gian đi đường là ô tô khi đường thông thoáng (OSRM), chưa tính kẹt xe giờ cao điểm hay xe buýt/metro.
 - Chưa có đăng nhập: khu vực đã lưu, danh sách so sánh, trọng số và giao diện được lưu ở `localStorage` của trình duyệt.
 - Bản đồ nền dùng OpenFreeMap (vector tiles miễn phí, không cần key; dữ liệu © OpenStreetMap).
@@ -275,7 +337,7 @@ Kéo timeline (hoặc bấm ▶) để xem metro, vành đai, vùng TOD, không 
   Mỗi hướng có mũi tên màu theo chủ đề (công nghiệp, logistics, du lịch, y tế – dịch vụ),
   bộ lọc chủ đề, thời gian lái xe từ trung tâm Hà Nội, và thẻ chi tiết: chức năng, tên tỉnh trước sáp nhập, điểm đáng chú ý kèm nguồn, hạ tầng dọc hướng
   (cao tốc, đường sắt Lào Cai – Hà Nội – Hải Phòng, đường sắt tốc độ cao Bắc – Nam, vành đai 4 và 5, sân bay Gia Bình, Bệnh viện Bạch Mai cơ sở 2) với
-  trạng thái theo từng mốc, các cực của Hà Nội hướng về đó, và liên kết sang Living Score (gợi ý nơi sống nếu đi làm theo hướng này) và Business Copilot.
+  trạng thái theo từng mốc, các cực của Hà Nội hướng về đó, và liên kết sang Living Score (gợi ý nơi sống nếu đi làm theo hướng này) và Bản đồ cơ hội kinh doanh (phường/xã ở cửa ngõ).
 
 **Dữ liệu có nguồn** (`backend-node/src/future-map/data.js`, `region.js`): mỗi đối tượng ghi nguồn — QĐ 2512/QĐ-UBND (2026), QĐ 1668/QĐ-TTg và 1569/QĐ-TTg (2024),
 NQ 188/2025/QH15, NQ 202/2025/QH15 (sắp xếp tỉnh), cổng thông tin Hà Nội và báo chí (Báo Chính phủ, Dân trí, Thanh Niên, Tuổi Trẻ, VnEconomy…).
@@ -302,49 +364,12 @@ API (tiền tố `/api/future-map`, đều nhận `lang=vi|en`):
 
 Frontend: `frontend/src/app/future-map/` (MapLibre, nền OpenFreeMap). Kiểm thử: `cd backend-node && npm test` (`test/future-map.test.js`).
 
-## Hanoi Business Copilot (`/business-copilot`, API `/api/business-copilot`)
+## Business Copilot → đã gộp vào Bản đồ Cơ hội Kinh doanh
 
-Nền tảng location intelligence trả lời câu hỏi **"Tôi nên mở cửa hàng tiếp theo ở đâu tại Hà Nội?"**. Nhập ý tưởng tự nhiên
-(tiếng Việt hoặc tiếng Anh, ví dụ *"I have 500M VND and want to open a coffee shop"* hay *"Tôi có 1,2 tỷ, muốn mở nhà hàng"*) →
-Copilot nhận ra loại hình + ngân sách → xếp hạng **Top 10** khu vực theo Business Score → chi tiết, so sánh, mô phỏng, hỏi AI, xuất báo cáo.
-
-> ⚠️ **Toàn bộ là dữ liệu DEMO / ƯỚC TÍNH** (`backend-node/src/business-copilot/data.js`): dân số, thu nhập, giá thuê, đối thủ, lưu lượng
-> khách, doanh thu, chi phí đều là số minh hoạ — **không phải số liệu thị trường**. Giao diện, API và báo cáo đều ghi nhãn này.
-
-**Các trang** (thanh điều hướng riêng của Copilot): Dashboard · Explore Locations (bản đồ MapLibre 10 lớp: Business Score, heatmap nhu cầu,
-mật độ dân số, đối thủ, metro, trường học, văn phòng, mua sắm, đường chính, vùng phát triển) · Market Data (bảng sắp xếp được) · Competitors ·
-Compare (2–3 khu vực, radar + bảng) · Simulator (form nhập giả định → khu vực đề xuất, chi phí, doanh thu, lợi nhuận, hoà vốn, rủi ro) ·
-Reports (9 mục, lưu trên trình duyệt, **Xuất PDF** qua hộp thoại in) · AI Copilot. Trợ lý Copilot cũng mở được ở mọi trang (nút "Ask AI" / "Copilot").
-
-**Business Score** (`scoring.js`) = trung bình có trọng số của Nhu cầu 26 · Cạnh tranh 16 · Giá thuê 14 · Lưu lượng 14 · Tiếp cận 10 ·
-Tăng trưởng 10 · Phù hợp ngân sách 10, rồi hiệu chỉnh tuyến tính về thang 0–100. Nhu cầu dùng trọng số riêng cho từng loại hình (quán cà phê nặng
-về dân văn phòng/sinh viên, phòng gym nặng về dân cư/thu nhập…). Chi phí, doanh thu 18 tháng và điểm hoà vốn tính từ mô hình chi phí của từng loại hình.
-
-**AI** (`ai-provider.js`): lớp trừu tượng `AIProvider` (`name`, `model`, `explain({ task, question, facts })`). AI **chỉ diễn đạt** — mọi con số do
-engine tính và truyền vào. Mặc định `AI_PROVIDER=auto`: dùng Claude (Anthropic SDK) khi có `ANTHROPIC_API_KEY`, nếu không (hoặc khi lỗi/bị từ chối)
-dùng `MockAIProvider` trả lời theo quy tắc. Thêm OpenAI/Gemini = viết một lớp cùng giao diện và đăng ký trong `PROVIDERS`. Câu trả lời của Copilot
-luôn có cấu trúc **Khuyến nghị → Bằng chứng → Điểm → Rủi ro → Bước tiếp theo**; hiện nhận 6 ý định: gợi ý vị trí, ít cạnh tranh nhất, so sánh,
-cao cấp, "nên kinh doanh gì ở X", phân tích một quận.
-
-| Method | Đường dẫn (tiền tố `/api/business-copilot`) | Mô tả |
-|---|---|---|
-| GET | `/categories` | 6 loại hình |
-| GET | `/locations?category=&budget=` | 10 khu vực xếp hạng |
-| GET | `/locations/:id` · `/locations/:id/business-score` · `/locations/:id/competitors` | Chi tiết / điểm / đối thủ |
-| GET | `/recommendations?category=&budget=&limit=` | Top N + nhận định AI + heatmap cơ hội |
-| GET | `/map/layers?category=&budget=` | 10 lớp GeoJSON |
-| POST | `/analyze` | `{ message }` câu tự nhiên → Top 10 |
-| POST | `/compare` | `{ locations: [2–3 slug], category?, budgetVnd? }` |
-| POST | `/simulate` | `{ category, budgetVnd, sizeM2?, expectedRevenueVnd?, maxRentVnd?, targetCustomers?, districts? }` |
-| POST | `/ai/analyze` | `{ question, context? }` — AI Copilot |
-| POST | `/report` | `{ category?, budgetVnd?, location? }` — báo cáo 9 mục |
-
-Kiểm thử: `cd backend-node && npm test` (bộ `test/business-copilot.test.js`).
-
-**Khác biệt so với đặc tả gốc (cố ý, để khớp kiến trúc đang có của dự án):** backend là module Express trong `backend-node` (không phải NestJS riêng);
-dữ liệu chạy in-memory — chưa có bảng PostgreSQL/PostGIS và Redis cho Copilot (các thực thể trong spec tương ứng với cấu trúc trong `data.js`/`scoring.js`,
-có thể chuyển sang Postgres theo mẫu của Living Score); CSS thuần theo token sáng/tối của app (không dùng Tailwind); biểu đồ SVG tự viết (không dùng ECharts);
-AI provider hiện có mock + Anthropic (chưa có OpenAI/Gemini).
+Business Copilot cũ (10 quận, dữ liệu dân số/thu nhập/giá thuê/đối thủ **demo**) trùng mục đích với Bản đồ Cơ hội Kinh doanh nên đã được gộp:
+phần chấm điểm khu vực dùng dữ liệu thật theo 79 phường/xã của Bản đồ cơ hội; phần mô phỏng tài chính trở thành **Tính khả thi** trên giả định
+của người dùng; báo cáo in/PDF và lưu báo cáo, bảng dữ liệu thị trường (sắp xếp/lọc/CSV), radar so sánh, mức rủi ro và câu trả lời AI có cấu trúc giữ lại. Dữ liệu demo đã xoá (`backend-node/src/business-copilot`, `frontend/src/app/business-copilot`).
+Mọi đường dẫn cũ `/business-copilot/...` chuyển về `/opportunity-map`; cấu hình AI dùng chung chuyển sang `backend-node/src/ai-config.js`.
 
 ## AI Property Intelligence (`/property-intelligence`, API `/api/property-intel`)
 
@@ -359,8 +384,11 @@ nền bản đồ **OpenFreeMap** (vector, không cần key; ảnh vệ tinh Esr
   mật độ dân cư, công viên, dự án và nhiệt độ giá (minh hoạ); mốc **2026 / 2030 / 2045** đổi trạng thái công trình (đang xây → dự kiến xong).
   Bảng phường: điểm, hạng, **vì sao có điểm này** (6 tiêu chí kèm số liệu), hạ tầng trong 4 km (năm dự kiến, nguồn), cực phát triển,
   **giá đất Nhà nước 2026** của phường, **thị trường căn hộ Hà Nội** theo quý, dự án có giá công bố gần đó, **liên kết** sang Bản đồ Cơ hội
-  Kinh doanh, Living Score, Future Map, Business Copilot, danh sách nguồn, nút **Chia sẻ** (link `?ward=&horizon=&lang=`).
+  Kinh doanh, Living Score, Future Map, danh sách nguồn, nút **Chia sẻ** (link `?ward=&horizon=&lang=`).
   Có thể tô màu bản đồ theo giá đất Nhà nước.
+  **Chỉnh trọng số** 6 tiêu chí (điểm, hạng và màu bản đồ tính lại ngay trên trang; link chia sẻ giữ trọng số `?w=`),
+  **so sánh** tối đa 3 phường cạnh nhau (`?c=`), **theo dõi** phường/dự án (nút ★ trên thanh trên cùng), **báo cáo phường** in/PDF.
+  Lớp trường học & y tế (~2.000 điểm) chỉ tải khi bật (`/map/social`).
 - **Dự án** (`/property-intelligence/projects/:slug`): 12 dự án có giá được báo chí công bố, đặt ở vị trí thật trên OSM — giá/m² và loại giá,
   so với giá sơ cấp trung bình Hà Nội (CBRE), giá căn 70 m² theo giá đó, giá đất Nhà nước của phường, ga metro, trường, y tế, công viên,
   hạ tầng sắp có trong 3 km; báo cáo in/PDF có nguồn.
@@ -379,13 +407,19 @@ Xã chưa có số dân được chấm trên 5 tiêu chí còn lại và gắn 
 - **Giá đất Nhà nước 2026** theo phường (`npm run data:landprice` → `src/property-intel/data/land-price.json`): bảng giá đất của
   Nghị quyết 52/2025/NQ-HĐND (áp dụng từ 1/1/2026, 17 khu vực), giá đất ở VT1 (mặt đường). Tên đường trong bảng được ghép với đường cùng tên
   trên OpenStreetMap thuộc các phường của khu vực đó; giá của phường = trung vị (và cao nhất) các tuyến tìm thấy. 67/79 phường tính từ đường của
-  chính mình, 11 phường/xã (chủ yếu xã, nơi bảng ghi theo đoạn tuyến) dùng trung vị khu vực và được ghi chú. Bản Excel lấy từ bản tổng hợp của
-  thuviennhadat.vn. Giá Nhà nước thường thấp hơn giá thị trường nhiều — trang ghi rõ điều này.
+  chính mình (ghép theo tên đường và theo số hiệu QL./ĐT. của OSM), 8 xã dùng trung vị khu vực và được ghi chú. Bản Excel lấy từ bản tổng
+  hợp của thuviennhadat.vn; lỗi chép đã biết được sửa trong script ("Lán" → Láng, "Đông Sơn" → Sơn Đồng ở khu vực 9). Bản PDF phụ lục
+  chính thức là ảnh scan nên chưa đối chiếu tự động được từng dòng. Giá Nhà nước thường thấp hơn giá thị trường nhiều — trang ghi rõ điều này.
 - **Thị trường căn hộ Hà Nội** (`market.js`): giá sơ cấp, thứ cấp, số căn mở bán/bán được theo quý IV/2025, I/2026, II/2026 của CBRE và giá
   quý II/2026 của Savills, mỗi quý dẫn bài báo đăng lại báo cáo. Các báo cáo không chia theo phường nên đây là số toàn thành phố.
   Số căn mở bán quý II/2026 suy ra từ 16.600 căn nửa đầu năm (có ghi chú).
-- **12 dự án** có giá chào bán / dự kiến / rao bán được báo chí công bố năm 2026 (Người Quan Sát, VietNamNet), toạ độ từ OSM; CT14 Mandala
-  đặt gần đúng ở phường Yên Sở (bài chỉ nêu phường). Đây là giá chào bán, không phải giá giao dịch.
+- **24 dự án** có giá được báo chí công bố năm 2026 (Người Quan Sát, VietNamNet, VietnamFinance, Báo Xây dựng, CafeF, Vietstock), toạ độ từ
+  OSM: giá chào bán / dự kiến / rao bán / môi giới chào và **6 dự án nhà ở xã hội** (giá tạm tính, tô viền xanh trên bản đồ, không so với
+  giá thương mại). Dự án bài báo chỉ nêu phường thì đặt gần đúng ở tâm phường và ghi chú. Đây là giá chào bán, không phải giá giao dịch.
+- **Thời gian lái xe** (`npm run data:travel` → `src/property-intel/data/travel.json`): từ tâm mỗi phường và từng dự án tới Hồ Gươm, khu văn
+  phòng Cầu Giấy – Duy Tân, sân bay Nội Bài và ga metro gần nhất theo đường bộ — OSRM trên mạng đường OSM, đường thông thoáng (chưa tính kẹt xe).
+- **Cập nhật mỗi quý**: thêm bài báo vào `SOURCES` và quý mới vào `QUARTERS` trong `market.js` (ghi rõ số suy ra), thêm dự án có giá công bố,
+  chạy `npm run data:travel` rồi `npm test`. Số liệu hiện tính đến quý II/2026.
 - Đã bỏ: giá theo quận mẫu, tỷ lệ hấp thụ và lợi suất mẫu, kịch bản tăng giá, lịch sử giá nội suy, điểm phát triển/rủi ro dự án và nút đổi
   VND/USD (tỷ giá không có nguồn).
 
@@ -400,6 +434,7 @@ theo mẫu trên cùng dữ liệu. Nhận diện ý định (phân tích / so s
 | GET | `/wards` · `/wards/:slug` | 79 phường/xã xếp hạng · chi tiết (tiêu chí, hạ tầng, cực, giá đất, thị trường, dự án, liên kết, nguồn) |
 | GET | `/projects` · `/projects/:slug` | 12 dự án có giá công bố · phân tích sâu với bối cảnh thật |
 | GET | `/map?horizon=2026\|2030\|2045` | Các lớp GeoJSON theo mốc |
+| GET | `/map/social` | Trường học & cơ sở y tế (tải khi bật lớp) |
 | GET | `/search?q=` | Tìm phường/xã (khớp nguyên từ trước) và dự án |
 | POST | `/ask` | `{ question, intent?, ward?, project?, lang? }` → câu trả lời có nguồn |
 

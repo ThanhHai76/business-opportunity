@@ -3,6 +3,7 @@ import { Injectable, WritableSignal, computed, inject, signal } from '@angular/c
 import { Observable, shareReplay } from 'rxjs';
 import { PROPERTY_INTEL_API_URL } from '../config';
 import { PI_TEXT } from './pi-i18n';
+import { DEFAULT_WEIGHTS, Weights, decodeWeights, encodeWeights, isDefaultWeights } from './pi-weights';
 import {
   AskAnswer,
   AskIntent,
@@ -72,6 +73,11 @@ export class PiApiService {
     return this.cached(`${this.base}/map?horizon=${horizon}&lang=${lang}`);
   }
 
+  /** Schools and health facilities, loaded only when that layer is switched on. */
+  mapSocial(lang: Lang): Observable<import('geojson').FeatureCollection> {
+    return this.cached(`${this.base}/map/social?lang=${lang}`);
+  }
+
   search(q: string, lang: Lang): Observable<{ results: SearchResult[] }> {
     return this.http.get<{ results: SearchResult[] }>(`${this.base}/search`, { params: { q, lang } });
   }
@@ -104,8 +110,17 @@ export interface Persisted {
   ward: string;
   project: string;
   layers: Record<LayerKey, boolean>;
+  /** Watched projects (slugs). */
   watchlist: string[];
+  /** Watched wards (slugs). */
+  watchWards: string[];
+  /** The user's weights for the potential score (percent per criterion). */
+  weights: Weights;
+  /** Wards picked for side-by-side comparison (at most MAX_COMPARE). */
+  compare: string[];
 }
+
+export const MAX_COMPARE = 3;
 
 export const DEFAULT_STATE: Persisted = {
   lang: 'vi',
@@ -116,11 +131,14 @@ export const DEFAULT_STATE: Persisted = {
   project: 'vinhomes-skylake',
   layers: { ...DEFAULT_LAYERS },
   watchlist: [],
+  watchWards: [],
+  weights: { ...DEFAULT_WEIGHTS },
+  compare: [],
 };
 
-/** Saved state, then the link's ?ward=&horizon=&lang= on top (a shared link wins over what was saved). */
+/** Saved state, then the link's ?ward=&horizon=&lang=&w=&c= on top (a shared link wins over what was saved). */
 export function initialState(stored: string | null, search: string): Persisted {
-  let state: Persisted = { ...DEFAULT_STATE, layers: { ...DEFAULT_LAYERS } };
+  let state: Persisted = { ...DEFAULT_STATE, layers: { ...DEFAULT_LAYERS }, weights: { ...DEFAULT_WEIGHTS } };
   try {
     if (stored) {
       const parsed = JSON.parse(stored) as Partial<Persisted>;
@@ -136,6 +154,11 @@ export function initialState(stored: string | null, search: string): Persisted {
   if (!['potential', 'connectivity', 'infrastructure', 'landPrice'].includes(state.lens)) state.lens = 'potential';
   if (!HORIZONS.includes(state.horizon)) state.horizon = 2026;
   if (state.lang !== 'en') state.lang = 'vi';
+  state.weights = decodeWeights(state.weights ? encodeWeights({ ...DEFAULT_WEIGHTS, ...state.weights }) : null) ?? { ...DEFAULT_WEIGHTS };
+  const slugs = (list: unknown, max: number) => (Array.isArray(list) ? list.filter((x): x is string => typeof x === 'string' && SLUG.test(x)) : []).slice(0, max);
+  state.watchlist = slugs(state.watchlist, 50);
+  state.watchWards = slugs(state.watchWards, 50);
+  state.compare = slugs(state.compare, MAX_COMPARE);
   const params = new URLSearchParams(search);
   const ward = params.get('ward');
   if (ward && SLUG.test(ward)) state.ward = ward;
@@ -143,6 +166,9 @@ export function initialState(stored: string | null, search: string): Persisted {
   if (HORIZONS.includes(horizon as Horizon)) state.horizon = horizon as Horizon;
   const lang = params.get('lang');
   if (lang === 'vi' || lang === 'en') state.lang = lang;
+  const w = decodeWeights(params.get('w'));
+  if (w) state.weights = w;
+  if (params.get('c')) state.compare = slugs((params.get('c') ?? '').split(','), MAX_COMPARE);
   return state;
 }
 
@@ -169,6 +195,10 @@ export class PiStateService {
   readonly project = signal<string>(this.initial.project);
   readonly layers = signal<Record<LayerKey, boolean>>(this.initial.layers);
   readonly watchlist = signal<string[]>(this.initial.watchlist);
+  readonly watchWards = signal<string[]>(this.initial.watchWards);
+  readonly weights = signal<Weights>(this.initial.weights);
+  readonly customWeights = computed(() => !isDefaultWeights(this.weights()));
+  readonly compare = signal<string[]>(this.initial.compare);
 
   readonly chat = signal<ChatTurn[]>([]);
   readonly asking = signal(false);
@@ -195,12 +225,44 @@ export class PiStateService {
     this.save();
   }
 
-  /** Link to what is on screen: the page path plus ward, horizon and language. */
+  toggleWatchWard(slug: string): void {
+    this.watchWards.update((list) => (list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug]));
+    this.save();
+  }
+
+  setWeight(key: keyof Weights, value: number): void {
+    this.weights.update((w) => ({ ...w, [key]: Math.max(0, Math.min(100, Math.round(value))) }));
+    this.save();
+  }
+
+  setWeights(w: Weights): void {
+    this.weights.set({ ...w });
+    this.save();
+  }
+
+  resetWeights(): void {
+    this.setWeights(DEFAULT_WEIGHTS);
+  }
+
+  /** Adds or removes a ward from the comparison; the oldest one leaves when a fourth is added. */
+  toggleCompare(slug: string): void {
+    this.compare.update((list) => (list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug].slice(-MAX_COMPARE)));
+    this.save();
+  }
+
+  setCompare(list: string[]): void {
+    this.compare.set(list.slice(0, MAX_COMPARE));
+    this.save();
+  }
+
+  /** Link to what is on screen: the page path plus ward, horizon, language, custom weights and the comparison. */
   shareUrl(path: string): string {
     const params = new URLSearchParams();
     params.set('ward', this.ward());
     params.set('horizon', String(this.horizon()));
     if (this.lang() === 'en') params.set('lang', 'en');
+    if (this.customWeights()) params.set('w', encodeWeights(this.weights()));
+    if (this.compare().length) params.set('c', this.compare().join(','));
     return `${location.origin}${path.split('?')[0]}?${params}`;
   }
 
@@ -238,6 +300,9 @@ export class PiStateService {
       project: this.project(),
       layers: this.layers(),
       watchlist: this.watchlist(),
+      watchWards: this.watchWards(),
+      weights: this.weights(),
+      compare: this.compare(),
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));

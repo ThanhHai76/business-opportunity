@@ -49,7 +49,7 @@ describe('AI Property Intelligence API', () => {
     assert.equal(status, 200);
     assert.match(body.note, /bảng giá Nhà nước/);
     assert.deepEqual(body.market, { quarter: 'Q2/2026', primary: 95 });
-    assert.equal(body.stats.projects, 12);
+    assert.equal(body.stats.projects, 24);
     assert.deepEqual(body.horizons, [2026, 2030, 2045]);
     assert.equal(body.stats.wards, 79);
     assert.equal(body.stats.poles, 9);
@@ -67,6 +67,10 @@ describe('AI Property Intelligence API', () => {
     const scores = body.wards.map((w) => w.score);
     assert.deepEqual([...scores].sort((a, b) => b - a), scores);
     assert.deepEqual(body.wards.map((w) => w.rank), body.wards.map((_, i) => i + 1));
+    // Each ward carries its criterion values (for re-weighting on the page), land median and driving times.
+    const first = body.wards[0];
+    assert.deepEqual(Object.keys(first.values), ['connectivity', 'infrastructure', 'planning', 'amenities', 'population', 'development']);
+    assert.ok(first.landMedian > 0 && first.drive.centre >= 0);
     // Communes without a population figure are scored on the other criteria and flagged.
     const partial = body.wards.filter((w) => w.partial);
     assert.ok(partial.length > 0 && partial.every((w) => w.population === null));
@@ -96,6 +100,26 @@ describe('AI Property Intelligence API', () => {
     assert.ok(body.sources.some((s) => s.id === 'landPrice'));
     assert.ok(body.sources.some((s) => s.id === 'population'));
     assert.ok(!body.sources.some((s) => s.id === 'sample'));
+  });
+
+  it('gives driving times (OSRM, free-flow) from the ward and from each project', async () => {
+    const { body } = await get('/wards/phuong-bo-de');
+    assert.deepEqual(body.travel.items.map((t) => t.id), ['centre', 'offices', 'airport']);
+    assert.ok(body.travel.items.every((t) => t.minutes > 0 && t.minutes < 90));
+    assert.ok(body.travel.metro.minutes > 0 && body.travel.metro.station);
+    assert.match(body.travel.note, /chưa tính kẹt xe/);
+    assert.ok(body.sources.some((s) => s.id === 'osrm'));
+    const project = (await get('/projects/vinhomes-skylake')).body;
+    assert.ok(project.travel.items[1].minutes <= 10); // next to the Cầu Giấy – Duy Tân office cluster
+  });
+
+  it('keeps social housing apart from the commercial market average', async () => {
+    const { body } = await get('/projects/noxh-kim-hoa-ct2');
+    assert.equal(body.price.kind, 'social');
+    assert.equal(body.vsMarket, null);
+    assert.ok(body.sources.some((s) => s.url?.includes('cafef.vn')));
+    const located = (await get('/projects/lumiere-essence-peak')).body;
+    assert.ok(located.sources.some((s) => s.id === 'savillsProjects2026'));
   });
 
   it('serves ward text in English', async () => {
@@ -142,6 +166,14 @@ describe('AI Property Intelligence API', () => {
     assert.equal(underground(later).properties.status, 'operating');
     assert.ok(now.layers.planning.features.some((f) => f.properties.kind === 'development'));
     assert.equal((await get('/map?horizon=2040')).status, 400);
+  });
+
+  it('serves schools and health facilities apart from the main layers', async () => {
+    const main = (await get('/map?horizon=2026')).body;
+    assert.equal(main.layers.social, undefined);
+    const social = (await get('/map/social?lang=en')).body;
+    assert.ok(social.features.length > 1000);
+    assert.ok(social.features.every((f) => ['school', 'hospital'].includes(f.properties.kind)));
   });
 
   it('searches wards (whole words first) and projects', async () => {
