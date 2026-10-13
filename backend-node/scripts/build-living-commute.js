@@ -16,7 +16,7 @@ const OSRM = 'https://router.project-osrm.org/table/v1/driving';
 async function main() {
   const coords = AREA_DEFINITIONS.map((a) => a.center.join(',')).join(';');
   const res = await fetch(`${OSRM}/${coords}?annotations=duration,distance`, {
-    headers: { 'user-agent': 'hanoi100-living-score/1.0 (commute table)' },
+    headers: { 'user-agent': 'hanoicenturyvista-living-score/1.0 (commute table)' },
     signal: AbortSignal.timeout(60_000),
   });
   if (!res.ok) throw new Error(`OSRM: HTTP ${res.status}`);

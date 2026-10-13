@@ -1,4 +1,4 @@
-# Hà Nội 100 năm — Bản đồ Cơ hội Kinh doanh và các công cụ đô thị
+# Hanoi Century Vista — Bản đồ Cơ hội Kinh doanh và các công cụ đô thị
 
 Bộ công cụ về Hà Nội: **Bản đồ Cơ hội Kinh doanh**, Hanoi Time Machine, Hanoi Living Score, Hanoi Future Map,
 AI Property Intelligence.
@@ -59,7 +59,7 @@ theo điểm cơ hội của **12 ngành** (☕ cà phê, 🍜 ăn uống, 🏋�
 ## Điều hướng chung
 
 Cả năm công cụ (Bản đồ Cơ hội Kinh doanh, Hanoi Time Machine, Hanoi Living Score, Hanoi Future Map, AI Property Intelligence) dùng **một thanh điều hướng chung** `frontend/src/app/components/site-nav/`,
-đặt trong `AppComponent`: logo "Hà Nội 100 năm" (về Trang chủ) và sáu tab. Mỗi trang chỉ giữ thanh phụ riêng cho việc của nó
+đặt trong `AppComponent`: logo "Hanoi Century Vista" (về Trang chủ) và sáu tab. Mỗi trang chỉ giữ thanh phụ riêng cho việc của nó
 (chọn thành phố / mục lục chương / Khám phá · So sánh · AI · Đã lưu · Cá nhân). Chiều cao thanh chung là biến CSS `--site-nav-h` (`styles.css`);
 trang chiếm cả khung nhìn phải trừ biến này thay vì dùng `100vh`.
 
@@ -91,7 +91,7 @@ project/
 └── frontend/                 # Angular 18 (Trang chủ + 3 công cụ), có Dockerfile + nginx.conf
     └── src/app/
         ├── app.component.*         # Thanh điều hướng chung + router-outlet
-        ├── components/site-nav/    # Thanh điều hướng chung (logo Hà Nội 100 năm + 3 tab)
+        ├── components/site-nav/    # Thanh điều hướng chung (logo Hanoi Century Vista + 3 tab)
         ├── opportunity/            # Bản đồ Cơ hội Kinh doanh (lazy route /opportunity-map, MapLibre)
         ├── pages/                  # home, time-machine
         ├── living-score/           # Hanoi Living Score (lazy route /living-score, MapLibre)

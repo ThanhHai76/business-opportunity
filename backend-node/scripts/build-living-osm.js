@@ -69,7 +69,7 @@ async function overpass(query) {
     try {
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': 'hanoi100-living-score/1.0 (data snapshot)' },
+        headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': 'hanoicenturyvista-living-score/1.0 (data snapshot)' },
         body: new URLSearchParams({ data: query }).toString(),
         signal: AbortSignal.timeout(300_000),
       });

@@ -28,7 +28,7 @@ const ENDPOINTS = [
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
 ];
-const UA = 'hanoi100-property-intel/1.0 (data snapshot)';
+const UA = 'hanoicenturyvista-property-intel/1.0 (data snapshot)';
 
 /**
  * Ward names misspelt in the transcription. Zone 9 lists "Đông Sơn" among the communes of former Hoài Đức and Đan Phượng;

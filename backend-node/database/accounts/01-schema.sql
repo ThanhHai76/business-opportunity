@@ -1,4 +1,4 @@
--- Accounts and saved items (Hanoi 100 Years). Applied by the server on start (idempotent), so it also works on
+-- Accounts and saved items (Hanoi Century Vista). Applied by the server on start (idempotent), so it also works on
 -- managed PostgreSQL (Supabase, Neon, RDS…) where /docker-entrypoint-initdb.d is not available. PostgreSQL 13+.
 
 CREATE TABLE IF NOT EXISTS app_users (

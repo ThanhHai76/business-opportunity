@@ -36,7 +36,7 @@ async function overpass(query) {
     try {
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': 'hanoi100-property-intel/1.0 (data snapshot)' },
+        headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': 'hanoicenturyvista-property-intel/1.0 (data snapshot)' },
         body: new URLSearchParams({ data: query }).toString(),
         signal: AbortSignal.timeout(240_000),
       });

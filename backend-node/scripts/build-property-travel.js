@@ -14,7 +14,7 @@ const M = require('../src/property-intel/model');
 
 const OUT = path.join(__dirname, '..', 'src', 'property-intel', 'data', 'travel.json');
 const OSRM = 'https://router.project-osrm.org/table/v1/driving';
-const UA = 'hanoi100-property-intel/1.0 (travel times)';
+const UA = 'hanoicenturyvista-property-intel/1.0 (travel times)';
 
 const DESTINATIONS = [
   { id: 'centre', name: { vi: 'Hồ Gươm', en: 'Hoàn Kiếm Lake' }, coords: [105.8522, 21.0287] },

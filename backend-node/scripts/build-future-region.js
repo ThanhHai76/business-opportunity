@@ -13,7 +13,7 @@ const OUT_FILE = path.join(__dirname, '..', 'src', 'future-map', 'data', 'region
 async function main() {
   const points = [ORIGIN, ...CORRIDORS.map((c) => c.destination)].map((p) => p.join(',')).join(';');
   const url = `https://router.project-osrm.org/table/v1/driving/${points}?sources=0&annotations=duration,distance`;
-  const res = await fetch(url, { headers: { 'user-agent': 'hanoi100-future-map/1.0 (region times)' }, signal: AbortSignal.timeout(60_000) });
+  const res = await fetch(url, { headers: { 'user-agent': 'hanoicenturyvista-future-map/1.0 (region times)' }, signal: AbortSignal.timeout(60_000) });
   if (!res.ok) throw new Error(`OSRM: HTTP ${res.status}`);
   const body = await res.json();
   if (body.code !== 'Ok') throw new Error(`OSRM: ${body.code}`);

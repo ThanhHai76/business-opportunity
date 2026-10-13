@@ -22,6 +22,6 @@ describe('AppComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('app-site-nav')).not.toBeNull();
-    expect(compiled.querySelector('.brand-word')?.textContent).toContain('Hanoi 100 Years');
+    expect(compiled.querySelector('.brand-word')?.textContent).toContain('Hanoi Century Vista');
   });
 });

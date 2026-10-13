@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    title: 'Hanoi 100 Years',
+    title: 'Hanoi Century Vista',
     loadComponent: () =>
       import('./pages/home/home.component').then((m) => m.HomeComponent),
   },

@@ -29,7 +29,7 @@ async function overpass(query) {
     try {
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': 'hanoi100-future-map/1.0 (province outlines)' },
+        headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': 'hanoicenturyvista-future-map/1.0 (province outlines)' },
         body: new URLSearchParams({ data: query }).toString(),
         signal: AbortSignal.timeout(300_000),
       });
