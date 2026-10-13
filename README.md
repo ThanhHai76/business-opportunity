@@ -5,7 +5,6 @@ AI Property Intelligence.
 
 - **Frontend**: Angular 18 (standalone components, signals) + MapLibre GL với nền OpenFreeMap.
 - **Backend**: `backend-node/` — Node.js/Express, dữ liệu đọc từ file (không bắt buộc DB), cổng 8000.
-  (Thư mục `backend/` là bản Python/FastAPI cũ của Bản đồ Cơ hội Kinh doanh — có TP.HCM, dữ liệu mô phỏng; **không còn tương thích** với frontend hiện tại.)
 
 ### Bản đồ Cơ hội Kinh doanh (`/opportunity-map`, API `/api/opportunity`)
 
@@ -76,15 +75,6 @@ Trang "Cá nhân" của Living Score vẫn có lựa chọn Theo hệ thống / 
 
 ```
 project/
-├── backend/                  # Bản Python (FastAPI) cũ — không còn dùng với frontend hiện tại
-│   ├── app/
-│   │   ├── main.py           # API endpoints + CORS
-│   │   ├── models.py         # SQLAlchemy model Area
-│   │   ├── scoring.py        # Công thức tính điểm cơ hội theo loại hình KD
-│   │   ├── seed_data.py      # 10 khu vực demo (mock data)
-│   │   ├── schemas.py        # Pydantic response models
-│   │   └── database.py
-│   └── requirements.txt
 ├── backend-node/              # Node.js (Express) — API của mọi công cụ
 │   ├── server.js               # Mount các router, CORS
 │   ├── scripts/                # Dựng dữ liệu từ OpenStreetMap/OSRM (npm run data:*)
