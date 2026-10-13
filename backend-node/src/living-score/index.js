@@ -10,6 +10,8 @@
  *
  * Scores are computed from an OpenStreetMap snapshot (see seed/seed-data.js, `npm run data:living`).
  */
+const fs = require('node:fs');
+const path = require('node:path');
 const express = require('express');
 const helmet = require('helmet');
 const { rateLimit } = require('express-rate-limit');
@@ -47,6 +49,7 @@ const { RecommendationService } = require('./recommendation/recommendation.servi
 const { AnthropicNarrativeClient } = require('./recommendation/anthropic-narrative.client');
 
 const logger = createLogger('LivingScore');
+const SCHEMA = path.join(__dirname, '..', '..', 'database', 'living-score', '01-schema.sql');
 
 function createDataSource(config) {
   if (config.dataSource !== 'postgres') return { source: new MemoryDataSource(), pool: null };
@@ -202,16 +205,27 @@ function createLivingScore(options = {}) {
     config,
     services: { scoring, areas, amenities, infrastructure, compare, search, recommendations, cache, data },
 
-    /** Loads the OpenStreetMap-derived data into PostgreSQL on first start (no-op for the in-memory source). */
+    /**
+     * PostgreSQL only: applies database/living-score/01-schema.sql (idempotent) and, with AUTO_SEED, loads the
+     * OpenStreetMap-derived data on first start. No-op for the in-memory source.
+     */
     async init() {
-      if (!pool || !config.autoSeed) return;
+      if (!pool) return;
+      try {
+        await pool.query(fs.readFileSync(SCHEMA, 'utf8'));
+      } catch (error) {
+        logger.error(
+          `Could not apply database/living-score/01-schema.sql. PostGIS must be installed, and creating the extension ` +
+            `needs a superuser the first time (CREATE EXTENSION postgis;). (${error instanceof Error ? error.message : String(error)})`,
+        );
+        throw error;
+      }
+      if (!config.autoSeed) return;
       try {
         const seeded = await seedPostgres(pool);
         if (!seeded) logger.log('Areas table already populated — skipping seed.');
       } catch (error) {
-        logger.error(
-          `Could not seed the database. Did you apply database/living-score/01-schema.sql first? (${error instanceof Error ? error.message : String(error)})`,
-        );
+        logger.error(`Could not seed the database. (${error instanceof Error ? error.message : String(error)})`);
         throw error;
       }
     },

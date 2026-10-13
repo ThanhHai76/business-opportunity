@@ -219,7 +219,10 @@ docker compose up --build                # ở thư mục gốc dự án
 - Frontend: <http://localhost:8080> (Trang chủ, `/opportunity-map`, `/time-machine`, `/living-score`)
 - API: <http://localhost:8000/api/living-score/health> · Postgres: `localhost:5432` (user/pass/db: `living` / `living` / `living_score`)
 
-Schema (`backend-node/database/living-score/`) được áp dụng tự động ở lần khởi động đầu; backend tự nạp dữ liệu khi bảng `areas` trống (`AUTO_SEED=true`).
+Schema `01-schema.sql` (`backend-node/database/living-score/`) được backend áp dụng mỗi lần khởi động khi `DATA_SOURCE=postgres` (idempotent);
+backend tự nạp dữ liệu khi bảng `areas` trống (`AUTO_SEED=true`).
+Postgres cài thẳng trên máy (không Docker): cần cài PostGIS, và tạo extension một lần bằng superuser vì user `living` không có quyền:
+`psql -U postgres -d living_score -c "CREATE EXTENSION postgis;"`.
 Database tạo từ schema cũ (dữ liệu mẫu có giá thuê, dân số): chạy `02-osm-data.sql` rồi nạp lại với `SEED_RESET=true`.
 Nạp lại từ đầu: `SEED_RESET=true npm run seed:living` (trong `backend-node/`). Chỉ chạy Postgres/Redis bằng Docker rồi chạy API local:
 `docker compose up db redis`, sau đó `cp .env.example .env` trong `backend-node/` và đặt `DATA_SOURCE=postgres`.

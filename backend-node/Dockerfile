@@ -10,6 +10,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json server.js ./
 COPY src ./src
+# SQL schemas applied on start (accounts; Living Score when DATA_SOURCE=postgres)
+COPY database ./database
 USER node
 EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \

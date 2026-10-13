@@ -98,7 +98,7 @@ async function seedPostgres(pool, options = {}, seed = getSeedData()) {
 
     await client.query('COMMIT');
     logger.log(
-      `Seeded OpenStreetMap data: ${seed.areas.length} areas, ${seed.amenities.length} amenities, ${seed.infrastructure.length} infrastructure items.`,
+      `Seeded OpenStreetMap data: ${seed.areas.length} areas, ${seed.amenities.length} amenities, ${seed.metro.length} infrastructure items.`,
     );
     return true;
   } catch (error) {

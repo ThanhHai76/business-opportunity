@@ -1,6 +1,6 @@
 -- Hanoi Living Score — PostgreSQL + PostGIS schema.
--- Applied automatically by the postgis container (docker-entrypoint-initdb.d) on first start.
--- For a local Postgres run it once:  psql "$DATABASE_URL" -f backend-node/database/living-score/01-schema.sql
+-- Applied by the backend on start when DATA_SOURCE=postgres (idempotent), and by the postgis container on first start.
+-- PostGIS must be installed; the first CREATE EXTENSION needs a superuser:  psql -U postgres -d living_score -c "CREATE EXTENSION postgis;"
 --
 -- Rows are computed by the backend seeder from an OpenStreetMap snapshot (© OpenStreetMap contributors, ODbL).
 -- Existing databases created from the older sample-data schema: apply 02-osm-data.sql, then reseed with SEED_RESET=true.
