@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, HostListener, ViewChild, computed, effect, inject, input, signal } from '@angular/core';
+import { PiQualityComponent } from './pi-quality.component';
+import { AiQuotaComponent } from '../../components/ai-quota/ai-quota.component';
 import { AskIntent } from '../pi.models';
 import { PiStateService } from '../pi.service';
 
@@ -8,6 +10,7 @@ const ACTIONS: Exclude<AskIntent, 'project'>[] = ['analyze', 'compare', 'future'
 @Component({
   selector: 'pi-ai-panel',
   standalone: true,
+  imports: [AiQuotaComponent, PiQualityComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './pi-ai-panel.component.css',
   template: `
@@ -91,11 +94,14 @@ const ACTIONS: Exclude<AskIntent, 'project'>[] = ['analyze', 'compare', 'future'
                         } @else {
                           {{ s.title }}
                         }
+                        <pi-quality [quality]="s.quality" [lang]="state.lang()" />
                       </li>
                     }
                   </ul>
                 </details>
               }
+
+              <app-ai-quota [quota]="a.quota" [lang]="state.lang()" />
 
               @if ($last && a.followUps.length) {
                 <div class="ai__follow">

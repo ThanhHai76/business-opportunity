@@ -16,6 +16,7 @@ import {
 import { LivingMetaService } from '../../services/living-meta.service';
 import { formatNum } from '../../pipes/format.pipes';
 import { LangService } from '../../services/lang.service';
+import { AiQuotaComponent } from '../../../components/ai-quota/ai-quota.component';
 import { LivingScoreApiService, describeApiError } from '../../services/living-score-api.service';
 import { PreferencesService } from '../../services/preferences.service';
 
@@ -24,7 +25,7 @@ const NEUTRAL_PRIORITY = 3;
 @Component({
   selector: 'app-ai-recommend',
   standalone: true,
-  imports: [RouterLink, IconComponent, ScoreRingComponent, StateMessageComponent],
+  imports: [RouterLink, IconComponent, ScoreRingComponent, StateMessageComponent, AiQuotaComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ai-recommend.component.html',
   styleUrl: './ai-recommend.component.css',
@@ -38,6 +39,7 @@ export class AiRecommendComponent implements OnInit {
 
   private readonly langService = inject(LangService);
   protected readonly t = this.langService.t;
+  protected readonly lang = this.langService.lang;
   protected readonly households = HOUSEHOLD_OPTIONS;
   protected readonly interestOptions = INTEREST_OPTIONS;
   protected readonly icons = CRITERION_ICONS;

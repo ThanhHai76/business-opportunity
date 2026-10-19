@@ -1,3 +1,4 @@
+import type { AiQuota } from '../../services/billing.service';
 /** Types mirroring the Hanoi Living Score REST API (backend-node/src/living-score, mounted at /api/living-score). */
 
 export const CRITERION_KEYS = [
@@ -250,6 +251,8 @@ export interface RecommendationResponse {
   /** Attached by the server, never written by the model. */
   sources: Array<{ title: string; publisher: string; license: string; url: string }>;
   results: RecommendationItem[];
+  /** Cost of the AI explanations in AI questions (only when the server counts them). */
+  quota?: AiQuota;
 }
 
 export interface ApiError {

@@ -491,6 +491,9 @@
 
           <details class="sources">
             <summary class="pi-kicker">{{ tx.ward.sources }} ({{ d.sources.length }})</summary>
+            @if (estimates(d.sources); as n) {
+              <p class="muted">{{ tx.ward.estimateNote(n) }}</p>
+            }
             <ul>
               @for (s of d.sources; track s.id) {
                 <li>
@@ -500,6 +503,7 @@
                     {{ s.title }}
                   }
                   <small> — {{ s.publisher }}</small>
+                  <pi-quality [quality]="s.quality" [lang]="lang" />
                 </li>
               }
             </ul>
@@ -612,7 +616,7 @@
         <h3>{{ tx.wardReport.sections.sources }}</h3>
         <ul>
           @for (s of d.sources; track s.id) {
-            <li>{{ s.title }} — {{ s.publisher }}@if (s.url) { · <a [href]="s.url" target="_blank" rel="noopener">{{ s.url }}</a> }</li>
+            <li>{{ s.title }} — {{ s.publisher }} <em>({{ qualityText(s.quality) }})</em>@if (s.url) { · <a [href]="s.url" target="_blank" rel="noopener">{{ s.url }}</a> }</li>
           }
         </ul>
       </section>

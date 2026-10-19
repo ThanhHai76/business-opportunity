@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewEncapsulation, effect, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { LANDMARK_PHOTOS, LandmarkPhoto } from './time-machine-photos';
 import { ERAS, Era, LANDMARKS, Landmark } from './tm-data';
 import { landmarkIcon } from './landmark-icons';
@@ -15,6 +15,8 @@ import { TmTours } from './tm-tours';
 import { TmCompare } from './tm-compare';
 import { EN_ERAS, EN_EVENTS, EN_LANDMARKS, EN_PHOTOS, EN_SITE, EN_TICKER, EN_TOURS, EN_WIKI, LANG_KEY, Lang } from './tm-i18n';
 import { ThemeService } from '../../services/theme.service';
+import { AccountService } from '../../services/account.service';
+import { BillingService } from '../../services/billing.service';
 
 type MapMode = 'real' | 'illustrated';
 const MAP_MODE_KEY = 'hanoi100.tm.mapMode';
@@ -57,6 +59,9 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
   private railObserver?: IntersectionObserver;
   private revealObserver?: IntersectionObserver;
   private readonly theme = inject(ThemeService);
+  private readonly account = inject(AccountService);
+  private readonly billing = inject(BillingService);
+  private readonly router = inject(Router);
   private realMap?: TmRealMap;
   /** Page language; Vietnamese is the source text, English comes from tm-i18n.ts. */
   private lang: Lang = readLang();
@@ -104,6 +109,10 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
       this.render();
     },
     link: (text, url) => this.sourceLink(text, url),
+    storyFreePerDay: () => this.billing.aiLimits().storyFreePerDay,
+    applyQuota: (quota) => this.billing.applyQuota(quota),
+    signIn: () => this.account.dialogOpen.set(true),
+    openPlans: () => void this.router.navigate(['/premium']),
   };
 
   constructor(hostRef: ElementRef<HTMLElement>) {

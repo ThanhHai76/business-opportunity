@@ -3,6 +3,8 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { ThemeService } from '../../../services/theme.service';
+import { PiQualityComponent } from '../../components/pi-quality.component';
+import { SourceQuality, estimateCount, qualityText } from '../../components/pi-quality.view';
 import { PiAiPanelComponent } from '../../components/pi-ai-panel.component';
 import { LAND_STOPS, PiAreaMapComponent } from '../../components/pi-area-map.component';
 import { PiCompareComponent } from '../../components/pi-compare.component';
@@ -39,13 +41,17 @@ const LENSES: Lens[] = ['potential', 'connectivity', 'infrastructure', 'landPric
 @Component({
   selector: 'pi-dashboard',
   standalone: true,
-  imports: [RouterLink, PiAreaMapComponent, PiAiPanelComponent, PiCompareComponent, PiNumPipe, PiDistancePipe],
+  imports: [RouterLink, PiAreaMapComponent, PiAiPanelComponent, PiCompareComponent, PiNumPipe, PiDistancePipe, PiQualityComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pi-dashboard.component.html',
   styleUrl: './pi-dashboard.component.css',
 })
 export class PiDashboardComponent {
   protected readonly state = inject(PiStateService);
+  protected readonly estimates = estimateCount;
+  protected qualityText(q: SourceQuality | undefined): string {
+    return qualityText(q, this.state.lang());
+  }
   private readonly api = inject(PiApiService);
   private readonly router = inject(Router);
   protected readonly theme = inject(ThemeService);

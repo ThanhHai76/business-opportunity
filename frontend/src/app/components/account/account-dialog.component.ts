@@ -1,6 +1,9 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AccountService, accountError } from '../../services/account.service';
+import { BillingService } from '../../services/billing.service';
+import { LegalLinksComponent } from '../../pages/legal/legal-links.component';
 
 type View = 'login' | 'register' | 'account';
 
@@ -11,6 +14,7 @@ type View = 'login' | 'register' | 'account';
 @Component({
   selector: 'app-account-dialog',
   standalone: true,
+  imports: [RouterLink, LegalLinksComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="ad-backdrop" (click)="close()"></div>
@@ -28,6 +32,29 @@ type View = 'login' | 'register' | 'account';
           }
         </p>
         <p class="ad__note">Báo cáo bạn lưu trên Bản đồ cơ hội kinh doanh được giữ trong tài khoản này và mở được trên mọi thiết bị.</p>
+        @if (account.mail() && !u.emailVerified) {
+          <div class="ad__verify" role="status">
+            <span>Email chưa được xác minh. Hãy mở liên kết trong email chúng tôi đã gửi.</span>
+            <button type="button" class="ad__btn" (click)="resend()" [disabled]="busy()">Gửi lại email xác minh</button>
+          </div>
+        }
+
+        @if (billing.enabled()) {
+          <div class="ad__plan">
+            @if (billing.ai(); as ai) {
+              <p>
+                <strong>{{ ai.premium ? 'Premium' : 'Gói miễn phí' }}</strong>
+                @if (ai.premium && ai.premiumUntil) {
+                  <small>đến {{ day(ai.premiumUntil) }}</small>
+                }
+              </p>
+              <p class="ad__hint">
+                Lượt AI chuyên sâu hôm nay: {{ ai.premium ? ai.premiumLeft + ' Premium + ' : '' }}{{ ai.freeLeft }} miễn phí · Time Machine: {{ ai.storyFreeLeft }} miễn phí · đã mua: {{ ai.aiCredits }}
+              </p>
+            }
+            <a class="ad__btn" routerLink="/premium" (click)="close()">{{ billing.ai()?.premium ? 'Quản lý gói' : 'Nâng cấp Premium' }}</a>
+          </div>
+        }
 
         <form class="ad__form" (submit)="$event.preventDefault(); saveName()">
           <label>
@@ -92,9 +119,18 @@ type View = 'login' | 'register' | 'account';
               (input)="password.set($any($event.target).value)"
             />
           </label>
+          @if (view() === 'register') {
+            <label class="ad__check">
+              <input type="checkbox" name="terms" required (change)="terms.set($any($event.target).checked)" />
+              <span>Tôi đồng ý với <a routerLink="/terms" (click)="close()">Điều khoản sử dụng</a> và <a routerLink="/privacy" (click)="close()">Chính sách quyền riêng tư</a>.</span>
+            </label>
+          }
           <button type="submit" class="ad__btn ad__btn--primary" [disabled]="busy()">
             {{ busy() ? 'Đang xử lý…' : view() === 'register' ? 'Tạo tài khoản' : 'Đăng nhập' }}
           </button>
+          @if (view() === 'login' && account.mail()) {
+            <a class="ad__forgot" routerLink="/forgot-password" (click)="close()">Quên mật khẩu?</a>
+          }
         </form>
         <p class="ad__switch">
           @if (view() === 'register') {
@@ -163,6 +199,25 @@ type View = 'login' | 'register' | 'account';
       }
       .ad__x:hover {
         background: var(--app-surface-2);
+      }
+      .ad__plan {
+        display: grid;
+        gap: 6px;
+        padding: 12px;
+        border: 1px solid var(--app-line);
+        border-radius: 12px;
+        background: var(--app-time-soft);
+      }
+      .ad__plan p {
+        margin: 0;
+      }
+      .ad__plan small {
+        margin-left: 6px;
+        color: var(--app-ink-dim);
+      }
+      .ad__plan .ad__btn {
+        justify-self: start;
+        text-decoration: none;
       }
       .ad__note,
       .ad__hint {
@@ -249,6 +304,12 @@ type View = 'login' | 'register' | 'account';
         font-weight: 700;
         cursor: pointer;
       }
+      .ad__verify { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid #d97706; border-radius: 10px; background: color-mix(in srgb, #d97706 10%, transparent); font-size: 13px; }
+      .ad__verify .ad__btn { justify-self: start; }
+      .ad__check { display: flex; gap: 8px; align-items: flex-start; font-weight: 500; }
+      .ad__check input { margin-top: 3px; }
+      .ad__check a, .ad__forgot { color: var(--app-biz); font-weight: 700; }
+      .ad__forgot { font-size: 13px; }
       .ad__error {
         margin: 0;
         padding: 8px 10px;
@@ -267,6 +328,7 @@ type View = 'login' | 'register' | 'account';
 })
 export class AccountDialogComponent implements AfterViewInit {
   protected readonly account = inject(AccountService);
+  protected readonly billing = inject(BillingService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   protected readonly view = signal<View>('login');
@@ -274,6 +336,7 @@ export class AccountDialogComponent implements AfterViewInit {
   protected readonly password = signal('');
   protected readonly newPassword = signal('');
   protected readonly name = signal('');
+  protected readonly terms = signal(false);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly done = signal<string | null>(null);
@@ -287,6 +350,10 @@ export class AccountDialogComponent implements AfterViewInit {
   }
 
   @HostListener('document:keydown.escape')
+  protected day(iso: string): string {
+    return new Date(iso).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' });
+  }
+
   protected close(): void {
     this.account.dialogOpen.set(false);
   }
@@ -317,8 +384,12 @@ export class AccountDialogComponent implements AfterViewInit {
   protected submit(): void {
     const email = this.email().trim();
     const password = this.password();
-    const call = this.view() === 'register' ? this.account.register(email, password, this.name()) : this.account.login(email, password);
+    const call = this.view() === 'register' ? this.account.register(email, password, this.name(), this.terms()) : this.account.login(email, password);
     this.run(call, () => this.close());
+  }
+
+  protected resend(): void {
+    this.run(this.account.resendVerification(), () => this.done.set('Đã gửi email xác minh. Hãy kiểm tra hộp thư.'));
   }
 
   protected saveName(): void {

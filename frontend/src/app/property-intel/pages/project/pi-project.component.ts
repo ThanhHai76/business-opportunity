@@ -4,6 +4,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { ThemeService } from '../../../services/theme.service';
+import { SourceQuality, qualityText } from '../../components/pi-quality.view';
 import { PiProjectMapComponent } from '../../components/pi-project-map.component';
 import { PiDistancePipe, formatBillion, formatNum } from '../../pi-format';
 import { ProjectDetail } from '../../pi.models';
@@ -64,6 +65,10 @@ export class PiProjectComponent {
     const lang = this.state.lang();
     return p.unit.max === null ? `> ${formatBillion(p.unit.min, lang)}` : p.unit.min === p.unit.max ? formatBillion(p.unit.min, lang) : `${formatNum(p.unit.min, lang, 2)}–${formatBillion(p.unit.max, lang)}`;
   });
+
+  protected qualityText(q: SourceQuality | undefined): string {
+    return qualityText(q, this.state.lang());
+  }
 
   /** The project's price source (the first source of the response). */
   protected readonly priceSource = computed(() => this.p()?.sources[0] ?? null);

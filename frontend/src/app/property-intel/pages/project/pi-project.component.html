@@ -245,7 +245,7 @@
               <h3>{{ tx.project.sections.sources }}</h3>
               <ul>
                 @for (s of p.sources; track s.id) {
-                  <li>{{ s.title }} — {{ s.publisher }}@if (s.url) { · <a [href]="s.url" target="_blank" rel="noopener">{{ s.url }}</a> }</li>
+                  <li>{{ s.title }} — {{ s.publisher }} <em>({{ qualityText(s.quality) }})</em>@if (s.url) { · <a [href]="s.url" target="_blank" rel="noopener">{{ s.url }}</a> }</li>
                 }
               </ul>
             </section>

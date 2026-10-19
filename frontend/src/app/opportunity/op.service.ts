@@ -71,6 +71,6 @@ export class OpportunityService {
       lang: context.lang,
       ...(context.type ? { type: context.type } : {}),
       ...(context.ward ? { ward: context.ward } : {}),
-    });
+    }, { withCredentials: true }); // the session cookie: in-depth AI answers are counted per account
   }
 }

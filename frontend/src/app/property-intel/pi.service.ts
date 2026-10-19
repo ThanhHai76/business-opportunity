@@ -83,7 +83,8 @@ export class PiApiService {
   }
 
   ask(body: { question: string; intent?: AskIntent; ward?: string; project?: string; lang: Lang }): Observable<AskAnswer> {
-    return this.http.post<AskAnswer>(`${this.base}/ask`, body);
+    // With the session cookie: in-depth AI answers are counted per account.
+    return this.http.post<AskAnswer>(`${this.base}/ask`, body, { withCredentials: true });
   }
 }
 

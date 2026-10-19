@@ -7,6 +7,10 @@ export const API_BASE_URL = onLocalhost ? 'http://localhost:8000' : '';
 // Accounts and saved reports (PostgreSQL), under /api/account.
 export const ACCOUNT_API_URL = `${API_BASE_URL}/api/account`;
 
+// Purchases of report credits, and the paid reports they buy (computed and stored by the server).
+export const BILLING_API_URL = `${API_BASE_URL}/api/billing`;
+export const REPORTS_API_URL = `${API_BASE_URL}/api/reports`;
+
 // Business Opportunity Map: Hanoi wards (2025) scored from OpenStreetMap data, under /api/opportunity.
 export const OPPORTUNITY_API_URL = `${API_BASE_URL}/api/opportunity`;
 
@@ -21,3 +25,9 @@ export const PROPERTY_INTEL_API_URL = `${API_BASE_URL}/api/property-intel`;
 
 // Hanoi Time Machine: AI Storyteller grounded in the page's landmark data, served by backend-node.
 export const TIME_MACHINE_API_URL = `${API_BASE_URL}/api/time-machine`;
+
+// Public address of the site: canonical links, the sitemap and share tags. Keep in step with SITE_URL in index.html / scripts/seo.mjs.
+export const SITE_URL = 'https://hanoicenturyvista.com';
+
+// Cookieless statistics (Plausible-compatible). Leave `domain` empty to keep analytics off.
+export const ANALYTICS = { domain: '', script: 'https://plausible.io/js/script.js' };

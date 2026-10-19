@@ -113,6 +113,7 @@
           @if (r.notice) {
             <p class="notice"><ls-icon name="info" [size]="14" /> {{ r.notice }}</p>
           }
+          <app-ai-quota [quota]="r.quota" [lang]="lang()" />
 
           @for (item of r.results; track item.area.slug) {
             <article class="result ls-card">

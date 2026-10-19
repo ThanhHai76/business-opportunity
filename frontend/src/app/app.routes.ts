@@ -34,8 +34,19 @@ export const routes: Routes = [
   { path: 'business-copilot', pathMatch: 'full', redirectTo: 'opportunity-map' },
   { path: 'business-copilot', children: [{ path: '**', redirectTo: '/opportunity-map' }] },
   {
+    path: 'premium',
+    title: 'Premium · Hanoi Century Vista',
+    loadComponent: () => import('./pages/premium/premium.component').then((m) => m.PremiumComponent),
+  },
+  {
     path: 'property-intelligence',
     loadChildren: () => import('./property-intel/pi.routes').then((m) => m.PROPERTY_INTEL_ROUTES),
   },
+  { path: 'terms', title: 'Điều khoản sử dụng · Hanoi Century Vista', data: { kind: 'terms' }, loadComponent: () => import('./pages/legal/legal.component').then((m) => m.LegalComponent) },
+  { path: 'privacy', title: 'Quyền riêng tư · Hanoi Century Vista', data: { kind: 'privacy' }, loadComponent: () => import('./pages/legal/legal.component').then((m) => m.LegalComponent) },
+  { path: 'refund', title: 'Chính sách hoàn tiền · Hanoi Century Vista', data: { kind: 'refund' }, loadComponent: () => import('./pages/legal/legal.component').then((m) => m.LegalComponent) },
+  { path: 'forgot-password', title: 'Quên mật khẩu · Hanoi Century Vista', data: { mode: 'forgot' }, loadComponent: () => import('./pages/auth-link/auth-link.component').then((m) => m.AuthLinkComponent) },
+  { path: 'reset-password', title: 'Đặt mật khẩu mới · Hanoi Century Vista', data: { mode: 'reset' }, loadComponent: () => import('./pages/auth-link/auth-link.component').then((m) => m.AuthLinkComponent) },
+  { path: 'verify-email', title: 'Xác minh email · Hanoi Century Vista', data: { mode: 'verify' }, loadComponent: () => import('./pages/auth-link/auth-link.component').then((m) => m.AuthLinkComponent) },
   { path: '**', redirectTo: '' },
 ];

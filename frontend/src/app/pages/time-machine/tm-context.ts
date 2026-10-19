@@ -1,3 +1,4 @@
+import { AiQuota } from '../../services/billing.service';
 import { LandmarkPhoto } from './time-machine-photos';
 import { Lang } from './tm-i18n';
 
@@ -29,4 +30,12 @@ export interface TmContext {
   /** Selects a landmark (and optionally an era) on the page. */
   select(key: string, eraId?: string): void;
   link(text: string, url: string): HTMLAnchorElement;
+  /** Free in-depth AI answers a day for a signed-in visitor (the fallback when an answer carries no quota). */
+  storyFreePerDay(): number;
+  /** Keeps the header and the Premium page in step with the allowances an AI answer reported. */
+  applyQuota(quota: AiQuota): void;
+  /** Opens the sign-in dialog. */
+  signIn(): void;
+  /** Goes to the Premium page (plans, AI question packs). */
+  openPlans(): void;
 }

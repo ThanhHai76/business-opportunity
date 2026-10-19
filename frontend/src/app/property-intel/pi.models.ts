@@ -1,3 +1,5 @@
+import type { AiQuota } from '../services/billing.service';
+import type { SourceQuality } from './components/pi-quality.view';
 /**
  * Response shapes of /api/property-intel (backend-node/src/property-intel). Every figure is cited: OpenStreetMap,
  * approved plans, the 2026 land price table, CBRE / Savills briefings and the press.
@@ -14,6 +16,8 @@ export interface Source {
   title: string;
   publisher: string;
   url: string | null;
+  /** What kind of data it is, how far to trust it and its date (absent from an older backend). */
+  quality?: SourceQuality;
 }
 
 export type CriterionKey = 'connectivity' | 'infrastructure' | 'planning' | 'amenities' | 'population' | 'development';
@@ -196,6 +200,8 @@ export interface AskAnswer {
   provider: 'template' | 'anthropic';
   model: string | null;
   outOfScope: boolean;
+  /** Cost of the answer in AI questions (only when the server counts them). */
+  quota?: AiQuota;
   ward: { slug: string; name: string };
   wards: { slug: string; name: string }[];
   project: { slug: string; name: string } | null;

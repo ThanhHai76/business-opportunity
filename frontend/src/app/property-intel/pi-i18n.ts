@@ -133,6 +133,7 @@ const vi = {
     },
     method: 'Cách tính',
     sources: 'Nguồn',
+    estimateNote: (n: number) => `${n} trong các nguồn dưới đây là ước tính hoặc có độ tin cậy thấp (giá chào, thời gian tính toán…), không phải số liệu giao dịch.`,
   },
 
   charts: {
@@ -418,6 +419,7 @@ const en: PiText = {
     },
     method: 'Method',
     sources: 'Sources',
+    estimateNote: (n: number) => `${n} of the sources below ${n === 1 ? 'is an estimate or has' : 'are estimates or have'} low confidence (asking prices, computed times…), not transaction records.`,
   },
 
   charts: {

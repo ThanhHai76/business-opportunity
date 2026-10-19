@@ -237,6 +237,7 @@
                   <ls-icon [name]="inCompare(d.slug) ? 'check' : 'plus'" [size]="14" /> {{ inCompare(d.slug) ? t().compareAdded : t().compareAdd }}
                 </button>
                 <button type="button" class="op-btn" (click)="reportOpen.set(true)"><ls-icon name="chart" [size]="14" /> {{ t().report.open }}</button>
+                <button type="button" class="op-btn op-btn--primary" (click)="openFullReport()">{{ t().buy.open }}</button>
               </div>
             </section>
 
@@ -598,6 +599,7 @@
                 }
               }
             </small>
+            <app-ai-quota [quota]="a.quota" [lang]="lang()" />
           </div>
         }
       </div>
@@ -608,7 +610,7 @@
 @if (reportOpen() && detail(); as d) {
   @if (focus(); as f) {
     <div class="op-report-backdrop" (click)="reportOpen.set(false)"></div>
-    <div class="op-report" role="dialog" aria-modal="true" aria-labelledby="op-report-title">
+    <div class="op-report" role="dialog" aria-modal="true" aria-labelledby="op-report-title" [attr.data-theme]="theme()">
       <header class="op-report__head">
         <div>
           <span class="op-eyebrow">{{ t().report.kicker }}</span>
@@ -617,7 +619,6 @@
         </div>
         <div class="op-report__actions">
           <button type="button" class="op-btn" [class.is-on]="justSaved()" (click)="saveReport()">{{ justSaved() ? t().saved.done : t().saved.save }}</button>
-          <button type="button" class="op-btn" (click)="print()">{{ t().report.print }}</button>
           <button type="button" class="op-btn" (click)="reportOpen.set(false)" [attr.aria-label]="t().report.close">✕</button>
         </div>
       </header>
@@ -679,6 +680,7 @@
         </ul>
       </section>
       <p class="op-report__note">{{ t().report.disclaimer }}</p>
+      <app-op-buy id="op-buy" [t]="t().buy" [lang]="lang()" [request]="buyRequest()" (signIn)="signInToBuy()" />
     </div>
   }
 }

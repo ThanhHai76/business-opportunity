@@ -1,4 +1,6 @@
 import { TIME_MACHINE_API_URL } from '../../config';
+import { AiQuota } from '../../services/billing.service';
+import { quotaText, quotaView } from '../../components/ai-quota/ai-quota.view';
 import { ChatAnswer, QA } from './tm-data';
 import { TmContext } from './tm-context';
 import { EN_QA } from './tm-i18n';
@@ -11,11 +13,14 @@ interface StorytellerAnswer {
   outOfScope: boolean;
   provider: string;
   model: string | null;
+  /** Present when the server counts in-depth AI answers per account: what this answer cost, or why it is the basic one. */
+  quota?: AiQuota;
 }
 
 /**
  * AI Storyteller chat: suggested questions answer with their reviewed text; anything typed goes to
- * POST /api/time-machine/ask, which answers only from the page's data and attaches the sources.
+ * POST /api/time-machine/ask, which answers only from the page's data and attaches the sources. When the server counts
+ * in-depth AI answers, a line under the answer says which allowance paid for it, or why it is the basic answer.
  */
 export class TmChat {
   private timers: Array<ReturnType<typeof setTimeout> | ReturnType<typeof setInterval>> = [];
@@ -119,16 +124,44 @@ export class TmChat {
     return src;
   }
 
-  private addAiBubble(item: ChatAnswer, links: StorytellerAnswer['sources'] = [], bubble?: HTMLElement | null): void {
+  /** The line under an AI answer about its cost (or why it is the basic answer), with the next step to offer. */
+  private quotaLine(quota: AiQuota): HTMLElement | null {
+    const lang = this.ctx.lang();
+    const view = quotaView(quota, lang, this.ctx.storyFreePerDay());
+    if (!view) return null;
+    const t = quotaText(lang);
+    const line = document.createElement('p');
+    line.className = view.basic ? 'tm-quota tm-quota--basic' : 'tm-quota';
+    line.setAttribute('role', 'status');
+    const dot = document.createElement('span');
+    dot.className = 'tm-quota-dot';
+    dot.setAttribute('aria-hidden', 'true');
+    const text = document.createElement('span');
+    text.className = 'tm-quota-text';
+    text.textContent = view.text;
+    line.append(dot, text);
+    if (view.action) {
+      const action = document.createElement('button');
+      action.type = 'button';
+      action.className = view.action === 'plans' ? 'tm-quota-link' : 'tm-quota-btn';
+      action.textContent = view.action === 'signin' ? t.signInBtn : view.action === 'buy' ? t.buy : t.plans;
+      action.addEventListener('click', () => (view.action === 'signin' ? this.ctx.signIn() : this.ctx.openPlans()));
+      line.append(action);
+    }
+    return line;
+  }
+
+  private addAiBubble(item: ChatAnswer, links: StorytellerAnswer['sources'] = [], bubble?: HTMLElement | null, quota?: AiQuota): void {
     const log = this.q('#tm-chatLog');
     if (!log) return;
     const b = bubble ?? this.addTypingBubble();
     if (!b) return;
     b.removeAttribute('aria-busy');
     b.classList.toggle('tm-future', item.future);
+    const extra = quota ? this.quotaLine(quota) : null;
 
     if (this.reduceMotion) {
-      b.replaceChildren(document.createTextNode(item.a), this.sourceLine(item, links));
+      b.replaceChildren(document.createTextNode(item.a), this.sourceLine(item, links), ...(extra ? [extra] : []));
       this.scrollChat();
       return;
     }
@@ -145,6 +178,7 @@ export class TmChat {
         if (i > item.a.length) {
           clearInterval(interval);
           b.appendChild(this.sourceLine(item, links));
+          if (extra) b.appendChild(extra);
           this.scrollChat();
         }
       }, 14);
@@ -172,6 +206,7 @@ export class TmChat {
       const res = await fetch(`${TIME_MACHINE_API_URL}/ask`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
+        credentials: 'include', // the account's session decides whether the answer is written by the AI
         body: JSON.stringify({ question: question.slice(0, 500), landmark: this.ctx.current(), era: this.ctx.era(), lang: this.ctx.lang() }),
       });
       const data = (await res.json().catch(() => null)) as (StorytellerAnswer & { message?: string }) | null;
@@ -180,9 +215,12 @@ export class TmChat {
         ? this.ctx.tr('Ngoài phạm vi dữ liệu của Time Machine', 'Outside the Time Machine’s data')
         : data.provider === 'anthropic'
           ? this.ctx.tr('AI (Claude) · chỉ dựa trên dữ liệu của trang', 'AI (Claude) · based only on this page’s data')
-          : this.ctx.tr('Trả lời tự động từ dữ liệu của trang (chưa bật AI)', 'Automatic answer from this page’s data (AI not enabled)');
+          : data.quota
+            ? this.ctx.tr('Trả lời cơ bản từ dữ liệu của trang', 'Basic answer from this page’s data')
+            : this.ctx.tr('Trả lời tự động từ dữ liệu của trang (chưa bật AI)', 'Automatic answer from this page’s data (AI not enabled)');
       const scenario = this.ctx.tr('Kịch bản tương lai, không phải dự đoán', 'Future scenario, not a prediction');
-      this.addAiBubble({ q: question, a: data.answer, src: data.future ? `${src} · ${scenario}` : src, future: data.future }, data.sources, bubble);
+      if (data.quota) this.ctx.applyQuota(data.quota);
+      this.addAiBubble({ q: question, a: data.answer, src: data.future ? `${src} · ${scenario}` : src, future: data.future }, data.sources, bubble, data.quota);
     } catch (error) {
       const fallback = this.ctx.tr(
         'Không kết nối được AI kể chuyện. Hãy thử lại sau, hoặc chọn một câu hỏi gợi ý.',

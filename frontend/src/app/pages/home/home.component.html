@@ -1,7 +1,7 @@
 <div class="page">
   <main>
     <section class="hero">
-      <span class="eyebrow">Năm công cụ · Một bản đồ khởi đầu</span>
+      <span class="eyebrow">Năm công cụ · Ba nhóm · Một bản đồ khởi đầu</span>
       <h1>Chọn cách bạn muốn khám phá thành phố</h1>
       <p class="hero-sub">
         Từ cơ hội kinh doanh, hành trình xuyên thời gian đến việc chọn nơi an cư —
@@ -11,6 +11,7 @@
     </section>
 
     <section class="cards">
+      <h2 class="group-title">Khám phá Hà Nội <small>Lịch sử, quy hoạch, tương lai</small></h2>
       <article class="card card-future">
         <div class="card-top">
           <span class="card-eyebrow">Tầm nhìn · Quy hoạch &amp; tương lai</span>
@@ -31,7 +32,6 @@
           Khám phá Hà Nội tương lai <span aria-hidden="true">→</span>
         </a>
       </article>
-
       <article class="card card-time">
         <div class="card-top">
           <span class="card-eyebrow">Trải nghiệm · Văn hoá &amp; giáo dục</span>
@@ -54,27 +54,7 @@
         </a>
       </article>
 
-      <article class="card card-live">
-        <div class="card-top">
-          <span class="card-eyebrow">Người ở · Chọn nơi an cư</span>
-          <span class="card-icon">📍</span>
-        </div>
-        <h2>Hanoi Living Score</h2>
-        <p class="card-desc">
-          Chấm điểm mức độ đáng sống quanh 10 quận cũ của Hà Nội theo giao thông,
-          giáo dục, y tế, công viên – hồ nước và tiện ích, đo từ dữ liệu
-          OpenStreetMap — so sánh 2–3 khu vực và nhận gợi ý cá nhân hoá từ AI.
-        </p>
-        <ul class="card-meta">
-          <li>10 khu vực · 5 tiêu chí có dữ liệu · Personalized Score</li>
-          <li>Bản đồ, so sánh, AI gợi ý Top 3 kèm lý do</li>
-          <li>Dành cho người tìm nhà, gia đình trẻ, người chuyển việc</li>
-        </ul>
-        <a class="cta" routerLink="/living-score">
-          Tìm nơi sống phù hợp <span aria-hidden="true">→</span>
-        </a>
-      </article>
-
+      <h2 class="group-title">Kinh doanh <small>Mở quán, chọn địa điểm</small></h2>
       <article class="card card-biz">
         <div class="card-top">
           <span class="card-eyebrow">B2B · Phân tích thị trường</span>
@@ -97,7 +77,7 @@
         </a>
       </article>
 
-
+      <h2 class="group-title">Bất động sản <small>Mua nhà, đầu tư, chọn nơi ở</small></h2>
       <article class="card card-property">
         <div class="card-top">
           <span class="card-eyebrow">Nhà đầu tư · Bất động sản</span>
@@ -119,10 +99,59 @@
           Mở AI Property Intelligence <span aria-hidden="true">→</span>
         </a>
       </article>
+      <article class="card card-live">
+        <div class="card-top">
+          <span class="card-eyebrow">Người ở · Chọn nơi an cư</span>
+          <span class="card-icon">📍</span>
+        </div>
+        <h2>Hanoi Living Score</h2>
+        <p class="card-desc">
+          Chấm điểm mức độ đáng sống quanh 10 quận cũ của Hà Nội theo giao thông,
+          giáo dục, y tế, công viên – hồ nước và tiện ích, đo từ dữ liệu
+          OpenStreetMap — so sánh 2–3 khu vực và nhận gợi ý cá nhân hoá từ AI.
+        </p>
+        <ul class="card-meta">
+          <li>10 khu vực · 5 tiêu chí có dữ liệu · Personalized Score</li>
+          <li>Bản đồ, so sánh, AI gợi ý Top 3 kèm lý do</li>
+          <li>Dành cho người tìm nhà, gia đình trẻ, người chuyển việc</li>
+        </ul>
+        <a class="cta" routerLink="/living-score">
+          Tìm nơi sống phù hợp <span aria-hidden="true">→</span>
+        </a>
+      </article>
     </section>
+
+    @if (billing.enabled()) {
+      <section class="promo" aria-labelledby="promo-title">
+        <div>
+          <h2 id="promo-title">Dùng thử miễn phí, nâng cấp khi cần</h2>
+          <p>
+            Bản đồ, điểm số và câu trả lời cơ bản luôn miễn phí.
+            @if (billing.aiMetering()) {
+              Đăng nhập để nhận {{ billing.aiLimits().freePerDay }} lượt AI chuyên sâu mỗi ngày
+              ({{ billing.aiLimits().storyFreePerDay }} lượt cho Time Machine).
+              Premium nâng lên {{ billing.aiLimits().premiumPerDay }} lượt mỗi ngày.
+            } @else {
+              Premium thêm lượt hỏi AI chuyên sâu và credit báo cáo.
+            }
+          </p>
+        </div>
+        <div class="promo-actions">
+          @if (!account.user() && account.enabled()) {
+            <button type="button" class="promo-btn" (click)="account.dialogOpen.set(true)">Đăng nhập dùng thử</button>
+          }
+          @if (!billing.ai()?.premium) {
+            <a class="promo-btn promo-btn--primary" routerLink="/premium">★ Nâng cấp Premium</a>
+          } @else {
+            <a class="promo-btn" routerLink="/premium">Quản lý Premium</a>
+          }
+        </div>
+      </section>
+    }
   </main>
 
   <footer class="footer">
     <p>Demo dự án bản đồ đô thị tương tác · © 2026</p>
+    <app-legal-links />
   </footer>
 </div>

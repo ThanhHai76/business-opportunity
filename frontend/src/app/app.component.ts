@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SiteNavComponent } from './components/site-nav/site-nav.component';
+import { startAnalytics } from './services/analytics';
+import { SeoService } from './services/seo.service';
 
 @Component({
   selector: 'app-root',
@@ -9,4 +11,9 @@ import { SiteNavComponent } from './components/site-nav/site-nav.component';
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
-export class AppComponent {}
+export class AppComponent {
+  constructor() {
+    inject(SeoService).start();
+    startAnalytics();
+  }
+}

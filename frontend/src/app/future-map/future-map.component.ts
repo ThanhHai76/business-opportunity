@@ -13,6 +13,7 @@ import {
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { EMPTY, catchError, of, switchMap, tap } from 'rxjs';
 import { RouterLink } from '@angular/router';
+import { AiQuotaComponent } from '../components/ai-quota/ai-quota.component';
 import { IconComponent } from '../living-score/components/icon/icon.component';
 import { ThemeService } from '../services/theme.service';
 import { normalizeText } from '../utils/text';
@@ -85,7 +86,7 @@ function initialLang(params: URLSearchParams): Lang {
 @Component({
   selector: 'app-future-map',
   standalone: true,
-  imports: [FutureMapCanvasComponent, IconComponent, RouterLink],
+  imports: [FutureMapCanvasComponent, IconComponent, RouterLink, AiQuotaComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './future-map.component.html',
   styleUrls: ['./future-map.component.css', './future-map-region.css'],

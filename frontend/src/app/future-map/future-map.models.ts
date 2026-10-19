@@ -1,3 +1,4 @@
+import type { AiQuota } from '../services/billing.service';
 /** Types mirroring the Hanoi Future Map REST API (backend-node/src/future-map, mounted at /api/future-map). */
 
 export type Lang = 'vi' | 'en';
@@ -132,6 +133,8 @@ export interface Answer {
   source?: 'rules';
   provider?: string;
   outOfScope?: boolean;
+  /** Cost of the answer in AI questions (free-text questions, only when the server counts them). */
+  quota?: AiQuota;
 }
 
 /** The toggles of the "Map layers" panel. Several map layers can belong to one toggle. */

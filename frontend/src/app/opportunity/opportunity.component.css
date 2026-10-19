@@ -2,7 +2,9 @@
   display: block;
 }
 
-.op {
+/* Tokens: the page, and the report dialog (rendered outside .op, on top of everything). */
+.op,
+.op-report {
   --op-glass: color-mix(in srgb, var(--app-surface) 90%, transparent);
   --op-line: color-mix(in srgb, var(--app-ink) 13%, transparent);
   --op-ink: var(--app-ink);
@@ -12,7 +14,9 @@
   --op-accent-soft: color-mix(in srgb, #0f766e 12%, transparent);
   --op-warn: #b45309;
   --op-warn-soft: #fdf0d5;
+}
 
+.op {
   position: relative;
   height: calc(100vh - var(--site-nav-h));
   height: calc(100dvh - var(--site-nav-h));
@@ -24,7 +28,8 @@
   font-size: 14px;
   line-height: 1.5;
 }
-.op[data-theme='dark'] {
+.op[data-theme='dark'],
+.op-report[data-theme='dark'] {
   --op-glass: rgba(10, 17, 30, 0.86);
   --op-line: rgba(160, 190, 255, 0.16);
   --op-accent: #2dd4bf;

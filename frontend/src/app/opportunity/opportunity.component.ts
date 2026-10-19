@@ -1,4 +1,17 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, ViewChild, computed, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  HostListener,
+  Injector,
+  ViewChild,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { EMPTY, catchError, of, switchMap, tap } from 'rxjs';
@@ -10,6 +23,9 @@ import { OpFeasibilityComponent } from './op-feasibility.component';
 import { MarketKey, MarketSort, marketCsv, marketRows, sortMarket } from './op-market';
 import { parseIdeaLocal } from './op-parse';
 import { AccountService } from '../services/account.service';
+import { PaidReportRequest } from '../services/billing.service';
+import { OpBuyComponent } from './op-buy.component';
+import { AiQuotaComponent } from '../components/ai-quota/ai-quota.component';
 import { SavedReport, SavedReportsStore } from './op-reports';
 import { OpRadarComponent, RadarSeries } from './op-radar.component';
 import { OP_LANG_KEY, OP_TEXT } from './op-i18n';
@@ -39,7 +55,7 @@ function initialLang(params: URLSearchParams): Lang {
 @Component({
   selector: 'app-opportunity',
   standalone: true,
-  imports: [OpMapComponent, IconComponent, RouterLink, OpFeasibilityComponent, OpRadarComponent],
+  imports: [OpMapComponent, IconComponent, RouterLink, OpFeasibilityComponent, OpRadarComponent, OpBuyComponent, AiQuotaComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './opportunity.component.html',
   styleUrl: './opportunity.component.css',
@@ -47,6 +63,7 @@ function initialLang(params: URLSearchParams): Lang {
 export class OpportunityComponent {
   private readonly api = inject(OpportunityService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
   protected readonly theme = inject(ThemeService).effective;
   @ViewChild(OpMapComponent) protected map?: OpMapComponent;
 
@@ -90,6 +107,28 @@ export class OpportunityComponent {
     const fe = this.feasibility();
     return fe ? riskOf(fe.r, fe.r.budgetGap >= 0, this.focus()?.competition) : null;
   });
+  /** What a paid report of the open ward would be computed from (the server computes it). */
+  protected readonly buyRequest = computed<PaidReportRequest | null>(() => {
+    const f = this.focus();
+    const d = this.detail();
+    return f && d ? { type: f.type, ward: d.slug, horizon: this.horizon(), assumptions: this.feasStore.get(f.type) } : null;
+  });
+  /** Straight from the ward panel: the report dialog, scrolled down to the paid report panel at its end. */
+  protected openFullReport(): void {
+    this.reportOpen.set(true);
+    afterNextRender(() => document.getElementById('op-buy')?.scrollIntoView({ block: 'start' }), { injector: this.injector });
+  }
+  /** Set while the sign-in dialog opened from the paid report panel is showing. */
+  private readonly resumeBuy = signal(false);
+  /**
+   * The sign-in dialog lives in the site header, under this page's report dialog: close the report first, and
+   * reopen it on the paid panel when the sign-in dialog closes.
+   */
+  protected signInToBuy(): void {
+    this.reportOpen.set(false);
+    this.resumeBuy.set(true);
+    this.account.dialogOpen.set(true);
+  }
   // ------------------------------------------------------------- saved reports (this browser only)
   protected readonly reports = inject(SavedReportsStore);
   protected readonly account = inject(AccountService);
@@ -245,6 +284,15 @@ export class OpportunityComponent {
     effect(() => {
       const url = this.shareUrl();
       if (typeof history !== 'undefined') history.replaceState(history.state, '', url.slice(location.origin.length));
+    });
+
+    // Back to the paid report panel once the sign-in dialog opened from it closes (signed in or not).
+    effect(() => {
+      if (!this.resumeBuy() || this.account.dialogOpen()) return;
+      untracked(() => {
+        this.resumeBuy.set(false);
+        this.openFullReport();
+      });
     });
     if (this.selected()) setTimeout(() => this.flyToken.update((n) => n + 1), 1500);
   }
@@ -417,10 +465,6 @@ export class OpportunityComponent {
     this.query.set('');
     if (this.isSmall()) this.panelOpen.set(false);
     if (fly) this.flyToken.update((n) => n + 1);
-  }
-
-  protected print(): void {
-    window.print();
   }
 
   protected today(): string {

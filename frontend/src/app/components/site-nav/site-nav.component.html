@@ -17,18 +17,59 @@
   <div class="right">
     <!-- Wide screens: inline tabs -->
     <nav class="tabs" aria-label="Chọn công cụ">
-      @for (tab of tabs; track tab.path) {
-        <a
-          class="tab"
-          [routerLink]="tab.path"
-          routerLinkActive="active"
-          ariaCurrentWhenActive="page"
-          [style.--tab-accent]="'var(--app-' + tab.key + ')'"
-        >
-          <span class="dot" aria-hidden="true"></span>
-          <span class="label-full">{{ tab.label }}</span>
-          <span class="label-short">{{ tab.short }}</span>
-        </a>
+      @for (group of groups; track group.id) {
+        @if (group.tabs.length === 1) {
+          <a
+            class="tab"
+            [routerLink]="group.tabs[0].path"
+            routerLinkActive="active"
+            ariaCurrentWhenActive="page"
+            [style.--tab-accent]="'var(--app-' + group.tabs[0].key + ')'"
+            [title]="group.tabs[0].hint"
+          >
+            <span class="dot" aria-hidden="true"></span>
+            {{ group.label }}
+          </a>
+        } @else {
+          <div class="group">
+            <button
+              type="button"
+              class="tab group-btn"
+              [class.active]="activeGroup() === group.id || openGroup() === group.id"
+              [attr.aria-expanded]="openGroup() === group.id"
+              [attr.aria-controls]="'group-' + group.id"
+              aria-haspopup="true"
+              (click)="toggleGroup(group.id)"
+            >
+              <span class="dots" aria-hidden="true">
+                @for (tab of group.tabs; track tab.path) {
+                  <span class="dot" [style.--tab-accent]="'var(--app-' + tab.key + ')'"></span>
+                }
+              </span>
+              {{ group.label }}
+              <svg class="chev" viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" /></svg>
+            </button>
+            @if (openGroup() === group.id) {
+              <div class="group-panel" [id]="'group-' + group.id">
+                @for (tab of group.tabs; track tab.path) {
+                  <a
+                    class="group-item"
+                    [routerLink]="tab.path"
+                    routerLinkActive="active"
+                    ariaCurrentWhenActive="page"
+                    [style.--tab-accent]="'var(--app-' + tab.key + ')'"
+                  >
+                    <span class="dot" aria-hidden="true"></span>
+                    <span class="menu-text">
+                      <span class="menu-label">{{ tab.label }}</span>
+                      <span class="menu-hint">{{ tab.hint }}</span>
+                    </span>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
       }
     </nav>
 
@@ -43,6 +84,12 @@
         aria-hidden="true"
       >
         <span class="dot" aria-hidden="true"></span>{{ tab.short }}
+      </a>
+    }
+
+    @if (billing.enabled()) {
+      <a class="premium-link" routerLink="/premium" routerLinkActive="active" [class.is-on]="billing.ai()?.premium">
+        <span aria-hidden="true">★</span> {{ billing.ai()?.premium ? 'Premium' : 'Nâng cấp' }}
       </a>
     }
 
@@ -105,6 +152,14 @@
   </div>
 </header>
 
+@if (nudge(); as n) {
+  <div class="nudge" role="note">
+    <span class="nudge-text"><span aria-hidden="true">★</span> {{ n.text }}</span>
+    <button type="button" class="nudge-cta" (click)="nudgeAction(n.action)">{{ n.cta }}</button>
+    <button type="button" class="nudge-x" (click)="closeNudge()" aria-label="Ẩn lời mời này">✕</button>
+  </div>
+}
+
 <!-- Narrow screens: drop-down menu (overlays the page, header height stays fixed) -->
 @if (menuOpen()) {
   <div class="backdrop" (click)="closeMenu()" aria-hidden="true"></div>
@@ -123,21 +178,33 @@
       </span>
       <span class="menu-text">
         <span class="menu-label">Trang chủ</span>
-        <span class="menu-hint">Tổng quan năm công cụ</span>
+        <span class="menu-hint">Tổng quan năm công cụ theo ba nhóm</span>
       </span>
     </a>
-    @for (tab of tabs; track tab.path) {
-      <a
-        class="menu-item"
-        [routerLink]="tab.path"
-        routerLinkActive="active"
-        ariaCurrentWhenActive="page"
-        [style.--tab-accent]="'var(--app-' + tab.key + ')'"
-      >
-        <span class="menu-icon" aria-hidden="true"><span class="dot"></span></span>
+    @for (group of groups; track group.id) {
+      <p class="menu-group">{{ group.label }} <small>{{ group.hint }}</small></p>
+      @for (tab of group.tabs; track tab.path) {
+        <a
+          class="menu-item"
+          [routerLink]="tab.path"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+          [style.--tab-accent]="'var(--app-' + tab.key + ')'"
+        >
+          <span class="menu-icon" aria-hidden="true"><span class="dot"></span></span>
+          <span class="menu-text">
+            <span class="menu-label">{{ tab.label }}</span>
+            <span class="menu-hint">{{ tab.hint }}</span>
+          </span>
+        </a>
+      }
+    }
+    @if (billing.enabled()) {
+      <a class="menu-item premium" routerLink="/premium" routerLinkActive="active" ariaCurrentWhenActive="page">
+        <span class="menu-icon" aria-hidden="true">★</span>
         <span class="menu-text">
-          <span class="menu-label">{{ tab.label }}</span>
-          <span class="menu-hint">{{ tab.hint }}</span>
+          <span class="menu-label">{{ billing.ai()?.premium ? 'Premium của bạn' : 'Nâng cấp Premium' }}</span>
+          <span class="menu-hint">Thêm lượt hỏi AI chuyên sâu, credit báo cáo</span>
         </span>
       </a>
     }

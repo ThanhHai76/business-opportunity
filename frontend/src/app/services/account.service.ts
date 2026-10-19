@@ -8,6 +8,8 @@ export interface AccountUser {
   email: string;
   displayName: string | null;
   createdAt: string;
+  /** The address was confirmed through the link sent by email. */
+  emailVerified: boolean;
 }
 
 /** The session is an HttpOnly cookie: every call sends it (withCredentials), the page never sees the token. */
@@ -33,6 +35,8 @@ export class AccountService {
 
   readonly enabled = signal(false);
   readonly user = signal<AccountUser | null>(null);
+  /** The server can send email (verify an address, reset a password). */
+  readonly mail = signal(false);
   /** The first /me answer has arrived (until then the menu shows nothing rather than a wrong state). */
   readonly ready = signal(false);
   /** The sign-in dialog (opened from the header, or from a page that offers to keep things in the account). */
@@ -43,24 +47,26 @@ export class AccountService {
   }
 
   refresh(): void {
-    this.http.get<{ enabled: boolean; user: AccountUser | null }>(`${ACCOUNT_API_URL}/me`, opts).subscribe({
+    this.http.get<{ enabled: boolean; mail?: boolean; user: AccountUser | null }>(`${ACCOUNT_API_URL}/me`, opts).subscribe({
       next: (r) => {
         this.enabled.set(r.enabled);
+        this.mail.set(Boolean(r.mail));
         this.user.set(r.user);
         this.ready.set(true);
       },
       error: () => {
         // Old backend without /api/account, or offline: behave as "accounts off".
         this.enabled.set(false);
+        this.mail.set(false);
         this.user.set(null);
         this.ready.set(true);
       },
     });
   }
 
-  register(email: string, password: string, displayName: string): Observable<AccountUser> {
+  register(email: string, password: string, displayName: string, acceptTerms = false): Observable<AccountUser> {
     return this.http
-      .post<{ user: AccountUser }>(`${ACCOUNT_API_URL}/register`, { email, password, ...(displayName.trim() ? { displayName } : {}) }, opts)
+      .post<{ user: AccountUser }>(`${ACCOUNT_API_URL}/register`, { email, password, ...(displayName.trim() ? { displayName } : {}), ...(acceptTerms ? { acceptTerms: true } : {}) }, opts)
       .pipe(map((r) => r.user), tap((u) => this.user.set(u)));
   }
 
@@ -78,6 +84,23 @@ export class AccountService {
 
   changePassword(currentPassword: string, newPassword: string): Observable<void> {
     return this.http.post<void>(`${ACCOUNT_API_URL}/me/password`, { currentPassword, newPassword }, opts);
+  }
+
+  forgotPassword(email: string): Observable<unknown> {
+    return this.http.post(`${ACCOUNT_API_URL}/forgot-password`, { email }, opts);
+  }
+
+  resetPassword(token: string, password: string): Observable<void> {
+    return this.http.post<void>(`${ACCOUNT_API_URL}/reset-password`, { token, password }, opts);
+  }
+
+  /** Confirms the address from the emailed link; refreshes the signed-in user so the banner goes away. */
+  verifyEmail(token: string): Observable<unknown> {
+    return this.http.post(`${ACCOUNT_API_URL}/verify-email`, { token }, opts).pipe(tap(() => this.refresh()));
+  }
+
+  resendVerification(): Observable<unknown> {
+    return this.http.post(`${ACCOUNT_API_URL}/verify-email/send`, null, opts);
   }
 
   deleteAccount(password: string): Observable<void> {

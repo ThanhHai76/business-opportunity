@@ -102,7 +102,8 @@ export class LivingScoreApiService {
   }
 
   recommend(request: RecommendationRequest): Observable<RecommendationResponse> {
-    return this.http.post<RecommendationResponse>(`${LIVING_SCORE_API_URL}/recommendations`, { ...request, lang: this.langService.lang() });
+    // With the session cookie: AI explanations are counted per account.
+    return this.http.post<RecommendationResponse>(`${LIVING_SCORE_API_URL}/recommendations`, { ...request, lang: this.langService.lang() }, { withCredentials: true });
   }
 
   /** Query parameters, plus `lang=en` when the interface is in English (Vietnamese is the API default). */

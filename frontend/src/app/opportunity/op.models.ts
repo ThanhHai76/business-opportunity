@@ -1,3 +1,4 @@
+import type { AiQuota } from '../services/billing.service';
 /** Types mirroring the Business Opportunity Map API (backend-node/src/opportunity, mounted at /api/opportunity). */
 
 export type Lang = 'vi' | 'en';
@@ -139,6 +140,8 @@ export interface AskAnswer {
   outOfScope: boolean;
   provider: string;
   model: string | null;
+  /** Cost of the answer in AI questions (only when the server counts them). */
+  quota?: AiQuota;
 }
 
 /** A business idea read from plain words (POST /parse). */

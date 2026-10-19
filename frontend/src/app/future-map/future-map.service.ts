@@ -76,6 +76,7 @@ export class FutureMapService {
 
   /** A free-text question (Claude when configured, answered only from the data; otherwise the template answerer). */
   askAi(question: string, year: number, lang: Lang): Observable<Answer> {
-    return this.http.post<Answer>(`${FUTURE_MAP_API_URL}/ask-ai`, { question: question.slice(0, 500), year, lang });
+    // With the session cookie: in-depth AI answers are counted per account.
+    return this.http.post<Answer>(`${FUTURE_MAP_API_URL}/ask-ai`, { question: question.slice(0, 500), year, lang }, { withCredentials: true });
   }
 }
