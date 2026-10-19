@@ -11,3 +11,6 @@ frontend/.angular/
 
 # Local environment files (copy from .env.example)
 .env
+
+# Backend dependencies (a few files of it were committed by mistake in the first commit; untrack with: git rm -r --cached backend-node/node_modules)
+backend-node/node_modules/
