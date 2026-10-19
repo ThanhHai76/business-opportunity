@@ -6,6 +6,8 @@
  *   /api/future-map/...                                Hanoi Future Map — sourced plan milestones 2026-2065 (src/future-map).
  *   /api/property-intel/...                            AI Property Intelligence — area and project intelligence (src/property-intel).
  *   /api/account/...                                   Accounts and saved reports, PostgreSQL (src/accounts).
+ *   /api/billing/...                                   Purchases: report credits, AI question packs, Premium (src/billing).
+ *   /api/reports/...                                   Paid feasibility reports, computed and stored by the server (src/reports).
  */
 try {
   process.loadEnvFile(); // optional .env (Node >= 20.12); real environment variables win
@@ -21,6 +23,10 @@ const { createFutureMap } = require('./src/future-map');
 const { createPropertyIntel } = require('./src/property-intel');
 const { createTimeMachine } = require('./src/time-machine');
 const { createAccounts } = require('./src/accounts');
+const { createBilling } = require('./src/billing');
+const { createPaidReports } = require('./src/reports');
+const { createAiMeter } = require('./src/billing/ai-meter');
+const { createMailer } = require('./src/mailer');
 
 const PORT = process.env.PORT || 8000;
 
@@ -70,29 +76,38 @@ function createApp(options = {}) {
     res.json({ status: 'ok' });
   });
 
+  // Accounts first: the AI meter needs them to count in-depth AI answers per account (src/billing/ai-meter.js).
+  const mailer = options.mailer ?? createMailer({ log: options.log !== false });
+  const accounts = createAccounts({ isAllowedOrigin, mailer, ...options.accounts });
+  const meter = createAiMeter({ accounts, isAllowedOrigin, ...options.aiMeter });
+
   // Business Opportunity Map (Hanoi wards, OpenStreetMap data; AI answers from the data).
-  const opportunity = createOpportunityMap(options.opportunity);
+  const opportunity = createOpportunityMap({ meter, ...options.opportunity });
   app.use('/api/opportunity', opportunity.router);
 
   // Hanoi Living Score (its own JSON error format, rate limiting and security headers).
-  const living = createLivingScore(options.living);
+  const living = createLivingScore({ meter, ...options.living });
   app.use('/api/living-score', living.router);
 
   // Hanoi Future Map (illustrative scenario data; same error format as Living Score).
-  const futureMap = createFutureMap(options.futureMap);
+  const futureMap = createFutureMap({ meter, ...options.futureMap });
   app.use('/api/future-map', futureMap.router);
 
   // AI Property Intelligence (real data; Claude when ANTHROPIC_API_KEY is set, template answers otherwise).
-  const propertyIntel = createPropertyIntel(options.propertyIntel);
+  const propertyIntel = createPropertyIntel({ meter, ...options.propertyIntel });
   app.use('/api/property-intel', propertyIntel.router);
 
   // Hanoi Time Machine AI Storyteller (grounded in the page's own landmark data; mock unless ANTHROPIC_API_KEY is set).
-  const timeMachine = createTimeMachine(options.timeMachine);
+  const timeMachine = createTimeMachine({ meter, ...options.timeMachine });
   app.use('/api/time-machine', timeMachine.router);
 
   // Accounts and saved reports (PostgreSQL when DATABASE_URL is set; off otherwise).
-  const accounts = createAccounts({ isAllowedOrigin, ...options.accounts });
   app.use('/api/account', accounts.router);
+
+  // Purchases (report credits, AI question packs, Premium) and the paid reports they buy; both need accounts.
+  const billing = createBilling({ accounts, isAllowedOrigin, meter, ...options.billing });
+  app.use('/api/billing', billing.router);
+  app.use('/api/reports', createPaidReports({ accounts }).router);
 
   // Unmatched routes and uncaught errors still respond with JSON, matching
   // every other endpoint's contract (the frontend never has to special-case
@@ -106,11 +121,11 @@ function createApp(options = {}) {
     res.status(500).json({ detail: 'Internal server error' });
   });
 
-  return { app, living, accounts };
+  return { app, living, accounts, billing, meter, mailer };
 }
 
 async function main() {
-  const { app, living, accounts } = createApp();
+  const { app, living, accounts, billing, meter, mailer } = createApp();
   await living.init();
   await accounts.init();
   const server = app.listen(PORT, () => {
@@ -120,6 +135,13 @@ async function main() {
     console.log('  Hanoi Future Map          /api/future-map    (sourced plan data)');
     console.log('  AI Property Intelligence  /api/property-intel (79 wards, land prices 2026, market briefings)');
     console.log(`  Accounts                  /api/account       (${accounts.enabled ? accounts.store.kind : 'off — set DATABASE_URL'})`);
+    console.log(`  Billing                   /api/billing       (${billing.enabled ? `provider: ${billing.provider.name}` : 'off'})  · paid reports /api/reports`);
+    console.log(
+      `  Email                     ${accounts.mailEnabled ? `${mailer.kind} — verify email, reset password${accounts.requireVerifiedEmail ? ', verified email needed to buy' : ''}` : 'off — no verify email / reset password (MAIL_PROVIDER, APP_URL)'}`,
+    );
+    console.log(
+      `  AI metering               ${meter.enabled ? `on — ${meter.limits.freePerDay} free in-depth AI answers a day (${meter.limits.storyFreePerDay} for the Time Machine), ${meter.limits.premiumPerDay} with Premium` : 'off — AI answers are free (AI_METERING, accounts and ANTHROPIC_API_KEY)'}`,
+    );
     if (!living.config.anthropicApiKey) console.log('  ANTHROPIC_API_KEY not set — AI recommendations use rule-based explanations.');
   });
 

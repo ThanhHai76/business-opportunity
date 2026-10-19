@@ -7,6 +7,8 @@
  *
  * The answer's sources are the sources of the landmarks it drew on (never written by the model).
  * Claude answers when ANTHROPIC_API_KEY is set (AI_PROVIDER=auto|anthropic); otherwise a template storyteller.
+ * With accounts and AI metering on (src/billing/ai-meter.js), a signed-in visitor gets a few free Claude answers a day
+ * (more than the other tools), then bought AI credits or Premium; anyone else gets the template storyteller.
  */
 const express = require('express');
 const helmet = require('helmet');
@@ -16,6 +18,7 @@ const { HttpError, asyncHandler, badRequest, errorBody } = require('../living-sc
 const { createLogger } = require('../living-score/common/logger');
 const { loadConfig } = require('../ai-config');
 const { createStorytellers, tell, LANDMARK_KEYS, ERA_IDS } = require('./storyteller');
+const { NO_METER, answerersFor, answeredByAi } = require('../billing/ai-meter');
 
 const logger = createLogger('TimeMachine');
 
@@ -43,11 +46,13 @@ function createAnswerCache(ttlMs = 30 * 60_000, max = 300) {
  * @param options.config        { aiProvider, anthropicApiKey, llmModel, llmTimeoutMs } (defaults from env)
  * @param options.storytellers  { primary, fallback } — replaces the storytellers (tests)
  * @param options.rateLimits    { global, ask } requests per minute per client (defaults 120 / 20)
+ * @param options.meter         counts in-depth AI answers per account (src/billing/ai-meter.js); none by default
  */
 function createTimeMachine(options = {}) {
   const config = options.config ?? loadConfig();
   const storytellers = options.storytellers ?? createStorytellers(config);
   const limits = { global: 120, ask: 20, ...options.rateLimits };
+  const meter = options.meter ?? NO_METER;
   const cached = createAnswerCache();
   const tooMany = (req, res, next) => next(new HttpError(429, 'Bạn hỏi hơi nhanh. Vui lòng thử lại sau ít phút.'));
 
@@ -69,8 +74,14 @@ function createTimeMachine(options = {}) {
         throw badRequest(`Dữ liệu gửi lên không hợp lệ — ${details}`);
       }
       const body = parsed.data;
-      const key = `${body.lang}|${body.question.toLowerCase()}|${body.landmark ?? ''}|${body.era ?? ''}`;
-      res.json(await cached(key, () => tell(storytellers, body)));
+      res.json(
+        await meter.run(req, res, 'time-machine', async (allowAi) => {
+          // The AI and the template answer are cached apart: a template answer is never served as an AI one, or the reverse.
+          const key = `${allowAi ? 'ai' : 'basic'}|${body.lang}|${body.question.toLowerCase()}|${body.landmark ?? ''}|${body.era ?? ''}`;
+          const answer = await cached(key, () => tell(answerersFor(storytellers, allowAi), body));
+          return { body: answer, usedAi: answeredByAi(storytellers, answer.provider) };
+        }),
+      );
     }),
   );
 

@@ -150,8 +150,55 @@ for (const id of ['viupRail', 'railPriority', 'nq188', 'ring4', 'qd2512Poles', '
   const s = FM.SOURCES[id];
   SOURCES[id] = { title: s.title, titleEn: s.title, publisher: s.publisher, url: s.url };
 }
+
+/**
+ * How far each source can be trusted, shown next to it so nobody reads a rough figure as a hard one.
+ *   kind        official   — a decision or table published by the authority (land price table, approved plans)
+ *               published  — a figure a research firm or the press published (CBRE, Savills, news)
+ *               crowdsourced — OpenStreetMap: community-mapped, completeness varies by area
+ *               computed   — worked out here from other data (driving times, free-flow, no traffic)
+ *               asking     — asking / expected prices, not transaction prices; an estimate of value, not a record of sales
+ *   confidence  high | medium | low — a judgement of how well the figure represents reality
+ *   asOf        the date of the data (YYYY-MM-DD, or YYYY-MM), null when the source gives none
+ */
+const isoDay = (v) => (typeof v === 'string' && v.length >= 10 ? v.slice(0, 10) : null);
+const QUALITY = {
+  population: { kind: 'crowdsourced', confidence: 'medium', asOf: '2025-07-01' },
+  osmAmenities: { kind: 'crowdsourced', confidence: 'medium', asOf: isoDay(OSM.osmBase) },
+  osmDevelopment: { kind: 'crowdsourced', confidence: 'medium', asOf: isoDay(WARDS_DATA.osmBase) },
+  osmInfra: { kind: 'crowdsourced', confidence: 'medium', asOf: isoDay(INFRA_OSM.osmBase) },
+  bridges2025: { kind: 'published', confidence: 'medium', asOf: null },
+  tranHungDao: { kind: 'published', confidence: 'medium', asOf: '2026-09' },
+  thuongCat: { kind: 'published', confidence: 'medium', asOf: null },
+  landPrice: { kind: 'official', confidence: 'high', asOf: '2026-01-01' },
+  osrm: { kind: 'computed', confidence: 'medium', asOf: isoDay(TRAVEL.generatedAt) },
+  cbreQ4_2025: { kind: 'published', confidence: 'medium', asOf: '2026-01-15' },
+  cbreQ1_2026: { kind: 'published', confidence: 'medium', asOf: '2026-04-23' },
+  cbreQ2_2026: { kind: 'published', confidence: 'medium', asOf: '2026-07-07' },
+  savillsQ2_2026: { kind: 'published', confidence: 'medium', asOf: '2026-08-13' },
+  launches2026: { kind: 'asking', confidence: 'medium', asOf: '2026-03-20' },
+  listings2026: { kind: 'asking', confidence: 'low', asOf: '2026-04-24' },
+  listingsAug2026: { kind: 'asking', confidence: 'low', asOf: '2026-08-21' },
+  parkCentric2026: { kind: 'asking', confidence: 'low', asOf: '2026-03-21' },
+  social2026: { kind: 'published', confidence: 'medium', asOf: '2026-03-04' },
+  minhGiang2026: { kind: 'asking', confidence: 'low', asOf: '2026-08-18' }, // a planned launch price
+  savillsProjects2026: { kind: 'published', confidence: 'medium', asOf: '2026-07-16' },
+  socialPrices2026: { kind: 'asking', confidence: 'low', asOf: '2026-03-04' },
+  // approved plans: the decision is firm, the dates in it are targets; a press article or an encyclopedia about a plan is only "published"
+  viupRail: { kind: 'official', confidence: 'high', asOf: null },
+  railPriority: { kind: 'published', confidence: 'medium', asOf: '2025-05-25' },
+  nq188: { kind: 'official', confidence: 'high', asOf: null },
+  ring4: { kind: 'published', confidence: 'medium', asOf: null },
+  qd2512Poles: { kind: 'published', confidence: 'medium', asOf: '2026-06-29' },
+  poleRoles: { kind: 'official', confidence: 'medium', asOf: null },
+};
+/** The label of a source: a source without an entry is shown as the weakest kind rather than as a plain fact. */
+const qualityOf = (id) => QUALITY[id] ?? { kind: 'published', confidence: 'low', asOf: null };
+
 const sourceList = (ids, lang) =>
-  [...new Set(ids)].filter((id) => SOURCES[id]).map((id) => ({ id, title: lang === 'en' ? SOURCES[id].titleEn : SOURCES[id].title, publisher: SOURCES[id].publisher, url: SOURCES[id].url }));
+  [...new Set(ids)]
+    .filter((id) => SOURCES[id])
+    .map((id) => ({ id, title: lang === 'en' ? SOURCES[id].titleEn : SOURCES[id].title, publisher: SOURCES[id].publisher, url: SOURCES[id].url, quality: qualityOf(id) }));
 
 // ---------------------------------------------------------------- metro (in service / under construction: OSM via the Living Score seed)
 const seed = getSeedData();
@@ -420,6 +467,9 @@ module.exports = {
   rankOf,
   statusAt,
   sourceList,
+  qualityOf,
+  QUALITY,
+  SOURCE_IDS: Object.keys(SOURCES),
   wardAt,
   around,
 };

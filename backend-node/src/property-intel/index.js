@@ -20,6 +20,7 @@
 const express = require('express');
 const helmet = require('helmet');
 const { rateLimit } = require('express-rate-limit');
+const { NO_METER, answerersFor, answeredByAi } = require('../billing/ai-meter');
 const { z } = require('zod');
 const { HttpError, asyncHandler, badRequest, errorBody, singleString } = require('../living-score/common/http');
 const { parseSlug } = require('../living-score/common/query-parsers');
@@ -47,9 +48,15 @@ function langOf(req) {
   return lang;
 }
 
+/**
+ * @param options.analysts   { primary, fallback } (tests)
+ * @param options.rateLimits { global, ask } per minute per client
+ * @param options.meter      counts in-depth AI answers per account (src/billing/ai-meter.js); none by default
+ */
 function createPropertyIntel(options = {}) {
   const limits = { global: 240, ask: 30, ...options.rateLimits };
   const analysts = options.analysts ?? analyst.createAnalysts(options.config);
+  const meter = options.meter ?? NO_METER;
   const tooMany = (req, res, next) => next(new HttpError(429, 'Bạn gửi quá nhiều yêu cầu. Vui lòng thử lại sau ít phút.'));
   const router = express.Router();
   router.use(helmet());
@@ -117,7 +124,13 @@ function createPropertyIntel(options = {}) {
         const details = parsed.error.issues.map((i) => `${i.path.join('.') || 'body'}: ${i.message}`).join('; ');
         throw badRequest(`Dữ liệu gửi lên không hợp lệ — ${details}`);
       }
-      res.json(await analyst.ask(analysts, { ...parsed.data, lang: parsed.data.lang ?? 'vi' }));
+      const input = { ...parsed.data, lang: parsed.data.lang ?? 'vi' };
+      res.json(
+        await meter.run(req, res, 'property-intel', async (allowAi) => {
+          const answer = await analyst.ask(answerersFor(analysts, allowAi), input);
+          return { body: answer, usedAi: answeredByAi(analysts, answer.provider) };
+        }),
+      );
     }),
   );
 

@@ -44,6 +44,33 @@ describe('AI Property Intelligence API', () => {
     return { status: res.status, body: await res.json() };
   };
 
+  it('labels every source with its kind, date and confidence, and never shows an unlabelled one as firm', () => {
+    for (const id of M.SOURCE_IDS) {
+      assert.ok(Object.hasOwn(M.QUALITY, id), `${id} has no quality label`);
+      const q = M.qualityOf(id);
+      assert.ok(['official', 'published', 'crowdsourced', 'computed', 'asking'].includes(q.kind), id);
+      assert.ok(['high', 'medium', 'low'].includes(q.confidence), id);
+      assert.ok(q.asOf === null || /^\d{4}-\d{2}(-\d{2})?$/.test(q.asOf), `${id}: ${q.asOf}`);
+    }
+    // asking prices are estimates, never "high"
+    for (const id of M.SOURCE_IDS) if (M.qualityOf(id).kind === 'asking') assert.notEqual(M.qualityOf(id).confidence, 'high', id);
+    assert.deepEqual(M.qualityOf('not-a-source'), { kind: 'published', confidence: 'low', asOf: null });
+  });
+
+  it('returns the label with every source of a ward, a project and an AI answer', async () => {
+    const ward = (await get('/wards/phuong-bo-de')).body;
+    const land = ward.sources.find((s) => s.id === 'landPrice');
+    assert.deepEqual(land.quality, { kind: 'official', confidence: 'high', asOf: '2026-01-01' });
+    assert.ok(ward.sources.every((s) => s.quality && s.quality.kind && s.quality.confidence));
+    assert.equal(ward.sources.find((s) => s.id === 'osrm').quality.kind, 'computed');
+    const project = (await get('/projects/vinhomes-metropolis')).body;
+    const price = project.sources.find((s) => s.id === project.sourceId) ?? project.sources[0];
+    assert.equal(price.quality.kind, 'asking');
+    assert.equal(price.quality.confidence, 'low');
+    const answer = (await ask({ question: 'Phường Bồ Đề có tiềm năng không?', ward: 'phuong-bo-de' })).body;
+    assert.ok(answer.sources.length > 0 && answer.sources.every((s) => s.quality?.confidence));
+  });
+
   it('serves an overview of the 79 wards with the latest market figure', async () => {
     const { status, body } = await get('/overview');
     assert.equal(status, 200);

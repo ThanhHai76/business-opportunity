@@ -15,6 +15,7 @@
 const express = require('express');
 const helmet = require('helmet');
 const { rateLimit } = require('express-rate-limit');
+const { NO_METER, answerersFor, answeredByAi } = require('../billing/ai-meter');
 const { z } = require('zod');
 const { HttpError, asyncHandler, badRequest, errorBody, singleString } = require('../living-score/common/http');
 const { parseSlug } = require('../living-score/common/query-parsers');
@@ -64,10 +65,12 @@ function createAnswerCache(ttlMs = 30 * 60_000, max = 300) {
  * @param options.answerers   { primary, fallback } — replaces the AI answerers (tests)
  * @param options.config      AI config (defaults from env: AI_PROVIDER, ANTHROPIC_API_KEY, LLM_MODEL)
  * @param options.rateLimits  { global, ai } requests per minute per client (defaults 240 / 20)
+ * @param options.meter       counts in-depth AI answers per account (src/billing/ai-meter.js); none by default
  */
 function createFutureMap(options = {}) {
   const limits = { global: 240, ai: 20, ...options.rateLimits };
   const answerers = options.answerers ?? createAnswerers(options.config ?? loadConfig());
+  const meter = options.meter ?? NO_METER;
   const cached = createAnswerCache();
   const tooMany = (req, res, next) => next(new HttpError(429, 'Bạn gửi quá nhiều yêu cầu. Vui lòng thử lại sau ít phút.'));
   const router = express.Router();
@@ -131,8 +134,14 @@ function createFutureMap(options = {}) {
     asyncHandler(async (req, res) => {
       const body = parse(AskAiSchema, req.body);
       const year = scenarios.requireYear(body.year ?? DEFAULT_YEAR);
-      const key = `${body.lang}|${year}|${body.question.toLowerCase()}`;
-      res.json(await cached(key, () => ask(answerers, { question: body.question, year, lang: body.lang })));
+      res.json(
+        await meter.run(req, res, 'future-map', async (allowAi) => {
+          // The AI and the basic answer are cached apart: a basic answer is never served as an AI one, or the reverse.
+          const key = `${allowAi ? 'ai' : 'basic'}|${body.lang}|${year}|${body.question.toLowerCase()}`;
+          const answer = await cached(key, () => ask(answerersFor(answerers, allowAi), { question: body.question, year, lang: body.lang }));
+          return { body: answer, usedAi: answeredByAi(answerers, answer.provider) };
+        }),
+      );
     }),
   );
 

@@ -15,6 +15,7 @@ const path = require('node:path');
 const express = require('express');
 const helmet = require('helmet');
 const { rateLimit } = require('express-rate-limit');
+const { NO_METER } = require('../billing/ai-meter');
 
 const { loadConfig } = require('./config');
 const { HttpError, asyncHandler, badRequest, errorBody, singleString } = require('./common/http');
@@ -65,8 +66,10 @@ const tooManyRequests = (req, res, next) => next(new HttpError(429, 'Bạn gửi
  * @param options.config     already-parsed settings (defaults to loadConfig() from process.env)
  * @param options.narrative  replaces the Anthropic client (tests)
  * @param options.rateLimits { global, recommendations } requests per minute per client (defaults 240 / 10)
+ * @param options.meter      counts in-depth AI answers per account (src/billing/ai-meter.js); none by default
  */
 function createLivingScore(options = {}) {
+  const meter = options.meter ?? NO_METER;
   const config = options.config ?? loadConfig();
   const limits = { global: 240, recommendations: 10, ...options.rateLimits };
   const { source: data, pool } = createDataSource(config);
@@ -184,7 +187,15 @@ function createLivingScore(options = {}) {
     '/recommendations',
     rateLimit({ windowMs: 60_000, limit: limits.recommendations, standardHeaders: true, legacyHeaders: false, handler: tooManyRequests }),
     asyncHandler(async (req, res) => {
-      res.status(200).json(await recommendations.recommend(req.body));
+      const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
+      // Rule-based explanations asked for (useAi: false): nothing to meter.
+      if (body.useAi === false) return res.status(200).json(await recommendations.recommend(req.body));
+      res.status(200).json(
+        await meter.run(req, res, 'living-score', async (allowAi) => {
+          const result = await recommendations.recommend(allowAi ? req.body : { ...body, useAi: false });
+          return { body: result, usedAi: result.mode === 'ai' };
+        }),
+      );
     }),
   );
 

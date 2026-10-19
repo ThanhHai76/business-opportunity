@@ -12,6 +12,7 @@
  */
 const express = require('express');
 const { rateLimit } = require('express-rate-limit');
+const { NO_METER, answerersFor, answeredByAi } = require('../billing/ai-meter');
 const { z } = require('zod');
 const { HttpError, asyncHandler, badRequest, errorBody, notFound, singleString } = require('../living-score/common/http');
 const { createLogger } = require('../living-score/common/logger');
@@ -197,10 +198,12 @@ function wardDetail(slug, horizon, lang) {
 /**
  * @param options.answerers  { primary, fallback } (tests)
  * @param options.rateLimits { global, ai } per minute per client
+ * @param options.meter      counts in-depth AI answers per account (src/billing/ai-meter.js); none by default
  */
 function createOpportunityMap(options = {}) {
   const limits = { global: 240, ai: 12, ...options.rateLimits };
   const answerers = options.answerers ?? createAnswerers();
+  const meter = options.meter ?? NO_METER;
   const tooMany = (req, res) => res.status(429).json({ statusCode: 429, error: 'Too Many Requests', message: 'Quá nhiều yêu cầu, vui lòng thử lại sau ít phút.' });
   const router = express.Router();
   router.use(rateLimit({ windowMs: 60_000, limit: limits.global, standardHeaders: true, legacyHeaders: false, handler: tooMany }));
@@ -285,7 +288,13 @@ function createOpportunityMap(options = {}) {
       if (!parsed.success) throw badRequest(`Dữ liệu gửi lên không hợp lệ — ${parsed.error.issues.map((i) => `${i.path.join('.') || 'body'}: ${i.message}`).join('; ')}`);
       const body = parsed.data;
       if (body.ward) requireWard(body.ward);
-      res.json(await ask(answerers, { ...body, horizon: body.horizon ?? 'now', lang: body.lang ?? 'vi' }));
+      const request = { ...body, horizon: body.horizon ?? 'now', lang: body.lang ?? 'vi' };
+      res.json(
+        await meter.run(req, res, 'opportunity', async (allowAi) => {
+          const answer = await ask(answerersFor(answerers, allowAi), request);
+          return { body: answer, usedAi: answeredByAi(answerers, answer.provider) };
+        }),
+      );
     }),
   );
 

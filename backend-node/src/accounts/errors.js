@@ -13,6 +13,7 @@ const unauthorized = (message = 'Bạn cần đăng nhập.', code = 'unauthenti
 const forbidden = (message, code = 'forbidden') => new AccountError(403, code, message);
 const notFound = (message = 'Không tìm thấy.') => new AccountError(404, 'not_found', message);
 const conflict = (message = 'Email này đã được đăng ký.') => new AccountError(409, 'email_taken', message);
+const paymentRequired = (message = 'Bạn đã dùng hết lượt báo cáo.', code = 'no_credits') => new AccountError(402, code, message);
 const disabled = () => new AccountError(503, 'accounts_disabled', 'Tài khoản chưa được bật trên máy chủ này (chưa cấu hình DATABASE_URL).');
 
-module.exports = { AccountError, badRequest, unauthorized, forbidden, notFound, conflict, disabled };
+module.exports = { AccountError, badRequest, unauthorized, forbidden, notFound, conflict, paymentRequired, disabled };
