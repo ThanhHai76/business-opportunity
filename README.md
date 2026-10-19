@@ -82,8 +82,12 @@ project/
 │   │   ├── opportunity/        # Bản đồ Cơ hội Kinh doanh (/api/opportunity/...) — phường/xã Hà Nội, dữ liệu OSM
 │   │   ├── living-score/       # Hanoi Living Score (/api/living-score/...) — xem mục bên dưới
 │   │   ├── future-map/         # Hanoi Future Map (/api/future-map/...) — quy hoạch có nguồn 2026-2065 + Vùng Thủ đô
-│   │   └── property-intel/     # AI Property Intelligence (/api/property-intel/...) — phường/xã, giá đất 2026, thị trường, dự án
+│   │   ├── property-intel/     # AI Property Intelligence (/api/property-intel/...) — phường/xã, giá đất 2026, thị trường, dự án
+│   │   ├── accounts/           # Tài khoản, phiên đăng nhập, báo cáo đã lưu (/api/account/...)
+│   │   ├── billing/            # Mua lượt báo cáo: gói, đơn hàng, webhook, cổng giả (/api/billing/...)
+│   │   └── reports/            # Báo cáo khả thi trả phí: tính trên server, trang in PDF (/api/reports/...)
 │   ├── database/living-score/  # 01-schema.sql — schema PostgreSQL/PostGIS
+│   ├── database/accounts/      # 01-schema.sql tài khoản · 02-billing.sql đơn hàng, lượt, báo cáo trả phí
 │   ├── test/                   # node --test: mọi API
 │   ├── Dockerfile · .env.example
 │   └── package.json
@@ -153,6 +157,36 @@ trong trình duyệt được **chuyển vào tài khoản** (bản mới hơn t
 
 **Kiểm thử**: `npm test` chạy bộ kiểm thử tài khoản trên store trong bộ nhớ; đặt `TEST_DATABASE_URL=postgres://…` (database dùng một lần —
 bảng bị xoá sạch) để chạy cùng bộ đó trên PostgreSQL thật.
+
+### Thanh toán & báo cáo trả phí (API `/api/billing`, `/api/reports`)
+
+Giai đoạn 1 bán **lượt báo cáo**: mỗi lượt đổi được một **báo cáo khả thi đầy đủ** cho một ngành + phường + mốc, theo giả định hiện tại của
+người dùng. Trên Bản đồ Cơ hội Kinh doanh: mở **Báo cáo** của một phường → **Báo cáo đầy đủ (PDF)** → đăng nhập → chọn gói → thanh toán ở
+tab mới (trang này tự cập nhật khi tiền về) → **Tạo báo cáo** → trang in mở ở tab mới, trình duyệt lưu thành PDF.
+
+- **Báo cáo do server tính và lưu cố định** (`src/reports/`): trang chỉ gửi ngành, phường, mốc và giả định; server tính lại (công thức giống
+  `op-feasibility.ts` — kiểm thử so khớp giả định mặc định hai bên) và giữ nguyên số liệu lúc tạo. Gồm: tóm tắt, nhu cầu và cạnh tranh của phường,
+  kết quả kinh doanh và vốn, dòng tiền 36 tháng (biểu đồ + bảng), 4 kịch bản, rủi ro, 5 phường hợp hơn với cùng kế hoạch, giả định, nguồn.
+  Dữ liệu vào sai (phường không có, chưa có điểm) bị từ chối **trước khi** trừ lượt. Báo cáo viết bằng tiếng Việt.
+- **Gói và giá**: `backend-node/src/billing/products.js` (`report_1` 199.000 đ · `report_3` 449.000 đ — đổi tại đây).
+- **Bảng** (`database/accounts/02-billing.sql`, server tự tạo): `billing_orders` (mã đơn số cho cổng thanh toán; xoá tài khoản vẫn giữ đơn để
+  đối soát), `credit_ledger` (sổ cộng/trừ lượt — số dư là tổng; mỗi đơn chỉ được cộng một lần), `paid_reports`.
+- **Chỉ webhook đã kiểm chữ ký mới cộng lượt** — không bao giờ dựa vào việc trình duyệt quay về `returnUrl`. Webhook lặp lại không cộng thêm;
+  sai số tiền thì không cộng và ghi log để kiểm tra tay; trả tiền cho đơn đã huỷ/hết hạn vẫn được cộng (tiền đã về). Trừ lượt nằm trong
+  transaction có khoá theo người dùng: tạo hai báo cáo cùng lúc không dùng chung một lượt. `returnUrl` chỉ được trỏ về trang của ứng dụng.
+- **Cổng thanh toán** (`BILLING_PROVIDER`): `mock` — cổng **giả** để thử cả luồng không cần tiền (mặc định khi không phải production; production
+  từ chối khởi động với `mock`); `off` — không bán (mặc định ở production). **PayOS chưa kết nối**: thêm một provider cùng giao diện với
+  `src/billing/mock-provider.js` (`createPayment`, `verifyWebhook`) rồi chọn nó trong `createProvider()` (`src/billing/index.js`).
+
+| Method | Đường dẫn | Mô tả |
+|---|---|---|
+| GET | `/api/billing/products` | `{ enabled, provider, products }` — công khai |
+| GET | `/api/billing/me` | `{ credits, orders }` (10 đơn gần nhất) |
+| POST | `/api/billing/checkout` | `{ product, returnUrl }` → `{ order, checkoutUrl }` |
+| GET · POST | `/api/billing/orders/:id` · `/orders/:id/cancel` | Trạng thái đơn (`pending`/`paid`/`cancelled`/`expired`) · huỷ |
+| POST | `/api/billing/webhook/:provider` | Thông báo thanh toán từ cổng (có chữ ký) |
+| POST · GET | `/api/reports` | Tạo báo cáo (trừ 1 lượt, `402 no_credits` khi hết) · danh sách |
+| GET | `/api/reports/:id` · `/api/reports/:id/print` | Nội dung · trang in A4 (lưu PDF) |
 
 ### Đưa lên mạng
 
