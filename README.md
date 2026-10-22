@@ -3,6 +3,22 @@
 Bộ công cụ về Hà Nội: **Bản đồ Cơ hội Kinh doanh**, Hanoi Time Machine, Hanoi Living Score, Hanoi Future Map,
 AI Property Intelligence.
 
+**Tên hiển thị cho người dùng** (giao diện tiếng Việt; giao diện tiếng Anh giữ tên tiếng Anh; đường dẫn URL và API không đổi).
+Phần còn lại của README gọi công cụ bằng tên kỹ thuật ở cột giữa:
+
+| Tên hiển thị | Tên kỹ thuật | Đường dẫn |
+|---|---|---|
+| Mở gì ở đâu | Bản đồ Cơ hội Kinh doanh (Business Opportunity Map) | `/opportunity-map` |
+| Hà Nội xưa và nay | Hanoi Time Machine | `/time-machine` |
+| Hà Nội tương lai | Hanoi Future Map | `/future-map` |
+| Chấm điểm bất động sản | AI Property Intelligence (trợ lý: "AI bất động sản" / Property AI) | `/property-intelligence` |
+| Điểm đáng sống | Hanoi Living Score | `/living-score` |
+| La bàn nghề nghiệp Hà Nội | Career compass (định hướng việc làm, chỉ giao diện) | `/career` |
+
+Đổi tên hiển thị ở: `components/site-nav/site-nav.component.ts` (thanh điều hướng), `pages/home/home.component.html` (thẻ trang chủ),
+`app.routes.ts` · `living-score.routes.ts` · `pi.routes.ts` (tiêu đề tab), `services/seo.service.ts` và `index.html` (mô tả cho công cụ tìm kiếm),
+và các file `*-i18n.ts` của từng công cụ.
+
 - **Frontend**: Angular 18 (standalone components, signals) + MapLibre GL với nền OpenFreeMap.
 - **Backend**: `backend-node/` — Node.js/Express, dữ liệu đọc từ file (không bắt buộc DB), cổng 8000.
 
@@ -100,7 +116,8 @@ project/
         ├── pages/                  # home, time-machine
         ├── living-score/           # Hanoi Living Score (lazy route /living-score, MapLibre)
         ├── future-map/             # Hanoi Future Map (lazy route /future-map, MapLibre)
-        └── property-intel/         # AI Property Intelligence (lazy route /property-intelligence, MapLibre)
+        ├── property-intel/         # AI Property Intelligence (lazy route /property-intelligence, MapLibre)
+        └── career/                 # La bàn nghề nghiệp Hà Nội (lazy route /career): dữ liệu có nguồn, xếp hạng bằng quy tắc
 ```
 
 ## Chạy Backend
@@ -190,12 +207,17 @@ tab mới (trang này tự cập nhật khi tiền về) → **Tạo báo cáo**
 
 ### Đưa lên mạng
 
+**Hướng dẫn từng bước cho một máy chủ Linux (Docker + HTTPS tự động + sao lưu): xem [DEPLOY.md](DEPLOY.md)**
+(`docker-compose.prod.yml`, `deploy/Caddyfile`, `.env.production.example`, `deploy/backup.sh`, `deploy/update.sh`).
+Các ý dưới đây là điều kiện chung, dù bạn triển khai theo cách nào:
+
 1. **PostgreSQL 13+ (UTF8)**: tự chạy (`docker compose up`) hoặc dịch vụ quản lý (Supabase, Neon, Railway…) → đặt `DATABASE_URL`.
 2. **HTTPS** (Let's Encrypt / Cloudflare) rồi đặt `COOKIE_SECURE=true` (mặc định đã bật khi `NODE_ENV=production`).
 3. Phục vụ trang và API trên **cùng một tên miền**: nginx của frontend đã chuyển `/api/` sang backend; đặt `TRUST_PROXY=1` để giới hạn
    tần suất theo IP thật, và `CORS_ORIGIN=https://<tên-miền>`.
 4. `NODE_ENV=production` (localhost không còn được tin cậy về CORS/CSRF). Sao lưu database định kỳ.
-5. Chưa có: **quên mật khẩu** (cần dịch vụ gửi email — SMTP/Resend/SES) và đăng nhập Google; nên thêm trước khi mở rộng người dùng.
+5. Quên mật khẩu và xác minh email cần dịch vụ gửi email (`SMTP_URL`, `MAIL_FROM`, `APP_URL`); không có thì hai tính năng này tắt.
+   Chưa có đăng nhập bằng Google.
 
 ## Hanoi Living Score (`/living-score`, API `/api/living-score`)
 
@@ -349,6 +371,17 @@ cd backend-node && npm test      # node --test: scoring, seed, recommendation en
 - Bản đồ nền dùng OpenFreeMap (vector tiles miễn phí, không cần key; dữ liệu © OpenStreetMap).
 - Retrieval RAG mới theo chủ đề; nên chuyển sang pgvector khi kho tri thức lớn hơn.
 - Phần PostgreSQL/PostGIS, Redis và Docker chưa được chạy kiểm thử trong môi trường phát triển ban đầu — hãy chạy `docker compose up --build` và xem `/api/living-score/health`.
+
+## La bàn nghề nghiệp Hà Nội (`/career`)
+
+Định hướng việc làm cho người thất nghiệp, đổi nghề, sinh viên mới ra trường và người đang đi làm muốn tham khảo thị trường: 5 câu hỏi → các hướng nghề hợp nhất, kèm điều nguồn công khai nói về Hà Nội, kỹ năng, lộ trình, chính sách hỗ trợ (Luật Việc làm 2025) và kênh việc làm chính thống. **Không đăng tin tuyển dụng.**
+Trang chia 5 tab (có thể mở thẳng bằng `?tab=`: `paths`, `plan`, `market`, `map`, `support`): Hướng nghề của bạn (bảng hỏi và kết quả), Kế hoạch 30 ngày (kèm tiến độ trên tab), Thị trường, Bản đồ (tạo khi mở lần đầu và giữ nguyên ngành, nhà, vùng đã chọn khi đổi tab), Hỗ trợ và nơi tìm việc; phần Nguồn luôn nằm dưới cùng.
+Chỉ có giao diện (không có API): dữ liệu nằm ở `frontend/src/app/career/career.data.ts`, mỗi con số gắn mã nguồn trích dẫn (có kiểm thử: mọi nguồn được dẫn đều có trong danh sách và ngược lại).
+Mỗi hướng có mục **Nơi làm việc và nơi ở**: các điểm mốc đã có thời gian lái xe (OSRM, từ API Chấm điểm bất động sản) và các cực phát triển theo quy hoạch (khoảng cách đường chim bay, ghi rõ chưa phải nơi đã có việc làm); và **kế hoạch 30 ngày** (`career.plan.ts`) có checklist tick, lưu trên trình duyệt.
+**Bản đồ ngành nghề theo khu vực** (`job-map-section.component.ts`, tải lười khi cuộn tới): chọn một trong 12 ngành dịch vụ của Mở gì ở đâu, tô 79 phường/xã theo số cơ sở (hoặc mật độ trên 10.000 dân; 5 nhóm theo phân vị, `career.jobmap.ts`), phủ lớp cực theo quy hoạch và điểm mốc; bấm một phường để xem ngành dày quanh đó. Là dấu hiệu nơi ngành tập trung (OpenStreetMap), **không phải số vị trí tuyển dụng**; công nghiệp, bán dẫn, logistics không tô màu vì không có số cơ sở đáng tin.
+Từ phường người dùng ở, bản đồ còn có **vùng đi làm bằng ô tô** (15/20/30/45 phút, phường ngoài vùng bị làm mờ; ma trận thời gian giữa 79 phường từ OSRM, `npm run data:wardtimes` → `property-intel/data/commute.json`, API `GET /api/property-intel/commute/:slug`) và lớp **metro** ở ba mốc (hiện nay, 2027 khi các ga đang thi công mở, theo quy hoạch; API `GET /api/property-intel/metro-reach`, ga trong 1,5 km): phường nào cùng tuyến metro với nhà, và nhà nối với từng nơi làm bằng metro hay không. Dữ liệu chưa có lịch chạy nên **không ước tính thời gian đi metro**; hành lang tuyến theo quy hoạch chỉ là sơ đồ.
+**Premium** (khoá khi đang bán Premium): lưu kế hoạch và câu trả lời vào tài khoản (`career.store.ts`: trình duyệt trước, đồng bộ `GET/PUT/DELETE /api/account/career/…`, tối đa 5 kế hoạch, gộp bản mới hơn khi đăng nhập, xoá bản trên trình duyệt khi đăng xuất; bảng `saved_items` thêm loại `career_plan`, `career_profile` ở `06-career.sql`), xuất PDF kế hoạch (`career.print.ts`, mang thông tin tư vấn viên đã lưu ở `/api/reports/brand`) và lớp **Nơi ở theo nơi làm** (`career.live.ts`: chọn 1–2 nơi làm, xếp các phường theo thời gian đi hoặc giá đất nhà nước thấp nhất, kèm metro cùng tuyến; API `GET /api/property-intel/commute-to/:target`). Gói miễn phí giữ 1 kế hoạch trên trình duyệt.
+Xếp hạng bằng quy tắc minh bạch ở `career.logic.ts` (nền tảng 40, thời gian học 25, trình độ 20, làm thuê/tự kinh doanh 15), hiển thị trên trang. Phần lớn nguồn là báo chí dẫn số liệu nhà nước: **đối chiếu văn bản gốc trước khi dựa vào số liệu**, và cập nhật `DATA_DATE` khi rà lại.
 
 ## Hanoi Future Map (`/future-map`, API `/api/future-map`)
 
