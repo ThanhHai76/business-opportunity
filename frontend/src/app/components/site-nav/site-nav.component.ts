@@ -24,7 +24,7 @@ interface SiteTab {
   /** One-line description shown in the mobile menu. */
   hint: string;
   /** Suffix of the `--app-<key>` colour token that identifies the tool. */
-  key: 'biz' | 'time' | 'live' | 'future' | 'property';
+  key: 'biz' | 'time' | 'live' | 'future' | 'property' | 'career';
 }
 
 /** The five tools in three groups, so a newcomer sees who each is for before reading names. */
@@ -64,17 +64,18 @@ export class SiteNavComponent {
   private readonly url = signal(this.router.url);
 
   protected readonly tabs: SiteTab[] = [
-    { path: '/future-map', label: 'Hanoi Future Map', short: 'Future Map', hint: 'Quy hoạch Thủ đô 2026 → 2065, có nguồn', key: 'future' },
-    { path: '/time-machine', label: 'Hanoi Time Machine', short: 'Time Machine', hint: 'Du hành thời gian 1926 → 2100, có AR', key: 'time' },
-    { path: '/living-score', label: 'Hanoi Living Score', short: 'Living Score', hint: 'Chấm điểm nơi an cư từ dữ liệu OpenStreetMap', key: 'live' },
-    { path: '/property-intelligence', label: 'AI Property Intelligence', short: 'Property AI', hint: 'Tiềm năng 79 phường/xã: metro, hạ tầng, quy hoạch', key: 'property' },
-    { path: '/opportunity-map', label: 'Business Opportunity', short: 'Opportunity', hint: 'Phường nào nên mở gì, có lời không — dữ liệu OSM', key: 'biz' },
+    { path: '/future-map', label: 'Hà Nội tương lai', short: 'Tương lai', hint: 'Quy hoạch Thủ đô 2026 → 2065, có nguồn', key: 'future' },
+    { path: '/time-machine', label: 'Hà Nội xưa và nay', short: 'Xưa và nay', hint: 'Du hành thời gian 1926 → 2100, có AR', key: 'time' },
+    { path: '/living-score', label: 'Điểm đáng sống', short: 'Đáng sống', hint: 'Chấm điểm nơi an cư từ dữ liệu OpenStreetMap', key: 'live' },
+    { path: '/property-intelligence', label: 'Chấm điểm bất động sản', short: 'Điểm BĐS', hint: 'Tiềm năng 79 phường/xã: metro, hạ tầng, quy hoạch', key: 'property' },
+    { path: '/opportunity-map', label: 'Mở gì ở đâu', short: 'Mở gì ở đâu', hint: 'Phường nào nên mở gì, có lời không — dữ liệu OSM', key: 'biz' },
+    { path: '/career', label: 'La bàn nghề nghiệp', short: 'Nghề nghiệp', hint: 'Hướng nghề theo cách Hà Nội thay đổi, có nguồn', key: 'career' },
   ];
 
   /** Business · Real estate · Explore Hanoi. A group with one tool is a plain link. */
   protected readonly groups: SiteGroup[] = [
     { id: 'explore', label: 'Khám phá Hà Nội', hint: 'Lịch sử, quy hoạch, tương lai', tabs: [this.tabs[0], this.tabs[1]] },
-    { id: 'biz', label: 'Kinh doanh', hint: 'Mở quán, chọn địa điểm', tabs: [this.tabs[4]] },
+    { id: 'biz', label: 'Kinh doanh và việc làm', hint: 'Mở quán, tìm hướng nghề nghiệp', tabs: [this.tabs[4], this.tabs[5]] },
     { id: 'property', label: 'Bất động sản', hint: 'Mua nhà, đầu tư, chọn nơi ở', tabs: [this.tabs[3], this.tabs[2]] },
   ];
 
@@ -86,7 +87,8 @@ export class SiteNavComponent {
    * a free account is told what is left and invited to upgrade. Nothing for Premium accounts or where nothing is sold.
    */
   protected readonly nudge = computed(() => {
-    const onTool = this.tabs.some((t) => this.url().split(/[?#]/)[0].startsWith(t.path));
+    // The career compass has no AI answers (yet): no invitation to try them there.
+    const onTool = this.tabs.some((t) => t.key !== 'career' && this.url().split(/[?#]/)[0].startsWith(t.path));
     if (!onTool || this.nudgeClosed() || !this.billing.enabled()) return null;
     const metered = this.billing.aiMetering();
     const limits = this.billing.aiLimits();
@@ -94,7 +96,7 @@ export class SiteNavComponent {
       if (!this.account.ready() || !this.account.enabled()) return null;
       return {
         text: metered
-          ? `Dùng thử miễn phí: đăng nhập để nhận ${limits.freePerDay} lượt AI chuyên sâu mỗi ngày (Time Machine ${limits.storyFreePerDay}).`
+          ? `Dùng thử miễn phí: đăng nhập để nhận ${limits.freePerDay} lượt AI chuyên sâu mỗi ngày (Hà Nội xưa và nay ${limits.storyFreePerDay}).`
           : 'Đăng nhập để lưu báo cáo và mở trên mọi thiết bị.',
         cta: 'Đăng nhập miễn phí',
         action: 'login' as const,

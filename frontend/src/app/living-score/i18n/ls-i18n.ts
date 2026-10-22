@@ -3,7 +3,7 @@
 export type Lang = 'vi' | 'en';
 
 const vi = {
-  nav: { explore: 'Khám phá', compare: 'So sánh', ai: 'AI', saved: 'Đã lưu', profile: 'Cá nhân', main: 'Điều hướng chính', mobile: 'Điều hướng chính (di động)', brand: 'Hanoi Living Score — trang giới thiệu' },
+  nav: { explore: 'Khám phá', compare: 'So sánh', ai: 'AI', saved: 'Đã lưu', profile: 'Cá nhân', main: 'Điều hướng chính', mobile: 'Điều hướng chính (di động)', brand: 'Điểm đáng sống — trang giới thiệu', scoreName: 'Điểm đáng sống' },
   common: {
     retry: 'Thử lại',
     details: 'Chi tiết',
@@ -51,7 +51,7 @@ const vi = {
     h1em: 'phù hợp nhất',
     h1b: 'tại Hà Nội',
     intro:
-      'Hanoi Living Score chấm điểm mức độ đáng sống của từng phường/xã Hà Nội (sau sắp xếp 2025) — giao thông, giáo dục, y tế, công viên – hồ nước và tiện ích — đo từ dữ liệu OpenStreetMap, rồi cá nhân hoá theo điều bạn thật sự quan tâm.',
+      'Điểm đáng sống cho biết mức độ đáng sống của từng phường/xã Hà Nội (sau sắp xếp 2025) — giao thông, giáo dục, y tế, công viên – hồ nước và tiện ích — đo từ dữ liệu OpenStreetMap, rồi cá nhân hoá theo điều bạn thật sự quan tâm.',
     ctaMap: 'Khám phá bản đồ',
     ctaAi: 'Tìm nơi phù hợp với tôi',
     note: (n: number) =>
@@ -59,13 +59,13 @@ const vi = {
     board: 'Bảng xếp hạng',
     seeAll: (n: number) => `Xem cả ${n} phường/xã trên bản đồ`,
     features: [
-      { icon: 'map', title: 'Bản đồ tương tác', text: 'Xem Living Score ngay trên bản đồ, lọc theo trường học, bệnh viện, công viên… và bật lớp metro theo OpenStreetMap.', link: '/living-score/explore', cta: 'Mở bản đồ' },
+      { icon: 'map', title: 'Bản đồ tương tác', text: 'Xem điểm đáng sống ngay trên bản đồ, lọc theo trường học, bệnh viện, công viên… và bật lớp metro theo OpenStreetMap.', link: '/living-score/explore', cta: 'Mở bản đồ' },
       { icon: 'scale', title: 'So sánh khu vực', text: 'Đặt 2–3 khu vực cạnh nhau bằng bảng và biểu đồ radar để thấy rõ ưu, nhược điểm từng nơi.', link: '/living-score/compare', cta: 'So sánh ngay' },
       { icon: 'sparkles', title: 'AI gợi ý cá nhân hoá', text: 'Chọn nơi làm việc, gia đình và ưu tiên — nhận Top 3 khu vực phù hợp kèm lý do, số liệu và thời gian đi đường.', link: '/living-score/ai', cta: 'Nhận gợi ý' },
     ],
     howTitle: 'Điểm số được tính như thế nào?',
     howText:
-      'Living Score là tổng có trọng số của 5 tiêu chí đo từ OpenStreetMap, do Scoring Engine trên máy chủ tính — giao diện và AI chỉ hiển thị, không tự đặt điểm. Bạn có thể đổi trọng số để có Personalized Living Score.',
+      'Điểm đáng sống là tổng có trọng số của 5 tiêu chí đo từ OpenStreetMap, do Scoring Engine trên máy chủ tính — giao diện và AI chỉ hiển thị, không tự đặt điểm. Bạn có thể đổi trọng số để có điểm đáng sống cá nhân hoá.',
   },
   explore: {
     searchLabel: 'Tìm khu vực, phường hoặc địa điểm',
@@ -126,7 +126,7 @@ const vi = {
   },
   compare: {
     title: 'So sánh khu vực',
-    subtitle: 'Chọn 2–3 khu vực để so sánh Living Score và từng tiêu chí chi tiết.',
+    subtitle: 'Chọn 2–3 khu vực để so sánh điểm đáng sống và từng tiêu chí chi tiết.',
     clear: 'Bỏ chọn',
     listFailed: 'Không tải được danh sách khu vực',
     pickAria: 'Chọn khu vực để so sánh',
@@ -146,7 +146,7 @@ const vi = {
     rowCafes: 'Quán cà phê',
     rowIntl: 'Trường có tên "quốc tế"',
     rowGreen: 'Công viên · hồ ao',
-    footBest: (name: string, n: number) => `${name} có Living Score cao nhất trong nhóm. Điểm là tương đối giữa ${n} phường/xã; dữ liệu ©`,
+    footBest: (name: string, n: number) => `${name} có điểm đáng sống cao nhất trong nhóm. Điểm là tương đối giữa ${n} phường/xã; dữ liệu ©`,
   },
   ai: {
     title: 'AI gợi ý khu vực phù hợp',
@@ -174,7 +174,7 @@ const vi = {
     fit: 'Độ phù hợp',
     reasons: 'Lý do lựa chọn',
     measured: 'Số liệu đo được (bán kính 1,5 km, OpenStreetMap)',
-    scores: (def: string, mine: string): [string, string, string, string] => [`Living Score mặc định: `, def, ` · theo trọng số của bạn: `, mine],
+    scores: (def: string, mine: string): [string, string, string, string] => [`Điểm đáng sống mặc định: `, def, ` · theo trọng số của bạn: `, mine],
     compareAll: (n: number) => `So sánh cả ${n} khu vực`,
     sources: 'Nguồn:',
     licence: 'giấy phép',
@@ -191,8 +191,8 @@ const vi = {
     title: 'Cá nhân',
     subtitle: 'Thiết lập giao diện, ngôn ngữ và trọng số mặc định. Mọi thứ được lưu trên trình duyệt này.',
     appearance: 'Giao diện',
-    weightsTitle: 'Trọng số Living Score của bạn',
-    weightsHint: 'Trọng số này được dùng ở bản đồ, trang chi tiết, so sánh và mục đã lưu để tạo Personalized Living Score.',
+    weightsTitle: 'Trọng số điểm đáng sống của bạn',
+    weightsHint: 'Trọng số này được dùng ở bản đồ, trang chi tiết, so sánh và mục đã lưu để tạo điểm đáng sống cá nhân hoá.',
     device: 'Dữ liệu trên thiết bị',
     deviceSummary: (s: number, c: number) => `Đã lưu ${s} khu vực · đang so sánh ${c} khu vực.`,
     clear: 'Xoá dữ liệu cá nhân',
@@ -205,13 +205,13 @@ const vi = {
     personal: 'Đang dùng điểm cá nhân hoá — tổng trọng số được chuẩn hoá về 100%.',
     default: 'Đang dùng trọng số mặc định. Kéo thanh trượt để cá nhân hoá.',
   },
-  map: { aria: 'Bản đồ Hà Nội với điểm Living Score', pin: (name: string, score: number) => `${name}, điểm ${score}` },
+  map: { aria: 'Bản đồ Hà Nội với điểm đáng sống', pin: (name: string, score: number) => `${name}, điểm ${score}` },
 };
 
 export type Dict = typeof vi;
 
 const en: Dict = {
-  nav: { explore: 'Explore', compare: 'Compare', ai: 'AI', saved: 'Saved', profile: 'Profile', main: 'Main navigation', mobile: 'Main navigation (mobile)', brand: 'Hanoi Living Score — home' },
+  nav: { explore: 'Explore', compare: 'Compare', ai: 'AI', saved: 'Saved', profile: 'Profile', main: 'Main navigation', mobile: 'Main navigation (mobile)', brand: 'Hanoi Living Score — home', scoreName: 'Living Score' },
   common: {
     retry: 'Try again',
     details: 'Details',

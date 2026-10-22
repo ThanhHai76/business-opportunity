@@ -28,7 +28,8 @@ export class OpportunityService {
     const key = `${path}?${new URLSearchParams(params).toString()}`;
     let request = this.cache.get(key) as Observable<T> | undefined;
     if (!request) {
-      request = this.http.get<T>(`${OPPORTUNITY_API_URL}${path}`, { params }).pipe(
+      // With the session cookie: the 2030 map is Premium.
+      request = this.http.get<T>(`${OPPORTUNITY_API_URL}${path}`, { params, withCredentials: true }).pipe(
         catchError((error) => {
           this.cache.delete(key);
           return throwError(() => error);
@@ -57,7 +58,7 @@ export class OpportunityService {
   }
 
   compare(slugs: string[], type: string | null, horizon: Horizon, lang: Lang): Observable<CompareResponse> {
-    return this.http.get<CompareResponse>(`${OPPORTUNITY_API_URL}/compare`, { params: { slugs: slugs.join(','), horizon, lang, ...(type ? { type } : {}) } });
+    return this.http.get<CompareResponse>(`${OPPORTUNITY_API_URL}/compare`, { params: { slugs: slugs.join(','), horizon, lang, ...(type ? { type } : {}) }, withCredentials: true });
   }
 
   parse(text: string, lang: Lang): Observable<ParsedIdea> {

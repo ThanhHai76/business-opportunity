@@ -6,9 +6,66 @@
 }
 
 .dash {
+  --col-left: 260px;
+  --col-right: 420px;
+  /* Room kept on the right of the map for the floating AI panel (toolbar, zoom buttons): little when it is hidden. */
+  --ai-room: 420px;
+  --zoom-room: 412px;
   height: 100%;
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 420px;
+  grid-template-columns: var(--col-left) minmax(0, 1fr) var(--col-right);
+  transition: grid-template-columns 0.2s ease;
+}
+
+/* Fixed columns: a hidden (display-less) sidebar must not let the others slide over its column. */
+.layers {
+  grid-column: 1;
+}
+
+.main {
+  grid-column: 2;
+}
+
+.district {
+  grid-column: 3;
+}
+
+.dash.hide-ai {
+  --ai-room: 16px;
+  --zoom-room: 16px;
+}
+
+/* Hidden panels. Left and right sidebars only on a wide screen (below that the layers are a drawer and the analysis sits under the map). */
+.dash.hide-charts .charts {
+  display: none;
+}
+
+.dash.hide-charts .ai-slot {
+  bottom: 16px;
+}
+
+@media (min-width: 1281px) {
+  .dash.hide-layers {
+    --col-left: 0px;
+  }
+
+  .dash.hide-analysis {
+    --col-right: 0px;
+  }
+
+  .dash.hide-layers .layers,
+  .dash.hide-analysis .district {
+    visibility: hidden;
+    overflow: hidden;
+    padding-inline: 0;
+    border-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash {
+    transition: none;
+  }
 }
 
 /* ================================================= left: layers */
@@ -233,7 +290,7 @@
   position: absolute;
   left: 16px;
   top: 16px;
-  right: 420px;
+  right: var(--ai-room);
   z-index: 3;
   display: flex;
   flex-wrap: wrap;
@@ -332,7 +389,7 @@
 
 .zoom {
   position: absolute;
-  right: 412px;
+  right: var(--zoom-room);
   bottom: 16px;
   z-index: 3;
   display: flex;
@@ -368,6 +425,13 @@
   bottom: calc(236px + 16px);
   z-index: 4;
   width: 380px;
+}
+
+/* Expanded (the button in its header): wider, and down over the charts row, so long answers and questions fit. */
+.ai-slot.is-expanded {
+  z-index: 6;
+  bottom: 16px;
+  width: min(880px, calc(100% - 32px));
 }
 
 /* ---------- charts row */
@@ -1057,19 +1121,18 @@
 /* ================================================= responsive */
 @media (max-width: 1560px) {
   .dash {
-    grid-template-columns: 232px minmax(0, 1fr) 360px;
+    --col-left: 232px;
+    --col-right: 360px;
+    --ai-room: 372px;
+    --zoom-room: 372px;
   }
 
   .ai-slot {
     width: 340px;
   }
 
-  .zoom {
-    right: 372px;
-  }
-
-  .map__top {
-    right: 372px;
+  .ai-slot.is-expanded {
+    width: min(760px, calc(100% - 32px));
   }
 
   .criteria__row {
@@ -1145,6 +1208,11 @@
     width: auto;
     height: 560px;
     margin: 16px;
+  }
+
+  .ai-slot.is-expanded {
+    height: min(86vh, 900px);
+    width: auto;
   }
 
   .charts {
@@ -1480,4 +1548,93 @@
   .compare-open {
     bottom: 16px;
   }
+}
+
+/* ================================================= show / hide the panels around the map */
+.panel-toggles {
+  pointer-events: auto;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+}
+
+.panel-toggles button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--pi-faint);
+  cursor: pointer;
+}
+
+.panel-toggles button:hover {
+  color: var(--pi-ink);
+}
+
+.panel-toggles button[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--pi-violet) 18%, transparent);
+  color: var(--pi-violet-ink);
+}
+
+.panel-toggles button:focus-visible {
+  outline: 2px solid var(--pi-violet);
+  outline-offset: 1px;
+}
+
+.panel-toggles .panel-toggles__focus {
+  width: auto;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.panel-toggles__sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: var(--pi-line);
+}
+
+@media (max-width: 1280px) {
+  /* The sidebars are a drawer and a block under the map here: nothing to hide; "map only" has no meaning. */
+  .panel-toggles .only-wide,
+  .panel-toggles .panel-toggles__focus,
+  .panel-toggles__sep {
+    display: none;
+  }
+}
+
+/* Premium (while Premium is for sale): a star on the locked horizons, a note over the locked weights. */
+.pi-pro {
+  margin-left: 3px;
+  color: #d97706;
+  font-size: 0.85em;
+}
+.pi-pro-note {
+  display: block;
+  width: 100%;
+  margin: 4px 0 8px;
+  padding: 8px 10px;
+  border: 1px dashed color-mix(in srgb, #d97706 55%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, #d97706 8%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.pi-pro-note span {
+  color: #d97706;
+}
+.weights input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }

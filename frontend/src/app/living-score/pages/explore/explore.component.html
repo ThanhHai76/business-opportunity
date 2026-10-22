@@ -71,7 +71,7 @@
         <section>
           <h3 class="ex-h">{{ t().explore.colourBy }}</h3>
           <div class="ex-chips">
-            <button type="button" class="ls-chip" [class.is-on]="visual() === 'livingScore'" (click)="setVisual('livingScore')">Living Score</button>
+            <button type="button" class="ls-chip" [class.is-on]="visual() === 'livingScore'" (click)="setVisual('livingScore')">{{ t().nav.scoreName }}</button>
             @for (key of criterionKeys; track key) {
               <button type="button" class="ls-chip" [class.is-on]="visual() === key" (click)="setVisual(key)">
                 <ls-icon [name]="criterionIcons[key]" [size]="14" /> {{ meta.label(key) }}

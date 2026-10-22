@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, Subscription, catchError, filter, switchMap, take, timer } from 'rxjs';
 import { AccountService, accountError } from '../services/account.service';
 import { BillingService, Order, PaidReportRequest, Product } from '../services/billing.service';
+import { OpBrandComponent } from './op-brand.component';
 import { OpText } from './op-i18n';
 import { Lang } from './op.models';
 
@@ -16,19 +17,13 @@ const POLL_MS = 3000;
 @Component({
   selector: 'app-op-buy',
   standalone: true,
+  imports: [OpBrandComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="buy" aria-labelledby="op-buy-title">
-      <h3 id="op-buy-title">{{ t().title }}</h3>
+    <section class="buy">
       @if (!billing.enabled()) {
         <p class="muted">{{ t().off }}</p>
       } @else {
-        <p>{{ t().intro }}</p>
-        <ul>
-          @for (line of t().includes; track $index) {
-            <li>{{ line }}</li>
-          }
-        </ul>
         @if (!account.user()) {
           <button type="button" class="op-btn op-btn--primary" (click)="signIn.emit()">{{ t().signIn }}</button>
         } @else {
@@ -71,10 +66,14 @@ const POLL_MS = 3000;
                   <span>{{ r.title }}</span>
                   <small>{{ date(r.createdAt) }}</small>
                   <a [href]="billing.printUrl(r.id)" target="_blank" rel="noopener">{{ t().view }}</a>
+                  @if (billing.brand()) {
+                    <a class="alt" [href]="billing.printUrl(r.id, true)" target="_blank" rel="noopener">{{ premiumText().brand.standard }}</a>
+                  }
                 </li>
               }
             </ul>
           }
+          <app-op-brand [t]="premiumText()" [lang]="lang()" />
         }
         <p class="note">{{ t().note }}</p>
       }
@@ -82,8 +81,7 @@ const POLL_MS = 3000;
   `,
   styles: `
     :host { display: block; }
-    .buy { margin-top: 14px; padding: 14px 16px; border: 1px solid var(--op-accent); border-radius: 12px; background: var(--op-accent-soft); }
-    h3 { margin: 0 0 6px; font-size: 15px; }
+    .buy { margin-top: 4px; }
     h4 { margin: 14px 0 6px; font-size: 13px; }
     p { margin: 6px 0; font-size: 13px; }
     ul { margin: 4px 0; padding-left: 18px; font-size: 12.5px; }
@@ -103,6 +101,7 @@ const POLL_MS = 3000;
     .mine span { flex: 1 1 200px; }
     .mine small { color: var(--op-ink-dim); }
     .mine a { color: var(--op-accent); font-weight: 600; }
+    .mine a.alt { font-weight: 400; color: var(--op-ink-dim); }
     /* Same as the page's .op-btn (component styles are scoped, so the page's rule does not reach in here). */
     .op-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border: 1px solid var(--op-line); border-radius: 999px; background: var(--app-surface); color: inherit; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
     .op-btn--primary { border-color: transparent; background: var(--op-accent); color: #fff; }
@@ -116,6 +115,8 @@ export class OpBuyComponent {
 
   readonly t = input.required<OpText['buy']>();
   readonly lang = input.required<Lang>();
+  /** The Premium texts (the broker details on the report). */
+  readonly premiumText = input.required<OpText['premium']>();
   /** The report to create: business type, ward, horizon and the user's current assumptions (null: nothing open). */
   readonly request = input<PaidReportRequest | null>(null);
   /** The buyer must sign in first. The parent opens the sign-in dialog (and gets this dialog out of its way). */

@@ -1,0 +1,6 @@
+# Files that run on the Linux server keep Unix line endings, whatever the editor or Git setting of the machine they were
+# written on (a script with Windows line endings fails with "bash\r: No such file or directory").
+*.sh text eol=lf
+deploy/Caddyfile text eol=lf
+docker-compose*.yml text eol=lf
+.env.production.example text eol=lf

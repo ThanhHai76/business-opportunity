@@ -55,6 +55,8 @@ describe('Business Opportunity Map API', () => {
       log: false,
       living: { config: loadConfig({ DATA_SOURCE: 'memory' }) },
       opportunity: { answerers: { primary: fake, fallback: new MockAnswerer() }, rateLimits: { global: 10_000, ai: 10_000 } },
+      // These tests are about the data: no Premium lock, whatever the machine's .env turns on (see premium.test.js).
+      premium: { mode: 'off' },
     });
     living = created.living;
     server = await new Promise((resolve) => {

@@ -24,7 +24,7 @@ const vndFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
         <h1>Premium và lượt hỏi AI chuyên sâu</h1>
         <p class="pm__lead">
           Bản đồ, điểm số và câu trả lời cơ bản luôn miễn phí. Câu trả lời do AI phân tích sâu từ dữ liệu
-          (Bản đồ cơ hội kinh doanh, Future Map, Property Intelligence, Living Score, kể chuyện Time Machine) dùng lượt hỏi AI.
+          (Mở gì ở đâu, Hà Nội tương lai, Chấm điểm bất động sản, Điểm đáng sống, kể chuyện Hà Nội xưa và nay) dùng lượt hỏi AI.
         </p>
       </header>
 
@@ -53,7 +53,7 @@ const vndFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
                 </dd>
               </div>
               <div>
-                <dt>Lượt kể chuyện Time Machine hôm nay</dt>
+                <dt>Lượt kể chuyện Hà Nội xưa và nay hôm nay</dt>
                 <dd>{{ ai.storyFreeLeft }}/{{ ai.storyFreePerDay }} miễn phí@if (ai.premium) { · hoặc dùng lượt Premium }</dd>
               </div>
               <div>
@@ -77,11 +77,13 @@ const vndFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
           <h3>Miễn phí</h3>
           <p class="pm__price">0 đ</p>
           <ul>
-            <li>Mọi bản đồ, điểm số, so sánh khu vực</li>
+            <li>Mọi bản đồ và điểm số hôm nay</li>
+            <li>Xem thử mốc 2030 từng phường, 3 phường hợp kế hoạch nhất, so sánh 2 phường, theo dõi 3 mục</li>
             <li>Câu trả lời cơ bản (theo mẫu, từ dữ liệu) không giới hạn</li>
             <li><strong>{{ limits().freePerDay }} câu trả lời AI chuyên sâu mỗi ngày</strong> khi đăng nhập</li>
-            <li>Thêm <strong>{{ limits().storyFreePerDay }} lượt AI kể chuyện mỗi ngày</strong> ở Time Machine</li>
-            <li>Lưu báo cáo trên mọi thiết bị</li>
+            <li>Thêm <strong>{{ limits().storyFreePerDay }} lượt AI kể chuyện mỗi ngày</strong> ở Hà Nội xưa và nay</li>
+            <li>Lưu 5 báo cáo, mở trên mọi thiết bị</li>
+            <li>La bàn nghề nghiệp: bảng hỏi, kết quả, thị trường, bản đồ ngành nghề, vùng đi làm và metro; 1 kế hoạch 30 ngày lưu trên trình duyệt</li>
           </ul>
           @if (!account.user()) {
             <button type="button" class="pm__btn" (click)="account.dialogOpen.set(true)">Đăng nhập miễn phí</button>
@@ -95,7 +97,12 @@ const vndFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
           }
           <ul>
             <li>Mọi thứ của gói Miễn phí</li>
-            <li><strong>{{ limits().premiumPerDay }} câu trả lời AI chuyên sâu mỗi ngày</strong>, dùng chung cho cả 5 công cụ, kể cả Time Machine</li>
+            <li><strong>{{ limits().premiumPerDay }} câu trả lời AI chuyên sâu mỗi ngày</strong>, dùng chung cho cả 5 công cụ, kể cả Hà Nội xưa và nay</li>
+            <li><strong>Mở gì ở đâu:</strong> mốc 2030 trên toàn bản đồ, danh sách đầy đủ theo kế hoạch, xuất CSV</li>
+            <li><strong>Chấm điểm bất động sản:</strong> lớp quy hoạch 2030 và 2045, trọng số tuỳ chỉnh, so sánh tới 5 phường và xuất CSV, theo dõi không giới hạn</li>
+            <li><strong>Báo cáo khả thi mang thương hiệu của bạn:</strong> tên công ty, liên hệ và lời nhắn trên bản PDF gửi khách (dành cho môi giới)</li>
+            <li>Lưu tới 100 báo cáo, kèm ghi chú và thẻ cho từng báo cáo</li>
+            <li><strong>La bàn nghề nghiệp:</strong> lưu kế hoạch vào tài khoản (tới 5 kế hoạch, mọi thiết bị), xuất PDF kế hoạch mang tên và liên hệ của bạn (cho tư vấn viên, trung tâm đào tạo), tìm nơi ở theo nơi làm</li>
             <li>Kèm credit báo cáo khả thi (xuất PDF) theo gói</li>
             <li>Mua thêm thì cộng dồn thời hạn</li>
           </ul>
@@ -128,7 +135,7 @@ const vndFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
         </div>
         <p class="pm__muted">
           Báo cáo khả thi chi tiết (dòng tiền 36 tháng, độ nhạy, PDF) mua theo credit ngay trong
-          <a routerLink="/opportunity-map">Bản đồ cơ hội kinh doanh</a>.
+          <a routerLink="/opportunity-map">Mở gì ở đâu</a>.
         </p>
       </section>
 

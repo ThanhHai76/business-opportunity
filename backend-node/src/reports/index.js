@@ -5,7 +5,9 @@
  *   POST /           { type, ward, horizon, assumptions } → 201 { report, credits }   (402 no_credits)
  *   GET  /           { items }   the user's reports, newest first (without their content)
  *   GET  /:id        { report }  with its content
- *   GET  /:id/print  the report as a printable page (the browser saves it as PDF)
+ *   GET  /:id/print  the report as a printable page (the browser saves it as PDF); a Premium account with saved
+ *                    details gets them on it (?brand=0: the standard page)
+ *   GET/PUT/DELETE /brand  the broker details printed on the reports (Premium)
  *
  * The server computes the report (src/reports/build.js) and stores it frozen: the page cannot change the figures,
  * and the report reads the same later. Input that cannot be reported on (unknown ward, no score) is refused before a
@@ -13,7 +15,8 @@
  */
 const express = require('express');
 const { z } = require('zod');
-const { AccountError, badRequest, notFound } = require('../accounts/errors');
+const { AccountError, badRequest, notFound, paymentRequired } = require('../accounts/errors');
+const { OPEN_GATE } = require('../billing/premium-gate');
 const { signedInWith, finishRouter, UUID } = require('../billing/common');
 const { buildFeasibilityReport, reportTitle } = require('./build');
 const { printPage } = require('./print');
@@ -51,9 +54,23 @@ const CreateSchema = z.strictObject({
 const listView = (r) => ({ id: r.id, kind: r.kind, title: r.title, createdAt: r.createdAt, type: r.input?.type, ward: r.input?.ward, horizon: r.input?.horizon });
 const fullView = (r) => ({ ...listView(r), content: r.content });
 
-/** @param options { accounts } */
-function createPaidReports({ accounts }) {
+const BRAND_KIND = 'broker_brand';
+const BRAND_KEY = 'profile';
+/** The broker's details printed on a report (Premium): text only, everything is escaped when printed. */
+const Text = (max) => z.string().trim().max(max);
+const BrandSchema = z.strictObject({
+  company: Text(80),
+  name: Text(80),
+  phone: Text(30),
+  email: Text(120),
+  note: Text(300),
+});
+const brandView = (item) => (item ? BrandSchema.parse(item.payload) : null);
+
+/** @param options { accounts, premium? } premium: the gate (src/billing/premium-gate.js); open by default. */
+function createPaidReports({ accounts, premium = OPEN_GATE }) {
   const store = () => accounts.store;
+  const brandOf = async (userId) => brandView((await store().listItems(userId, BRAND_KIND))[0]);
   const signedIn = signedInWith(accounts);
   const router = express.Router();
   router.use(express.json({ limit: '16kb' }));
@@ -91,6 +108,35 @@ function createPaidReports({ accounts }) {
     }),
   );
 
+  // The broker's details for the printed report (Premium). Before /:id, so "brand" is not read as a report id.
+  router.get(
+    '/brand',
+    signedIn(async (req, res) => {
+      res.setHeader('Cache-Control', 'no-store');
+      res.json({ brand: await brandOf(req.user.id), premium: await premium.isPremium(req, res) });
+    }),
+  );
+
+  router.put(
+    '/brand',
+    signedIn(async (req, res) => {
+      if (!(await premium.isPremium(req, res))) throw paymentRequired('Báo cáo mang thương hiệu của bạn dành cho tài khoản Premium.', 'premium_required');
+      const parsed = BrandSchema.safeParse(req.body ?? {});
+      if (!parsed.success) throw badRequest('Thông tin thương hiệu không hợp lệ (mỗi mục có giới hạn độ dài).');
+      if (!parsed.data.company && !parsed.data.name) throw badRequest('Nhập tên công ty hoặc tên của bạn.');
+      await store().putItem(req.user.id, BRAND_KIND, BRAND_KEY, parsed.data, new Date());
+      res.json({ brand: parsed.data });
+    }),
+  );
+
+  router.delete(
+    '/brand',
+    signedIn(async (req, res) => {
+      await store().deleteAllItems(req.user.id, BRAND_KIND);
+      res.status(204).end();
+    }),
+  );
+
   router.get(
     '/:id',
     signedIn(async (req, res) => {
@@ -103,8 +149,12 @@ function createPaidReports({ accounts }) {
     '/:id/print',
     signedIn(async (req, res) => {
       const report = await findOwn(req);
+      // A Premium account with saved details gets its own branding, unless ?brand=0 asks for the standard page.
+      const saved = (await premium.isPremium(req, res)) ? await brandOf(req.user.id) : null;
+      const brand = req.query.brand === '0' ? null : saved;
       res.setHeader('Cache-Control', 'private, no-store');
-      res.type('html').send(printPage(report));
+      // `canSwitch`: the page offers the other version (with / without the broker's details).
+      res.type('html').send(printPage(report, { brand, canSwitch: Boolean(saved) }));
     }),
   );
 

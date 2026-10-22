@@ -34,7 +34,8 @@ const crypto = require('node:crypto');
 const express = require('express');
 const { rateLimit } = require('express-rate-limit');
 const { z } = require('zod');
-const { AccountError, badRequest, unauthorized, forbidden, notFound, disabled } = require('./errors');
+const { AccountError, badRequest, unauthorized, forbidden, notFound, disabled, paymentRequired } = require('./errors');
+const { OPEN_GATE } = require('../billing/premium-gate');
 const { hashPassword, verifyPassword, dummyHash } = require('./passwords');
 const { verifyEmailMail, resetPasswordMail } = require('./mails');
 const { MemoryStore } = require('./memory-store');
@@ -42,8 +43,14 @@ const { MemoryStore } = require('./memory-store');
 const COOKIE = 'h100_sid';
 const SESSION_DAYS = 30;
 const TOUCH_EVERY_MS = 60 * 60 * 1000;
-const MAX_REPORTS = 30;
+/** Saved reports kept per account (Premium, and when nothing is for sale), and without Premium while it is for sale. */
+const MAX_REPORTS = 100;
+const FREE_REPORTS = 5;
 const REPORT_KIND = 'opportunity_report';
+const PLAN_KIND = 'career_plan';
+const PROFILE_KIND = 'career_profile';
+/** 30-day career plans kept in a Premium account, one per direction. */
+const MAX_CAREER_PLANS = 5;
 const VERIFY_HOURS = 48;
 const RESET_MINUTES = 60;
 /** A mailbox gets at most one link of a kind per minute, however often it is asked for. */
@@ -92,6 +99,30 @@ const ReportSchema = z.strictObject({
   risk: z.enum(['low', 'medium', 'high']),
 });
 const ImportSchema = z.strictObject({ items: z.array(ReportSchema).max(MAX_REPORTS * 2) });
+/**
+ * The career compass (frontend/src/app/career): the visitor's answers, and a 30-day plan per direction with the steps
+ * ticked off. Kept in the account for Premium; everyone else keeps them in the browser.
+ */
+const DirectionId = z.string().regex(/^[a-z0-9-]{1,40}$/);
+const CareerPlanSchema = z.strictObject({
+  startedAt: z.iso.datetime({ offset: true }),
+  done: z.array(z.string().regex(/^[a-z0-9-]{1,40}$/)).max(40),
+});
+const CareerProfileSchema = z.strictObject({
+  situation: z.enum(['unemployed', 'switching', 'graduate', 'employed']).nullable(),
+  backgrounds: z.array(z.enum(['tech', 'engineering', 'sales', 'logistics', 'service', 'finance', 'other'])).max(7),
+  education: z.union([z.literal(0), z.literal(1), z.literal(2)]).nullable(),
+  time: z.union([z.literal(0), z.literal(1), z.literal(2)]).nullable(),
+  work: z.enum(['employee', 'self', 'either']).nullable(),
+  ward: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(80).nullable(),
+});
+const toPlan = (item) => ({ directionId: item.key, ...item.payload, updatedAt: new Date(item.updatedAt).toISOString() });
+
+/** A Premium note and tags on a saved report. */
+const NoteSchema = z.strictObject({
+  note: z.string().trim().max(300).optional(),
+  tags: z.array(z.string().trim().min(1).max(20)).max(3).optional(),
+});
 
 function parse(schema, body) {
   const result = schema.safeParse(body ?? {});
@@ -156,6 +187,8 @@ function createAccounts(options = {}) {
     if (options.requireVerifiedEmail !== undefined) return Boolean(options.requireVerifiedEmail);
     return process.env.REQUIRE_VERIFIED_EMAIL ? process.env.REQUIRE_VERIFIED_EMAIL === 'true' : mailer.real;
   };
+  /** Which accounts have Premium (server.js sets it once billing is known); open until then. */
+  let premiumGate = OPEN_GATE;
   const router = express.Router();
   router.use(express.json({ limit: '64kb' }));
 
@@ -421,7 +454,16 @@ function createAccounts(options = {}) {
     '/reports',
     signedIn(async (req, res) => {
       const { id, savedAt, ...report } = parse(ReportSchema, req.body);
-      const item = await store.putItem(req.user.id, REPORT_KIND, reportKey(report), report, new Date());
+      const key = reportKey(report);
+      const existing = await store.listItems(req.user.id, REPORT_KIND);
+      const previous = existing.find((it) => it.key === key);
+      // Without Premium: a new report beyond the free few is refused (older ones are never deleted, e.g. after Premium ends).
+      if (!previous && existing.length >= FREE_REPORTS && !(await premiumGate.isPremium(req, res))) {
+        throw paymentRequired(`Gói miễn phí lưu tối đa ${FREE_REPORTS} báo cáo. Nâng cấp Premium để lưu nhiều hơn.`, 'premium_required');
+      }
+      // Saving the same type + ward + horizon again keeps its Premium note and tags.
+      const { note, tags } = previous?.payload ?? {};
+      const item = await store.putItem(req.user.id, REPORT_KIND, key, { ...report, ...(note ? { note } : {}), ...(tags?.length ? { tags } : {}) }, new Date());
       await store.trimItems(req.user.id, REPORT_KIND, MAX_REPORTS);
       res.json({ item: toReport(item) });
     }),
@@ -432,6 +474,7 @@ function createAccounts(options = {}) {
     signedIn(async (req, res) => {
       const { items } = parse(ImportSchema, req.body);
       const existing = new Map((await store.listItems(req.user.id, REPORT_KIND)).map((it) => [it.key, it]));
+      const premium = await premiumGate.isPremium(req, res);
       // Oldest first, so the newest copy of a type + ward + horizon is the one kept; never overwrite a newer one.
       const incoming = items
         .map(({ id, savedAt, ...report }) => ({ report, at: savedAt ? new Date(savedAt) : new Date() }))
@@ -441,10 +484,26 @@ function createAccounts(options = {}) {
         const key = reportKey(report);
         const current = existing.get(key);
         if (current && new Date(current.updatedAt) >= at) continue;
-        existing.set(key, await store.putItem(req.user.id, REPORT_KIND, key, report, at));
+        if (!current && !premium && existing.size >= FREE_REPORTS) continue; // over the free few: stays in the browser's list
+        const kept = current?.payload ?? {};
+        existing.set(key, await store.putItem(req.user.id, REPORT_KIND, key, { ...report, ...(kept.note ? { note: kept.note } : {}), ...(kept.tags?.length ? { tags: kept.tags } : {}) }, at));
       }
       await store.trimItems(req.user.id, REPORT_KIND, MAX_REPORTS);
       res.json({ items: (await store.listItems(req.user.id, REPORT_KIND)).map(toReport) });
+    }),
+  );
+
+  // A Premium note and tags on a saved report; the save time stays as it was.
+  router.patch(
+    '/reports/:id',
+    signedIn(async (req, res) => {
+      const { note, tags } = parse(NoteSchema, req.body);
+      if (!(await premiumGate.isPremium(req, res))) throw paymentRequired('Ghi chú và thẻ dành cho tài khoản Premium.', 'premium_required');
+      const item = /^[0-9a-f-]{36}$/i.test(req.params.id) ? (await store.listItems(req.user.id, REPORT_KIND)).find((it) => it.id === req.params.id) : null;
+      if (!item) throw notFound('Không tìm thấy báo cáo.');
+      const { note: _note, tags: _tags, ...rest } = item.payload;
+      const payload = { ...rest, ...(note ? { note } : {}), ...(tags?.length ? { tags: [...new Set(tags)] } : {}) };
+      res.json({ item: toReport(await store.putItem(req.user.id, REPORT_KIND, item.key, payload, new Date(item.updatedAt))) });
     }),
   );
 
@@ -460,6 +519,54 @@ function createAccounts(options = {}) {
     '/reports',
     signedIn(async (req, res) => {
       await store.deleteAllItems(req.user.id, REPORT_KIND);
+      res.status(204).end();
+    }),
+  );
+
+  // ---------------------------------------------------------------- career compass (Premium: kept in the account)
+  router.get(
+    '/career',
+    signedIn(async (req, res) => {
+      res.setHeader('Cache-Control', 'no-store');
+      const [plans, profiles] = await Promise.all([store.listItems(req.user.id, PLAN_KIND), store.listItems(req.user.id, PROFILE_KIND)]);
+      res.json({ profile: profiles[0]?.payload ?? null, plans: plans.map(toPlan) });
+    }),
+  );
+
+  const premiumOnly = async (req, res) => {
+    if (!(await premiumGate.isPremium(req, res))) throw paymentRequired('Lưu kế hoạch nghề nghiệp vào tài khoản dành cho tài khoản Premium.', 'premium_required');
+  };
+
+  router.put(
+    '/career/profile',
+    signedIn(async (req, res) => {
+      await premiumOnly(req, res);
+      const profile = parse(CareerProfileSchema, req.body);
+      await store.putItem(req.user.id, PROFILE_KIND, 'profile', profile, new Date());
+      res.json({ profile });
+    }),
+  );
+
+  router.put(
+    '/career/plans/:directionId',
+    signedIn(async (req, res) => {
+      await premiumOnly(req, res);
+      const directionId = parse(z.strictObject({ id: DirectionId }), { id: req.params.directionId }).id;
+      const plan = parse(CareerPlanSchema, req.body);
+      const existing = await store.listItems(req.user.id, PLAN_KIND);
+      if (!existing.some((it) => it.key === directionId) && existing.length >= MAX_CAREER_PLANS) {
+        throw new AccountError(409, 'plan_limit', `Tối đa ${MAX_CAREER_PLANS} kế hoạch: hãy xoá bớt một kế hoạch.`);
+      }
+      res.json({ plan: toPlan(await store.putItem(req.user.id, PLAN_KIND, directionId, { ...plan, done: [...new Set(plan.done)] }, new Date())) });
+    }),
+  );
+
+  router.delete(
+    '/career/plans/:directionId',
+    signedIn(async (req, res) => {
+      const item = (await store.listItems(req.user.id, PLAN_KIND)).find((it) => it.key === req.params.directionId);
+      if (!item) throw notFound('Không tìm thấy kế hoạch.');
+      await store.deleteItem(req.user.id, PLAN_KIND, item.id);
       res.status(204).end();
     }),
   );
@@ -495,6 +602,10 @@ function createAccounts(options = {}) {
     },
     /** For other modules (billing, paid reports): the signed-in user of a request, or null. Needs `enabled`. */
     userOf: (req, res) => currentUser(req, res),
+    /** The Premium gate (src/billing/premium-gate.js), for the limits of saved reports. */
+    usePremiumGate(gate) {
+      premiumGate = gate;
+    },
     /** The CSRF check of this router, for other routers that use the session cookie. */
     sameOriginOnly,
     async init() {

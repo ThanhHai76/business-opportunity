@@ -377,3 +377,20 @@
 .pi-watch__x {
   color: var(--pi-faint);
 }
+
+/* The free watch limit (while Premium is for sale). */
+.pi-watch__limit {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border: 1px dashed color-mix(in srgb, #d97706 55%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, #d97706 8%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.pi-watch__limit span {
+  color: #d97706;
+}

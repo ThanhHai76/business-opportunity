@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { ACCOUNT_API_URL } from '../config';
 import { AccountService, accountError } from '../services/account.service';
+import { BillingService } from '../services/billing.service';
 import { Assumptions, RiskLevel, defaultsFor } from './op-feasibility';
 import { Horizon } from './op.models';
 
@@ -23,10 +24,15 @@ export interface SavedReport {
   assumptions: Assumptions;
   result: { revenue: number; costs: number; profit: number; marginPct: number; investment: number; paybackMonths: number | null; budgetGap: number };
   risk: RiskLevel;
+  /** Premium: the user's own note and tags on the report (saved in the account). */
+  note?: string;
+  tags?: string[];
 }
 
 export const REPORTS_KEY = 'hanoi100.op.reports';
-export const MAX_REPORTS = 30;
+/** Saved reports kept (Premium, and when nothing is for sale), and without Premium while it is for sale. */
+export const MAX_REPORTS = 100;
+export const FREE_REPORTS = 5;
 const opts = { withCredentials: true } as const;
 
 const isReport = (r: unknown): r is SavedReport => {
@@ -58,8 +64,11 @@ const sameSlot = (a: Pick<SavedReport, 'type' | 'ward' | 'horizon'>, b: Pick<Sav
 export class SavedReportsStore {
   private readonly http = inject(HttpClient);
   private readonly account = inject(AccountService);
+  private readonly billing = inject(BillingService);
 
   readonly list = signal<SavedReport[]>(this.load());
+  /** Without Premium (while it is for sale) only the first few reports can be saved. */
+  readonly limit = computed(() => (this.billing.premiumLocked() ? FREE_REPORTS : MAX_REPORTS));
   /** Where the list lives right now. */
   readonly inAccount = computed(() => !!this.account.user());
   readonly syncing = signal(false);
@@ -127,9 +136,15 @@ export class SavedReportsStore {
     this.http.get<{ items: SavedReport[] }>(`${ACCOUNT_API_URL}/reports`, opts).subscribe({ next: ({ items }) => this.list.set(items), error: () => {} });
   }
 
-  /** Saves a report; the same type, ward and horizon replaces the older one. */
+  /** A new report would go over the free limit (replacing one of the same type, ward and horizon never does). */
+  atLimit(type: string, ward: string, horizon: Horizon): boolean {
+    return this.billing.premiumLocked() && this.list().length >= FREE_REPORTS && !this.has(type, ward, horizon);
+  }
+
+  /** Saves a report; the same type, ward and horizon replaces the older one (its note and tags stay). */
   save(report: Omit<SavedReport, 'id' | 'savedAt'>, now = new Date()): SavedReport {
-    const saved: SavedReport = { ...report, id: `${now.getTime().toString(36)}-${Math.random().toString(36).slice(2, 7)}`, savedAt: now.toISOString() };
+    const earlier = this.list().find((r) => sameSlot(r, report));
+    const saved: SavedReport = { ...(earlier?.note ? { note: earlier.note } : {}), ...(earlier?.tags ? { tags: earlier.tags } : {}), ...report, id: `${now.getTime().toString(36)}-${Math.random().toString(36).slice(2, 7)}`, savedAt: now.toISOString() };
     this.list.update((all) => [saved, ...all.filter((r) => !sameSlot(r, report))].slice(0, MAX_REPORTS));
     if (!this.inAccount()) {
       this.persist();
@@ -144,6 +159,13 @@ export class SavedReportsStore {
       error: (e: unknown) => this.reload(e),
     });
     return saved;
+  }
+
+  /** Sets the Premium note and tags of a saved report (the server refuses without Premium: the error is passed on). */
+  annotate(id: string, note: string, tags: string[]): Observable<{ item: SavedReport }> {
+    return this.http.patch<{ item: SavedReport }>(`${ACCOUNT_API_URL}/reports/${encodeURIComponent(id)}`, { note, tags }, opts).pipe(
+      tap(({ item }) => this.list.update((all) => all.map((r) => (r.id === id ? item : r)))),
+    );
   }
 
   remove(id: string): void {

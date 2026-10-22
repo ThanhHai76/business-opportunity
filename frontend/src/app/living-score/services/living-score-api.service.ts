@@ -35,7 +35,7 @@ export function describeApiError(error: unknown, lang: 'vi' | 'en' = 'vi'): stri
     if (error.status === 0) {
       return en
         ? 'Cannot reach the Hanoi Living Score server. Make sure backend-node is running (port 8000).'
-        : 'Không kết nối được máy chủ Hanoi Living Score. Hãy chắc chắn backend-node đang chạy (cổng 8000).';
+        : 'Không kết nối được máy chủ Điểm đáng sống. Hãy chắc chắn backend-node đang chạy (cổng 8000).';
     }
     const body = error.error as Partial<ApiError> | null;
     const message = body?.message;

@@ -31,7 +31,7 @@ type View = 'login' | 'register' | 'account';
             <small>{{ u.email }}</small>
           }
         </p>
-        <p class="ad__note">Báo cáo bạn lưu trên Bản đồ cơ hội kinh doanh được giữ trong tài khoản này và mở được trên mọi thiết bị.</p>
+        <p class="ad__note">Báo cáo bạn lưu trong công cụ Mở gì ở đâu được giữ trong tài khoản này và mở được trên mọi thiết bị.</p>
         @if (account.mail() && !u.emailVerified) {
           <div class="ad__verify" role="status">
             <span>Email chưa được xác minh. Hãy mở liên kết trong email chúng tôi đã gửi.</span>
@@ -49,7 +49,7 @@ type View = 'login' | 'register' | 'account';
                 }
               </p>
               <p class="ad__hint">
-                Lượt AI chuyên sâu hôm nay: {{ ai.premium ? ai.premiumLeft + ' Premium + ' : '' }}{{ ai.freeLeft }} miễn phí · Time Machine: {{ ai.storyFreeLeft }} miễn phí · đã mua: {{ ai.aiCredits }}
+                Lượt AI chuyên sâu hôm nay: {{ ai.premium ? ai.premiumLeft + ' Premium + ' : '' }}{{ ai.freeLeft }} miễn phí · Hà Nội xưa và nay: {{ ai.storyFreeLeft }} miễn phí · đã mua: {{ ai.aiCredits }}
               </p>
             }
             <a class="ad__btn" routerLink="/premium" (click)="close()">{{ billing.ai()?.premium ? 'Quản lý gói' : 'Nâng cấp Premium' }}</a>

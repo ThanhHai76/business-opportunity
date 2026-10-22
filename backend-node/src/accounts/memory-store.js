@@ -262,6 +262,11 @@ class MemoryStore {
     return used;
   }
 
+  /** When the user's Premium ends (see PostgresStore.premiumUntil). */
+  async premiumUntil(userId) {
+    return this.users.get(userId)?.premiumUntil ?? null;
+  }
+
   /** Premium end, AI credits and today's use (see PostgresStore.aiStatus). */
   async aiStatus(userId, { now, dayStart, storyTools = [] }) {
     const user = this.users.get(userId);

@@ -34,6 +34,8 @@
   --app-future-soft: #dff4f8;
   --app-property: #7556f0;
   --app-property-soft: #eee9ff;
+  --app-career: #1a7f4b;
+  --app-career-soft: #def3e7;
 
   color-scheme: light;
 }
@@ -61,6 +63,8 @@
   --app-future-soft: rgba(34, 211, 238, 0.14);
   --app-property: #3cc8e8;
   --app-property-soft: rgba(60, 200, 232, 0.14);
+  --app-career: #4cc582;
+  --app-career-soft: rgba(76, 197, 130, 0.15);
 
   color-scheme: dark;
 }

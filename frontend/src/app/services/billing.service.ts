@@ -87,6 +87,15 @@ export interface PaidReportRequest {
   assumptions: object;
 }
 
+/** The broker's details printed on a paid report (Premium). */
+export interface Brand {
+  company: string;
+  name: string;
+  phone: string;
+  email: string;
+  note: string;
+}
+
 const opts = { withCredentials: true } as const;
 
 /**
@@ -104,30 +113,48 @@ export class BillingService {
   /** The signed-in user's credits (null: not known yet, or signed out). */
   readonly credits = signal<number | null>(null);
   readonly reports = signal<PaidReport[]>([]);
+  /** The signed-in Premium user's saved broker details (null: none, or not loaded). */
+  readonly brand = signal<Brand | null>(null);
   /** The signed-in user's Premium and AI allowances (null: not known yet, or signed out). */
   readonly ai = signal<AiStatus | null>(null);
   readonly aiLimits = signal<AiLimits>({ freePerDay: 3, storyFreePerDay: 5, premiumPerDay: 50 });
   /** The server counts in-depth AI answers per account (false: AI answers are free for everyone). */
   readonly aiMetering = signal(false);
+  /** Premium-only features are locked for accounts without Premium (only while Premium is for sale). */
+  readonly premiumGating = signal(false);
+  private readonly productsLoaded = signal(false);
+  private readonly meLoaded = signal(false);
+
+  /**
+   * The Premium-only features are locked for this visitor: Premium is for sale, and they are signed out or their
+   * account has no Premium. False until that is known, so a Premium account never sees a lock flash.
+   */
+  readonly premiumLocked = computed(() => {
+    if (!this.premiumGating() || !this.productsLoaded() || !this.account.ready()) return false;
+    if (!this.account.user()) return true;
+    return this.meLoaded() && !this.ai()?.premium;
+  });
 
   readonly reportProducts = computed(() => this.products().filter((p) => (p.kind ?? 'report') === 'report'));
   readonly aiProducts = computed(() => this.products().filter((p) => p.kind === 'ai'));
   readonly premiumProducts = computed(() => this.products().filter((p) => p.kind === 'premium'));
 
   constructor() {
-    this.http.get<{ enabled: boolean; products: Product[]; aiLimits?: AiLimits; aiMetering?: boolean }>(`${BILLING_API_URL}/products`).subscribe({
+    this.http.get<{ enabled: boolean; products: Product[]; aiLimits?: AiLimits; aiMetering?: boolean; premiumGating?: boolean }>(`${BILLING_API_URL}/products`).subscribe({
       next: (r) => {
         this.enabled.set(r.enabled);
         this.products.set(r.products);
         if (r.aiLimits) this.aiLimits.set(r.aiLimits);
         this.aiMetering.set(Boolean(r.aiMetering));
+        this.premiumGating.set(Boolean(r.premiumGating));
+        this.productsLoaded.set(true);
       },
       error: () => this.enabled.set(false),
     });
     // Signing in or out changes whose credits and reports these are.
     effect(() => {
       const user = this.account.user();
-      untracked(() => (user ? this.refresh() : (this.credits.set(null), this.reports.set([]), this.ai.set(null))));
+      untracked(() => (user ? this.refresh() : (this.credits.set(null), this.reports.set([]), this.ai.set(null), this.brand.set(null), this.meLoaded.set(false))));
     });
   }
 
@@ -137,6 +164,7 @@ export class BillingService {
       next: (r) => {
         this.credits.set(r.credits);
         this.ai.set(r.ai ?? null);
+        this.meLoaded.set(true);
       },
       error: () => undefined,
     });
@@ -190,8 +218,22 @@ export class BillingService {
     );
   }
 
+  /** Loads the saved broker details (a visitor without Premium has none). */
+  loadBrand(): void {
+    if (!this.account.user()) return;
+    this.http.get<{ brand: Brand | null }>(`${REPORTS_API_URL}/brand`, opts).subscribe({ next: (r) => this.brand.set(r.brand), error: () => undefined });
+  }
+
+  saveBrand(brand: Brand): Observable<{ brand: Brand }> {
+    return this.http.put<{ brand: Brand }>(`${REPORTS_API_URL}/brand`, brand, opts).pipe(tap((r) => this.brand.set(r.brand)));
+  }
+
+  removeBrand(): Observable<unknown> {
+    return this.http.delete(`${REPORTS_API_URL}/brand`, opts).pipe(tap(() => this.brand.set(null)));
+  }
+
   /** The printable page of a paid report (the browser saves it as PDF). Opened in a new tab with the session cookie. */
-  printUrl(id: string): string {
-    return `${REPORTS_API_URL}/${encodeURIComponent(id)}/print`;
+  printUrl(id: string, standard = false): string {
+    return `${REPORTS_API_URL}/${encodeURIComponent(id)}/print${standard ? '?brand=0' : ''}`;
   }
 }

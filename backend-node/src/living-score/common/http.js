@@ -35,6 +35,8 @@ function errorBody(err, req) {
       statusCode: status,
       error: STATUS_CODES[status] ?? 'Error',
       message: known ? err.message : 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.',
+      // A machine-readable reason when there is one (e.g. premium_required), so the page can react to it.
+      ...(known && typeof err?.code === 'string' ? { code: err.code } : {}),
       path: req.originalUrl,
       timestamp: new Date().toISOString(),
     },

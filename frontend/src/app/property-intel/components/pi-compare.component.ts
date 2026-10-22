@@ -12,7 +12,13 @@ interface Row {
   best: number | null;
 }
 
-/** Side-by-side comparison of up to three wards, from the ward list already loaded (no extra request). */
+/** A comparison table as CSV (UTF-8 with BOM so Excel reads the Vietnamese names): one column per ward. */
+export function compareCsv(wardNames: string[], rows: { label: string; cells: string[] }[]): string {
+  const cell = (s: string) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
+  return '﻿' + [['', ...wardNames], ...rows.map((r) => [r.label, ...r.cells])].map((line) => line.map(cell).join(',')).join('\n');
+}
+
+/** Side-by-side comparison of up to five wards (two without Premium), from the ward list already loaded (no extra request). */
 @Component({
   selector: 'pi-compare',
   standalone: true,
@@ -23,12 +29,15 @@ interface Row {
       <header class="cmp__head">
         <strong>{{ tx.compare.title(wards().length) }}</strong>
         <div class="cmp__actions">
+          @if (wards().length > 1) {
+            <button type="button" class="pi-btn pi-btn--small" (click)="exportCsv()">{{ tx.compare.csv }}@if (state.premiumLocked()) { <span class="cmp__pro" aria-hidden="true">★</span>}</button>
+          }
           <button type="button" class="pi-btn pi-btn--small" (click)="state.setCompare([])">{{ tx.compare.clear }}</button>
           <button type="button" class="pi-btn pi-btn--small" (click)="closed.emit()">{{ tx.compare.close }}</button>
         </div>
       </header>
       @if (wards().length < 2) {
-        <p class="cmp__hint">{{ tx.compare.hint }}</p>
+        <p class="cmp__hint">{{ tx.compare.hint(state.compareLimit()) }}</p>
       }
       <div class="cmp__table" role="table" [style.--cols]="wards().length">
         <div class="cmp__row cmp__row--head" role="row">
@@ -81,8 +90,8 @@ interface Row {
       }
       .cmp__row {
         display: grid;
-        grid-template-columns: 150px repeat(var(--cols, 1), minmax(70px, 1fr));
-        gap: 8px;
+        grid-template-columns: minmax(88px, 120px) repeat(var(--cols, 1), minmax(54px, 1fr));
+        gap: 6px;
         align-items: baseline;
         padding: 3px 0;
         border-bottom: 1px solid var(--pi-line);
@@ -115,6 +124,10 @@ interface Row {
       .cmp__x {
         color: var(--pi-faint);
       }
+      .cmp__pro {
+        margin-left: 3px;
+        color: #d97706;
+      }
       .is-best {
         color: var(--pi-green);
         font-weight: 700;
@@ -130,6 +143,16 @@ export class PiCompareComponent {
   readonly ranking = input<Map<string, { score: number; rank: number }> | null>(null);
   readonly select = output<string>();
   readonly closed = output<void>();
+
+  protected exportCsv(): void {
+    if (this.state.premiumLocked()) return this.state.askPremium(this.state.t().premium.compareExport);
+    const csv = compareCsv(this.wards().map((w) => w.name), this.rows());
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = `so-sanh-${this.wards().map((w) => w.slug).join('-')}.csv`.slice(0, 120);
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
 
   protected readonly rows = computed<Row[]>(() => {
     const t = this.state.t();

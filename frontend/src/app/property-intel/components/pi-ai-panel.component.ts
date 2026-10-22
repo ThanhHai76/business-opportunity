@@ -1,10 +1,19 @@
-import { ChangeDetectionStrategy, Component, ElementRef, HostListener, ViewChild, computed, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, ViewChild, computed, effect, inject, input, output, signal } from '@angular/core';
 import { PiQualityComponent } from './pi-quality.component';
 import { AiQuotaComponent } from '../../components/ai-quota/ai-quota.component';
 import { AskIntent } from '../pi.models';
 import { PiStateService } from '../pi.service';
 
 const ACTIONS: Exclude<AskIntent, 'project'>[] = ['analyze', 'compare', 'future', 'price', 'report'];
+const EXPANDED_KEY = 'hanoi100.pi.aiExpanded';
+
+function savedExpanded(): boolean {
+  try {
+    return localStorage.getItem(EXPANDED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 /** "Ask Property AI" — the floating analyst panel of the Map Intelligence dashboard. */
 @Component({
@@ -12,10 +21,12 @@ const ACTIONS: Exclude<AskIntent, 'project'>[] = ['analyze', 'compare', 'future'
   standalone: true,
   imports: [AiQuotaComponent, PiQualityComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // The dashboard sizes the panel (it floats over the map): this class tells it to grow.
+  host: { '[class.is-expanded]': 'expanded()' },
   styleUrl: './pi-ai-panel.component.css',
   template: `
     @let tx = state.t();
-    <section class="ai" [attr.aria-label]="tx.ai.title">
+    <section class="ai" [class.is-wide]="expanded()" [attr.aria-label]="tx.ai.title">
       <header class="ai__head">
         <span class="ai__mark" aria-hidden="true"><i></i></span>
         <div class="ai__title">
@@ -23,6 +34,27 @@ const ACTIONS: Exclude<AskIntent, 'project'>[] = ['analyze', 'compare', 'future'
           <span>{{ tx.ai.sub(usesClaude()) }}</span>
         </div>
         <kbd>{{ isMac ? '⌘J' : 'Ctrl J' }}</kbd>
+        <button type="button" class="ai__expand ai__hide" [attr.aria-label]="tx.ai.hide" [title]="tx.ai.hide" (click)="closed.emit()">
+          <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+            <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="ai__expand"
+          [attr.aria-label]="expanded() ? tx.ai.collapse : tx.ai.expand"
+          [attr.aria-pressed]="expanded()"
+          [title]="expanded() ? tx.ai.collapse : tx.ai.expand"
+          (click)="toggleExpanded()"
+        >
+          <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            @if (expanded()) {
+              <path d="M13 7H9V3M9 7l4.5-4.5M3 9h4v4M7 9l-4.5 4.5" />
+            } @else {
+              <path d="M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9" />
+            }
+          </svg>
+        </button>
       </header>
 
       <div class="ai__log" #log aria-live="polite">
@@ -140,12 +172,16 @@ const ACTIONS: Exclude<AskIntent, 'project'>[] = ['analyze', 'compare', 'future'
 export class PiAiPanelComponent {
   protected readonly state = inject(PiStateService);
   readonly wardName = input('');
+  /** The user hides the panel (the dashboard shows it again from its panel buttons, or with Ctrl J). */
+  readonly closed = output<void>();
 
   @ViewChild('log', { static: true }) private log!: ElementRef<HTMLDivElement>;
   @ViewChild('input', { static: true }) private inputEl!: ElementRef<HTMLInputElement>;
 
   protected readonly actions = ACTIONS;
   protected readonly draft = signal('');
+  /** A bigger panel for reading long answers and typing longer questions (remembered in this browser). */
+  protected readonly expanded = signal(savedExpanded());
   protected readonly isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
   /** Whether the last answer came from Claude (the server falls back to template answers without a key). */
   protected readonly usesClaude = computed(() => [...this.state.chat()].reverse().find((t) => t.answer)?.answer?.provider === 'anthropic');
@@ -167,6 +203,18 @@ export class PiAiPanelComponent {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'j') {
       event.preventDefault();
       this.inputEl.nativeElement.focus();
+    } else if (event.key === 'Escape' && this.expanded() && this.inputEl.nativeElement === document.activeElement) {
+      this.toggleExpanded(); // Esc in the question box shrinks the panel back
+    }
+  }
+
+  protected toggleExpanded(): void {
+    const next = !this.expanded();
+    this.expanded.set(next);
+    try {
+      localStorage.setItem(EXPANDED_KEY, next ? '1' : '0');
+    } catch {
+      /* not remembered */
     }
   }
 

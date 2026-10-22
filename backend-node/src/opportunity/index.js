@@ -13,6 +13,7 @@
 const express = require('express');
 const { rateLimit } = require('express-rate-limit');
 const { NO_METER, answerersFor, answeredByAi } = require('../billing/ai-meter');
+const { OPEN_GATE } = require('../billing/premium-gate');
 const { z } = require('zod');
 const { HttpError, asyncHandler, badRequest, errorBody, notFound, singleString } = require('../living-score/common/http');
 const { createLogger } = require('../living-score/common/logger');
@@ -199,11 +200,15 @@ function wardDetail(slug, horizon, lang) {
  * @param options.answerers  { primary, fallback } (tests)
  * @param options.rateLimits { global, ai } per minute per client
  * @param options.meter      counts in-depth AI answers per account (src/billing/ai-meter.js); none by default
+ * @param options.premium    opens Premium-only data (src/billing/premium-gate.js): the 2030 horizon of the whole map,
+ *                           of comparisons and of AI answers. One ward's 2030 stays free (a preview). Open by default.
  */
 function createOpportunityMap(options = {}) {
   const limits = { global: 240, ai: 12, ...options.rateLimits };
   const answerers = options.answerers ?? createAnswerers();
   const meter = options.meter ?? NO_METER;
+  const premium = options.premium ?? OPEN_GATE;
+  const PREMIUM_2030 = 'Mốc 2030 trên toàn bản đồ';
   const tooMany = (req, res) => res.status(429).json({ statusCode: 429, error: 'Too Many Requests', message: 'Quá nhiều yêu cầu, vui lòng thử lại sau ít phút.' });
   const router = express.Router();
   router.use(rateLimit({ windowMs: 60_000, limit: limits.global, standardHeaders: true, legacyHeaders: false, handler: tooMany }));
@@ -214,12 +219,18 @@ function createOpportunityMap(options = {}) {
     res.json({ types: M.TYPE_KEYS.map((k) => typeView(k, lang)), signals: M.SIGNAL_LABELS[lang], sparseBelow: M.SPARSE_TOTAL });
   });
 
-  router.get('/wards', (req, res) => {
-    const lang = requireLang(singleString(req.query.lang, 'lang'));
-    const horizon = requireHorizon(singleString(req.query.horizon, 'horizon'));
-    const type = requireType(singleString(req.query.type, 'type'), { optional: true });
-    res.json(wardsGeoJson(type, horizon, lang));
-  });
+  router.get(
+    '/wards',
+    asyncHandler(async (req, res) => {
+      const lang = requireLang(singleString(req.query.lang, 'lang'));
+      const horizon = requireHorizon(singleString(req.query.horizon, 'horizon'));
+      const type = requireType(singleString(req.query.type, 'type'), { optional: true });
+      if (horizon === '2030') await premium.require(req, res, PREMIUM_2030);
+      res.json(wardsGeoJson(type, horizon, lang));
+    }),
+  );
+
+  // One ward, any horizon: its 2030 is free on purpose (the preview of what Premium adds to the whole map).
 
   router.get('/wards/:slug', (req, res) => {
     const lang = requireLang(singleString(req.query.lang, 'lang'));
@@ -238,30 +249,34 @@ function createOpportunityMap(options = {}) {
     res.json({ type: 'FeatureCollection', features, meta: { ward: w.slug, type, source: SOURCES.osm.publisher } });
   });
 
-  router.get('/compare', (req, res) => {
-    const lang = requireLang(singleString(req.query.lang, 'lang'));
-    const horizon = requireHorizon(singleString(req.query.horizon, 'horizon'));
-    const type = requireType(singleString(req.query.type, 'type'), { optional: true });
-    const slugs = [...new Set((singleString(req.query.slugs, 'slugs') ?? '').split(',').map((s) => s.trim()).filter(Boolean))];
-    if (slugs.length < 2 || slugs.length > 3) throw badRequest('Cần 2–3 phường/xã để so sánh (slugs=a,b[,c]).');
-    const wards = slugs.map((slug) => wardDetail(slug, horizon, lang));
-    res.json({
-      horizon,
-      type: type ? typeView(type, lang) : null,
-      wards: wards.map((w) => ({
-        slug: w.slug,
-        name: w.name,
-        scored: w.scored,
-        facts: w.facts,
-        coverage: w.coverage,
-        focus: type ? (w.opportunities.find((o) => o.type === type) ?? null) : (w.opportunities[0] ?? null),
-        top3: w.opportunities.filter((o) => !o.sparseType).slice(0, 3).map((o) => ({ type: o.type, icon: o.icon, name: o.name, opportunity: o.opportunity })),
-        // Every demand signal (0-100, relative between wards), whatever the type weighs — for the radar chart.
-        signals: w.scored ? Object.fromEntries(M.scoresFor(w.slug, horizon)[0].parts.map((p) => [p.signal, p.value])) : null,
-      })),
-      sources: sourceList(['osm', 'population', 'metro'], lang),
-    });
-  });
+  router.get(
+    '/compare',
+    asyncHandler(async (req, res) => {
+      const lang = requireLang(singleString(req.query.lang, 'lang'));
+      const horizon = requireHorizon(singleString(req.query.horizon, 'horizon'));
+      const type = requireType(singleString(req.query.type, 'type'), { optional: true });
+      if (horizon === '2030') await premium.require(req, res, 'So sánh ở mốc 2030');
+      const slugs = [...new Set((singleString(req.query.slugs, 'slugs') ?? '').split(',').map((s) => s.trim()).filter(Boolean))];
+      if (slugs.length < 2 || slugs.length > 3) throw badRequest('Cần 2–3 phường/xã để so sánh (slugs=a,b[,c]).');
+      const wards = slugs.map((slug) => wardDetail(slug, horizon, lang));
+      res.json({
+        horizon,
+        type: type ? typeView(type, lang) : null,
+        wards: wards.map((w) => ({
+          slug: w.slug,
+          name: w.name,
+          scored: w.scored,
+          facts: w.facts,
+          coverage: w.coverage,
+          focus: type ? (w.opportunities.find((o) => o.type === type) ?? null) : (w.opportunities[0] ?? null),
+          top3: w.opportunities.filter((o) => !o.sparseType).slice(0, 3).map((o) => ({ type: o.type, icon: o.icon, name: o.name, opportunity: o.opportunity })),
+          // Every demand signal (0-100, relative between wards), whatever the type weighs — for the radar chart.
+          signals: w.scored ? Object.fromEntries(M.scoresFor(w.slug, horizon)[0].parts.map((p) => [p.signal, p.value])) : null,
+        })),
+        sources: sourceList(['osm', 'population', 'metro'], lang),
+      });
+    }),
+  );
 
   /** A business idea in plain words → { type, budget, ward } (the page then ranks the wards for that plan). */
   const ParseSchema = z.strictObject({ text: z.string().trim().min(2).max(300), lang: z.enum(LANGS).optional() });
@@ -288,7 +303,9 @@ function createOpportunityMap(options = {}) {
       if (!parsed.success) throw badRequest(`Dữ liệu gửi lên không hợp lệ — ${parsed.error.issues.map((i) => `${i.path.join('.') || 'body'}: ${i.message}`).join('; ')}`);
       const body = parsed.data;
       if (body.ward) requireWard(body.ward);
-      const request = { ...body, horizon: body.horizon ?? 'now', lang: body.lang ?? 'vi' };
+      // Without Premium (when it is for sale) the AI answers about today only, and its data leaves out 2030.
+      const with2030 = await premium.isPremium(req, res);
+      const request = { ...body, horizon: with2030 ? (body.horizon ?? 'now') : 'now', lang: body.lang ?? 'vi', with2030 };
       res.json(
         await meter.run(req, res, 'opportunity', async (allowAi) => {
           const answer = await ask(answerersFor(answerers, allowAi), request);

@@ -464,6 +464,7 @@ module.exports = {
   round1,
   round2,
   distKm,
+  linesKm,
   rankOf,
   statusAt,
   sourceList,

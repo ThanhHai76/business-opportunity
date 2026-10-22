@@ -18,6 +18,8 @@ describe('AI Property Intelligence API', () => {
       log: false,
       living: { config: loadConfig({ DATA_SOURCE: 'memory' }) },
       propertyIntel: { config: { aiProvider: 'mock' } },
+      // These tests are about the data: no Premium lock, whatever the machine's .env turns on (see premium.test.js).
+      premium: { mode: 'off' },
     });
     living = created.living;
     server = await new Promise((resolve) => {
@@ -80,11 +82,11 @@ describe('AI Property Intelligence API', () => {
     assert.deepEqual(body.horizons, [2026, 2030, 2045]);
     assert.equal(body.stats.wards, 79);
     assert.equal(body.stats.poles, 9);
-    assert.equal(body.featured.slug, 'phuong-bo-de');
+    assert.equal(body.featured.slug, 'phuong-tay-ho');
     assert.equal(body.featured.criteria.length, 3);
     const en = (await get('/overview?lang=en')).body;
     assert.match(en.note, /official table/);
-    assert.match(en.defaultQuestion, /^Is Phường Bồ Đề/);
+    assert.match(en.defaultQuestion, /^Is Phường Tây Hồ/);
   });
 
   it('ranks the wards by potential score', async () => {

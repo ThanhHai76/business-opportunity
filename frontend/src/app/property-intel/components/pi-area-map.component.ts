@@ -184,6 +184,11 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
     this.map?.remove();
   }
 
+  /** The map's box changed size (a panel around it opened or closed): redraw it to the new size. */
+  resize(): void {
+    this.map?.resize();
+  }
+
   zoomIn(): void {
     this.map?.zoomIn();
   }

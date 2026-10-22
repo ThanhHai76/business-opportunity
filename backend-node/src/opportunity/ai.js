@@ -209,7 +209,7 @@ const AnswerSchema = z.object({
 });
 
 /** Compact data for the model: every scored ward with facts and its scores (both horizons). */
-function knowledge(lang) {
+function knowledge(lang, with2030 = true) {
   return {
     method: 'demand (population, offices, apartments, schools, metro) − 0.4 × competition (same-type places per 10k residents); 2030 adds construction and metro being built',
     caveat: 'OpenStreetMap under-counts small shops; competition may be too low. Scores compare wards; not revenue forecasts.',
@@ -223,7 +223,7 @@ function knowledge(lang) {
         metroStations: w.metroStations,
         constructionHa: w.constructionHa,
         scoresNow: Object.fromEntries(M.scoresFor(w.slug, 'now').map((s) => [s.type, [s.opportunity, s.demand, s.competition, s.count]])),
-        scores2030: Object.fromEntries(M.scoresFor(w.slug, '2030').map((s) => [s.type, s.opportunity])),
+        ...(with2030 ? { scores2030: Object.fromEntries(M.scoresFor(w.slug, '2030').map((s) => [s.type, s.opportunity])) } : {}),
       })),
     scoreArrayFormat: '[opportunity, demand, competition, placesMappedInOSM]',
     sourceIds: SOURCE_IDS,
@@ -254,7 +254,7 @@ class AnthropicAnswerer {
     this.model = model;
   }
 
-  async answer({ question, type, ward, horizon, lang }) {
+  async answer({ question, type, ward, horizon, lang, with2030 }) {
     try {
       const { zodOutputFormat } = require('@anthropic-ai/sdk/helpers/zod');
       const context = [type ? `selected business type: ${type}` : null, ward ? `selected ward: ${ward}` : null, `horizon: ${horizon}`].filter(Boolean).join('; ');
@@ -266,7 +266,7 @@ class AnthropicAnswerer {
         system: [
           { type: 'text', text: systemPrompt(lang) },
           // Identical for every request in a language, so it is cached.
-          { type: 'text', text: `DATA (JSON):\n${JSON.stringify(knowledge(lang))}`, cache_control: { type: 'ephemeral' } },
+          { type: 'text', text: `DATA (JSON):\n${JSON.stringify(knowledge(lang, with2030 !== false))}`, cache_control: { type: 'ephemeral' } },
         ],
         messages: [{ role: 'user', content: `${question}\n(${context})` }],
         output_config: { effort: 'low', format: zodOutputFormat(AnswerSchema) },

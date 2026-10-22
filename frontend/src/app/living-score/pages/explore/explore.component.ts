@@ -109,7 +109,7 @@ export class ExploreComponent implements OnInit {
   });
   protected readonly visualLabel = computed(() => {
     const v = this.visual();
-    return v === 'livingScore' ? 'Living Score' : this.meta.label(v);
+    return v === 'livingScore' ? this.t().nav.scoreName : this.meta.label(v);
   });
   protected readonly isPersonalized = computed(() => this.prefs.weights() !== null);
 

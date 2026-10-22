@@ -130,7 +130,7 @@ export class TmMuseum {
     link.textContent = ctx.landmarkUrl(key);
     const brand = document.createElement('p');
     brand.className = 'tm-pp-brand';
-    brand.textContent = 'Hanoi Time Machine — Then · Now · Next';
+    brand.textContent = ctx.tr('Hà Nội xưa và nay — Xưa · Nay · Mai', 'Hanoi Time Machine — Then · Now · Next');
     sheet.append(title, sub, qr, call, link, brand);
     printSheet(sheet);
   }

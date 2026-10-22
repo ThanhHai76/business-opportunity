@@ -9,17 +9,17 @@ export const PROPERTY_INTEL_ROUTES: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        title: 'AI Property Intelligence',
+        title: 'Chấm điểm bất động sản · Hanoi Century Vista',
         loadComponent: () => import('./pages/hero/pi-hero.component').then((m) => m.PiHeroComponent),
       },
       {
         path: 'map',
-        title: 'Map Intelligence · AI Property Intelligence',
+        title: 'Bản đồ phân tích · Chấm điểm bất động sản',
         loadComponent: () => import('./pages/dashboard/pi-dashboard.component').then((m) => m.PiDashboardComponent),
       },
       {
         path: 'projects/:slug',
-        title: 'Project · AI Property Intelligence',
+        title: 'Dự án · Chấm điểm bất động sản',
         loadComponent: () => import('./pages/project/pi-project.component').then((m) => m.PiProjectComponent),
       },
       { path: '**', redirectTo: '' },

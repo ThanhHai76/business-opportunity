@@ -1,0 +1,130 @@
+# Production stack for Hanoi Century Vista on ONE Linux server (x86_64):
+#
+#   internet ──► caddy (80/443, HTTPS certificate by itself)
+#                  ├─ /api/*  ──► backend (Node, port 8000, inside)
+#                  └─ the rest ─► frontend (nginx with the Angular build, inside)
+#   backend ──► db (PostgreSQL + PostGIS), redis (cache)
+#
+# Only Caddy publishes ports (80, 443). The database, redis, the API and nginx are reachable only from inside.
+# Settings come from the .env file next to this one (copy .env.production.example); see DEPLOY.md.
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+
+name: hanoi-century-vista
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: living
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Đặt POSTGRES_PASSWORD trong file .env}
+      POSTGRES_DB: living_score
+      # Vietnamese text and emoji (account names, saved reports) need UTF8.
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8'
+    # No published port. The tables are created by the backend itself when it starts.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    shm_size: 256mb
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U living -d living_score']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    logging: *logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # A cache only: nothing is kept on disk, and it never grows past 128 MB.
+    command: ['redis-server', '--maxmemory', '128mb', '--maxmemory-policy', 'allkeys-lru', '--save', '', '--appendonly', 'no']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    logging: *logging
+
+  backend:
+    build:
+      context: ./backend-node
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: '8000'
+      CORS_ORIGIN: https://${DOMAIN:?Đặt DOMAIN trong file .env}
+      # The address in the links of the emails (verify the address, reset the password).
+      APP_URL: https://${DOMAIN}
+      DATA_SOURCE: postgres
+      DATABASE_URL: postgres://living:${POSTGRES_PASSWORD}@db:5432/living_score
+      AUTO_SEED: 'true'
+      REDIS_URL: redis://redis:6379
+      CACHE_TTL_SECONDS: '300'
+      # postgres: the server stops (and Docker restarts it) instead of running with accounts off when the database is down.
+      ACCOUNTS: postgres
+      COOKIE_SECURE: 'true'
+      # One proxy in front of the API: Caddy.
+      TRUST_PROXY: '1'
+      # AI (optional): without a key every AI answer is the automatic one.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-claude-sonnet-5-5}
+      LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-45000}
+      AI_PROVIDER: auto
+      AI_METERING: ${AI_METERING:-auto}
+      AI_FREE_PER_DAY: ${AI_FREE_PER_DAY:-}
+      AI_PREMIUM_PER_DAY: ${AI_PREMIUM_PER_DAY:-}
+      AI_STORY_FREE_PER_DAY: ${AI_STORY_FREE_PER_DAY:-}
+      # Payments: off until a real provider (PayOS) is connected; the mock provider is refused in production.
+      BILLING_PROVIDER: ${BILLING_PROVIDER:-off}
+      BILLING_WEBHOOK_SECRET: ${BILLING_WEBHOOK_SECRET:-}
+      # Email (verify the address, reset the password): without SMTP_URL these features stay off.
+      SMTP_URL: ${SMTP_URL:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      REQUIRE_VERIFIED_EMAIL: ${REQUIRE_VERIFIED_EMAIL:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging: *logging
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    logging: *logging
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    environment:
+      DOMAIN: ${DOMAIN:?Đặt DOMAIN trong file .env}
+      ACME_EMAIL: ${ACME_EMAIL:?Đặt ACME_EMAIL trong file .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # The certificates: keep them, or every re-create asks Let's Encrypt again (and may hit its limits).
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    logging: *logging
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

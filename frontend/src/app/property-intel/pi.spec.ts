@@ -3,7 +3,10 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { formatBillion, formatDistance, formatNum, signed } from './pi-format';
 import { PI_TEXT } from './pi-i18n';
-import { DEFAULT_STATE, PiStateService, initialState } from './pi.service';
+import { DEFAULT_STATE, FREE_WATCH, PiStateService, initialState } from './pi.service';
+import { signal } from '@angular/core';
+import { BillingService } from '../services/billing.service';
+import { PremiumPromptService } from '../services/premium-prompt.service';
 
 describe('Property Intelligence number formats', () => {
   it('writes Vietnamese decimals with a comma and English ones with a point', () => {
@@ -110,6 +113,26 @@ describe('Property Intelligence state', () => {
       expect(state.t().tabs.map).toBe('Bản đồ phân tích');
       state.set('lang', 'en');
       expect(state.t().tabs.map).toBe('Map Intelligence');
+    });
+
+    it('while Premium is locked: today only, and up to FREE_WATCH watched, asking for Premium past that', () => {
+      TestBed.overrideProvider(BillingService, { useValue: { premiumLocked: signal(true) } });
+      const state = TestBed.inject(PiStateService);
+      const prompt = TestBed.inject(PremiumPromptService);
+      state.setHorizon(2045);
+      expect(state.horizon()).toBe(2026);
+      expect(prompt.ask()?.feature).toBe(state.t().premium.horizon(2045));
+      prompt.close();
+
+      ['a', 'b'].forEach((s) => state.toggleWatchWard(`phuong-${s}`));
+      state.toggleWatch('du-an-c');
+      state.toggleWatch('du-an-d');
+      expect(state.watchlist()).toEqual(['du-an-c']);
+      expect(state.watchWards().length).toBe(FREE_WATCH - 1);
+      expect(prompt.ask()?.feature).toBe(state.t().premium.watch);
+      // Removing is always allowed.
+      state.toggleWatch('du-an-c');
+      expect(state.watchlist()).toEqual([]);
     });
   });
 });
