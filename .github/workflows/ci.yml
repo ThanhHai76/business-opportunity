@@ -37,3 +37,40 @@ jobs:
       - run: npm ci
       - run: npx ng test --watch=false --browsers=ChromeHeadless
       - run: npm run build
+
+  # The files that put the site on a server (docker-compose.prod.yml, deploy/Caddyfile): checked, built, and the database
+  # and the API started for real, with the settings of the server. Needs no secret: every value below is a dummy.
+  production-stack:
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_PASSWORD: ci-only-password
+      DOMAIN: example.com
+      ACME_EMAIL: ci@example.com
+      COMPOSE: docker compose -f docker-compose.prod.yml
+    steps:
+      - uses: actions/checkout@v4
+      - name: The compose file is valid
+        run: $COMPOSE config -q
+      - name: The Caddyfile is valid
+        run: docker run --rm -e DOMAIN -e ACME_EMAIL -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+      - name: Build the images
+        run: $COMPOSE build
+      - name: Start the database, redis and the API, and wait until they are healthy
+        run: $COMPOSE up -d --wait db redis backend
+      - name: The API answers, with the seeded data and the settings of the server
+        run: |
+          $COMPOSE exec -T backend node -e "
+          const get = async (p) => (await fetch('http://127.0.0.1:8000' + p)).json();
+          (async () => {
+            const areas = await get('/api/living-score/areas');
+            if (!areas.data || areas.data.length < 10) throw new Error('areas: ' + (areas.data ? areas.data.length : 'none'));
+            const products = await get('/api/billing/products');
+            if (products.enabled) throw new Error('payments must be off until a real provider is connected');
+            const me = await get('/api/account/me');
+            if (!me.enabled) throw new Error('accounts must be on');
+            console.log(areas.data.length + ' areas | payments off | accounts on');
+          })().catch((e) => { console.error(e.message); process.exit(1); });
+          "
+      - name: Logs of the stack (only when something failed)
+        if: failure()
+        run: $COMPOSE logs --no-color --tail=200 backend db
