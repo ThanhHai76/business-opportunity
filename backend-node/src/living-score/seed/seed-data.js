@@ -125,7 +125,7 @@ const DATA_INFO_TEXT = {
     vi: {
         method: `Đếm địa điểm và đo diện tích công viên, hồ ao trên OpenStreetMap trong bán kính 1,5 km (khoảng 20 phút đi bộ) quanh trung tâm mỗi phường/xã. Điểm là tương đối giữa ${N} phường/xã: 100 = nơi cao nhất, theo thang căn bậc hai (địa điểm đầu tiên gần nhà có giá trị hơn địa điểm thứ một trăm). An ninh, môi trường và chi phí chưa có dữ liệu mở theo khu vực nên không được tính.`,
         caveat: 'OpenStreetMap do cộng đồng đóng góp nên có thể thiếu địa điểm, nhất là ở vùng ven; số liệu phù hợp để so sánh tương đối giữa các phường/xã, không phải thống kê chính thức.',
-        areaNote: `${N} phường/xã sau sắp xếp đơn vị hành chính năm 2025, ranh giới theo OpenStreetMap — cùng bộ với Bản đồ cơ hội kinh doanh và AI Property Intelligence. Với xã rộng, vòng đo 1,5 km chỉ phản ánh khu trung tâm.`,
+        areaNote: `${N} phường/xã sau sắp xếp đơn vị hành chính năm 2025, ranh giới theo OpenStreetMap — cùng bộ với công cụ Mở gì ở đâu và AI Property Intelligence. Với xã rộng, vòng đo 1,5 km chỉ phản ánh khu trung tâm.`,
     },
     en: {
         method: `Places are counted, and park and lake areas measured, on OpenStreetMap within 1.5 km (about a 20-minute walk) of each ward's centre. Scores are relative between the ${N} wards and communes: 100 = the best one, on a square-root scale (the first places near home matter more than the hundredth). Safety, environment and cost have no open per-area data, so they are not scored.`,

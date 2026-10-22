@@ -73,6 +73,7 @@ const orderView = (o, now = new Date()) => ({
 function createBilling(options) {
   const { accounts } = options;
   const meter = options.meter ?? NO_METER;
+  const premium = options.premium ?? { enabled: false };
   const isAllowedOrigin = options.isAllowedOrigin ?? (() => false);
   const provider =
     options.provider !== undefined
@@ -135,7 +136,7 @@ function createBilling(options) {
   });
 
   router.get('/products', (req, res) => {
-    res.json({ enabled: enabled(), provider: provider?.name ?? null, products: productList(), aiLimits: meter.limits, aiMetering: meter.enabled });
+    res.json({ enabled: enabled(), provider: provider?.name ?? null, products: productList(), aiLimits: meter.limits, aiMetering: meter.enabled, premiumGating: premium.enabled });
   });
 
   router.get(

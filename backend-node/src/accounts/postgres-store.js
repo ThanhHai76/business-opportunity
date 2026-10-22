@@ -5,7 +5,7 @@ const path = require('node:path');
 const { conflict, paymentRequired } = require('./errors');
 
 // Applied in order on start: accounts and saved items, purchases and paid reports, then AI questions and Premium.
-const SCHEMAS = ['01-schema.sql', '02-billing.sql', '03-ai-premium.sql', '04-email-terms.sql'].map((f) => path.join(__dirname, '..', '..', 'database', 'accounts', f));
+const SCHEMAS = ['01-schema.sql', '02-billing.sql', '03-ai-premium.sql', '04-email-terms.sql', '05-broker-brand.sql', '06-career.sql'].map((f) => path.join(__dirname, '..', '..', 'database', 'accounts', f));
 
 const toUser = (r) => r && { id: r.id, email: r.email, displayName: r.display_name, createdAt: r.created_at, lastLoginAt: r.last_login_at, emailVerifiedAt: r.email_verified_at, termsAcceptedAt: r.terms_accepted_at };
 const toItem = (r) => ({ id: r.id, key: r.item_key, payload: r.payload, createdAt: r.created_at, updatedAt: r.updated_at });
@@ -276,6 +276,12 @@ class PostgresStore {
   }
 
   // ---------------------------------------------------------------- in-depth AI questions and Premium (03-ai-premium.sql)
+  /** When the user's Premium ends (null: never had it, or no such user). Used to open Premium-only data. */
+  async premiumUntil(userId) {
+    const { rows } = await this.pool.query('SELECT premium_until FROM app_users WHERE id = $1', [userId]);
+    return rows[0]?.premium_until ?? null;
+  }
+
   /**
    * Premium end, bought AI credits left, and today's in-depth AI answers by allowance.
    * The free answers of the `storyTools` are counted apart (`freeStory`): they have an allowance of their own.

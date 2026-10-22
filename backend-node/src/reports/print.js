@@ -77,7 +77,19 @@ function cashChart(monthly, paybackMonth) {
 </svg>`;
 }
 
-function printPage(report) {
+/** The broker's own header block (company, name, phone, email), and their note for the client. */
+function brandHeader(brand) {
+  const title = brand.company || brand.name;
+  // The person's own details; their name is the title when there is no company.
+  const who = [brand.company ? brand.name : '', brand.phone, brand.email].filter(Boolean).map(e).join(' · ');
+  return `<div class="brand">${e(title)} · Báo cáo khả thi kinh doanh</div>${who ? `<div class="prepared">Chuẩn bị bởi: ${who}</div>` : ''}`;
+}
+
+/**
+ * @param report the stored report
+ * @param options { brand?: the broker's details to print (Premium), canSwitch?: offer the other version in the toolbar }
+ */
+function printPage(report, { brand = null, canSwitch = false } = {}) {
   const c = report.content;
   const r = c.feasibility;
   const a = c.assumptions;
@@ -102,7 +114,7 @@ function printPage(report) {
   const scenarioRows = [{ label: 'Kế hoạch của bạn', revenue: r.revenue, profit: r.profit, marginPct: r.marginPct, paybackMonths: r.paybackMonths, base: true }, ...c.sensitivity];
 
   return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${e(report.title)} — Báo cáo khả thi · Hanoi Century Vista</title>
+<title>${e(report.title)} — Báo cáo khả thi${brand ? '' : ' · Hanoi Century Vista'}</title>
 <style>
 @page{size:A4;margin:14mm 12mm}
 *{box-sizing:border-box}
@@ -112,6 +124,9 @@ body{font:13px/1.5 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:#1d
 .toolbar button{font:inherit;font-weight:600;padding:10px 16px;border:0;border-radius:8px;background:#1f6f4a;color:#fff;cursor:pointer}
 .toolbar span{color:#5c574d}
 header{border-bottom:3px solid #1f6f4a;padding-bottom:12px;margin-bottom:18px}
+.prepared{margin-top:2px;color:#5c574d;font-size:12px}
+.brand-note{margin:14px 0 0;padding:10px 12px;border:1px solid #ddd8cc;border-radius:8px;background:#faf8f3;white-space:pre-line}
+.toolbar a{color:#1f6f4a;font-weight:600}
 .brand{font-weight:700;letter-spacing:.04em;color:#1f6f4a;text-transform:uppercase;font-size:12px}
 h1{font-size:24px;margin:4px 0}
 h2{font-size:16px;margin:24px 0 8px;padding-bottom:4px;border-bottom:1px solid #ddd8cc;break-after:avoid}
@@ -143,12 +158,13 @@ footer{margin-top:24px;padding-top:10px;border-top:1px solid #ddd8cc}
 @media (max-width:640px){.page{padding:20px 16px}.two{grid-template-columns:1fr}}
 @media print{body{background:#fff}.page{padding:0;max-width:none}.toolbar{display:none}h2{break-after:avoid}}
 </style></head><body>
-<div class="toolbar"><button type="button" onclick="window.print()">Lưu PDF / In</button><span>Trong hộp thoại in, chọn "Lưu dưới dạng PDF".</span></div>
+<div class="toolbar"><button type="button" onclick="window.print()">Lưu PDF / In</button><span>Trong hộp thoại in, chọn "Lưu dưới dạng PDF".</span>${canSwitch ? (brand ? '<a href="?brand=0">Xem bản chuẩn</a>' : '<a href="?brand=1">Xem bản có thông tin của bạn</a>') : ''}</div>
 <div class="page">
 <header>
-  <div class="brand">Hanoi Century Vista · Báo cáo khả thi kinh doanh</div>
+  ${brand ? brandHeader(brand) : '<div class="brand">Hanoi Century Vista · Báo cáo khả thi kinh doanh</div>'}
   <h1>${e(c.type.icon)} ${e(c.type.name)} tại ${e(c.ward.name)}</h1>
   <div class="meta">Mốc: ${c.horizon === '2030' ? '2030 (có tín hiệu tăng trưởng)' : 'hiện tại'} · Tạo ngày ${e(date(c.generatedAt))} · Dữ liệu bản đồ ngày ${e(c.dataDate ? date(c.dataDate) : '—')} · Mã báo cáo ${e(report.id.slice(0, 8).toUpperCase())}</div>
+  ${brand?.note ? `<p class="brand-note">${e(brand.note)}</p>` : ''}
 </header>
 
 <h2>1. Tóm tắt</h2>
@@ -251,6 +267,7 @@ ${FIELDS.filter(([key]) => key !== 'daysOpen' || a.basis === 'day')
   OpenStreetMap (chưa ghi nhận đủ cửa hàng nhỏ); phần tài chính dựa hoàn toàn vào giả định ở mục 8. Giá đất là bảng giá nhà nước,
   thường thấp hơn giá thị trường. Hãy khảo sát thực địa và lấy báo giá thật trước khi quyết định.
   Bản đồ dữ liệu © OpenStreetMap contributors (ODbL).
+  ${brand ? 'Số liệu phân tích: Hanoi Century Vista.' : ''}
 </footer>
 </div>
 </body></html>`;

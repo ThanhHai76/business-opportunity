@@ -11,6 +11,9 @@
  *                                  schools, health, parks, infrastructure)
  *   GET  /map?horizon=2030         GeoJSON layers for one planning horizon (2026 | 2030 | 2045)
  *   GET  /map/social               schools and health facilities (GeoJSON, loaded when that layer is switched on)
+ *   GET  /commute/:slug            minutes by car from a ward to every ward (the career compass)
+ *   GET  /commute-to/:target       minutes by car from every ward to one ward or reference place (Hồ Gươm, offices, airport)
+ *   GET  /metro-reach              metro lines near every ward and every place of work: now, 2027, under the plan
  *   GET  /search?q=gia             wards and projects matching a query
  *   POST /ask { question, intent?, ward?, project?, lang? }   answer from the data (Claude when configured)
  *
@@ -21,10 +24,13 @@ const express = require('express');
 const helmet = require('helmet');
 const { rateLimit } = require('express-rate-limit');
 const { NO_METER, answerersFor, answeredByAi } = require('../billing/ai-meter');
+const { OPEN_GATE } = require('../billing/premium-gate');
 const { z } = require('zod');
 const { HttpError, asyncHandler, badRequest, errorBody, singleString } = require('../living-score/common/http');
 const { parseSlug } = require('../living-score/common/query-parsers');
 const { createLogger } = require('../living-score/common/logger');
+const commute = require('./commute');
+const { metroReach } = require('./metro-reach');
 const M = require('./model');
 const engine = require('./engine');
 const analyst = require('./analyst');
@@ -52,11 +58,15 @@ function langOf(req) {
  * @param options.analysts   { primary, fallback } (tests)
  * @param options.rateLimits { global, ask } per minute per client
  * @param options.meter      counts in-depth AI answers per account (src/billing/ai-meter.js); none by default
+ * @param options.premium    opens Premium-only data (src/billing/premium-gate.js): the planning layers of 2030 and 2045.
+ *                           Open by default.
  */
 function createPropertyIntel(options = {}) {
   const limits = { global: 240, ask: 30, ...options.rateLimits };
   const analysts = options.analysts ?? analyst.createAnalysts(options.config);
   const meter = options.meter ?? NO_METER;
+  const premium = options.premium ?? OPEN_GATE;
+  const TODAY = M.HORIZONS[0];
   const tooMany = (req, res, next) => next(new HttpError(429, 'Bạn gửi quá nhiều yêu cầu. Vui lòng thử lại sau ít phút.'));
   const router = express.Router();
   router.use(helmet());
@@ -100,13 +110,44 @@ function createPropertyIntel(options = {}) {
     res.json(socialCache.get(lang));
   });
 
-  router.get('/map', (req, res) => {
-    const lang = langOf(req);
-    const raw = singleString(req.query.horizon, 'horizon') ?? '2030';
-    const horizon = Number(raw);
-    if (!M.HORIZONS.includes(horizon)) throw badRequest(`horizon phải là một trong ${M.HORIZONS.join(', ')}.`);
+  router.get(
+    '/map',
+    asyncHandler(async (req, res) => {
+      const lang = langOf(req);
+      const raw = singleString(req.query.horizon, 'horizon');
+      let horizon = Number(raw ?? '2030');
+      if (!M.HORIZONS.includes(horizon)) throw badRequest(`horizon phải là một trong ${M.HORIZONS.join(', ')}.`);
+      // The planning layers of 2030 and 2045 are Premium (when it is for sale); 2026 (today) is for everyone.
+      if (horizon !== TODAY) {
+        if (raw === undefined && !(await premium.isPremium(req, res))) horizon = TODAY; // no horizon asked: today
+        else await premium.require(req, res, `Các lớp quy hoạch mốc ${horizon}`);
+      }
+      // Premium layers are private: a shared cache must not hand them to someone without Premium.
+      res.set('Cache-Control', `${horizon === TODAY || !premium.enabled ? 'public' : 'private'}, max-age=3600`);
+      res.json(layersFor(horizon, lang));
+    }),
+  );
+
+  // Driving times between wards, and the metro lines near each ward and place of work: static data, built once.
+  router.get('/commute/:slug', (req, res) => {
+    const slug = parseSlug(req.params.slug, 'Mã phường/xã');
+    const data = commute.minutesFrom(slug, langOf(req));
+    if (!data) throw new HttpError(404, `Không có dữ liệu thời gian đi lại cho "${slug}".`);
     res.set('Cache-Control', 'public, max-age=3600');
-    res.json(layersFor(horizon, lang));
+    res.json(data);
+  });
+
+  router.get('/commute-to/:target', (req, res) => {
+    const target = parseSlug(req.params.target, 'Nơi làm việc');
+    const data = commute.minutesTo(target, langOf(req));
+    if (!data) throw new HttpError(404, `Không có dữ liệu thời gian đi lại tới "${target}".`);
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.json(data);
+  });
+
+  router.get('/metro-reach', (req, res) => {
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.json(metroReach());
   });
 
   router.get('/search', (req, res) => {

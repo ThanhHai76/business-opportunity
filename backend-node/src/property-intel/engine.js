@@ -307,9 +307,16 @@ function search(query, lang) {
   return { results: [...wards, ...projects].slice(0, 8) };
 }
 
-/** Featured ward: outside the existing central city, the most growth-driven one (infrastructure + pole + new development). */
+/**
+ * Featured ward (the overview page, and the AI's ward when a question names none): the one chosen here, or — if it
+ * is missing from the data — the most growth-driven ward outside the existing central city (infrastructure + pole +
+ * new development).
+ */
+const FEATURED_WARD = 'phuong-tay-ho';
 const growth = (slug) => ['infrastructure', 'planning', 'development'].reduce((s, k) => s + M.SCORES.get(slug).values[k], 0);
-const FEATURED = M.RANKED.filter((slug) => !M.FACTS.get(slug).poles.some((x) => x.pole.slug === 'trung-tam' && x.d <= x.pole.radiusKm)).sort((a, b) => growth(b) - growth(a))[0];
+const FEATURED = M.SCORES.has(FEATURED_WARD)
+  ? FEATURED_WARD
+  : M.RANKED.filter((slug) => !M.FACTS.get(slug).poles.some((x) => x.pole.slug === 'trung-tam' && x.d <= x.pole.radiusKm)).sort((a, b) => growth(b) - growth(a))[0];
 
 function overview(lang) {
   const w = getWard(FEATURED, lang);

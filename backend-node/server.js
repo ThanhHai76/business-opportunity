@@ -26,6 +26,7 @@ const { createAccounts } = require('./src/accounts');
 const { createBilling } = require('./src/billing');
 const { createPaidReports } = require('./src/reports');
 const { createAiMeter } = require('./src/billing/ai-meter');
+const { createPremiumGate } = require('./src/billing/premium-gate');
 const { createMailer } = require('./src/mailer');
 
 const PORT = process.env.PORT || 8000;
@@ -80,9 +81,12 @@ function createApp(options = {}) {
   const mailer = options.mailer ?? createMailer({ log: options.log !== false });
   const accounts = createAccounts({ isAllowedOrigin, mailer, ...options.accounts });
   const meter = createAiMeter({ accounts, isAllowedOrigin, ...options.aiMeter });
+  // Premium-only data of the tools, locked only while Premium can be bought (`billing` is created below; asked per request).
+  const premium = createPremiumGate({ accounts, forSale: () => billing.enabled, ...options.premium });
+  accounts.usePremiumGate(premium); // the limit of saved reports
 
   // Business Opportunity Map (Hanoi wards, OpenStreetMap data; AI answers from the data).
-  const opportunity = createOpportunityMap({ meter, ...options.opportunity });
+  const opportunity = createOpportunityMap({ meter, premium, ...options.opportunity });
   app.use('/api/opportunity', opportunity.router);
 
   // Hanoi Living Score (its own JSON error format, rate limiting and security headers).
@@ -94,7 +98,7 @@ function createApp(options = {}) {
   app.use('/api/future-map', futureMap.router);
 
   // AI Property Intelligence (real data; Claude when ANTHROPIC_API_KEY is set, template answers otherwise).
-  const propertyIntel = createPropertyIntel({ meter, ...options.propertyIntel });
+  const propertyIntel = createPropertyIntel({ meter, premium, ...options.propertyIntel });
   app.use('/api/property-intel', propertyIntel.router);
 
   // Hanoi Time Machine AI Storyteller (grounded in the page's own landmark data; mock unless ANTHROPIC_API_KEY is set).
@@ -105,9 +109,9 @@ function createApp(options = {}) {
   app.use('/api/account', accounts.router);
 
   // Purchases (report credits, AI question packs, Premium) and the paid reports they buy; both need accounts.
-  const billing = createBilling({ accounts, isAllowedOrigin, meter, ...options.billing });
+  const billing = createBilling({ accounts, isAllowedOrigin, meter, premium, ...options.billing });
   app.use('/api/billing', billing.router);
-  app.use('/api/reports', createPaidReports({ accounts }).router);
+  app.use('/api/reports', createPaidReports({ accounts, premium }).router);
 
   // Unmatched routes and uncaught errors still respond with JSON, matching
   // every other endpoint's contract (the frontend never has to special-case
@@ -121,7 +125,7 @@ function createApp(options = {}) {
     res.status(500).json({ detail: 'Internal server error' });
   });
 
-  return { app, living, accounts, billing, meter, mailer };
+  return { app, living, accounts, billing, meter, mailer, premium };
 }
 
 async function main() {

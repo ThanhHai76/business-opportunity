@@ -48,7 +48,7 @@ for (const [name, makeStore] of stores) {
 
     before(async () => {
       store = await makeStore();
-      const { app } = createApp({ log: false, accounts: { store, rateLimits: { login: 1000, register: 1000 } } });
+      const { app } = createApp({ log: false, premium: { mode: 'off' }, accounts: { store, rateLimits: { login: 1000, register: 1000 } } });
       await new Promise((resolve) => {
         server = app.listen(0, resolve);
       });
@@ -146,16 +146,16 @@ for (const [name, makeStore] of stores) {
       assert.deepEqual((await b('GET', '/reports')).body.items, []);
     });
 
-    it('validates reports and keeps at most 30', async () => {
+    it('validates reports and keeps at most 100', async () => {
       const b = browser();
       await b('POST', '/register', { email: 'giang@example.com', password: '12345678' });
       assert.equal((await b('PUT', '/reports', report('Bad Slug'))).status, 400);
       assert.equal((await b('PUT', '/reports', { ...report('phuong-lang'), extra: 'x' })).status, 400);
       assert.equal((await b('PUT', '/reports', report('phuong-lang', { score: 500 }))).status, 400);
-      for (let i = 0; i < 32; i++) await b('PUT', '/reports', report(`w-${i}`));
+      for (let i = 0; i < 102; i++) await b('PUT', '/reports', report(`w-${i}`));
       const items = (await b('GET', '/reports')).body.items;
-      assert.equal(items.length, 30);
-      assert.equal(items[0].ward, 'w-31');
+      assert.equal(items.length, 100);
+      assert.equal(items[0].ward, 'w-101');
     });
 
     it('imports the reports kept in the browser, never overwriting a newer saved copy', async () => {

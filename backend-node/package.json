@@ -16,7 +16,8 @@
     "data:opportunity": "node scripts/build-opportunity-osm.js",
     "data:property": "node scripts/build-property-osm.js",
     "data:landprice": "node scripts/build-landprice.js",
-    "data:travel": "node scripts/build-property-travel.js"
+    "data:travel": "node scripts/build-property-travel.js",
+    "data:wardtimes": "node scripts/build-property-commute.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",
