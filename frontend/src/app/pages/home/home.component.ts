@@ -3,11 +3,12 @@ import { RouterLink } from '@angular/router';
 import { AccountService } from '../../services/account.service';
 import { BillingService } from '../../services/billing.service';
 import { LegalLinksComponent } from '../legal/legal-links.component';
+import { HeroSkylineComponent } from './hero-skyline.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, LegalLinksComponent],
+  imports: [RouterLink, LegalLinksComponent, HeroSkylineComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })

@@ -110,7 +110,7 @@
             </thead>
             <tbody>
               <tr class="total">
-                <th scope="row">Living Score</th>
+                <th scope="row">{{ t().nav.scoreName }}</th>
                 @for (area of r.areas; track area.slug) {
                   <td [class.best]="area.slug === r.bestOverall">{{ area.livingScore | num: lang() : 1 }}/100</td>
                 }

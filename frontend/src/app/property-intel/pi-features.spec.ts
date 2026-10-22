@@ -1,10 +1,13 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { PiCompareComponent } from './components/pi-compare.component';
+import { BillingService } from '../services/billing.service';
+import { PremiumPromptService } from '../services/premium-prompt.service';
+import { PiCompareComponent, compareCsv } from './components/pi-compare.component';
 import { DEFAULT_WEIGHTS, decodeWeights, encodeWeights, isDefaultWeights, rankWards, weightedScore } from './pi-weights';
 import { WardSummary } from './pi.models';
-import { PiStateService, initialState } from './pi.service';
+import { FREE_COMPARE, PiStateService, initialState } from './pi.service';
 
 const values = (connectivity: number, infrastructure: number, population: number | null = 50) => ({
   connectivity,
@@ -65,10 +68,10 @@ describe('Potential score weights', () => {
 });
 
 describe('Shared links with weights and a comparison', () => {
-  it('reads ?w= and ?c= (at most three wards)', () => {
-    const s = initialState(null, '?w=0,50,10,10,20,10&c=phuong-a,phuong-b,phuong-c,phuong-d');
+  it('reads ?w= and ?c= (at most five wards)', () => {
+    const s = initialState(null, '?w=0,50,10,10,20,10&c=phuong-a,phuong-b,phuong-c,phuong-d,phuong-e,phuong-f');
     expect(s.weights.infrastructure).toBe(50);
-    expect(s.compare).toEqual(['phuong-a', 'phuong-b', 'phuong-c']);
+    expect(s.compare).toEqual(['phuong-a', 'phuong-b', 'phuong-c', 'phuong-d', 'phuong-e']);
   });
 
   it('drops invalid saved comparison and watch entries', () => {
@@ -98,12 +101,12 @@ describe('Shared links with weights and a comparison', () => {
       expect(state.customWeights()).toBeFalse();
     });
 
-    it('keeps the three most recent wards in the comparison', () => {
+    it('keeps the five most recent wards in the comparison', () => {
       const state = TestBed.inject(PiStateService);
-      for (const s of ['a', 'b', 'c', 'd']) state.toggleCompare(s);
-      expect(state.compare()).toEqual(['b', 'c', 'd']);
+      for (const s of ['a', 'b', 'c', 'd', 'e', 'f']) state.toggleCompare(s);
+      expect(state.compare()).toEqual(['b', 'c', 'd', 'e', 'f']);
       state.toggleCompare('c');
-      expect(state.compare()).toEqual(['b', 'd']);
+      expect(state.compare()).toEqual(['b', 'd', 'e', 'f']);
     });
 
     it('watches wards apart from projects', () => {
@@ -150,5 +153,33 @@ describe('PiCompareComponent', () => {
     expect(el.textContent).toContain('70');
     expect(el.textContent).toContain('#1');
     expect(el.querySelector('.cmp__hint')).not.toBeNull();
+  });
+});
+
+describe('Property Intelligence comparison and Premium', () => {
+  beforeEach(() => {
+    localStorage.removeItem('pi.state.v2');
+    TestBed.resetTestingModule();
+  });
+  afterEach(() => localStorage.removeItem('pi.state.v2'));
+
+  it('compares two wards without Premium, asks for it on a third, and lets existing ones be removed', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), { provide: BillingService, useValue: { premiumLocked: signal(true) } }] });
+    const state = TestBed.inject(PiStateService);
+    const prompt = TestBed.inject(PremiumPromptService);
+    expect(state.compareLimit()).toBe(FREE_COMPARE);
+    state.toggleCompare('a');
+    state.toggleCompare('b');
+    expect(prompt.ask()).toBeNull();
+    state.toggleCompare('c');
+    expect(state.compare()).toEqual(['a', 'b']);
+    expect(prompt.ask()?.feature).toBe(state.t().premium.compare);
+    state.toggleCompare('a');
+    expect(state.compare()).toEqual(['b']);
+  });
+
+  it('writes the comparison as CSV with one column per ward, quoting what needs it', () => {
+    const csv = compareCsv(['Phường A', 'Phường "B"'], [{ label: 'Điểm, tiềm năng', cells: ['70', '65'] }]);
+    expect(csv).toBe('﻿,Phường A,"Phường ""B"""\n"Điểm, tiềm năng",70,65');
   });
 });

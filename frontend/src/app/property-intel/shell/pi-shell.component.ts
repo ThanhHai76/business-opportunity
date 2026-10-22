@@ -3,7 +3,7 @@ import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-i
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subject, catchError, debounceTime, distinctUntilChanged, filter, map, of, startWith, switchMap } from 'rxjs';
 import { Horizon, SearchResult } from '../pi.models';
-import { DEFAULT_STATE, MAX_COMPARE, PiApiService, PiStateService } from '../pi.service';
+import { DEFAULT_STATE, FREE_WATCH, MAX_COMPARE, PiApiService, PiStateService } from '../pi.service';
 import { decodeWeights } from '../pi-weights';
 
 /**
@@ -107,6 +107,9 @@ import { decodeWeights } from '../pi-weights';
                       <button type="button" class="pi-watch__x" (click)="state.toggleWatch(p.slug)" [attr.aria-label]="tx.watchList.remove">×</button>
                     </div>
                   }
+                }
+                @if (state.premiumLocked()) {
+                  <button type="button" class="pi-watch__limit" (click)="state.askPremium(tx.premium.watch)"><span aria-hidden="true">★</span> {{ tx.premium.watchLimit(freeWatch) }}</button>
                 }
               </div>
             }
@@ -214,6 +217,7 @@ export class PiShellComponent {
     return this.state.watchlist().map((slug) => list.find((p) => p.slug === slug)).filter((p) => !!p);
   });
   /** Only entries that still exist (a project removed since it was watched does not count). */
+  protected readonly freeWatch = FREE_WATCH;
   protected readonly watchCount = computed(() => this.watchedWards().length + this.watchedProjects().length);
 
   protected openWard(slug: string): void {

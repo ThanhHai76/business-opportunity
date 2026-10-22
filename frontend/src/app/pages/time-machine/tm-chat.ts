@@ -212,7 +212,7 @@ export class TmChat {
       const data = (await res.json().catch(() => null)) as (StorytellerAnswer & { message?: string }) | null;
       if (!res.ok || !data) throw new Error(data?.message ?? `HTTP ${res.status}`);
       const src = data.outOfScope
-        ? this.ctx.tr('Ngoài phạm vi dữ liệu của Time Machine', 'Outside the Time Machine’s data')
+        ? this.ctx.tr('Ngoài phạm vi dữ liệu của Hà Nội xưa và nay', 'Outside the Time Machine’s data')
         : data.provider === 'anthropic'
           ? this.ctx.tr('AI (Claude) · chỉ dựa trên dữ liệu của trang', 'AI (Claude) · based only on this page’s data')
           : data.quota

@@ -198,7 +198,7 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
     const url = this.shareUrl();
     if (navigator.share) {
       try {
-        await navigator.share({ title: `${this.lm(this.state.landmark).name} · ${this.currentEra().year} · Hanoi Time Machine`, url });
+        await navigator.share({ title: `${this.lm(this.state.landmark).name} · ${this.currentEra().year} · ${this.tr('Hà Nội xưa và nay', 'Hanoi Time Machine')}`, url });
       } catch {
         // share sheet closed — nothing to do
       }

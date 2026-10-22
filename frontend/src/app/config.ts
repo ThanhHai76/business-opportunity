@@ -1,8 +1,17 @@
 // Runtime config — no build-time environments needed.
-// On localhost (ng serve, a preview) the API is backend-node on port 8000. Deployed, the page and the API share one
-// origin (nginx forwards /api to backend-node, see frontend/nginx.conf), so the session cookie stays first-party.
-const onLocalhost = typeof location !== 'undefined' && /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-export const API_BASE_URL = onLocalhost ? 'http://localhost:8000' : '';
+/**
+ * Where the API is.
+ *  - A page on localhost WITH a port in its address (ng serve on 4200, a preview, the dev compose on 8080) talks to
+ *    backend-node on port 8000.
+ *  - A page on a standard port (https://localhost: the docker stack, where Caddy sends /api to the backend) and any real
+ *    domain use the same origin, so the session cookie stays first-party (nginx / Caddy forward /api, see
+ *    frontend/nginx.conf and deploy/Caddyfile).
+ */
+export function apiBaseUrl(hostname: string, port: string): string {
+  const local = /^(localhost|127\.0\.0\.1)$/.test(hostname);
+  return local && port !== '' ? 'http://localhost:8000' : '';
+}
+export const API_BASE_URL = typeof location === 'undefined' ? '' : apiBaseUrl(location.hostname, location.port);
 
 // Accounts and saved reports (PostgreSQL), under /api/account.
 export const ACCOUNT_API_URL = `${API_BASE_URL}/api/account`;

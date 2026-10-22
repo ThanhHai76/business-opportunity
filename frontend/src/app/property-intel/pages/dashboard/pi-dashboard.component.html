@@ -1,8 +1,15 @@
 @let tx = t();
 @let lang = state.lang();
-<div class="dash" [class.layers-open]="layersOpen()">
-  <!-- ============================== left: map layers -->
-  <aside class="layers" [attr.aria-label]="tx.layersTitle">
+<div
+  class="dash"
+  [class.layers-open]="layersOpen()"
+  [class.hide-layers]="hidden().layers"
+  [class.hide-analysis]="hidden().analysis"
+  [class.hide-charts]="hidden().charts"
+  [class.hide-ai]="hidden().ai"
+>
+  <!-- ============================== left: map layers (inert while hidden: no focus, not read out) -->
+  <aside class="layers" [attr.aria-label]="tx.layersTitle" [attr.inert]="hidden().layers ? '' : null">
     <div class="layers__head">
       <span class="pi-kicker layers__title">{{ tx.layersTitle }}</span>
       <div class="layers__presets">
@@ -44,7 +51,12 @@
         <div class="layers__group-title">{{ tx.horizon }}</div>
         <div class="pi-seg pi-seg--amber" role="group" [attr.aria-label]="tx.horizon">
           @for (h of horizons; track h) {
-            <button type="button" class="pi-mono" [attr.aria-pressed]="state.horizon() === h" [title]="tx.horizonHint[h]" (click)="state.set('horizon', h)">{{ h }}</button>
+            <button type="button" class="pi-mono" [attr.aria-pressed]="state.horizon() === h" [title]="tx.horizonHint[h]" (click)="state.setHorizon(h)">
+              {{ h }}
+              @if (h !== horizons[0] && state.premiumLocked()) {
+                <span class="pi-pro" [attr.aria-label]="tx.premium.badge">★</span>
+              }
+            </button>
           }
         </div>
         <p class="layers__hint">{{ tx.horizonHint[state.horizon()] }}</p>
@@ -84,6 +96,26 @@
         @if (d(); as d) {
           <div class="pi-glass map__pill"><i class="dot" aria-hidden="true"></i>{{ tx.selected(d.name, formatNum(d.areaKm2, lang)) }}</div>
         }
+
+        <!-- show / hide the panels around the map, to see more of it -->
+        <div class="pi-glass panel-toggles" role="group" [attr.aria-label]="tx.panels.aria">
+          <button type="button" class="only-wide" [attr.aria-pressed]="!hidden().layers" [attr.aria-label]="tx.panels.layers" [title]="tx.panels.layers" (click)="togglePanel('layers')">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="1.5" /><path d="M6 3v10" /></svg>
+          </button>
+          <button type="button" class="only-wide" [attr.aria-pressed]="!hidden().analysis" [attr.aria-label]="tx.panels.analysis" [title]="tx.panels.analysis" (click)="togglePanel('analysis')">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="1.5" /><path d="M10 3v10" /></svg>
+          </button>
+          <button type="button" [attr.aria-pressed]="!hidden().charts" [attr.aria-label]="tx.panels.charts" [title]="tx.panels.charts" (click)="togglePanel('charts')">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="1.5" /><path d="M2 10h12" /></svg>
+          </button>
+          <button type="button" [attr.aria-pressed]="!hidden().ai" [attr.aria-label]="tx.panels.ai" [title]="tx.panels.ai" (click)="togglePanel('ai')">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M8 2l1.4 3.6L13 7l-3.6 1.4L8 12 6.6 8.4 3 7l3.6-1.4z" /></svg>
+          </button>
+          <span class="panel-toggles__sep" aria-hidden="true"></span>
+          <button type="button" class="panel-toggles__focus" [attr.aria-pressed]="allPanelsHidden()" (click)="focusMap()">
+            {{ allPanelsHidden() ? tx.panels.showAll : tx.panels.focus }}
+          </button>
+        </div>
       </div>
 
       @if (layers().status === 'loading') {
@@ -117,10 +149,12 @@
       </div>
     </div>
 
-    <pi-ai-panel class="ai-slot" [wardName]="d()?.name ?? ''" />
+    @if (!hidden().ai) {
+      <pi-ai-panel class="ai-slot" [wardName]="d()?.name ?? ''" (closed)="togglePanel('ai')" />
+    }
 
     <!-- bottom charts: infrastructure, amenities, population (ward) · apartment prices, launches (city, CBRE) -->
-    <div class="charts">
+    <div class="charts" [attr.inert]="hidden().charts ? '' : null">
       @if (d(); as d) {
         <div class="chart">
           <div class="chart__head"><span>{{ tx.charts.infraTimeline }}</span><small>{{ tx.charts.infraTimelineSub }}</small></div>
@@ -222,7 +256,7 @@
   </section>
 
   <!-- ============================== right: ward intelligence -->
-  <aside class="district" [attr.aria-label]="tx.ward.kicker">
+  <aside class="district" [attr.aria-label]="tx.ward.kicker" [attr.inert]="hidden().analysis ? '' : null">
     @switch (detail().status) {
       @case ('loading') {
         <div class="pi-skeleton" style="height: 60px"></div>
@@ -306,10 +340,13 @@
             @if (weightsOpen()) {
               <div class="weights" role="group" [attr.aria-label]="tx.weights.title">
                 <span class="pi-kicker">{{ tx.weights.title }}</span>
+                @if (state.premiumLocked()) {
+                  <button type="button" class="pi-pro-note" (click)="state.askPremium(tx.premium.weights)"><span aria-hidden="true">★</span> {{ tx.premium.weightsLocked }}</button>
+                }
                 @for (k of criteriaKeys; track k) {
                   <label class="weights__row">
                     <span>{{ tx.criteriaLabels[k] }}</span>
-                    <input type="range" min="0" max="50" step="5" [value]="state.weights()[k]" (input)="setWeight(k, $any($event.target).value)" />
+                    <input type="range" min="0" max="50" step="5" [value]="state.weights()[k]" [disabled]="state.premiumLocked()" (input)="setWeight(k, $any($event.target).value)" />
                     <span class="pi-mono">{{ state.weights()[k] }}%</span>
                   </label>
                 }

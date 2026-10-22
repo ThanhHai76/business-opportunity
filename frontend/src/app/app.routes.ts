@@ -9,13 +9,13 @@ export const routes: Routes = [
   },
   {
     path: 'opportunity-map',
-    title: 'Business Opportunity Map',
+    title: 'Mở gì ở đâu · Hanoi Century Vista',
     loadComponent: () =>
       import('./opportunity/opportunity.component').then((m) => m.OpportunityComponent),
   },
   {
     path: 'time-machine',
-    title: 'Hanoi Time Machine',
+    title: 'Hà Nội xưa và nay · Hanoi Century Vista',
     loadComponent: () =>
       import('./pages/time-machine/time-machine.component').then(
         (m) => m.TimeMachineComponent
@@ -27,8 +27,13 @@ export const routes: Routes = [
   },
   {
     path: 'future-map',
-    title: 'Hanoi Future Map',
+    title: 'Hà Nội tương lai · Hanoi Century Vista',
     loadComponent: () => import('./future-map/future-map.component').then((m) => m.FutureMapComponent),
+  },
+  {
+    path: 'career',
+    title: 'La bàn nghề nghiệp Hà Nội · Hanoi Century Vista',
+    loadComponent: () => import('./career/career.component').then((m) => m.CareerComponent),
   },
   // The Business Copilot was merged into the Business Opportunity Map: every old link lands there.
   { path: 'business-copilot', pathMatch: 'full', redirectTo: 'opportunity-map' },

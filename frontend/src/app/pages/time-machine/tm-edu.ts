@@ -426,7 +426,7 @@ export class TmEdu {
       sheet.appendChild(el);
       return el;
     };
-    add('h1', ctx.tr('Hanoi Time Machine — Phiếu học tập', 'Hanoi Time Machine — Worksheet'));
+    add('h1', ctx.tr('Hà Nội xưa và nay — Phiếu học tập', 'Hanoi Time Machine — Worksheet'));
     add('p', `${ctx.tr('Chủ đề', 'Topic')}: ${this.scopeLabel(this.scope)} · ${ctx.tr('Mã đề', 'Quiz code')}: ${this.seed}`);
     add('p', ctx.tr('Họ tên: ______________________   Lớp: ________   Ngày: ________', 'Name: ______________________   Class: ________   Date: ________'), 'tm-ws-lines');
     add('h2', ctx.tr('Phần 1 — Chọn đáp án đúng', 'Part 1 — Choose the right answer'));
@@ -451,7 +451,7 @@ export class TmEdu {
       ul.appendChild(li);
     });
     sheet.appendChild(ul);
-    add('p', ctx.tr('Nguồn: câu chuyện và các mốc sự kiện trên Hanoi Time Machine (tóm tắt từ Wikipedia, trang chính thức của di tích, UNESCO).', 'Source: stories and key events on Hanoi Time Machine (summarised from Wikipedia, official relic sites, UNESCO).'), 'tm-ws-source');
+    add('p', ctx.tr('Nguồn: câu chuyện và các mốc sự kiện trên Hà Nội xưa và nay (tóm tắt từ Wikipedia, trang chính thức của di tích, UNESCO).', 'Source: stories and key events on Hanoi Time Machine (summarised from Wikipedia, official relic sites, UNESCO).'), 'tm-ws-source');
 
     add('h2', ctx.tr('Đáp án', 'Answer key'), 'tm-ws-break');
     const key = document.createElement('ol');

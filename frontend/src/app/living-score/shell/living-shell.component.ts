@@ -73,7 +73,7 @@ export class LivingShellComponent {
     const link = url.toString();
     try {
       if (navigator.share && matchMedia('(pointer: coarse)').matches) {
-        await navigator.share({ title: 'Hanoi Living Score', url: link });
+        await navigator.share({ title: this.lang.lang() === 'en' ? 'Hanoi Living Score' : 'Điểm đáng sống · Hanoi Century Vista', url: link });
         return;
       }
       await navigator.clipboard.writeText(link);

@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, ViewChild, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, ViewChild, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
+import { isPremiumRequired } from '../../../services/premium-prompt.service';
 import { ThemeService } from '../../../services/theme.service';
 import { PiQualityComponent } from '../../components/pi-quality.component';
 import { SourceQuality, estimateCount, qualityText } from '../../components/pi-quality.view';
@@ -10,6 +11,7 @@ import { LAND_STOPS, PiAreaMapComponent } from '../../components/pi-area-map.com
 import { PiCompareComponent } from '../../components/pi-compare.component';
 import { PiDistancePipe, PiNumPipe, areaPoints, formatInt, formatNum, linePoints } from '../../pi-format';
 import { PiText } from '../../pi-i18n';
+import { PanelKey, PanelsHidden, allPanelsHidden, readHidden, saveHidden, setAllPanels, toggledPanel } from '../../pi-panels';
 import { CRITERIA_KEYS, DEFAULT_WEIGHTS, rankWards } from '../../pi-weights';
 import { Basemap, CriterionKey, Horizon, LayerKey, Lens, MapLayers, WardDetail, WardSummary } from '../../pi.models';
 import { PiApiService, PiStateService, describeError } from '../../pi.service';
@@ -71,6 +73,9 @@ export class PiDashboardComponent {
   protected readonly weightsOpen = signal(false);
   protected readonly compareOpen = signal(this.state.compare().length > 0);
   protected readonly reportOpen = signal(false);
+  /** The panels around the map the user has hidden to see more of it (remembered in this browser). */
+  protected readonly hidden = signal<PanelsHidden>(readHidden());
+  protected readonly allPanelsHidden = computed(() => allPanelsHidden(this.hidden()));
   protected readonly criteriaKeys = CRITERIA_KEYS;
   protected readonly defaultWeights = DEFAULT_WEIGHTS;
 
@@ -79,7 +84,12 @@ export class PiDashboardComponent {
       switchMap(({ horizon, lang }) =>
         this.api.map(horizon, lang).pipe(
           map((value): Load<MapLayers> => ({ status: 'ok', value })),
-          catchError((err) => of<Load<MapLayers>>({ status: 'error', message: describeError(err, lang) })),
+          catchError((err) => {
+            // The future layers are Premium (saved state or a shared link on 2030/2045): back to today.
+            if (!isPremiumRequired(err)) return of<Load<MapLayers>>({ status: 'error', message: describeError(err, lang) });
+            this.state.set('horizon', this.horizons[0]);
+            return of<Load<MapLayers>>({ status: 'loading' });
+          }),
           startWith<Load<MapLayers>>({ status: 'loading' }),
         ),
       ),
@@ -222,6 +232,46 @@ export class PiDashboardComponent {
   protected readonly formatInt = formatInt;
   protected readonly formatNum = formatNum;
 
+  constructor() {
+    // The map's box changes with the panels around it: redraw it at its new size once they have finished sliding.
+    effect(() => {
+      this.hidden();
+      untracked(() => setTimeout(() => this.mapCmp?.resize(), 260));
+    });
+    // A question is on its way (asked here, or from the overview page): its answer must be in view.
+    effect(() => {
+      if (this.state.asking()) untracked(() => this.showPanel('ai'));
+    });
+  }
+
+  // ---------------------------------------------------------------- panels around the map
+  private setHidden(next: PanelsHidden): void {
+    this.hidden.set(next);
+    saveHidden(next);
+  }
+
+  protected togglePanel(key: PanelKey): void {
+    this.setHidden(toggledPanel(this.hidden(), key));
+  }
+
+  protected showPanel(key: PanelKey): void {
+    if (this.hidden()[key]) this.togglePanel(key);
+  }
+
+  /** "Map only": hides every panel; pressed again, shows them all. */
+  protected focusMap(): void {
+    this.setHidden(setAllPanels(!this.allPanelsHidden()));
+  }
+
+  /** Ctrl J asks the AI: when its panel is hidden, bring it back first (the panel focuses its own box when it is there). */
+  @HostListener('document:keydown', ['$event'])
+  protected onKey(event: KeyboardEvent): void {
+    if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'j' || !this.hidden().ai) return;
+    event.preventDefault();
+    this.showPanel('ai');
+    setTimeout(() => document.querySelector<HTMLInputElement>('pi-ai-panel input')?.focus(), 80);
+  }
+
   // ---------------------------------------------------------------- actions
   protected toggle(key: LayerKey): void {
     this.state.toggleLayer(key);
@@ -258,6 +308,7 @@ export class PiDashboardComponent {
   }
 
   protected setWeight(key: CriterionKey, value: string): void {
+    if (this.state.premiumLocked()) return this.state.askPremium(this.t().premium.weights);
     this.state.setWeight(key, Number(value));
   }
 
@@ -283,6 +334,6 @@ export class PiDashboardComponent {
 
   /** Right inset for fitBounds: the floating AI panel only overlays the map on wide screens. */
   protected rightInset(): number {
-    return typeof window !== 'undefined' && window.innerWidth > 1280 ? 400 : 0;
+    return !this.hidden().ai && typeof window !== 'undefined' && window.innerWidth > 1280 ? 400 : 0;
   }
 }

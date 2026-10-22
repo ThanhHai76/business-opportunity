@@ -99,6 +99,49 @@ export interface Travel {
   note: string;
 }
 
+/** Minutes by car from one ward to every ward (GET /commute/:slug): OSRM, free-flow, between ward centres. */
+export interface WardCommute {
+  from: string;
+  generatedAt: string;
+  source: string;
+  note: string;
+  /** Ward slug → minutes (0 for the ward itself; null: no route). */
+  minutes: Record<string, number | null>;
+}
+
+/** Minutes by car from every ward to one place of work (GET /commute-to/:target): a ward, or Hồ Gươm, the offices, Nội Bài. */
+export interface WardCommuteTo {
+  to: string;
+  name: string;
+  generatedAt: string;
+  source: string;
+  note: string;
+  /** Ward slug → minutes (null: no route). */
+  minutes: Record<string, number | null>;
+}
+
+/** The metro of a place (GET /metro-reach): the lines within reach at each horizon (each adds to the last). */
+export type MetroHorizon = 'now' | 'soon' | 'plan';
+
+export interface MetroPoint {
+  lines: Record<MetroHorizon, string[]>;
+  nearest: {
+    now: { name: string; line: string; distanceM: number } | null;
+    soon: { name: string; line: string; distanceM: number; openYear?: number } | null;
+    /** A planned corridor: schematic when the plans give no exact route. */
+    plan: { line: string; name: string; distanceM: number; year: number; schematic: boolean } | null;
+  };
+}
+
+export interface MetroReach {
+  /** A station within this distance counts as within reach (km). */
+  stationKm: number;
+  corridorKm: number;
+  soonYear: number;
+  wards: Record<string, MetroPoint>;
+  places: Record<string, MetroPoint & { name: string }>;
+}
+
 /** City-wide apartment market as published (CBRE quarters, Savills). */
 export interface CityMarket {
   quarters: Quarter[];

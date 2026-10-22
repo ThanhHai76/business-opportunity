@@ -1,7 +1,9 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Injectable, WritableSignal, computed, inject, signal } from '@angular/core';
+import { Injectable, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Observable, shareReplay } from 'rxjs';
 import { PROPERTY_INTEL_API_URL } from '../config';
+import { BillingService } from '../services/billing.service';
+import { PremiumPromptService } from '../services/premium-prompt.service';
 import { PI_TEXT } from './pi-i18n';
 import { DEFAULT_WEIGHTS, Weights, decodeWeights, encodeWeights, isDefaultWeights } from './pi-weights';
 import {
@@ -13,10 +15,13 @@ import {
   LayerKey,
   Lens,
   MapLayers,
+  MetroReach,
   Overview,
   ProjectDetail,
   ProjectSummary,
   SearchResult,
+  WardCommute,
+  WardCommuteTo,
   WardDetail,
   WardSummary,
 } from './pi.models';
@@ -41,7 +46,7 @@ export class PiApiService {
   private cached<T>(url: string): Observable<T> {
     let hit = this.cache.get(url) as Observable<T> | undefined;
     if (!hit) {
-      hit = this.http.get<T>(url).pipe(shareReplay(1));
+      hit = this.http.get<T>(url, { withCredentials: true }).pipe(shareReplay(1)); // the session cookie: future planning layers are Premium
       this.cache.set(url, hit);
       // Failed requests must be retryable, not cached.
       hit.subscribe({ error: () => this.cache.delete(url) });
@@ -71,6 +76,21 @@ export class PiApiService {
 
   map(horizon: Horizon, lang: Lang): Observable<MapLayers> {
     return this.cached(`${this.base}/map?horizon=${horizon}&lang=${lang}`);
+  }
+
+  /** Minutes by car from a ward to every ward (the career compass). */
+  commute(slug: string, lang: Lang): Observable<WardCommute> {
+    return this.cached(`${this.base}/commute/${encodeURIComponent(slug)}?lang=${lang}`);
+  }
+
+  /** Minutes by car from every ward to one place of work (the career compass: where to live). */
+  commuteTo(target: string, lang: Lang): Observable<WardCommuteTo> {
+    return this.cached(`${this.base}/commute-to/${encodeURIComponent(target)}?lang=${lang}`);
+  }
+
+  /** Metro lines near every ward and place of work: now, when the stations under construction open, and under the plan. */
+  metroReach(): Observable<MetroReach> {
+    return this.cached(`${this.base}/metro-reach`);
   }
 
   /** Schools and health facilities, loaded only when that layer is switched on. */
@@ -121,14 +141,16 @@ export interface Persisted {
   compare: string[];
 }
 
-export const MAX_COMPARE = 3;
+/** Wards compared side by side: Premium (and when nothing is for sale), and without Premium while it is for sale. */
+export const MAX_COMPARE = 5;
+export const FREE_COMPARE = 2;
 
 export const DEFAULT_STATE: Persisted = {
   lang: 'vi',
   horizon: 2026,
   basemap: 'map',
   lens: 'potential',
-  ward: 'phuong-bo-de',
+  ward: 'phuong-tay-ho',
   project: 'vinhomes-skylake',
   layers: { ...DEFAULT_LAYERS },
   watchlist: [],
@@ -180,10 +202,16 @@ export interface ChatTurn {
   error?: string;
 }
 
+/** Wards and projects watched without Premium (while Premium is for sale). */
+export const FREE_WATCH = 3;
+
 /** What the user is looking at, shared by every Property Intelligence page and kept across reloads. */
 @Injectable({ providedIn: 'root' })
 export class PiStateService {
   private readonly api = inject(PiApiService);
+  private readonly premiumPrompt = inject(PremiumPromptService);
+  /** Premium features are locked: the 2030 and 2045 layers, custom weights, more than FREE_WATCH watched. */
+  readonly premiumLocked = inject(BillingService).premiumLocked;
   private readonly initial = initialState(readStorage(), typeof location !== 'undefined' ? location.search : '');
   private nextId = 1;
 
@@ -200,11 +228,37 @@ export class PiStateService {
   readonly weights = signal<Weights>(this.initial.weights);
   readonly customWeights = computed(() => !isDefaultWeights(this.weights()));
   readonly compare = signal<string[]>(this.initial.compare);
+  readonly compareLimit = computed(() => (this.premiumLocked() ? FREE_COMPARE : MAX_COMPARE));
 
   readonly chat = signal<ChatTurn[]>([]);
   readonly asking = signal(false);
   /** Project report dialog (opened from the shell header). */
   readonly reportOpen = signal(false);
+
+  constructor() {
+    // Once the future layers turn out to be locked (saved state or a shared link on 2030/2045), show today.
+    effect(() => {
+      if (this.premiumLocked() && this.horizon() !== HORIZONS[0]) untracked(() => this.set('horizon', HORIZONS[0]));
+    });
+  }
+
+  /** Opens the Premium prompt for a feature, in the page's language. */
+  askPremium(feature: string): void {
+    this.premiumPrompt.open(feature, this.lang());
+  }
+
+  /** Picks a planning horizon; the future ones ask for Premium while locked. */
+  setHorizon(h: Horizon): void {
+    if (h !== HORIZONS[0] && this.premiumLocked()) return this.askPremium(this.t().premium.horizon(h));
+    this.set('horizon', h);
+  }
+
+  /** False (and the Premium prompt) when one more watched item would go over the free limit. */
+  private canWatchMore(): boolean {
+    if (!this.premiumLocked() || this.watchlist().length + this.watchWards().length < FREE_WATCH) return true;
+    this.askPremium(this.t().premium.watch);
+    return false;
+  }
 
   toggleLayer(key: LayerKey): void {
     this.layers.update((l) => ({ ...l, [key]: !l[key] }));
@@ -222,11 +276,13 @@ export class PiStateService {
   }
 
   toggleWatch(slug: string): void {
+    if (!this.watchlist().includes(slug) && !this.canWatchMore()) return;
     this.watchlist.update((list) => (list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug]));
     this.save();
   }
 
   toggleWatchWard(slug: string): void {
+    if (!this.watchWards().includes(slug) && !this.canWatchMore()) return;
     this.watchWards.update((list) => (list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug]));
     this.save();
   }
@@ -245,8 +301,9 @@ export class PiStateService {
     this.setWeights(DEFAULT_WEIGHTS);
   }
 
-  /** Adds or removes a ward from the comparison; the oldest one leaves when a fourth is added. */
+  /** Adds or removes a ward from the comparison; without Premium a third asks for it, and with it the oldest leaves when a sixth is added. */
   toggleCompare(slug: string): void {
+    if (!this.compare().includes(slug) && this.compare().length >= this.compareLimit() && this.premiumLocked()) return this.askPremium(this.t().premium.compare);
     this.compare.update((list) => (list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug].slice(-MAX_COMPARE)));
     this.save();
   }

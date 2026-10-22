@@ -6,16 +6,17 @@ import { filter } from 'rxjs';
 import { SITE_URL } from '../config';
 
 const DEFAULT_DESCRIPTION =
-  'Hanoi Century Vista: bản đồ cơ hội kinh doanh, cỗ máy thời gian, điểm sống, bản đồ tương lai và phân tích bất động sản cho Hà Nội.';
+  'Hanoi Century Vista: mở gì ở đâu (bản đồ cơ hội kinh doanh), Hà Nội xưa và nay, điểm đáng sống, Hà Nội tương lai và chấm điểm bất động sản.';
 
 /** Description per route (first path segment). Anything not listed keeps the default. */
 export const ROUTE_DESCRIPTIONS: Record<string, string> = {
   '': DEFAULT_DESCRIPTION,
-  'opportunity-map': 'Bản đồ cơ hội kinh doanh Hà Nội: chấm điểm 79 phường/xã theo nhu cầu, cạnh tranh và rủi ro từ dữ liệu OpenStreetMap, kèm báo cáo và hỏi đáp AI.',
-  'time-machine': 'Hanoi Time Machine: xem các công trình Hà Nội qua từng thời kỳ, từ ảnh tư liệu xưa tới kịch bản tương lai, và hỏi AI kể chuyện dựa trên dữ liệu có nguồn.',
-  'living-score': 'Living Score: điểm chất lượng sống của từng khu vực Hà Nội theo tiêu chí bạn chọn.',
-  'future-map': 'Hanoi Future Map: các mốc quy hoạch Hà Nội giai đoạn 2026–2065 và Vùng Thủ đô, có nguồn trích dẫn.',
-  'property-intelligence': 'AI Property Intelligence: giá đất, thị trường và dự án bất động sản Hà Nội, kèm nguồn, ngày dữ liệu và độ tin cậy.',
+  'opportunity-map': 'Mở gì ở đâu — bản đồ cơ hội kinh doanh Hà Nội: chấm điểm 79 phường/xã theo nhu cầu, cạnh tranh và rủi ro từ dữ liệu OpenStreetMap, kèm báo cáo và hỏi đáp AI.',
+  'time-machine': 'Hà Nội xưa và nay (Hanoi Time Machine): xem các công trình Hà Nội qua từng thời kỳ, từ ảnh tư liệu xưa tới kịch bản tương lai, và hỏi AI kể chuyện dựa trên dữ liệu có nguồn.',
+  'living-score': 'Điểm đáng sống (Living Score): điểm chất lượng sống của từng khu vực Hà Nội theo tiêu chí bạn chọn.',
+  'future-map': 'Hà Nội tương lai (Hanoi Future Map): các mốc quy hoạch Hà Nội giai đoạn 2026–2065 và Vùng Thủ đô, có nguồn trích dẫn.',
+  'property-intelligence': 'Chấm điểm bất động sản (AI Property Intelligence): giá đất, thị trường và dự án bất động sản Hà Nội, kèm nguồn, ngày dữ liệu và độ tin cậy.',
+  career: 'La bàn nghề nghiệp Hà Nội: định hướng việc làm cho người thất nghiệp, đổi nghề, sinh viên mới ra trường và người đang đi làm muốn tham khảo thị trường, theo cách Hà Nội thay đổi, có nguồn trích dẫn.',
   premium: 'Gói Premium và lượt hỏi AI chuyên sâu cho các công cụ của Hanoi Century Vista.',
   terms: 'Điều khoản sử dụng Hanoi Century Vista.',
   privacy: 'Chính sách quyền riêng tư của Hanoi Century Vista.',

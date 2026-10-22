@@ -70,6 +70,91 @@
   color: var(--pi-faint);
 }
 
+.ai__expand {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--pi-violet) 30%, transparent);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--pi-violet) 10%, transparent);
+  color: var(--pi-violet-ink);
+  cursor: pointer;
+}
+
+.ai__hide {
+  margin-left: 8px;
+}
+
+.ai__expand:hover {
+  background: color-mix(in srgb, var(--pi-violet) 22%, transparent);
+}
+
+.ai__expand:focus-visible {
+  outline: 2px solid var(--pi-violet);
+  outline-offset: 2px;
+}
+
+/* ---------- expanded: bigger type for reading and typing (the dashboard makes the panel itself bigger) */
+.ai.is-wide .ai__head {
+  padding: 16px 22px;
+}
+
+.ai.is-wide .ai__log {
+  padding: 16px 22px;
+  gap: 14px;
+}
+
+.ai.is-wide .ai__q {
+  max-width: 72%;
+  font-size: 15px;
+}
+
+.ai.is-wide .ai__summary,
+.ai.is-wide .ai__suggest {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.ai.is-wide .ai__rows {
+  font-size: 14px;
+}
+
+.ai.is-wide .ai__rows > div {
+  grid-template-columns: 130px 1fr;
+}
+
+.ai.is-wide .ai__rows dt {
+  font-size: 12px;
+}
+
+.ai.is-wide .ai__callout p,
+.ai.is-wide .ai__empty {
+  font-size: 14px;
+}
+
+.ai.is-wide .ai__table {
+  font-size: 12.5px;
+}
+
+.ai.is-wide .ai__foot {
+  padding: 14px 22px 18px;
+}
+
+.ai.is-wide .ai__actions button {
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
+.ai.is-wide .ai__input {
+  height: 48px;
+}
+
+.ai.is-wide .ai__input input {
+  font-size: 15px;
+}
+
 /* ---------- conversation */
 .ai__log {
   position: relative; /* offsetParent for scrolling to the latest question */

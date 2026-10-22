@@ -1,14 +1,17 @@
 <div class="page">
   <main>
-    <section class="hero">
-      <span class="eyebrow">Năm công cụ · Ba nhóm · Một bản đồ khởi đầu</span>
-      <h1>Chọn cách bạn muốn khám phá thành phố</h1>
-      <p class="hero-sub">
-        Từ cơ hội kinh doanh, hành trình xuyên thời gian đến việc chọn nơi an cư —
-        năm công cụ tương tác dựng trên nền bản đồ đô thị, phục vụ năm mục đích
-        rất khác nhau.
-      </p>
-    </section>
+    <div class="hero-wrap">
+      <app-hero-skyline class="hero-art" />
+      <section class="hero">
+        <span class="eyebrow">Năm công cụ · Ba nhóm · Một bản đồ khởi đầu</span>
+        <h1>Chọn cách bạn muốn khám phá thành phố</h1>
+        <p class="hero-sub">
+          Từ cơ hội kinh doanh, hành trình xuyên thời gian đến việc chọn nơi an cư —
+          năm công cụ tương tác dựng trên nền bản đồ đô thị, phục vụ năm mục đích
+          rất khác nhau.
+        </p>
+      </section>
+    </div>
 
     <section class="cards">
       <h2 class="group-title">Khám phá Hà Nội <small>Lịch sử, quy hoạch, tương lai</small></h2>
@@ -17,7 +20,7 @@
           <span class="card-eyebrow">Tầm nhìn · Quy hoạch &amp; tương lai</span>
           <span class="card-icon">🛰️</span>
         </div>
-        <h2>Hanoi Future Map</h2>
+        <h2>Hà Nội tương lai</h2>
         <p class="card-desc">
           Quy hoạch Thủ đô trên bản đồ, từ hiện trạng 2026 đến tầm nhìn 2065:
           9 cực phát triển, 9 trục động lực, metro đang chạy, đang thi công và
@@ -37,7 +40,7 @@
           <span class="card-eyebrow">Trải nghiệm · Văn hoá &amp; giáo dục</span>
           <span class="card-icon">🕰️</span>
         </div>
-        <h2>Hanoi Time Machine</h2>
+        <h2>Hà Nội xưa và nay</h2>
         <p class="card-desc">
           Chọn một địa danh, kéo timeline từ 1926 đến 2100, nghe AI kể
           chuyện lịch sử có nguồn xác thực — hoặc mở chế độ AR để đặt Hà
@@ -54,13 +57,13 @@
         </a>
       </article>
 
-      <h2 class="group-title">Kinh doanh <small>Mở quán, chọn địa điểm</small></h2>
+      <h2 class="group-title">Kinh doanh và việc làm <small>Mở quán, tìm hướng nghề nghiệp</small></h2>
       <article class="card card-biz">
         <div class="card-top">
           <span class="card-eyebrow">B2B · Phân tích thị trường</span>
           <span class="card-icon">🗺️</span>
         </div>
-        <h2>Business Opportunity Map</h2>
+        <h2>Mở gì ở đâu</h2>
         <p class="card-desc">
           Phường nào ở Hà Nội nên mở gì — hôm nay và 3–5 năm tới — và có lời
           không? Điểm cơ hội cho 12 ngành theo từng phường/xã mới (2025) từ dữ
@@ -73,7 +76,28 @@
           <li>Dành cho chủ shop, SME, F&amp;B, chuỗi bán lẻ, nhà đầu tư</li>
         </ul>
         <a class="cta" routerLink="/opportunity-map">
-          Khám phá bản đồ <span aria-hidden="true">→</span>
+          Tìm nơi mở cửa hàng <span aria-hidden="true">→</span>
+        </a>
+      </article>
+      <article class="card card-career">
+        <div class="card-top">
+          <span class="card-eyebrow">Người tìm việc · Định hướng nghề nghiệp</span>
+          <span class="card-icon">🧭</span>
+        </div>
+        <h2>La bàn nghề nghiệp Hà Nội</h2>
+        <p class="card-desc">
+          Trả lời 5 câu hỏi ngắn để thấy những hướng nghề hợp với bạn theo cách Hà
+          Nội đang thay đổi: công nghệ cao, xây dựng, logistics, bán lẻ, du lịch,
+          tài chính hoặc tự kinh doanh — kèm kỹ năng, lộ trình và nơi tìm việc
+          chính thống.
+        </p>
+        <ul class="card-meta">
+          <li>7 hướng nghề · số liệu thị trường lao động và quy hoạch có nguồn</li>
+          <li>Chính sách hỗ trợ người thất nghiệp theo Luật Việc làm 2025</li>
+          <li>Dành cho người thất nghiệp, đổi nghề, sinh viên mới ra trường và người đang đi làm muốn xem thị trường</li>
+        </ul>
+        <a class="cta" routerLink="/career">
+          Tìm hướng đi nghề nghiệp <span aria-hidden="true">→</span>
         </a>
       </article>
 
@@ -83,7 +107,7 @@
           <span class="card-eyebrow">Nhà đầu tư · Bất động sản</span>
           <span class="card-icon">🏙️</span>
         </div>
-        <h2>AI Property Intelligence</h2>
+        <h2>Chấm điểm bất động sản</h2>
         <p class="card-desc">
           Điểm tiềm năng của 79 phường/xã Hà Nội từ dữ liệu thật: khoảng cách
           tới metro, cầu và Vành đai 4 đang xây, tuyến metro quy hoạch, cực phát
@@ -96,7 +120,7 @@
           <li>Dành cho người mua nhà, nhà đầu tư, môi giới</li>
         </ul>
         <a class="cta" routerLink="/property-intelligence">
-          Mở AI Property Intelligence <span aria-hidden="true">→</span>
+          Xem điểm bất động sản <span aria-hidden="true">→</span>
         </a>
       </article>
       <article class="card card-live">
@@ -104,14 +128,14 @@
           <span class="card-eyebrow">Người ở · Chọn nơi an cư</span>
           <span class="card-icon">📍</span>
         </div>
-        <h2>Hanoi Living Score</h2>
+        <h2>Điểm đáng sống</h2>
         <p class="card-desc">
           Chấm điểm mức độ đáng sống quanh 10 quận cũ của Hà Nội theo giao thông,
           giáo dục, y tế, công viên – hồ nước và tiện ích, đo từ dữ liệu
           OpenStreetMap — so sánh 2–3 khu vực và nhận gợi ý cá nhân hoá từ AI.
         </p>
         <ul class="card-meta">
-          <li>10 khu vực · 5 tiêu chí có dữ liệu · Personalized Score</li>
+          <li>10 khu vực · 5 tiêu chí có dữ liệu · điểm cá nhân hoá</li>
           <li>Bản đồ, so sánh, AI gợi ý Top 3 kèm lý do</li>
           <li>Dành cho người tìm nhà, gia đình trẻ, người chuyển việc</li>
         </ul>
@@ -129,7 +153,7 @@
             Bản đồ, điểm số và câu trả lời cơ bản luôn miễn phí.
             @if (billing.aiMetering()) {
               Đăng nhập để nhận {{ billing.aiLimits().freePerDay }} lượt AI chuyên sâu mỗi ngày
-              ({{ billing.aiLimits().storyFreePerDay }} lượt cho Time Machine).
+              ({{ billing.aiLimits().storyFreePerDay }} lượt cho Hà Nội xưa và nay).
               Premium nâng lên {{ billing.aiLimits().premiumPerDay }} lượt mỗi ngày.
             } @else {
               Premium thêm lượt hỏi AI chuyên sâu và credit báo cáo.

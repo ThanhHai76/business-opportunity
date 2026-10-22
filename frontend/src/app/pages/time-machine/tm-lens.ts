@@ -220,7 +220,7 @@ export class TmLens {
     let credit = `${ctx.tr('Ảnh xưa', 'Archive photo')}: ${then.photo.author} · ${then.photo.license}`;
     while (g.measureText(credit).width > OUT_W - 80 && credit.length > 10) credit = `${credit.slice(0, -2)}…`;
     g.fillText(credit, 40, OUT_H + 104);
-    g.fillText('Wikimedia Commons · Hanoi Time Machine', 40, OUT_H + 136);
+    g.fillText(`Wikimedia Commons · ${ctx.tr('Hà Nội xưa và nay', 'Hanoi Time Machine')}`, 40, OUT_H + 136);
 
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
     if (!blob) return;
@@ -228,7 +228,7 @@ export class TmLens {
     // Phones: the share sheet (save to photos, send…). Elsewhere: a download.
     if (navigator.canShare?.({ files: [file] })) {
       try {
-        await navigator.share({ files: [file], title: `${ctx.name(key)} · Hanoi Time Machine` });
+        await navigator.share({ files: [file], title: `${ctx.name(key)} · ${ctx.tr('Hà Nội xưa và nay', 'Hanoi Time Machine')}` });
         return;
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') return; // the visitor closed the share sheet

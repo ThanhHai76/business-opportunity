@@ -2,10 +2,10 @@ import { AskIntent, Lang, LayerKey, Lens } from './pi.models';
 
 /** Interface text of AI Property Intelligence. Data text (ward names, criteria details, answers) comes from the API. */
 const vi = {
-  brand: 'AI PROPERTY INTELLIGENCE',
-  brandAria: 'AI Property Intelligence — tổng quan',
+  brand: 'CHẤM ĐIỂM BẤT ĐỘNG SẢN',
+  brandAria: 'Chấm điểm bất động sản — tổng quan',
   tabs: { overview: 'Tổng quan', map: 'Bản đồ phân tích', projects: 'Dự án' },
-  tabsAria: 'Các phần của Property Intelligence',
+  tabsAria: 'Các phần của Chấm điểm bất động sản',
   city: 'Hà Nội',
   searchPlaceholder: 'Tìm phường/xã hoặc dự án…',
   searchAria: 'Tìm phường/xã hoặc dự án',
@@ -31,8 +31,8 @@ const vi = {
     kicker: 'AI PROPERTY INTELLIGENCE · HÀ NỘI',
     title: 'Dữ liệu phía sau từng nơi bạn định mua.',
     sub: 'Phường/xã nào ở Hà Nội đang có metro, cầu, Vành đai 4 và cực phát triển mới, giá đất Nhà nước ra sao, căn hộ quanh đó đang chào bán bao nhiêu.',
-    askAria: 'Đặt câu hỏi cho Property AI',
-    ask: 'Hỏi Property AI',
+    askAria: 'Đặt câu hỏi cho AI bất động sản',
+    ask: 'Hỏi AI bất động sản',
     stats: { wards: 'phường/xã được chấm', infra: 'công trình đang xây & quy hoạch', poles: 'cực phát triển (QĐ 2512)' },
     open: 'Mở bản đồ phân tích →',
     project: 'Xem một dự án →',
@@ -46,6 +46,15 @@ const vi = {
   presets: 'Bộ lọc nhanh',
   closeLayers: 'Đóng lớp bản đồ',
   openLayers: '☰ Lớp',
+  panels: {
+    aria: 'Hiện hoặc ẩn các khung quanh bản đồ',
+    layers: 'Lớp bản đồ (bên trái)',
+    analysis: 'Phân tích phường/xã (bên phải)',
+    charts: 'Biểu đồ phía dưới bản đồ',
+    ai: 'Hỏi AI bất động sản',
+    focus: 'Chỉ xem bản đồ',
+    showAll: 'Hiện lại các khung',
+  },
   layerGroups: { planning: 'Quy hoạch', mobility: 'Giao thông', market: 'Thị trường', social: 'Xã hội' },
   layers: {
     planning: 'Cực phát triển (QĐ 2512)',
@@ -129,7 +138,7 @@ const vi = {
     links: {
       opportunity: 'Cơ hội kinh doanh tại phường này',
       living: (n: string) => `Mức sống khu vực ${n}`,
-      future: (n: string) => `${n} trên Hanoi Future Map`,
+      future: (n: string) => `${n} trên Hà Nội tương lai`,
     },
     method: 'Cách tính',
     sources: 'Nguồn',
@@ -158,7 +167,10 @@ const vi = {
   },
 
   ai: {
-    title: 'Hỏi Property AI',
+    title: 'Hỏi AI bất động sản',
+    hide: 'Ẩn khung hỏi đáp',
+    expand: 'Mở rộng khung hỏi đáp',
+    collapse: 'Thu nhỏ khung hỏi đáp',
     sub: (claude: boolean): string => (claude ? 'Claude · chỉ trả lời từ dữ liệu trang · có nguồn' : 'Trả lời tự động từ dữ liệu trang · có nguồn'),
     empty: 'Hỏi về một phường/xã hay dự án ở Hà Nội — tiềm năng, hạ tầng sắp có, giá đất, so sánh hoặc tóm tắt.',
     thinking: 'Đang phân tích',
@@ -166,7 +178,7 @@ const vi = {
     sources: 'Nguồn',
     outOfScope: 'Ngoài phạm vi dữ liệu',
     inputPlaceholder: 'Hỏi về phường/xã, dự án…',
-    inputAria: 'Hỏi Property AI',
+    inputAria: 'Hỏi AI bất động sản',
     send: 'Gửi',
     actions: {
       analyze: 'Phân tích',
@@ -206,7 +218,7 @@ const vi = {
     nearby: 'Dự án lân cận',
     nearCols: { project: 'DỰ ÁN', price: 'TRIỆU/m²', distance: 'CÁCH' },
     source: 'Nguồn giá',
-    askAbout: 'Hỏi Property AI về dự án này →',
+    askAbout: 'Hỏi AI bất động sản về dự án này →',
     chips: { tod: (m: number) => `Bán kính TOD ${m} m`, walk: 'Đi bộ ~10 phút (800 m)', drive: 'Lái xe ~20 phút (7 km)' },
     selected: 'đang xem',
     stationLabel: (name: string, line: string) => `${name.toUpperCase()} · TUYẾN ${line}`,
@@ -237,7 +249,8 @@ const vi = {
     close: 'Thu gọn',
     open: (n: number) => `So sánh (${n})`,
     remove: 'Bỏ khỏi so sánh',
-    hint: 'Bấm "+ So sánh" ở bảng phường để thêm (tối đa 3).',
+    hint: (max: number) => `Bấm "+ So sánh" ở bảng phường để thêm (tối đa ${max}).`,
+    csv: 'Xuất CSV',
     rows: {
       score: 'Điểm tiềm năng',
       rank: 'Hạng',
@@ -258,6 +271,16 @@ const vi = {
     wards: 'Phường/xã',
     projects: 'Dự án',
     remove: 'Bỏ theo dõi',
+  },
+  premium: {
+    badge: 'Premium',
+    horizon: (h: number) => 'Lớp quy hoạch mốc ' + h,
+    weights: 'Trọng số tuỳ chỉnh',
+    weightsLocked: 'Chỉnh trọng số theo cách của bạn với Premium. Liên kết có trọng số người khác chia sẻ vẫn xem được.',
+    watch: 'Theo dõi không giới hạn',
+    compare: 'So sánh nhiều phường/xã hơn',
+    compareExport: 'Xuất bảng so sánh',
+    watchLimit: (n: number) => 'Gói miễn phí theo dõi tối đa ' + n + ' mục.',
   },
   wardReport: {
     kicker: 'Báo cáo phường/xã · mọi số liệu có nguồn',
@@ -332,6 +355,15 @@ const en: PiText = {
   presets: 'Presets',
   closeLayers: 'Close layers',
   openLayers: '☰ Layers',
+  panels: {
+    aria: 'Show or hide the panels around the map',
+    layers: 'Map layers (left)',
+    analysis: 'Ward analysis (right)',
+    charts: 'Charts below the map',
+    ai: 'Property AI',
+    focus: 'Map only',
+    showAll: 'Show all panels',
+  },
   layerGroups: { planning: 'Planning', mobility: 'Mobility', market: 'Market', social: 'Social' },
   layers: {
     planning: 'Growth poles (Decision 2512)',
@@ -445,6 +477,9 @@ const en: PiText = {
 
   ai: {
     title: 'Ask Property AI',
+    hide: 'Hide the Q&A panel',
+    expand: 'Expand the Q&A panel',
+    collapse: 'Shrink the Q&A panel',
     sub: (claude: boolean): string => (claude ? 'Claude · answers only from the page data · with sources' : 'Automatic answers from the page data · with sources'),
     empty: 'Ask about a ward or project in Hanoi — potential, infrastructure coming, land prices, a comparison or a brief.',
     thinking: 'Analysing',
@@ -516,7 +551,8 @@ const en: PiText = {
     close: 'Collapse',
     open: (n: number) => `Compare (${n})`,
     remove: 'Remove from comparison',
-    hint: 'Use "+ Compare" in the ward panel to add one (up to 3).',
+    hint: (max: number) => `Use "+ Compare" in the ward panel to add one (up to ${max}).`,
+    csv: 'Export CSV',
     rows: {
       score: 'Potential score',
       rank: 'Rank',
@@ -537,6 +573,16 @@ const en: PiText = {
     wards: 'Wards',
     projects: 'Projects',
     remove: 'Stop watching',
+  },
+  premium: {
+    badge: 'Premium',
+    horizon: (h: number) => 'The ' + h + ' planning layers',
+    weights: 'Custom weights',
+    weightsLocked: 'Set your own weights with Premium. Links with weights someone shared still open.',
+    watch: 'An unlimited watchlist',
+    compare: 'Comparing more wards',
+    compareExport: 'Exporting the comparison',
+    watchLimit: (n: number) => 'The free plan watches up to ' + n + ' items.',
   },
   wardReport: {
     kicker: 'Ward report · every figure sourced',

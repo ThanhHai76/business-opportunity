@@ -1183,3 +1183,166 @@ button:disabled {
 .op-saved__signin {
   justify-self: start;
 }
+
+/* Premium (while Premium is for sale): a star on locked controls, the 2030 preview, the rest of the plan. */
+.op-pro {
+  margin-left: 4px;
+  color: #d97706;
+  font-size: 0.85em;
+}
+.op-preview {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 8px 0 4px;
+  padding: 8px 10px;
+  border: 1px dashed color-mix(in srgb, #d97706 55%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, #d97706 8%, transparent);
+  font-size: 13px;
+}
+.op-preview > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.op-preview small {
+  color: #16a34a;
+  font-weight: 700;
+}
+.op-preview small.is-down {
+  color: #dc2626;
+}
+.op-preview .op-link span {
+  color: #d97706;
+}
+.op-pro-more {
+  width: 100%;
+  margin: 2px 0 6px;
+  padding: 9px 12px;
+  border: 1px dashed color-mix(in srgb, #d97706 55%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, #d97706 8%, transparent);
+  color: var(--op-ink, inherit);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.op-pro-more span {
+  color: #d97706;
+}
+.op-saved__note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  color: var(--op-ink);
+}
+.op-tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--op-accent) 16%, transparent);
+  font-size: 11.5px;
+}
+.op-saved__edit {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+.op-saved__edit input {
+  padding: 6px 9px;
+  border: 1px solid var(--op-line);
+  border-radius: 8px;
+  background: var(--app-surface-2);
+  color: var(--op-ink);
+  font: inherit;
+}
+.op-saved__edit span {
+  display: flex;
+  gap: 6px;
+}
+
+/* The basic report ends with a pointer to the full one; the full one has its own dialog. */
+.op-upsell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--op-accent);
+  border-radius: 12px;
+  background: var(--op-accent-soft);
+}
+.op-upsell p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--op-ink-dim);
+}
+.op-compare-plans {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 12px;
+  margin: 14px 0;
+}
+.op-plan-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--op-line);
+  border-radius: 12px;
+}
+.op-plan-card h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.op-plan-card ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  font-size: 12.5px;
+  flex: 1;
+}
+.op-plan-card--full {
+  border: 2px solid var(--op-accent);
+  background: var(--op-accent-soft);
+}
+.op-plan-card--full h3 {
+  color: var(--op-accent);
+}
+@media (max-width: 640px) {
+  .op-compare-plans {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Report dialog header buttons: one line each, same height, a round close button; they stack under the title on a phone. */
+.op-report__actions {
+  flex-shrink: 0;
+  align-items: center;
+}
+.op-report__actions .op-btn {
+  min-height: 34px;
+  justify-content: center;
+  white-space: nowrap;
+}
+.op-report__actions .op-btn:last-child {
+  width: 34px;
+  padding: 0;
+}
+@media (max-width: 640px) {
+  .op-report__head {
+    flex-direction: column;
+  }
+  .op-report__actions {
+    flex-wrap: wrap;
+  }
+}

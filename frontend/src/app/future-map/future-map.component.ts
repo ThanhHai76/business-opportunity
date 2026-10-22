@@ -299,7 +299,7 @@ export class FutureMapComponent {
     const url = this.shareUrl();
     try {
       if (navigator.share) {
-        await navigator.share({ title: `Hanoi Future Map · ${this.year()}`, url });
+        await navigator.share({ title: `${this.lang() === 'en' ? 'Hanoi Future Map' : 'Hà Nội tương lai'} · ${this.year()}`, url });
         return;
       }
       try {

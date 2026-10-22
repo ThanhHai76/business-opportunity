@@ -50,7 +50,12 @@
 
     <div class="op-seg" role="group" [attr.aria-label]="t().horizonAria">
       <button type="button" [class.is-on]="horizon() === 'now'" [attr.aria-pressed]="horizon() === 'now'" (click)="setHorizon('now')">{{ t().horizon.now }}</button>
-      <button type="button" [class.is-on]="horizon() === '2030'" [attr.aria-pressed]="horizon() === '2030'" (click)="setHorizon('2030')">{{ t().horizon['2030'] }}</button>
+      <button type="button" [class.is-on]="horizon() === '2030'" [attr.aria-pressed]="horizon() === '2030'" (click)="setHorizon('2030')">
+        {{ t().horizon['2030'] }}
+        @if (premiumLocked()) {
+          <span class="op-pro" [title]="t().premium.badge" [attr.aria-label]="t().premium.badge">★</span>
+        }
+      </button>
     </div>
 
     <div class="op-types" role="group" [attr.aria-label]="t().typesAria">
@@ -98,7 +103,7 @@
     @if (planOn() && planRows().length && selectedType()) {
       <h2 class="op-h">{{ t().plan.rankingTitle(selectedType()!.name, money(planBudget())) }}</h2>
       <ol class="op-ranking op-ranking--plan">
-        @for (r of planRows().slice(0, 12); track r.slug; let i = $index) {
+        @for (r of planShown(); track r.slug; let i = $index) {
           <li>
             <button type="button" [class.is-on]="selected() === r.slug" (click)="selectWard(r.slug, true)">
               <span class="op-ranking__n">{{ i + 1 }}</span>
@@ -117,6 +122,11 @@
           </li>
         }
       </ol>
+      @if (premiumLocked() && planRows().length > planShown().length) {
+        <button type="button" class="op-pro-more" (click)="askPremium(t().premium.fullPlan)">
+          <span aria-hidden="true">★</span> {{ t().premium.morePlan(planRows().length) }}
+        </button>
+      }
       <p class="op-plan__note">{{ t().plan.note }} {{ t().risk.note }}</p>
     }
     <h2 class="op-h">{{ selectedType() ? t().rankingTitle(selectedType()!.name) : t().rankingAll }}</h2>
@@ -200,6 +210,16 @@
                 </div>
                 <span class="op-score op-score--big" [style.--c]="bandColor(f.opportunity)">{{ num(f.opportunity, 0) }}</span>
               </div>
+              @if (preview2030(); as p) {
+                <div class="op-preview" [title]="t().premium.previewHint">
+                  <span>
+                    <b>{{ t().premium.preview }}:</b>
+                    <span class="op-score" [style.--c]="bandColor(p.score)">{{ num(p.score, 0) }}</span>
+                    <small [class.is-down]="p.delta < 0">{{ p.delta >= 0 ? '+' : '−' }}{{ num(p.delta < 0 ? -p.delta : p.delta, 0) }}</small>
+                  </span>
+                  <button type="button" class="op-link" (click)="askPremium(t().premium.map2030)"><span aria-hidden="true">★</span> {{ t().premium.seeAll }}</button>
+                </div>
+              }
               @if (f.confidence === 'low') {
                 <p class="op-low"><ls-icon name="alert" [size]="13" /> {{ t().lowConfidence }}</p>
               }
@@ -237,7 +257,7 @@
                   <ls-icon [name]="inCompare(d.slug) ? 'check' : 'plus'" [size]="14" /> {{ inCompare(d.slug) ? t().compareAdded : t().compareAdd }}
                 </button>
                 <button type="button" class="op-btn" (click)="reportOpen.set(true)"><ls-icon name="chart" [size]="14" /> {{ t().report.open }}</button>
-                <button type="button" class="op-btn op-btn--primary" (click)="openFullReport()">{{ t().buy.open }}</button>
+                <button type="button" class="op-btn op-btn--primary op-btn--full" (click)="openFullReport()"><ls-icon name="download" [size]="14" /> {{ t().buy.open }}</button>
               </div>
             </section>
 
@@ -431,7 +451,7 @@
             </label>
           }
           <small>{{ t().market.count(marketView().length, marketCount()) }}</small>
-          <button type="button" class="op-btn" (click)="downloadCsv()" [disabled]="!marketView().length"><ls-icon name="download" [size]="14" /> {{ t().market.csv }}</button>
+          <button type="button" class="op-btn" (click)="downloadCsv()" [disabled]="!marketView().length"><ls-icon name="download" [size]="14" /> {{ t().market.csv }}@if (premiumLocked()) { <span class="op-pro" aria-hidden="true">★</span>}</button>
         </div>
         <div class="op-tablewrap op-market">
           <table class="op-table op-table--market">
@@ -499,6 +519,9 @@
         @if (reports.syncError(); as e) {
           <p class="op-error">{{ e }}</p>
         }
+        @if (premiumLocked()) {
+          <button type="button" class="op-pro-more" (click)="askPremium(t().premium.savedMore)"><span aria-hidden="true">★</span> {{ t().premium.savedLimit(freeReports) }} · {{ t().premium.savedMore }}</button>
+        }
         <ul class="op-saved">
           @for (r of reports.list(); track r.id) {
             <li>
@@ -514,9 +537,33 @@
                   · {{ r.result.paybackMonths === null ? t().plan.noPayback : t().plan.payback(r.result.paybackMonths) }}
                   · {{ t().saved.budget }} {{ money(r.assumptions.budget) }}
                 </small>
+                @if (r.note || r.tags?.length) {
+                  <small class="op-saved__note">
+                    @for (tag of r.tags ?? []; track tag) {
+                      <b class="op-tag">{{ tag }}</b>
+                    }
+                    {{ r.note }}
+                  </small>
+                }
+                @if (editing() === r.id) {
+                  <form class="op-saved__edit" (submit)="$event.preventDefault(); saveNotes(r)">
+                    <input type="text" maxlength="300" [value]="noteDraft()" (input)="noteDraft.set($any($event.target).value)" [placeholder]="t().premium.notes.note" [attr.aria-label]="t().premium.notes.note" />
+                    <input type="text" maxlength="80" [value]="tagsDraft()" (input)="tagsDraft.set($any($event.target).value)" [placeholder]="t().premium.notes.tags" [attr.aria-label]="t().premium.notes.tags" />
+                    <span>
+                      <button type="submit" class="op-btn op-btn--primary">{{ t().premium.notes.save }}</button>
+                      <button type="button" class="op-btn" (click)="editing.set(null)">{{ t().premium.notes.cancel }}</button>
+                    </span>
+                    @if (noteError(); as ne) {
+                      <small class="op-error">{{ ne }}</small>
+                    }
+                  </form>
+                }
               </div>
               <div class="op-saved__actions">
                 <button type="button" class="op-btn" (click)="reopenReport(r)">{{ t().saved.reopen }}</button>
+                @if (account.user() || premiumLocked()) {
+                  <button type="button" class="op-btn" (click)="editNotes(r)">{{ t().premium.notes.add }}@if (premiumLocked()) { <span class="op-pro" aria-hidden="true">★</span>}</button>
+                }
                 <button type="button" class="op-icon" (click)="reports.remove(r.id)" [attr.aria-label]="t().saved.remove + ' ' + r.typeName + ' · ' + r.wardName" [title]="t().saved.remove"><ls-icon name="trash" [size]="15" /></button>
               </div>
             </li>
@@ -619,6 +666,7 @@
         </div>
         <div class="op-report__actions">
           <button type="button" class="op-btn" [class.is-on]="justSaved()" (click)="saveReport()">{{ justSaved() ? t().saved.done : t().saved.save }}</button>
+          <button type="button" class="op-btn op-btn--primary" (click)="openFullReport()"><ls-icon name="download" [size]="14" /> {{ t().buy.open }}</button>
           <button type="button" class="op-btn" (click)="reportOpen.set(false)" [attr.aria-label]="t().report.close">✕</button>
         </div>
       </header>
@@ -680,7 +728,52 @@
         </ul>
       </section>
       <p class="op-report__note">{{ t().report.disclaimer }}</p>
-      <app-op-buy id="op-buy" [t]="t().buy" [lang]="lang()" [request]="buyRequest()" (signIn)="signInToBuy()" />
+      <div class="op-upsell">
+        <div>
+          <strong>{{ t().buy.upsell.title }}</strong>
+          <p>{{ t().buy.upsell.text }}</p>
+        </div>
+        <button type="button" class="op-btn op-btn--primary" (click)="openFullReport()"><ls-icon name="download" [size]="14" /> {{ t().buy.open }}</button>
+      </div>
+    </div>
+  }
+}
+
+<!-- The full (paid) report: what it adds to the basic one, then how to get it -->
+@if (fullOpen() && detail(); as d) {
+  @if (focus(); as f) {
+    <div class="op-report-backdrop" (click)="fullOpen.set(false)"></div>
+    <div class="op-report op-full" role="dialog" aria-modal="true" aria-labelledby="op-full-title" [attr.data-theme]="theme()">
+      <header class="op-report__head">
+        <div>
+          <span class="op-eyebrow">{{ t().buy.title }}</span>
+          <h2 id="op-full-title">{{ f.icon }} {{ f.name }} · {{ d.name }}</h2>
+          <p>{{ t().buy.intro }}</p>
+        </div>
+        <div class="op-report__actions">
+          <button type="button" class="op-btn" (click)="fullOpen.set(false)" [attr.aria-label]="t().report.close">✕</button>
+        </div>
+      </header>
+      <div class="op-compare-plans">
+        <section class="op-plan-card">
+          <h3>{{ t().buy.freeTitle }}</h3>
+          <ul>
+            @for (line of t().buy.freeIncludes; track $index) {
+              <li>{{ line }}</li>
+            }
+          </ul>
+          <button type="button" class="op-btn" (click)="fullOpen.set(false); reportOpen.set(true)">{{ t().report.open }}</button>
+        </section>
+        <section class="op-plan-card op-plan-card--full">
+          <h3>{{ t().buy.fullTitle }}</h3>
+          <ul>
+            @for (line of t().buy.includes; track $index) {
+              <li>{{ line }}</li>
+            }
+          </ul>
+        </section>
+      </div>
+      <app-op-buy id="op-buy" [t]="t().buy" [premiumText]="t().premium" [lang]="lang()" [request]="buyRequest()" (signIn)="signInToBuy()" />
     </div>
   }
 }

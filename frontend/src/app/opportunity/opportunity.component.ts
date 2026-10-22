@@ -23,10 +23,11 @@ import { OpFeasibilityComponent } from './op-feasibility.component';
 import { MarketKey, MarketSort, marketCsv, marketRows, sortMarket } from './op-market';
 import { parseIdeaLocal } from './op-parse';
 import { AccountService } from '../services/account.service';
-import { PaidReportRequest } from '../services/billing.service';
+import { BillingService, PaidReportRequest } from '../services/billing.service';
+import { PremiumPromptService, isPremiumRequired } from '../services/premium-prompt.service';
 import { OpBuyComponent } from './op-buy.component';
 import { AiQuotaComponent } from '../components/ai-quota/ai-quota.component';
-import { SavedReport, SavedReportsStore } from './op-reports';
+import { FREE_REPORTS, SavedReport, SavedReportsStore } from './op-reports';
 import { OpRadarComponent, RadarSeries } from './op-radar.component';
 import { OP_LANG_KEY, OP_TEXT } from './op-i18n';
 import { OpMapComponent, SCORE_STOPS } from './op-map.component';
@@ -35,6 +36,8 @@ import { OpportunityService, describeError } from './op.service';
 
 const SLUG = /^[a-z0-9-]{1,60}$/;
 const MAX_COMPARE = 3;
+/** Wards of the business plan shown without Premium (while Premium is for sale). */
+const FREE_PLAN_ROWS = 3;
 
 function initialLang(params: URLSearchParams): Lang {
   const fromUrl = params.get('lang');
@@ -113,10 +116,12 @@ export class OpportunityComponent {
     const d = this.detail();
     return f && d ? { type: f.type, ward: d.slug, horizon: this.horizon(), assumptions: this.feasStore.get(f.type) } : null;
   });
+  /** The full (paid) report dialog: what it adds to the basic report, and how to get it. */
+  protected readonly fullOpen = signal(false);
   /** Straight from the ward panel: the report dialog, scrolled down to the paid report panel at its end. */
   protected openFullReport(): void {
-    this.reportOpen.set(true);
-    afterNextRender(() => document.getElementById('op-buy')?.scrollIntoView({ block: 'start' }), { injector: this.injector });
+    this.reportOpen.set(false);
+    this.fullOpen.set(true);
   }
   /** Set while the sign-in dialog opened from the paid report panel is showing. */
   private readonly resumeBuy = signal(false);
@@ -125,7 +130,7 @@ export class OpportunityComponent {
    * reopen it on the paid panel when the sign-in dialog closes.
    */
   protected signInToBuy(): void {
-    this.reportOpen.set(false);
+    this.fullOpen.set(false);
     this.resumeBuy.set(true);
     this.account.dialogOpen.set(true);
   }
@@ -153,6 +158,25 @@ export class OpportunityComponent {
   /** The plan's adjustment for the open ward (passed to its feasibility box). */
   protected readonly wardFactors = computed(() => (this.planOn() && this.planAdjust() ? (this.planRows().find((r) => r.slug === this.selected())?.factors ?? null) : null));
   protected readonly planBudget = computed(() => (this.type() ? this.feasStore.get(this.type()!).budget : 0));
+  /** The plan's wards shown: all of them with Premium, the best few otherwise. */
+  protected readonly planShown = computed(() => this.planRows().slice(0, this.premiumLocked() ? FREE_PLAN_ROWS : 12));
+
+  // ------------------------------------------------------------- Premium (2030 map, full plan, CSV)
+  private readonly billing = inject(BillingService);
+  private readonly premiumPrompt = inject(PremiumPromptService);
+  protected readonly premiumLocked = this.billing.premiumLocked;
+  /** The open ward in 2030, as a free preview while the 2030 map is locked. */
+  private readonly detail2030 = signal<WardDetail | null>(null);
+  protected readonly preview2030 = computed(() => {
+    const f = this.focus();
+    const d = this.detail2030();
+    const later = f && d?.slug === this.selected() ? d.opportunities.find((o) => o.type === f.type) : null;
+    return f && later ? { score: later.opportunity, delta: later.opportunity - f.opportunity } : null;
+  });
+
+  protected askPremium(feature: string): void {
+    this.premiumPrompt.open(feature, this.lang());
+  }
 
   // ------------------------------------------------------------- market table (every scored ward, sortable)
   protected readonly marketOpen = signal(false);
@@ -238,7 +262,9 @@ export class OpportunityComponent {
         switchMap(({ type, horizon, lang }) =>
           this.api.wards(type, horizon, lang).pipe(
             catchError((e: unknown) => {
-              this.error.set(describeError(e, lang));
+              // The 2030 map is Premium (e.g. a shared link with horizon=2030): back to today.
+              if (isPremiumRequired(e)) this.horizon.set('now');
+              else this.error.set(describeError(e, lang));
               return EMPTY;
             }),
           ),
@@ -259,6 +285,19 @@ export class OpportunityComponent {
         takeUntilDestroyed(),
       )
       .subscribe((d) => this.detail.set(d));
+
+    // The 2030 preview of the open ward, while the 2030 map is locked.
+    toObservable(computed(() => ({ slug: this.selected(), lang: this.lang(), locked: this.premiumLocked() })))
+      .pipe(
+        switchMap(({ slug, lang, locked }) => (slug && locked ? this.api.ward(slug, '2030', lang).pipe(catchError(() => of(null))) : of(null))),
+        takeUntilDestroyed(),
+      )
+      .subscribe((d) => this.detail2030.set(d));
+
+    // Once the 2030 map turns out to be locked (a link or saved report opened on 2030), show today.
+    effect(() => {
+      if (this.premiumLocked() && this.horizon() === '2030') untracked(() => this.horizon.set('now'));
+    });
 
     // Competitors of the focused type in the selected ward.
     toObservable(computed(() => ({ slug: this.selected(), type: this.focus()?.type ?? null, show: this.showPlaces() })))
@@ -377,6 +416,7 @@ export class OpportunityComponent {
   }
 
   protected downloadCsv(): void {
+    if (this.premiumLocked()) return this.askPremium(this.t().premium.csv);
     const m = this.t().market;
     const blob = new Blob([marketCsv(this.marketView(), m.cols)], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
@@ -393,6 +433,7 @@ export class OpportunityComponent {
     const fe = this.feasibility();
     const risk = this.reportRisk();
     if (!d || !f || !fe || !risk) return;
+    if (this.reports.atLimit(f.type, d.slug, this.horizon())) return this.askPremium(this.t().premium.savedMore);
     this.reports.save({
       type: f.type,
       typeName: f.name,
@@ -430,6 +471,29 @@ export class OpportunityComponent {
     this.reportOpen.set(true);
   }
 
+  // Premium: a note and tags on a saved report
+  protected readonly freeReports = FREE_REPORTS;
+  protected readonly editing = signal<string | null>(null);
+  protected readonly noteDraft = signal('');
+  protected readonly tagsDraft = signal('');
+  protected readonly noteError = signal<string | null>(null);
+
+  protected editNotes(r: SavedReport): void {
+    if (this.premiumLocked()) return this.askPremium(this.t().premium.notes.locked);
+    this.editing.set(this.editing() === r.id ? null : r.id);
+    this.noteDraft.set(r.note ?? '');
+    this.tagsDraft.set((r.tags ?? []).join(', '));
+    this.noteError.set(null);
+  }
+
+  protected saveNotes(r: SavedReport): void {
+    const tags = this.tagsDraft().split(',').map((x) => x.trim()).filter(Boolean).slice(0, 3);
+    this.reports.annotate(r.id, this.noteDraft().trim(), tags).subscribe({
+      next: () => this.editing.set(null),
+      error: (e: unknown) => (isPremiumRequired(e) ? this.askPremium(this.t().premium.notes.locked) : this.noteError.set(describeError(e, this.lang()))),
+    });
+  }
+
   protected clearReports(): void {
     if (confirm(this.t().saved.confirmClear)) this.reports.clear();
   }
@@ -457,6 +521,7 @@ export class OpportunityComponent {
   }
 
   protected setHorizon(h: Horizon): void {
+    if (h === '2030' && this.premiumLocked()) return this.askPremium(this.t().premium.map2030);
     this.horizon.set(h);
   }
 
@@ -580,10 +645,12 @@ export class OpportunityComponent {
 
   @HostListener('document:keydown.escape')
   protected onEscape(): void {
+    if (this.premiumPrompt.ask()) return; // the Premium prompt closes itself
     if (this.compareOpen()) this.compareOpen.set(false);
     else if (this.marketOpen()) this.marketOpen.set(false);
     else if (this.reportsOpen()) this.reportsOpen.set(false);
     else if (this.askOpen()) this.askOpen.set(false);
+    else if (this.fullOpen()) this.fullOpen.set(false);
     else if (this.reportOpen()) this.reportOpen.set(false);
     else if (this.methodOpen()) this.methodOpen.set(false);
     else if (this.selected()) this.closeWard();
