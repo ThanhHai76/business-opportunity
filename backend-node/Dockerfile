@@ -10,6 +10,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json server.js ./
 COPY src ./src
+# The two operator scripts run inside the container: register the PayOS webhook, read the reports of wrong figures.
+COPY scripts/payos-webhook.js scripts/list-data-reports.js ./scripts/
 # SQL schemas applied on start (accounts; Living Score when DATA_SOURCE=postgres)
 COPY database ./database
 USER node
