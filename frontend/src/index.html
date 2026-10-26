@@ -29,7 +29,7 @@
       try {
         var stored = localStorage.getItem('hanoi100.theme');
         var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        theme = stored === 'dark' || stored === 'light' ? stored : dark ? 'dark' : 'light';
+        theme = stored === 'dark' || stored === 'light' ? stored : stored === 'system' && dark ? 'dark' : 'light';
       } catch (e) {}
       document.documentElement.setAttribute('data-theme', theme);
       document.documentElement.style.colorScheme = theme;
