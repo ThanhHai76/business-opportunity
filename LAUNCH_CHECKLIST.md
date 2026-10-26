@@ -34,7 +34,10 @@ Cập nhật lần cuối: 23/10/2026. Đánh dấu `[x]` khi xong. Hướng d�
 - [ ] Bật CSP (chính sách nội dung) sau khi thử kỹ vì bản đồ và font tải từ nhiều nguồn.
 - [ ] Thử trên Safari, iPhone và điện thoại Android thật (mới thử bằng Chrome và giả lập).
 - [ ] Đo tải của một máy chủ nhỏ.
-- [ ] Kiểm tra ảnh xem trước khi dán link vào Facebook, Zalo (Angular vẽ ở trình duyệt nên mọi trang con dùng chung thẻ xem trước); cân nhắc dựng sẵn (prerender) trang chủ và các trang công cụ.
+- [x] Ảnh xem trước khi dán link: mỗi trang công cụ có tiêu đề, mô tả, link chuẩn và thẻ chia sẻ riêng (`frontend/scripts/route-meta.mjs`, 26/10/2026). *Chưa thử dán link thật vào Facebook/Zalo (cần địa chỉ công khai); ảnh xem trước vẫn dùng chung một ảnh `og-image.png`.*
+- [x] Trang chủ có phần "Bạn đang cần gì?" dẫn người mới tới đúng công cụ (26/10/2026).
+- [x] Rà cấu trúc truy cập (nhãn nút, ô nhập, h1, vùng main) ở 9 trang bằng Chrome: đã sửa trang Mở gì ở đâu, Hà Nội tương lai, bản đồ BĐS. *Chưa rà độ tương phản màu, thứ tự Tab và đọc bằng trình đọc màn hình.*
+- [ ] Hiệu năng trên điện thoại chậm: đo giả lập 4G chậm, CPU chậm 4 lần, các trang bản đồ có LCP khoảng 9 giây (trang chủ, La bàn nghề nghiệp khoảng 4,7 giây). Số này đo trên bản chạy không nén; trên máy chủ thật Caddy nén nên nhỏ hơn. *Cần đo lại trên máy chủ thật.*
 - [ ] Thêm chức năng tải về dữ liệu cá nhân (đã có xoá tài khoản).
 - [ ] Thêm kiểm thử đầu-cuối cho các luồng chính (hiện chỉ có kiểm thử đơn vị và kiểm tra tay bằng Chrome).
 
