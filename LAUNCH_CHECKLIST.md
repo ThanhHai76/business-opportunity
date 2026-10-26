@@ -1,0 +1,49 @@
+# Danh sách việc trước khi đưa Hanoi Century Vista lên mạng
+
+Cập nhật lần cuối: 23/10/2026. Đánh dấu `[x]` khi xong. Hướng dẫn triển khai chi tiết nằm ở [DEPLOY.md](DEPLOY.md).
+
+**Gợi ý lộ trình:** mở bản **miễn phí** trước (nhóm 1, trừ PayOS), làm nhóm 2 trong lúc theo dõi phản hồi, bật thu tiền khi pháp lý và thanh toán đã sẵn sàng.
+
+## 1. Bắt buộc trước khi mở công khai
+
+- [ ] Commit và push các thay đổi đang dở (metro dùng chung, dữ liệu phường chính thức, mầm non, số liệu La bàn nghề nghiệp, bản tiếng Anh, nút báo sai số liệu, giao diện sáng mặc định, sửa thanh công cụ Hà Nội tương lai; *chưa commit tới 23/10/2026*), rồi xem CI trên GitHub Actions (job `production-stack`) có xanh không.
+- [ ] Mua tên miền, thuê máy chủ, trỏ DNS, xin chứng chỉ HTTPS thật (Let's Encrypt). *Chưa kiểm chứng: DEPLOY.md mục 13.* Cách tạm không cần tên miền: đã chia sẻ thử qua Cloudflare Quick Tunnel (`deploy/share-local.js` và `cloudflared`, 22–23/10/2026); địa chỉ đổi mỗi lần chạy và chỉ sống khi máy bật, không thay cho máy chủ thật. Có thể dùng tên miền sslip.io trên VPS (chưa thử).
+- [ ] Chạy thử trên máy chủ Linux thật (mới thử trên Docker Desktop của Windows).
+- [ ] Cấu hình gửi email thật (`SMTP_URL`, `MAIL_FROM`) và thử email xác minh, quên mật khẩu. *Chưa thử với SMTP thật.*
+- [ ] Nhờ người có chuyên môn xem lại **Điều khoản** và **Chính sách bảo mật** (bản trong dự án là bản mẫu); điền địa chỉ email liên hệ thật.
+- [ ] Nếu bán hàng: hỏi luật sư hoặc kế toán về nghĩa vụ đăng ký website thương mại điện tử, hoá đơn và chính sách hoàn tiền.
+- [ ] Quyết định cách thu tiền: mở **miễn phí hoàn toàn** trước (`BILLING_PROVIDER=off`, mọi tính năng mở), hoặc bán thủ công bằng chuyển khoản. Đã đăng ký tài khoản PayOS và **đã viết code PayOS** (`BILLING_PROVIDER=payos`, `src/billing/payos-provider.js`, 23/10/2026; mới thử với API giả). Còn cần: điền Client ID, API Key, Checksum Key vào `.env`, có địa chỉ webhook HTTPS cố định rồi chạy `npm run payos:webhook`, thử một đơn thật nhỏ (xem DEPLOY.md mục 11).
+- [ ] Thêm `ANTHROPIC_API_KEY` và **đặt trần chi tiêu** trong Claude Console. Hiện AI trả lời theo mẫu.
+- [ ] Bật sao lưu tự động (`deploy/backup.sh`) và chép bản sao ra ngoài máy chủ; thử khôi phục một lần.
+- [ ] Chạy hết checklist bảo mật ở DEPLOY.md mục 10 (quyền `.env`, tường lửa, SSH bằng khoá…).
+
+## 2. Nên làm trong 2–4 tuần đầu
+
+**Độ tin cậy của dữ liệu**
+- [x] Gắn nhãn "trên OpenStreetMap" cạnh văn phòng, chung cư, trường học trong bảng phường của Mở gì ở đâu; ghi chú "có thể thấp hơn thực tế"; tách riêng số mầm non khỏi trường học. *Xong 22/10/2026.*
+- [x] Đối chiếu **dân số và diện tích** từng phường với danh sách 126 xã, phường sau sắp xếp (Báo Hà Nội Mới). Đã sửa Phú Thượng và 16 xã; 79/79 đơn vị có dân số chính thức; diện tích ranh giới lệch dưới 8%. *Đã đối chiếu tên và số đơn vị với Nghị quyết 1656/NQ-UBTVQH15 (23/10/2026): đúng 126 đơn vị, 51 phường và 75 xã, khớp 126/126 tên. Nghị quyết không ghi diện tích, dân số từng đơn vị nên hai số này vẫn theo danh sách Báo Hà Nội Mới; số chính thức nằm trong đề án của Chính phủ (chưa tìm thấy bản công khai).*
+- [x] Đối chiếu các số của **La bàn nghề nghiệp** (22/10/2026): thống kê chung dùng số Cục Thống kê quý II/2026; dự báo 6%/5%/4% ghi đúng nguồn (Trung tâm DVVL Hà Nội, 1/2026, không phải quý 2); chính sách thất nghiệp sửa theo Luật Việc làm 74/2025/QH15 (Điều 37–39). *Kế hoạch 212/KH-UBND (2/6/2026) nay dẫn cổng thông tin UBND thành phố (nguồn chính thức, bản tiếng Anh; chưa có bản văn bản gốc tiếng Việt). "Thiếu 50.000 lao động chất lượng cao" là ước tính trong dự báo quý II/2026 của Trung tâm Dịch vụ việc làm Hà Nội, chỉ có qua báo chí (23/10/2026).* Cập nhật `DATA_DATE` mỗi lần rà lại.
+- [x] Nút **"Báo sai số liệu"** trên mỗi phường (Mở gì ở đâu, bản đồ việc làm) và mỗi nguồn (danh sách nguồn của hai trang). Báo cáo lưu ở bảng `data_reports`; xem bằng `npm run reports:list` trong `backend-node`. *Chưa có trang quản trị và chưa báo qua email: bạn cần chạy lệnh trên để đọc.* (23/10/2026)
+- [ ] Đặt lịch rà soát số liệu việc làm mỗi quý (đã có lịch cho thị trường bất động sản).
+- [x] Living Score và Mở gì ở đâu dùng chung `src/metro/stations.js` (toạ độ ga bám OpenStreetMap).
+
+**Kỹ thuật và vận hành**
+- [x] Giao diện **sáng là mặc định** khi vào lần đầu (23/10/2026); người đã chọn tối vẫn giữ lựa chọn.
+- [x] Sửa thanh công cụ trang Hà Nội tương lai đè lên thẻ số liệu khi cửa sổ thấp (23/10/2026). *Chưa kiểm tra trên điện thoại thật.*
+- [ ] Giám sát: kiểm tra trang còn sống, nhận cảnh báo lỗi; xem lại việc đo lượng truy cập đã đúng quy định chưa.
+- [ ] Bật CSP (chính sách nội dung) sau khi thử kỹ vì bản đồ và font tải từ nhiều nguồn.
+- [ ] Thử trên Safari, iPhone và điện thoại Android thật (mới thử bằng Chrome và giả lập).
+- [ ] Đo tải của một máy chủ nhỏ.
+- [ ] Kiểm tra ảnh xem trước khi dán link vào Facebook, Zalo (Angular vẽ ở trình duyệt nên mọi trang con dùng chung thẻ xem trước); cân nhắc dựng sẵn (prerender) trang chủ và các trang công cụ.
+- [ ] Thêm chức năng tải về dữ liệu cá nhân (đã có xoá tài khoản).
+- [ ] Thêm kiểm thử đầu-cuối cho các luồng chính (hiện chỉ có kiểm thử đơn vị và kiểm tra tay bằng Chrome).
+
+## 3. Sau khi có người dùng thật
+
+- [ ] Kết nối PayOS: *code xong (23/10/2026)*; còn đăng ký webhook và thử một đơn nhỏ thật. Quy trình hoàn tiền và hoá đơn.
+- [x] Bản tiếng Anh cho La bàn nghề nghiệp (22/10/2026). *Còn lại: thanh menu chung của trang vẫn tiếng Việt.*
+- [ ] Hỏi AI định hướng nghề.
+- [ ] Hướng dẫn lần đầu cho người mới (trang chủ có nhiều công cụ).
+- [ ] Làm video giới thiệu; nói chuyện với vài khách thật trước khi chốt giá.
+- [ ] Gửi email nhắc việc theo kế hoạch nghề nghiệp (cần hệ thống gửi email chạy định kỳ).
+- [ ] Bổ sung dữ liệu: chung cư theo số tầng, số doanh nghiệp theo phường nếu có nguồn công khai.

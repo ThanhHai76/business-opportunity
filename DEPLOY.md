@@ -225,7 +225,19 @@ rồi mới sửa `.env` và `up -d`.
 - Báo cáo tóm tắt, máy tính khả thi và mọi công cụ khác vẫn dùng bình thường.
 - Bạn có thể bán thủ công (khách chuyển khoản, bạn làm báo cáo) trong lúc chờ.
 
-Khi đã có tài khoản PayOS, cần thêm một file nối PayOS vào `src/billing/` (cùng giao diện với `mock-provider.js`). Việc đó làm ở bước riêng.
+### Bật PayOS (code đã có: `backend-node/src/billing/payos-provider.js`)
+
+1. Trên my.payos.vn, tạo **kênh thanh toán** gắn tài khoản ngân hàng nhận tiền, lấy **Client ID**, **API Key**, **Checksum Key**.
+2. Điền vào `.env` trên máy chủ: `BILLING_PROVIDER=payos`, `PAYOS_CLIENT_ID=…`, `PAYOS_API_KEY=…`, `PAYOS_CHECKSUM_KEY=…`
+   (không commit, không gửi cho ai). Tài khoản ngân hàng **đã liên kết** qua PayOS có thể đặt `PAYOS_DESCRIPTION_MAX=25`.
+3. Cần **SMTP thật** trước: người mua phải xác minh email (mục 7).
+4. Khởi động lại: `docker compose -f docker-compose.prod.yml up -d`.
+5. Đăng ký địa chỉ nhận thông báo thanh toán (PayOS gửi thử một giao dịch tới đó trước):
+   `docker compose -f docker-compose.prod.yml exec backend npm run payos:webhook -- https://TÊN-MIỀN/api/billing/webhook/payos`
+6. Mua thử gói rẻ nhất (49.000đ) bằng tài khoản của bạn; kiểm tra đơn chuyển sang "đã thanh toán" và lượt được cộng.
+7. Nếu khách chuyển sai số tiền, đơn **không** được cộng và log ghi `paid … expected …`: kiểm tra và xử lý tay.
+
+*Chưa thử với PayOS thật: mới thử bằng API PayOS giả trong kiểm thử.*
 
 ## 12. Khi gặp sự cố
 
