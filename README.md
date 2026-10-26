@@ -147,6 +147,11 @@ npm start        # = ng serve, chạy tại http://localhost:4200
 Trên localhost frontend gọi backend tại `http://localhost:8000`; khi deploy (tên miền khác localhost) frontend gọi `/api` trên **chính tên miền
 của trang** — nginx chuyển tiếp sang backend (`frontend/nginx.conf`). Cấu hình trong `frontend/src/app/config.ts`.
 
+**Ảnh xem trước khi chia sẻ link** (Facebook, Zalo, Messenger đọc thẻ trong file HTML, không chạy JavaScript): sau `ng build`, `npm run build` chạy
+`scripts/route-meta.mjs` tạo thêm `career.html`, `opportunity-map.html`… — bản sao của `index.html` với tiêu đề, mô tả, link chuẩn và thẻ chia sẻ riêng
+của từng trang (tiêu đề lấy từ `app.routes.ts`, mô tả từ `seo.service.ts`). `frontend/nginx.conf` phục vụ `/career` từ `career.html`.
+Thêm một trang mới: thêm vào `PAGES` của script đó và vào `ROUTE_DESCRIPTIONS`.
+
 **Lưu ý:** phải chạy backend trước (hoặc song song) thì bản đồ mới có dữ liệu — CORS đã được mở sẵn cho `http://localhost:4200`.
 
 ## Tài khoản & lưu báo cáo (API `/api/account`, PostgreSQL)

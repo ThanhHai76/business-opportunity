@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const site = (process.env.SITE_URL || 'https://hanoicenturyvista.com').replace(/\/+$/, '');
 const publicDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
-const pages = ['', 'opportunity-map', 'time-machine', 'living-score', 'future-map', 'property-intelligence', 'premium', 'terms', 'privacy', 'refund'];
+const pages = ['', 'opportunity-map', 'time-machine', 'living-score', 'future-map', 'property-intelligence', 'career', 'premium', 'terms', 'privacy', 'refund'];
 const lastmod = new Date().toISOString().slice(0, 10);
 
 mkdirSync(publicDir, { recursive: true });

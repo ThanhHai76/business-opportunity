@@ -43,7 +43,9 @@ http
       res.writeHead(403);
       return res.end();
     }
-    if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(ROOT, 'index.html'); // the app's own routes
+    // /career is served from career.html (the same page with its own title and share tags), else the app's own routes.
+    if ((!fs.existsSync(file) || fs.statSync(file).isDirectory()) && fs.existsSync(`${file}.html`)) file = `${file}.html`;
+    if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(ROOT, 'index.html');
     const ext = path.extname(file);
     const asset = /^[^.]+-[A-Z0-9]{8}\.(js|css)$/.test(path.basename(file));
     res.writeHead(200, { 'content-type': TYPES[ext] ?? 'application/octet-stream', 'cache-control': asset ? 'public, max-age=31536000, immutable' : 'no-cache' });
