@@ -95,7 +95,7 @@ describe('Business Opportunity Map API', () => {
     assert.ok(scored.every((f) => f.properties.rank >= 1 && f.properties.score !== null));
     assert.ok(byType.body.features.filter((f) => !f.properties.scored).every((f) => f.properties.score === null));
     assert.match(byType.body.meta.method, /0,4/);
-    assert.deepEqual(byType.body.meta.sources.map((s) => s.id), ['osm', 'population', 'metro']);
+    assert.deepEqual(byType.body.meta.sources.map((s) => s.id), ['osm', 'population', 'wardList', 'metro']);
     const top = await get('/wards');
     assert.ok(top.body.features.filter((f) => f.properties.scored).every((f) => M.TYPE_KEYS.includes(f.properties.topType)));
     assert.equal((await get('/wards?type=casino')).status, 400);

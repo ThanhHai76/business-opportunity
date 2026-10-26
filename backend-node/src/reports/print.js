@@ -191,7 +191,7 @@ footer{margin-top:24px;padding-top:10px;border-top:1px solid #ddd8cc}
 <div>
   <p style="margin:6px 0 4px"><strong>Điều gì tạo nên nhu cầu ở đây</strong> (giá trị so với các phường × trọng số của ngành):</p>
   <ul>${c.score.drivers.map((d) => `<li>${e(d.label)}: ${num(d.value, 0)}/100 × ${num(d.weight, 2)} = ${num(d.points, 1)} điểm</li>`).join('')}</ul>
-  ${c.ward.metroStations?.length ? `<p class="note">Ga metro đang khai thác trong phường: ${e(c.ward.metroStations.join(', '))}.</p>` : ''}
+  ${c.ward.metroStations?.length ? `<p class="note">Ga metro đang khai thác trong phường: ${e(c.ward.metroStations.join(', '))}.</p>` : c.ward.metroNearest ? `<p class="note">Chưa có ga metro trong phường; ga gần nhất: ${e(c.ward.metroNearest.name)} (tuyến ${e(c.ward.metroNearest.line)}), cách tâm phường khoảng ${num(c.ward.metroNearest.distanceM / 1000, 1)} km.</p>` : ''}
   ${c.score.confidence === 'low' ? '<p class="note">Độ tin cậy thấp: bản đồ ghi nhận ít cơ sở của ngành này, nên chỉ số cạnh tranh có thể chưa chính xác.</p>' : ''}
 </div>
 </div>

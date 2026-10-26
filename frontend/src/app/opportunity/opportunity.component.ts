@@ -19,6 +19,7 @@ import { IconComponent } from '../living-score/components/icon/icon.component';
 import { ThemeService } from '../services/theme.service';
 import { normalizeText } from '../utils/text';
 import { FeasibilityStore, RiskReason, computeFeasibility, planWards, riskOf } from './op-feasibility';
+import { ReportIssueComponent } from '../components/report-issue/report-issue.component';
 import { OpFeasibilityComponent } from './op-feasibility.component';
 import { MarketKey, MarketSort, marketCsv, marketRows, sortMarket } from './op-market';
 import { parseIdeaLocal } from './op-parse';
@@ -58,7 +59,7 @@ function initialLang(params: URLSearchParams): Lang {
 @Component({
   selector: 'app-opportunity',
   standalone: true,
-  imports: [OpMapComponent, IconComponent, RouterLink, OpFeasibilityComponent, OpRadarComponent, OpBuyComponent, AiQuotaComponent],
+  imports: [OpMapComponent, IconComponent, RouterLink, OpFeasibilityComponent, OpRadarComponent, OpBuyComponent, AiQuotaComponent, ReportIssueComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './opportunity.component.html',
   styleUrl: './opportunity.component.css',

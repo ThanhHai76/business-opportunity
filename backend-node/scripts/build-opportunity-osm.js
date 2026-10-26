@@ -15,6 +15,7 @@
  */
 const fs = require('node:fs');
 const path = require('node:path');
+const { applyOfficialPopulation } = require('../src/opportunity/official-wards');
 
 const OUT_FILE = path.join(__dirname, '..', 'src', 'opportunity', 'data', 'hanoi-wards.json');
 const ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
@@ -41,6 +42,8 @@ const TYPE_KEYS = Object.keys(BUSINESS);
 /** Demand signals counted per ward. */
 const SIGNALS = {
   schools: ['["amenity"~"^(school|college|university)$"]'],
+  /** Nursery and kindergarten schools: apart from `schools` (they are also part of the `education` business type). */
+  kindergartens: ['["amenity"="kindergarten"]'],
   offices: ['["office"]', '["building"="office"]'],
   apartments: ['["building"="apartments"]'],
 };
@@ -61,6 +64,7 @@ function classify(t) {
   if (/^(books|stationery)$/.test(t.shop ?? '')) out.push('bookstore');
   if (t.amenity === 'car_wash' || /^(car_repair|motorcycle_repair|tyres)$/.test(t.shop ?? '')) out.push('carwash');
   if (/^(school|college|university)$/.test(t.amenity ?? '')) out.push('schools');
+  if (t.amenity === 'kindergarten') out.push('kindergartens');
   if (t.office || t.building === 'office') out.push('offices');
   if (t.building === 'apartments') out.push('apartments');
   return out;
@@ -240,13 +244,18 @@ async function main() {
     }
   }
 
-  // Metro: stations in service inside the ward, and the distance to track under construction.
+  // Metro: the distance to track under construction. The stations inside a ward (and the nearest one) are NOT taken from
+  // here: the model computes them at start from src/metro/stations.js (OpenStreetMap coordinates, shared with Property
+  // Intelligence); what is stored below is only the snapshot's view and is replaced.
   for (const ward of wards) {
     ward.metroStations = stations.filter((s) => inRings(s.at, ward.rings)).map((s) => s.name);
     const d = building.length ? Math.min(...building.map((p) => distanceKm(p, ward.centroid))) : null;
     ward.metroBuildingKm = d === null ? null : Math.round(d * 10) / 10;
     ward.constructionHa = Math.round(ward.constructionHa * 10) / 10;
   }
+
+  // The population tag on OpenStreetMap is wrong or missing for a few wards: the official list (ward-list-2025.json) wins.
+  for (const c of applyOfficialPopulation(wards)) console.log(`Population of ${c.name}: ${c.was ?? 'none'} -> ${c.now} (official list)`);
 
   const out = {
     source: 'OpenStreetMap contributors (ODbL)',

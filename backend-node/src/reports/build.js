@@ -65,6 +65,7 @@ function buildFeasibilityReport({ type, ward, horizon, assumptions }, now = new 
       population: detail.facts.population,
       areaKm2: detail.facts.areaKm2,
       metroStations: detail.facts.metroStations,
+      metroNearest: detail.facts.metroNearest,
       landMedian: props.landMedian ?? null,
       landCityMedian: geo.meta.landCityMedian,
     },
