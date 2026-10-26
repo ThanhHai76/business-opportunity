@@ -5,7 +5,7 @@
  * Every number comes from data/hanoi-wards.json (OpenStreetMap, `npm run data:opportunity`):
  *
  *   demand       (0-100)  weighted mix of the ward's population and demand signals (offices, apartment buildings,
- *                          schools, metro stations in service). Each signal is relative between the scored wards,
+ *                          schools, nearness of a metro station in service). Each signal is relative between the scored wards,
  *                          on a square-root scale (100 = the highest ward).
  *   competition  (0-100)  businesses of that type per 10,000 residents, relative between the wards (100 = densest).
  *   opportunity  (0-100)  demand − 0.4 × competition.
@@ -18,6 +18,29 @@
  * competition figure is unreliable. Low-confidence types never become a ward's top suggestion.
  */
 const DATA = require('./data/hanoi-wards.json');
+const { STATIONS, distKm } = require('../metro/stations');
+
+// ---------------------------------------------------------------- metro of each ward
+// From the shared stations (src/metro/stations.js, OpenStreetMap coordinates), not from what the data file stored when it
+// was built: the stations inside the ward's boundary, and the nearest station in service to its centre.
+const OPERATING = STATIONS.filter((s) => s.status === 'operating');
+function inRing([x, y], ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+const inWard = (p, geometry) => (geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates).some((poly) => inRing(p, poly[0]) && !poly.slice(1).some((hole) => inRing(p, hole)));
+for (const w of DATA.wards) {
+  w.metroStations = OPERATING.filter((s) => inWard(s.coords, w.geometry)).map((s) => s.name);
+  const nearest = OPERATING.map((s) => ({ s, d: distKm(w.centroid, s.coords) })).sort((a, b) => a.d - b.d)[0];
+  w.metroNearest = nearest ? { name: nearest.s.name, line: nearest.s.line, distanceM: Math.round(nearest.d * 1000) } : null;
+}
+/** 1 within 500 m of the ward centre, 0 from 5 km, in between in proportion (the same scale as Property Intelligence). */
+const metroNearness = (w) => (w.metroNearest ? Math.max(0, Math.min(1, (5000 - w.metroNearest.distanceM) / 4500)) : 0);
 
 const SIGNALS = ['population', 'offices', 'apartments', 'schools', 'metro'];
 const SIGNAL_LABELS = {
@@ -60,7 +83,7 @@ const raw = {
   offices: scored.map((w) => w.counts.offices),
   apartments: scored.map((w) => w.counts.apartments),
   schools: scored.map((w) => w.counts.schools),
-  metro: scored.map((w) => w.metroStations.length),
+  metro: scored.map(metroNearness),
 };
 const norm = Object.fromEntries(SIGNALS.map((s) => [s, relative(raw[s])]));
 // Growth (3–5 years): construction area and metro track being built within reach of the ward.

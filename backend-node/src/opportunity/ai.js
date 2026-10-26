@@ -221,6 +221,7 @@ function knowledge(lang, with2030 = true) {
         name: w.name,
         population: w.population,
         metroStations: w.metroStations,
+        metroNearest: w.metroNearest,
         constructionHa: w.constructionHa,
         scoresNow: Object.fromEntries(M.scoresFor(w.slug, 'now').map((s) => [s.type, [s.opportunity, s.demand, s.competition, s.count]])),
         ...(with2030 ? { scores2030: Object.fromEntries(M.scoresFor(w.slug, '2030').map((s) => [s.type, s.opportunity])) } : {}),

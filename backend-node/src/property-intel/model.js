@@ -5,7 +5,7 @@
  * Sources (all snapshots on disk, nothing fetched at request time):
  *   - wards, population (01/07/2025, gis.vn), apartments, construction land  ← opportunity/data/hanoi-wards.json (OSM)
  *   - schools, hospitals/clinics, shops, parks, bus stops                     ← living-score/data/osm-hanoi.json (OSM)
- *   - metro lines and stations in service / under construction                ← Living Score seed (OSM)
+ *   - metro lines and stations in service / under construction                ← src/metro/stations.js (OSM)
  *   - planned metro lines, the 9 development poles of the 100-year plan       ← future-map/data.js (approved plans, cited)
  *   - Ring Road 4, Red River bridges under construction, construction sites   ← property-intel/data/infra-osm.json (OSM)
  *
@@ -24,7 +24,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 const WARDS_DATA = require('../opportunity/data/hanoi-wards.json');
 const OSM = require('../living-score/data/osm-hanoi.json');
-const { getSeedData } = require('../living-score/seed/seed-data');
 const FM = require('../future-map/data');
 const MK = require('./market');
 const LAND = require('./data/land-price.json');
@@ -201,17 +200,8 @@ const sourceList = (ids, lang) =>
     .map((id) => ({ id, title: lang === 'en' ? SOURCES[id].titleEn : SOURCES[id].title, publisher: SOURCES[id].publisher, url: SOURCES[id].url, quality: qualityOf(id) }));
 
 // ---------------------------------------------------------------- metro (in service / under construction: OSM via the Living Score seed)
-const seed = getSeedData();
-const seedLines = seed.infrastructure.filter((i) => i.kind === 'metro_line' && i.status !== 'planned');
-const lineRef = (name) => /Tuyến (\w+)/.exec(name)?.[1] ?? '';
-const STATIONS = seed.infrastructure
-  .filter((i) => i.kind === 'metro_station' && i.status !== 'planned')
-  .map((i) => {
-    const coords = i.geometry.coordinates;
-    const line = [...seedLines].sort((a, b) => linesKm(coords, [a.geometry.coordinates]) - linesKm(coords, [b.geometry.coordinates]))[0];
-    const name = i.name.replace(/^Ga /, '');
-    return { slug: name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase().replace(/[^a-z0-9]+/g, '-'), name, line: lineRef(line.name), status: i.status === 'operating' ? 'operating' : 'construction', coords };
-  });
+// The stations are shared with the other tools (src/metro/stations.js): coordinates from OpenStreetMap.
+const { STATIONS } = require('../metro/stations');
 const OPERATING_STATIONS = STATIONS.filter((s) => s.status === 'operating');
 
 // ---------------------------------------------------------------- infrastructure catalogue (every item cites its sources)

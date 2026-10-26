@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input, ou
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
+import { ReportIssueComponent } from '../components/report-issue/report-issue.component';
 import { OpportunityService } from '../opportunity/op.service';
 import { Opportunity, WardDetail, WardsResponse } from '../opportunity/op.models';
 import { MetroHorizon, MetroPoint } from '../property-intel/pi.models';
@@ -10,9 +11,11 @@ import { BillingService } from '../services/billing.service';
 import { PremiumPromptService } from '../services/premium-prompt.service';
 import { ThemeService } from '../services/theme.service';
 import { AREAS } from './career.data';
-import { LIVE_LIMITS, LiveLimit, LiveSort, METRO_FROM_TEXT, Workplace, liveClasses, rankHomes } from './career.live';
+import { CareerLang, areasIn, localeOf } from './career.local';
+import { JOBMAP_TEXT } from './career.ui';
+import { LIVE_LIMITS, LiveLimit, LiveSort, Workplace, liveClasses, metroFromTextIn, rankHomes } from './career.live';
 import { Metric, NO_DATA, RAMP, breaks, classOf, figureOf, legend, markers, topSectors } from './career.jobmap';
-import { LINK_TEXT, METRO_HORIZONS, MetroLink, ZONES, Zone, metroClass, metroLink, reachSummary } from './career.reach';
+import { MetroLink, ZONES, Zone, linkTextIn, metroClass, metroHorizonsIn, metroLink, reachSummary } from './career.reach';
 import { JobMapComponent, MapMode, METRO_COLORS } from './job-map.component';
 
 const DEFAULT_TYPE = 'cafe';
@@ -28,42 +31,42 @@ const DEFAULT_TYPE = 'cafe';
 @Component({
   selector: 'app-job-map-section',
   standalone: true,
-  imports: [RouterLink, JobMapComponent],
+  imports: [RouterLink, JobMapComponent, ReportIssueComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="jm" aria-labelledby="jm-title">
-      <h2 id="jm-title">Bản đồ ngành nghề theo khu vực</h2>
+      <h2 id="jm-title">{{ tx().title }}</h2>
       <p class="jm__lead">
-        Chọn một ngành dịch vụ để thấy phường nào có nhiều cơ sở của ngành đó trên bản đồ. Đây là dấu hiệu nơi ngành tập trung,
-        <strong>không phải số vị trí đang tuyển</strong>. Chọn phường bạn ở để xem vùng đi làm và metro. Bấm vào một phường để xem những ngành đang dày quanh đó.
+        {{ tx().lead1 }}
+        <strong>{{ tx().leadBold }}</strong>{{ tx().lead2 }}
       </p>
 
-      <div class="jm__layers" role="group" aria-label="Lớp bản đồ">
-        <button type="button" [attr.aria-pressed]="layer() === 'sector'" (click)="setLayer('sector')">Ngành nghề</button>
-        <button type="button" [attr.aria-pressed]="layer() === 'metro'" (click)="setLayer('metro')">Metro</button>
-        <button type="button" [attr.aria-pressed]="layer() === 'live'" (click)="setLayer('live')">Nơi ở theo nơi làm @if (locked()) { <span class="jm__star" aria-hidden="true">★</span> }</button>
+      <div class="jm__layers" role="group" [attr.aria-label]="tx().layersAria">
+        <button type="button" [attr.aria-pressed]="layer() === 'sector'" (click)="setLayer('sector')">{{ tx().layerSector }}</button>
+        <button type="button" [attr.aria-pressed]="layer() === 'metro'" (click)="setLayer('metro')">{{ tx().layerMetro }}</button>
+        <button type="button" [attr.aria-pressed]="layer() === 'live'" (click)="setLayer('live')">{{ tx().layerLive }} @if (locked()) { <span class="jm__star" aria-hidden="true">★</span> }</button>
       </div>
 
       @if (layer() === 'sector') {
-        <div class="jm__chips" role="group" aria-label="Ngành">
+        <div class="jm__chips" role="group" [attr.aria-label]="tx().sectorAria">
           @for (t of types(); track t.key) {
             <button type="button" [attr.aria-pressed]="type() === t.key" (click)="type.set(t.key); selected.set(null)">{{ t.icon }} {{ t.name }}</button>
           }
         </div>
         <div class="jm__controls">
-          <div class="jm__seg" role="group" aria-label="Cách tô màu theo ngành">
-            <button type="button" [attr.aria-pressed]="metric() === 'count'" (click)="metric.set('count')">Số cơ sở</button>
-            <button type="button" [attr.aria-pressed]="metric() === 'per10k'" (click)="metric.set('per10k')">Mật độ trên 10.000 dân</button>
+          <div class="jm__seg" role="group" [attr.aria-label]="tx().colourAria">
+            <button type="button" [attr.aria-pressed]="metric() === 'count'" (click)="metric.set('count')">{{ tx().metricCount }}</button>
+            <button type="button" [attr.aria-pressed]="metric() === 'per10k'" (click)="metric.set('per10k')">{{ tx().metricDensity }}</button>
           </div>
         </div>
       }
-      <label class="jm__check"><input type="checkbox" [checked]="showMarkers()" (change)="showMarkers.set($any($event.target).checked)" /> Hiện cực theo quy hoạch và điểm mốc</label>
+      <label class="jm__check"><input type="checkbox" [checked]="showMarkers()" (change)="showMarkers.set($any($event.target).checked)" /> {{ tx().markersCheck }}</label>
 
-      <div class="jm__home" role="group" aria-label="Từ nhà bạn">
+      <div class="jm__home" role="group" [attr.aria-label]="tx().homeAria">
         <label class="jm__homesel">
-          <span>Nhà bạn ở</span>
-          <select aria-label="Phường hoặc xã bạn đang ở" [value]="home() ?? ''" (change)="homeChange.emit($any($event.target).value)">
-            <option value="">Chưa chọn</option>
+          <span>{{ tx().homeLabel }}</span>
+          <select [attr.aria-label]="tx().wardAria" [value]="home() ?? ''" (change)="homeChange.emit($any($event.target).value)">
+            <option value="">{{ tx().notChosen }}</option>
             @for (w of wardOptions(); track w.slug) {
               <option [value]="w.slug" [selected]="w.slug === home()">{{ w.name }}</option>
             }
@@ -71,20 +74,20 @@ const DEFAULT_TYPE = 'cafe';
         </label>
         @if (layer() === 'sector') {
           <div class="jm__row">
-            <span class="jm__label">Đi làm bằng ô tô, trong</span>
-            <div class="jm__seg" role="group" aria-label="Vùng đi làm bằng ô tô">
-              <button type="button" [attr.aria-pressed]="zone() === null" (click)="zone.set(null)">Tất cả</button>
+            <span class="jm__label">{{ tx().driveIn }}</span>
+            <div class="jm__seg" role="group" [attr.aria-label]="tx().zoneAria">
+              <button type="button" [attr.aria-pressed]="zone() === null" (click)="zone.set(null)">{{ tx().all }}</button>
               @for (z of zones; track z) {
-                <button type="button" [attr.aria-pressed]="zone() === z" [disabled]="!home()" [title]="home() ? 'Lái xe, đường thông thoáng' : 'Chọn phường bạn ở trước'" (click)="zone.set(z)">{{ z }} phút</button>
+                <button type="button" [attr.aria-pressed]="zone() === z" [disabled]="!home()" [title]="home() ? tx().zoneTitleOn : tx().zoneTitleOff" (click)="zone.set(z)">{{ tx().minutes(z) }}</button>
               }
             </div>
           </div>
         }
         @if (layer() === 'metro') {
           <div class="jm__row">
-            <span class="jm__label">Metro ở mốc</span>
-            <div class="jm__seg" role="group" aria-label="Mốc thời gian của metro">
-              @for (h of horizons; track h.id) {
+            <span class="jm__label">{{ tx().metroAt }}</span>
+            <div class="jm__seg" role="group" [attr.aria-label]="tx().metroAria">
+              @for (h of horizons(); track h.id) {
                 <button type="button" [attr.aria-pressed]="metroH() === h.id" [title]="h.hint" (click)="metroH.set(h.id)">{{ h.label }}</button>
               }
             </div>
@@ -93,21 +96,19 @@ const DEFAULT_TYPE = 'cafe';
       </div>
 
       @if (layer() === 'live') {
-        <div class="jm__live" role="group" aria-label="Nơi ở theo nơi làm">
-          <p class="jm__livehint">
-            Chọn nơi làm của bạn (và của người cùng ở, nếu có). Bản đồ tô các phường/xã mà từ đó đi tới mọi nơi làm trong giới hạn thời gian; càng gần càng đậm.
-          </p>
+        <div class="jm__live" role="group" [attr.aria-label]="tx().liveAria">
+          <p class="jm__livehint">{{ tx().liveHint }}</p>
           <div class="jm__livepick">
             <label>
-              <span>Nơi làm 1</span>
-              <select aria-label="Nơi làm thứ nhất" [value]="workA() ?? ''" (change)="workA.set($any($event.target).value || null)">
-                <option value="">Chọn nơi làm</option>
-                <optgroup label="Điểm mốc">
-                  @for (p of placeOptions; track p.id) {
+              <span>{{ tx().work1 }}</span>
+              <select [attr.aria-label]="tx().work1Aria" [value]="workA() ?? ''" (change)="workA.set($any($event.target).value || null)">
+                <option value="">{{ tx().chooseWork }}</option>
+                <optgroup [label]="tx().landmarks">
+                  @for (p of placeOptions(); track p.id) {
                     <option [value]="p.id" [selected]="p.id === workA()">{{ p.name }}</option>
                   }
                 </optgroup>
-                <optgroup label="Phường/xã">
+                <optgroup [label]="tx().wards">
                   @for (w of wardOptions(); track w.slug) {
                     <option [value]="w.slug" [selected]="w.slug === workA()">{{ w.name }}</option>
                   }
@@ -115,15 +116,15 @@ const DEFAULT_TYPE = 'cafe';
               </select>
             </label>
             <label>
-              <span>Nơi làm 2 (không bắt buộc)</span>
-              <select aria-label="Nơi làm thứ hai" [value]="workB() ?? ''" (change)="workB.set($any($event.target).value || null)">
-                <option value="">Không có</option>
-                <optgroup label="Điểm mốc">
-                  @for (p of placeOptions; track p.id) {
+              <span>{{ tx().work2 }}</span>
+              <select [attr.aria-label]="tx().work2Aria" [value]="workB() ?? ''" (change)="workB.set($any($event.target).value || null)">
+                <option value="">{{ tx().none }}</option>
+                <optgroup [label]="tx().landmarks">
+                  @for (p of placeOptions(); track p.id) {
                     <option [value]="p.id" [selected]="p.id === workB()">{{ p.name }}</option>
                   }
                 </optgroup>
-                <optgroup label="Phường/xã">
+                <optgroup [label]="tx().wards">
                   @for (w of wardOptions(); track w.slug) {
                     <option [value]="w.slug" [selected]="w.slug === workB()">{{ w.name }}</option>
                   }
@@ -132,18 +133,18 @@ const DEFAULT_TYPE = 'cafe';
             </label>
           </div>
           <div class="jm__row">
-            <span class="jm__label">Mỗi nơi làm, tối đa</span>
-            <div class="jm__seg" role="group" aria-label="Giới hạn thời gian">
+            <span class="jm__label">{{ tx().eachWork }}</span>
+            <div class="jm__seg" role="group" [attr.aria-label]="tx().limitAria">
               @for (l of liveLimits; track l) {
-                <button type="button" [attr.aria-pressed]="liveLimit() === l" (click)="liveLimit.set(l)">{{ l }} phút</button>
+                <button type="button" [attr.aria-pressed]="liveLimit() === l" (click)="liveLimit.set(l)">{{ tx().minutes(l) }}</button>
               }
             </div>
           </div>
           <div class="jm__row">
-            <span class="jm__label">Xếp theo</span>
-            <div class="jm__seg" role="group" aria-label="Cách xếp">
-              <button type="button" [attr.aria-pressed]="liveSort() === 'time'" (click)="liveSort.set('time')">Gần nơi làm nhất</button>
-              <button type="button" [attr.aria-pressed]="liveSort() === 'price'" (click)="liveSort.set('price')">Giá đất thấp nhất</button>
+            <span class="jm__label">{{ tx().sortBy }}</span>
+            <div class="jm__seg" role="group" [attr.aria-label]="tx().sortAria">
+              <button type="button" [attr.aria-pressed]="liveSort() === 'time'" (click)="liveSort.set('time')">{{ tx().sortTime }}</button>
+              <button type="button" [attr.aria-pressed]="liveSort() === 'price'" (click)="liveSort.set('price')">{{ tx().sortPrice }}</button>
             </div>
           </div>
         </div>
@@ -151,33 +152,45 @@ const DEFAULT_TYPE = 'cafe';
 
       @if (layer() === 'sector' && zoneSummary(); as z) {
         <p class="jm__summary" role="status">
-          Từ <b>{{ homeName() }}</b>, trong <b>{{ zone() }} phút</b> lái xe (đường thông thoáng) đến được <b>{{ z.wards }}/{{ z.total }}</b> phường/xã
-          @if (current(); as c) {
-            với <b>{{ z.places }}</b> cơ sở {{ c.name.toLowerCase() }}.
-            @if (z.top.length) {
-              Dày nhất: @for (t of z.top; track t.slug; let last = $last) { <a href="javascript:void(0)" (click)="selected.set(t.slug)">{{ t.name }}</a> ({{ t.count }}){{ last ? '.' : ', ' }} }
+          @if (lang() === 'en') {
+            From <b>{{ homeName() }}</b>, within <b>{{ zone() }} minutes</b> by car (free-flowing roads) you can reach <b>{{ z.wards }}/{{ z.total }}</b> wards and communes
+            @if (current(); as c) {
+              with <b>{{ z.places }}</b> {{ c.name.toLowerCase() }} places.
+              @if (z.top.length) {
+                {{ tx().zoneDensest }} @for (t of z.top; track t.slug; let last = $last) { <a href="javascript:void(0)" (click)="selected.set(t.slug)">{{ t.name }}</a> ({{ t.count }}){{ last ? '.' : ', ' }} }
+              }
+            } @else {
+              .
             }
           } @else {
-            .
+            Từ <b>{{ homeName() }}</b>, trong <b>{{ zone() }} phút</b> lái xe (đường thông thoáng) đến được <b>{{ z.wards }}/{{ z.total }}</b> phường/xã
+            @if (current(); as c) {
+              với <b>{{ z.places }}</b> cơ sở {{ c.name.toLowerCase() }}.
+              @if (z.top.length) {
+                Dày nhất: @for (t of z.top; track t.slug; let last = $last) { <a href="javascript:void(0)" (click)="selected.set(t.slug)">{{ t.name }}</a> ({{ t.count }}){{ last ? '.' : ', ' }} }
+              }
+            } @else {
+              .
+            }
           }
-          Phường ngoài vùng bị làm mờ. Giờ cao điểm thường lâu hơn nhiều, nên coi đây là vùng gần nhất có thể.
+          {{ tx().zoneFaded }}
         </p>
       }
       @if (layer() === 'metro' && metroSummary(); as m) {
         <p class="jm__summary" role="status">
-          <b>{{ m.horizon.label }}:</b> {{ m.served }}/{{ m.total }} phường/xã có ga metro trong {{ stationKmText() }} km@if (m.horizon.id === 'plan') { hoặc nằm gần hành lang tuyến theo quy hoạch (sơ đồ, chưa có vị trí ga) }.
+          <b>{{ m.horizon.label }}:</b> {{ m.served }}/{{ m.total }} {{ tx().metroWards }} {{ stationKmText() }} {{ tx().metroIn }}@if (m.horizon.id === 'plan') { {{ tx().metroPlan }} }.
           @if (home()) {
             @if (m.homeLines.length) {
-              Nhà bạn đi được tuyến <b>{{ m.homeLines.join(', ') }}</b>; {{ m.same }} phường/xã khác nằm trên cùng tuyến.
+              {{ tx().homeLines }} <b>{{ m.homeLines.join(', ') }}</b>; {{ m.same }} {{ tx().homeShare }}
             } @else {
-              Nhà bạn chưa gần ga ở mốc này.
+              {{ tx().homeNone }}
             }
           }
         </p>
       }
 
       @if (layer() === 'sector' && current()?.sparse) {
-        <p class="jm__warn">Ngành này có rất ít cơ sở trên bản đồ OpenStreetMap, nên màu sắc chưa đáng tin. Hãy xem các ngành khác hoặc khảo sát thực tế.</p>
+        <p class="jm__warn">{{ tx().sparse }}</p>
       }
 
       <div class="jm__grid">
@@ -185,101 +198,142 @@ const DEFAULT_TYPE = 'cafe';
           <app-job-map
             [wards]="features()"
             [mode]="mode()"
-            [markers]="points"
+            [markers]="points()"
             [showMarkers]="showMarkers()"
             [selected]="selected()"
             [home]="home()"
             [theme]="theme()"
-            ariaLabel="Bản đồ các phường Hà Nội tô màu theo ngành đã chọn hoặc theo metro"
+            [ariaLabel]="tx().mapAria"
             (wardSelect)="selected.set($event)"
           />
           @if (error()) {
-            <p class="jm__error" role="alert">Chưa tải được dữ liệu bản đồ. Hãy thử lại sau.</p>
+            <p class="jm__error" role="alert">{{ tx().mapError }}</p>
           }
         </div>
 
         <aside class="jm__side" aria-live="polite">
           @if (figure(); as f) {
-            <h3>{{ f.name }}</h3>
-            <p class="jm__muted">
-              @if (f.population) {
-                {{ f.population.toLocaleString('vi-VN') }} dân ·
-              }
-              @if (f.count !== null) {
-                {{ current()?.name }}: <b>{{ f.count }} cơ sở</b>@if (f.per10k !== null) { ({{ f.per10k.toLocaleString('vi-VN') }} trên 10.000 dân) }
-              } @else {
-                chưa có dữ liệu ngành này ở phường
-              }
-            </p>
-            @if (fromHome(); as t) {
-              <p class="jm__from">{{ t }}</p>
-            }
-            @if (wardMetro(); as lines) {
-              <p class="jm__muted">Metro trong {{ stationKmText() }} km: nay <b>{{ lines.now }}</b> · 2027 <b>{{ lines.soon }}</b> · quy hoạch <b>{{ lines.plan }}</b></p>
-            }
-            <h4>Ngành đang dày quanh đây</h4>
-            @if (detailLoading()) {
-              <p class="jm__muted">Đang tải…</p>
-            } @else if (sectors().length) {
-              <ol class="jm__sectors">
-                @for (o of sectors(); track o.type) {
-                  <li><span aria-hidden="true">{{ o.icon }}</span> {{ o.name }} <b>{{ o.count }}</b></li>
+            <header class="jm__sidehead">
+              <div>
+                <h3>{{ f.name }}</h3>
+                @if (f.population) {
+                  <p class="jm__sub">{{ f.population.toLocaleString(locale()) }} {{ tx().people }}</p>
                 }
-              </ol>
-            } @else {
-              <p class="jm__muted">Chưa có dữ liệu các ngành ở phường này.</p>
+              </div>
+              <button type="button" class="jm__close" (click)="selected.set(null)" [attr.aria-label]="tx().deselect">✕</button>
+            </header>
+
+            @if (fromHome(); as fh) {
+              <section class="jm__block jm__block--home">
+                <span class="jm__k">{{ tx().fromHome(fh.home) }}</span>
+                <b class="jm__big">{{ tx().minutes(fh.minutes) }}</b>
+                <span class="jm__hint">{{ tx().driveNote }}</span>
+              </section>
             }
+
+            <section class="jm__block">
+              <h4>{{ current()?.name ?? tx().selectedSector }}</h4>
+              @if (f.count !== null) {
+                <dl class="jm__stats">
+                  <div><dt>{{ tx().places }}</dt><dd>{{ f.count }}</dd></div>
+                  @if (f.per10k !== null) {
+                    <div><dt>{{ tx().perTenK }}</dt><dd>{{ f.per10k.toLocaleString(locale()) }}</dd></div>
+                  }
+                </dl>
+              } @else {
+                <p class="jm__muted">{{ tx().noSectorWard }}</p>
+              }
+            </section>
+
+            @if (wardMetro(); as m) {
+              <section class="jm__block">
+                <h4>{{ tx().metroWithin }} {{ stationKmText() }} {{ tx().metroIn }}</h4>
+                <dl class="jm__metro">
+                  @for (r of m; track r.label) {
+                    <div><dt>{{ r.label }}</dt><dd [class.is-none]="r.none">{{ r.text }}</dd></div>
+                  }
+                </dl>
+              </section>
+            }
+
+            <section class="jm__block">
+              <h4>{{ tx().thick }}</h4>
+              @if (detailLoading()) {
+                <p class="jm__muted">{{ tx().loading }}</p>
+              } @else if (sectors().length) {
+                <ol class="jm__sectors">
+                  @for (o of sectors(); track o.type) {
+                    <li>
+                      <span class="jm__lbl"><span aria-hidden="true">{{ o.icon }}</span> {{ o.name }}</span>
+                      <span class="jm__bar" aria-hidden="true"><i [style.width.%]="(o.count / sectorMax()) * 100"></i></span>
+                      <b>{{ o.count }}</b>
+                    </li>
+                  }
+                </ol>
+                <p class="jm__unit">{{ tx().osmCount }}</p>
+              } @else {
+                <p class="jm__muted">{{ tx().noSectors }}</p>
+              }
+            </section>
+
             <div class="jm__actions">
               <button type="button" class="jm__btn" [class.is-on]="home() === f.slug" (click)="homeChange.emit(f.slug)">
-                {{ home() === f.slug ? '✓ Phường bạn đang ở' : 'Tôi ở phường này' }}
+                {{ home() === f.slug ? tx().hereNow : tx().imHere }}
               </button>
-              <a [routerLink]="'/opportunity-map'" [queryParams]="{ ward: f.slug, type: type() }">Mở gì ở đâu →</a>
-              <a [routerLink]="'/property-intelligence/map'" [queryParams]="{ ward: f.slug }">Chấm điểm bất động sản →</a>
+              <div class="jm__links">
+                <a [routerLink]="'/opportunity-map'" [queryParams]="{ ward: f.slug, type: type(), lang: lang() === 'en' ? 'en' : null }">{{ tx().openMap }}</a>
+                <a [routerLink]="'/property-intelligence/map'" [queryParams]="{ ward: f.slug, lang: lang() === 'en' ? 'en' : null }">{{ tx().property }}</a>
+              </div>
+              <app-report-issue kind="ward" [target]="f.slug" [targetName]="f.name" page="career" [lang]="lang()" />
             </div>
           } @else {
-            <h3>Chọn một phường</h3>
-            <p class="jm__muted">Bấm vào một phường trên bản đồ để xem chi tiết: số cơ sở của ngành đã chọn, những ngành đang dày quanh đó, thời gian từ nhà bạn và metro gần đó.</p>
+            <h3>{{ tx().pickWard }}</h3>
+            <p class="jm__muted">{{ tx().pickWardHint }}</p>
           }
         </aside>
       </div>
 
-      <div class="jm__legend" aria-label="Chú giải">
+      <div class="jm__legend" [attr.aria-label]="tx().legend">
         @if (layer() === 'live') {
-          @for (l of liveLegend; track l.label) {
+          @for (l of liveLegend(); track l.label) {
             <span><i [style.background]="l.color"></i>{{ l.label }}</span>
           }
-          <span><i [style.background]="noData"></i>Chưa chọn nơi làm</span>
-          <span><i class="faded"></i>Ngoài giới hạn thời gian</span>
+          <span><i [style.background]="noData"></i>{{ tx().legendNoWork }}</span>
+          <span><i class="faded"></i>{{ tx().legendOutside }}</span>
         } @else if (layer() === 'metro') {
           @if (home()) {
-            <span><i [style.background]="metroColors.same"></i>Cùng tuyến metro với nhà bạn</span>
+            <span><i [style.background]="metroColors.same"></i>{{ tx().legendSame }}</span>
           }
-          <span><i [style.background]="metroColors.any"></i>{{ home() ? 'Có metro, khác tuyến' : 'Có metro trong ' + stationKmText() + ' km' }}</span>
-          <span><i [style.background]="noData"></i>Chưa có metro</span>
+          <span><i [style.background]="metroColors.any"></i>{{ home() ? tx().legendMetro : tx().legendMetroKm(stationKmText()) }}</span>
+          <span><i [style.background]="noData"></i>{{ tx().legendNoMetro }}</span>
         } @else {
           @for (l of legendItems(); track l.label) {
             <span><i [style.background]="l.color"></i>{{ l.label }}</span>
           }
-          <span><i [style.background]="noData"></i>Chưa có dữ liệu</span>
+          <span><i [style.background]="noData"></i>{{ tx().legendNoData }}</span>
           @if (zone()) {
-            <span><i class="faded"></i>Ngoài vùng đi làm</span>
+            <span><i class="faded"></i>{{ tx().legendOutZone }}</span>
           }
         }
         @if (showMarkers()) {
-          <span><i class="dot dot--plan"></i>Cực theo quy hoạch</span>
-          <span><i class="dot dot--now"></i>Điểm mốc (Hồ Gươm, Cầu Giấy – Duy Tân, Nội Bài)</span>
+          <span><i class="dot dot--plan"></i>{{ tx().legendPole }}</span>
+          <span><i class="dot dot--now"></i>{{ tx().legendMark }}</span>
         }
       </div>
 
       @if (layer() === 'live' && liveSummary(); as ls) {
         <div class="jm__table jm__livetable">
-          <h3>Nơi ở gợi ý</h3>
+          <h3>{{ tx().liveTitle }}</h3>
           <p class="jm__summary" role="status">
             @if (ls.total === 0) {
-              Không có phường/xã nào đi tới {{ ls.names }} trong {{ liveLimit() }} phút. Thử nới giới hạn thời gian.
+              {{ tx().liveNone(ls.names, liveLimit()) }}
             } @else {
-              <b>{{ ls.total }}</b> phường/xã đi tới {{ ls.names }} trong {{ liveLimit() }} phút (lái xe, đường thông thoáng).
-              @if (ls.total > ls.rows.length) { Đang hiện {{ ls.rows.length }} phường/xã đứng đầu. }
+              @if (lang() === 'en') {
+                <b>{{ ls.total }}</b> wards and communes reach {{ ls.names }} within {{ liveLimit() }} minutes (by car, free-flowing roads).
+              } @else {
+                <b>{{ ls.total }}</b> phường/xã đi tới {{ ls.names }} trong {{ liveLimit() }} phút (lái xe, đường thông thoáng).
+              }
+              @if (ls.total > ls.rows.length) { {{ tx().liveTop(ls.rows.length) }} }
             }
           </p>
           @if (ls.rows.length) {
@@ -287,12 +341,12 @@ const DEFAULT_TYPE = 'cafe';
               <table>
                 <thead>
                   <tr>
-                    <th scope="col">Phường/xã</th>
+                    <th scope="col">{{ tx().colWard }}</th>
                     @for (w of ls.workNames; track w) {
-                      <th scope="col">Tới {{ w }}</th>
+                      <th scope="col">{{ tx().colTo(w) }}</th>
                     }
-                    <th scope="col" title="Giá đất nhà nước, trung vị VT1, triệu đồng/m²: thường thấp hơn giá thị trường">Giá đất NN</th>
-                    <th scope="col">Metro cùng tuyến</th>
+                    <th scope="col" [title]="tx().colLandTitle">{{ tx().colLand }}</th>
+                    <th scope="col">{{ tx().colMetro }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -300,32 +354,29 @@ const DEFAULT_TYPE = 'cafe';
                     <tr [class.is-selected]="selected() === r.slug">
                       <th scope="row"><a href="javascript:void(0)" (click)="selected.set(r.slug)">{{ r.name }}</a></th>
                       @for (m of r.minutes; track $index) {
-                        <td>{{ m }} phút</td>
+                        <td>{{ tx().minutesCell(m) }}</td>
                       }
-                      <td>{{ r.landMedian === null ? '–' : r.landMedian.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' tr/m²' }}</td>
-                      <td [attr.data-kind]="r.metroFrom ? 'direct' : 'noPlace'">{{ r.metroFrom ? '✓ ' + metroFromText[r.metroFrom] : '–' }}</td>
+                      <td>{{ r.landMedian === null ? '–' : r.landMedian.toLocaleString(locale(), { maximumFractionDigits: 1 }) + ' ' + tx().perM2 }}</td>
+                      <td [attr.data-kind]="r.metroFrom ? 'direct' : 'noPlace'">{{ r.metroFrom ? '✓ ' + metroFromText()[r.metroFrom] : '–' }}</td>
                     </tr>
                   }
                 </tbody>
               </table>
             </div>
           }
-          <p class="jm__note">
-            Thời gian là lái ô tô giữa tâm các phường/xã, đường thông thoáng; giờ cao điểm lâu hơn nhiều. Giá đất là bảng giá nhà nước 2026, chỉ là dấu hiệu thô về chi phí ở, không phải giá thuê hay giá bán.
-            "Metro cùng tuyến" nghĩa là ga trong {{ stationKmText() }} km quanh nhà và quanh mọi nơi làm có chung một tuyến; chưa có thời gian đi metro. Đây là gợi ý để đi xem, không thay cho khảo sát thực tế.
-          </p>
+          <p class="jm__note">{{ tx().liveNote(stationKmText()) }}</p>
         </div>
       }
 
       @if (layer() === 'metro' && home() && placeRows().length) {
         <div class="jm__table">
-          <h3>Nhà bạn nối với nơi làm việc bằng metro không?</h3>
+          <h3>{{ tx().metroTitle }}</h3>
           <div class="jm__scroll">
             <table>
               <thead>
                 <tr>
-                  <th scope="col">Nơi làm việc</th>
-                  @for (h of horizons; track h.id) {
+                  <th scope="col">{{ tx().colWork }}</th>
+                  @for (h of horizons(); track h.id) {
                     <th scope="col" [class.is-now]="h.id === metroH()">{{ h.label }}</th>
                   }
                 </tr>
@@ -342,17 +393,14 @@ const DEFAULT_TYPE = 'cafe';
               </tbody>
             </table>
           </div>
-          <p class="jm__note">
-            Chỉ cho biết nhà và nơi làm có cùng một tuyến metro trong {{ stationKmText() }} km quanh ga hay không; dữ liệu chưa có thời gian đi hay lịch chạy. Ô "Khác tuyến" có thể vẫn đi được bằng cách đổi tuyến.
-            Mốc quy hoạch chỉ là hành lang sơ đồ của tuyến dự kiến, chưa có vị trí ga.
-          </p>
+          <p class="jm__note">{{ tx().metroNote(stationKmText()) }}</p>
         </div>
       }
 
       <p class="jm__note">
-        {{ caveat() }} Số cơ sở khác số vị trí tuyển dụng: chỉ dùng để thấy ngành nào tập trung ở đâu. Cực theo quy hoạch là hướng phát triển, chưa phải nơi đã có sẵn việc làm.
-        Công nghiệp, bán dẫn, logistics và xây dựng không có số cơ sở đáng tin trên bản đồ nên không tô màu; hãy xem lớp quy hoạch và mục "Nơi làm việc" của từng hướng nghề.
-        Thời gian đi lại tính bằng ô tô giữa tâm các phường/xã, đường thông thoáng ({{ commuteSource() }}); xe máy nhiều khi nhanh hơn, giờ cao điểm lâu hơn nhiều.
+        {{ caveat() }} {{ tx().endNote1 }}
+        {{ tx().endNote2 }}
+        {{ tx().endNote3(commuteSource()) }}
       </p>
     </section>
   `,
@@ -393,15 +441,40 @@ const DEFAULT_TYPE = 'cafe';
     .jm__summary a { color: var(--app-career); font-weight: 700; }
     .jm__warn { margin: 0; padding: 8px 12px; border-radius: 10px; background: var(--app-time-soft); font-size: 13px; }
     .jm__grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; }
-    .jm__mapbox { position: relative; height: 540px; border: 1px solid var(--app-line); border-radius: 14px; overflow: hidden; background: var(--app-surface-2); }
+    .jm__mapbox { position: sticky; top: calc(var(--site-nav-h, 56px) + 70px); height: clamp(480px, calc(100dvh - var(--site-nav-h, 56px) - 90px), 760px); border: 1px solid var(--app-line); border-radius: 14px; overflow: hidden; background: var(--app-surface-2); }
     .jm__error { position: absolute; left: 12px; bottom: 12px; margin: 0; padding: 8px 12px; border-radius: 8px; background: var(--app-surface); font-size: 13px; }
-    .jm__side { padding: 16px; border: 1px solid var(--app-line); border-radius: 14px; background: var(--app-surface); align-self: start; }
-    .jm__muted { margin: 4px 0 0; font-size: 13.5px; color: var(--app-ink-dim); }
-    .jm__from { margin: 6px 0 0; font-size: 14px; font-weight: 700; color: var(--app-career); }
-    .jm__sectors { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; }
-    .jm__sectors b { float: right; color: var(--app-career); }
-    .jm__actions { display: grid; gap: 8px; margin-top: 14px; }
-    .jm__actions a { color: var(--app-career); font-weight: 700; font-size: 14px; }
+    .jm__side { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--app-line); border-radius: 14px; background: var(--app-surface); align-self: start; position: sticky; top: calc(var(--site-nav-h, 56px) + 70px); max-height: clamp(480px, calc(100dvh - var(--site-nav-h, 56px) - 90px), 760px); overflow-y: auto; }
+    .jm__sidehead { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+    .jm__sub { margin: 2px 0 0; font-size: 13px; color: var(--app-ink-dim); }
+    .jm__close { width: 32px; height: 32px; flex-shrink: 0; border: 0; border-radius: 8px; background: transparent; color: var(--app-ink-dim); cursor: pointer; font: inherit; }
+    .jm__close:hover { background: var(--app-surface-2); }
+    .jm__block { display: grid; gap: 6px; padding-top: 12px; border-top: 1px solid var(--app-line); }
+    .jm__block h4 { margin: 0; }
+    .jm__block--home { grid-template-columns: 1fr auto; align-items: baseline; padding: 10px 12px; border: 1px solid var(--app-career); border-radius: 10px; background: var(--app-career-soft); }
+    .jm__k { font-size: 12.5px; font-weight: 700; color: var(--app-ink-dim); grid-column: 1 / -1; }
+    .jm__big { font-size: 24px; line-height: 1.1; color: var(--app-career); }
+    .jm__hint { font-size: 12.5px; color: var(--app-ink-dim); text-align: right; }
+    .jm__muted { margin: 0; font-size: 13.5px; color: var(--app-ink-dim); }
+    .jm__stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin: 0; }
+    .jm__stats > div { padding: 8px 10px; border-radius: 10px; background: var(--app-surface-2); }
+    .jm__stats dt { font-size: 12px; color: var(--app-ink-dim); }
+    .jm__stats dd { margin: 0; font-size: 20px; font-weight: 800; }
+    .jm__metro { display: grid; gap: 4px; margin: 0; font-size: 13.5px; }
+    .jm__metro > div { display: flex; justify-content: space-between; gap: 10px; }
+    .jm__metro dt { color: var(--app-ink-dim); }
+    .jm__metro dd { margin: 0; font-weight: 700; text-align: right; }
+    .jm__metro dd.is-none { font-weight: 500; color: var(--app-ink-faint); }
+    .jm__sectors { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 13.5px; }
+    .jm__sectors li { display: grid; grid-template-columns: minmax(0, 1fr) 56px auto; align-items: center; gap: 8px; }
+    .jm__lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .jm__bar { height: 6px; border-radius: 999px; background: var(--app-line); overflow: hidden; }
+    .jm__bar i { display: block; height: 100%; border-radius: inherit; background: var(--app-career); }
+    .jm__sectors b { min-width: 22px; text-align: right; color: var(--app-career); }
+    .jm__unit { margin: 0; font-size: 11.5px; color: var(--app-ink-faint); }
+    .jm__actions { display: grid; gap: 10px; padding-top: 12px; border-top: 1px solid var(--app-line); }
+    .jm__btn { width: 100%; }
+    .jm__links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; }
+    .jm__links a { color: var(--app-career); font-weight: 700; font-size: 13.5px; }
     .jm__btn { padding: 9px 14px; min-height: 40px; border: 1px solid var(--app-career); border-radius: 999px; background: var(--app-career-soft); color: var(--app-career); font: inherit; font-weight: 700; cursor: pointer; }
     .jm__btn.is-on { background: var(--app-career); color: #fff; }
     .jm__legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--app-ink-dim); }
@@ -423,7 +496,8 @@ const DEFAULT_TYPE = 'cafe';
     .jm__note { margin: 0; font-size: 12.5px; color: var(--app-ink-dim); }
     @media (max-width: 860px) {
       .jm__grid { grid-template-columns: 1fr; }
-      .jm__mapbox { height: 420px; }
+      .jm__mapbox { position: relative; top: auto; height: 420px; }
+      .jm__side { position: static; max-height: none; }
       .jm__label { min-width: 0; width: 100%; }
     }
   `,
@@ -437,12 +511,16 @@ export class JobMapSectionComponent {
   readonly home = input<string | null>(null);
   /** "Tôi ở phường này": the visitor says where they live. */
   readonly homeChange = output<string>();
+  /** The language of the page. */
+  readonly lang = input<CareerLang>('vi');
+  protected readonly tx = computed(() => JOBMAP_TEXT[this.lang()]);
+  protected readonly locale = computed(() => localeOf(this.lang()));
 
   protected readonly noData = NO_DATA;
   protected readonly metroColors = METRO_COLORS;
   protected readonly zones = ZONES;
-  protected readonly horizons = METRO_HORIZONS;
-  protected readonly points = markers();
+  protected readonly horizons = computed(() => metroHorizonsIn(this.lang()));
+  protected readonly points = computed(() => markers(areasIn(this.lang())));
   protected readonly type = signal(DEFAULT_TYPE);
   protected readonly metric = signal<Metric>('count');
   protected readonly showMarkers = signal(true);
@@ -459,29 +537,36 @@ export class JobMapSectionComponent {
 
   // ---- where to live for the work (Premium)
   protected readonly liveLimits = LIVE_LIMITS;
-  protected readonly metroFromText = METRO_FROM_TEXT;
+  protected readonly metroFromText = computed(() => metroFromTextIn(this.lang()));
   protected readonly workA = signal<string | null>(null);
   protected readonly workB = signal<string | null>(null);
   protected readonly liveLimit = signal<LiveLimit>(30);
   protected readonly liveSort = signal<LiveSort>('time');
   /** The reference places a workplace can be (their times to every ward come with the travel data). */
-  protected readonly placeOptions = Object.values(AREAS).filter((a) => a.routed).map((a) => ({ id: a.id, name: a.name }));
-  protected readonly liveLegend = [
-    { color: RAMP[4], label: 'Gần nơi làm nhất' },
-    { color: RAMP[2], label: 'Vừa' },
-    { color: RAMP[0], label: 'Xa hơn (vẫn trong giới hạn)' },
-  ];
+  protected readonly placeOptions = computed(() => Object.values(areasIn(this.lang())).filter((a) => a.routed).map((a) => ({ id: a.id, name: a.name })));
+  protected readonly liveLegend = computed(() => {
+    const l = this.tx().liveLegend;
+    return [
+      { color: RAMP[4], label: l.near },
+      { color: RAMP[2], label: l.mid },
+      { color: RAMP[0], label: l.far },
+    ];
+  });
 
   protected setLayer(layer: 'sector' | 'metro' | 'live'): void {
-    if (layer === 'live' && this.locked()) return this.premiumPrompt.open('Tìm nơi ở theo nơi làm', 'vi');
+    if (layer === 'live' && this.locked()) return this.premiumPrompt.open(this.tx().liveAsk, this.lang());
     this.layer.set(layer);
     this.selected.set(null);
   }
 
   protected readonly types = toSignal(
-    this.api.types('vi').pipe(
-      map((r) => r.types),
-      catchError(() => of([])),
+    toObservable(this.lang).pipe(
+      switchMap((lang) =>
+        this.api.types(lang).pipe(
+          map((r) => r.types),
+          catchError(() => of([])),
+        ),
+      ),
     ),
     { initialValue: [] },
   );
@@ -492,14 +577,14 @@ export class JobMapSectionComponent {
 
   /** Driving times from home, and the metro lines near every ward and place. */
   private readonly commute = toSignal(
-    toObservable(this.home).pipe(switchMap((slug) => (slug ? this.pi.commute(slug, 'vi').pipe(catchError(() => of(null))) : of(null)))),
+    toObservable(computed(() => ({ slug: this.home(), lang: this.lang() }))).pipe(switchMap(({ slug, lang }) => (slug ? this.pi.commute(slug, lang).pipe(catchError(() => of(null))) : of(null)))),
     { initialValue: null },
   );
   private readonly metro = toSignal(this.pi.metroReach().pipe(catchError(() => of(null))), { initialValue: null });
-  private readonly timesA = toSignal(toObservable(this.workA).pipe(switchMap((t) => (t ? this.pi.commuteTo(t, 'vi').pipe(catchError(() => of(null))) : of(null)))), { initialValue: null });
-  private readonly timesB = toSignal(toObservable(this.workB).pipe(switchMap((t) => (t ? this.pi.commuteTo(t, 'vi').pipe(catchError(() => of(null))) : of(null)))), { initialValue: null });
-  protected readonly stationKmText = computed(() => (this.metro()?.stationKm ?? 1.5).toLocaleString('vi-VN'));
-  protected readonly commuteSource = computed(() => this.commute()?.source ?? 'OSRM trên đường OpenStreetMap');
+  private readonly timesA = toSignal(toObservable(computed(() => ({ t: this.workA(), lang: this.lang() }))).pipe(switchMap(({ t, lang }) => (t ? this.pi.commuteTo(t, lang).pipe(catchError(() => of(null))) : of(null)))), { initialValue: null });
+  private readonly timesB = toSignal(toObservable(computed(() => ({ t: this.workB(), lang: this.lang() }))).pipe(switchMap(({ t, lang }) => (t ? this.pi.commuteTo(t, lang).pipe(catchError(() => of(null))) : of(null)))), { initialValue: null });
+  protected readonly stationKmText = computed(() => (this.metro()?.stationKm ?? 1.5).toLocaleString(this.locale()));
+  protected readonly commuteSource = computed(() => this.commute()?.source ?? this.tx().defaultSource);
 
   protected readonly wardOptions = computed(() =>
     (this.response()?.features ?? [])
@@ -543,7 +628,7 @@ export class JobMapSectionComponent {
     const works = this.workplaces();
     if (this.layer() !== 'live' || works.length === 0) return null;
     const rows = this.liveRows();
-    return { total: rows.length, rows: rows.slice(0, 12), names: works.map((w) => w.name).join(' và '), workNames: works.map((w) => w.name) };
+    return { total: rows.length, rows: rows.slice(0, 12), names: works.map((w) => w.name).join(this.tx().and), workNames: works.map((w) => w.name) };
   });
 
   /** Metro: how many wards are served at the chosen horizon, and how many share a line with home. */
@@ -554,7 +639,7 @@ export class JobMapSectionComponent {
     const home = this.home() ? (metro.wards[this.home() as string] ?? null) : null;
     const wards = Object.values(metro.wards);
     return {
-      horizon: this.horizons.find((x) => x.id === h)!,
+      horizon: this.horizons().find((x) => x.id === h)!,
       served: wards.filter((w) => w.lines[h].length).length,
       total: wards.length,
       homeLines: home?.lines[h] ?? [],
@@ -595,8 +680,8 @@ export class JobMapSectionComponent {
     };
   });
 
-  protected readonly legendItems = computed(() => legend(this.limits(), this.metric() === 'per10k' ? 1 : 0));
-  protected readonly caveat = computed(() => this.response()?.meta.caveat ?? 'OpenStreetMap do cộng đồng đóng góp và chưa ghi nhận đủ cửa hàng nhỏ.');
+  protected readonly legendItems = computed(() => legend(this.limits(), this.metric() === 'per10k' ? 1 : 0, this.lang()));
+  protected readonly caveat = computed(() => this.response()?.meta.caveat ?? this.tx().caveatDefault);
 
   protected readonly figure = computed(() => {
     const slug = this.selected();
@@ -609,7 +694,7 @@ export class JobMapSectionComponent {
     const commute = this.commute();
     if (!slug || !commute || !this.home() || slug === this.home()) return null;
     const minutes = commute.minutes[slug];
-    return minutes === null || minutes === undefined ? null : `Từ ${this.homeName()}: khoảng ${minutes} phút lái xe (đường thông thoáng)`;
+    return minutes === null || minutes === undefined ? null : { home: this.homeName(), minutes };
   });
 
   /** The metro lines near the chosen ward at the three horizons. */
@@ -617,8 +702,9 @@ export class JobMapSectionComponent {
     const slug = this.selected();
     const point = slug ? this.metro()?.wards[slug] : null;
     if (!point) return null;
-    const text = (h: MetroHorizon) => (point.lines[h].length ? point.lines[h].join(', ') : 'chưa có');
-    return { now: text('now'), soon: text('soon'), plan: text('plan') };
+    const tx = this.tx();
+    const row = (label: string, h: MetroHorizon) => ({ label, text: point.lines[h].length ? tx.line(point.lines[h].join(', ')) : tx.noneYet, none: point.lines[h].length === 0 });
+    return [row(tx.horizonNow, 'now'), row(tx.horizonSoon, 'soon'), row(tx.horizonPlan, 'plan')];
   });
 
   /** The places of work and whether home shares a metro line with each, at the three horizons. */
@@ -626,33 +712,38 @@ export class JobMapSectionComponent {
     const metro = this.metro();
     const home = metro && this.home() ? (metro.wards[this.home() as string] ?? null) : null;
     if (!metro || !home) return [];
-    return Object.keys(AREAS)
+    const areas = areasIn(this.lang());
+    const linkText = linkTextIn(this.lang());
+    return Object.keys(areas)
       .filter((id) => metro.places[id])
       .map((id) => ({
         id,
-        name: AREAS[id].name,
-        cells: this.horizons.map((h) => {
+        name: areas[id].name,
+        cells: this.horizons().map((h) => {
           const link = metroLink(home, metro.places[id], h.id);
-          return { id: h.id, link, text: this.cellText(link), title: LINK_TEXT[link.kind] };
+          return { id: h.id, link, text: this.cellText(link), title: linkText[link.kind] };
         }),
       }));
   });
 
   private cellText(link: MetroLink): string {
-    return link.kind === 'direct' ? `✓ tuyến ${link.lines.join(', ')}` : link.kind === 'transfer' ? 'Khác tuyến' : '–';
+    const c = this.tx().metroCell;
+    return link.kind === 'direct' ? c.line(link.lines.join(', ')) : link.kind === 'transfer' ? c.transfer : '–';
   }
 
   private readonly detail = signal<WardDetail | null>(null);
   protected readonly detailLoading = computed(() => !!this.selected() && this.detail()?.slug !== this.selected());
+  /** The most places of any sector listed, for the length of the bars. */
+  protected readonly sectorMax = computed(() => Math.max(1, ...this.sectors().map((o) => o.count)));
   protected readonly sectors = computed<Opportunity[]>(() => (this.detail()?.slug === this.selected() ? topSectors(this.detail()?.opportunities ?? []) : []));
 
   constructor() {
     // The wards of the chosen sector.
-    toObservable(this.type)
+    toObservable(computed(() => ({ type: this.type(), lang: this.lang() })))
       .pipe(
-        switchMap((type) => {
+        switchMap(({ type, lang }) => {
           this.error.set(false);
-          return this.api.wards(type, 'now', 'vi').pipe(
+          return this.api.wards(type, 'now', lang).pipe(
             catchError(() => {
               this.error.set(true);
               return of(null);
@@ -664,9 +755,9 @@ export class JobMapSectionComponent {
       .subscribe((r) => this.response.set(r));
 
     // The sectors around the chosen ward.
-    toObservable(this.selected)
+    toObservable(computed(() => ({ slug: this.selected(), lang: this.lang() })))
       .pipe(
-        switchMap((slug) => (slug ? this.api.ward(slug, 'now', 'vi').pipe(catchError(() => of(null))) : of(null))),
+        switchMap(({ slug, lang }) => (slug ? this.api.ward(slug, 'now', lang).pipe(catchError(() => of(null))) : of(null))),
         takeUntilDestroyed(),
       )
       .subscribe((d) => this.detail.set(d));

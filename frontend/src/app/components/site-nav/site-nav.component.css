@@ -285,6 +285,7 @@ button:focus-visible {
 /* Account: a pill "Đăng nhập" when signed out, the user's initial when signed in. */
 .account-btn:not(.is-in) {
   display: inline-flex;
+  align-items: center;
   gap: 6px;
   width: auto;
   padding: 0 12px 0 9px;
@@ -442,6 +443,7 @@ button:focus-visible {
   .account-btn:not(.is-in) {
     width: 36px;
     padding: 0;
+    justify-content: center;
     border-radius: 50%;
   }
   .account-label {

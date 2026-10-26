@@ -5,7 +5,7 @@ const path = require('node:path');
 const { conflict, paymentRequired } = require('./errors');
 
 // Applied in order on start: accounts and saved items, purchases and paid reports, then AI questions and Premium.
-const SCHEMAS = ['01-schema.sql', '02-billing.sql', '03-ai-premium.sql', '04-email-terms.sql', '05-broker-brand.sql', '06-career.sql'].map((f) => path.join(__dirname, '..', '..', 'database', 'accounts', f));
+const SCHEMAS = ['01-schema.sql', '02-billing.sql', '03-ai-premium.sql', '04-email-terms.sql', '05-broker-brand.sql', '06-career.sql', '07-data-reports.sql'].map((f) => path.join(__dirname, '..', '..', 'database', 'accounts', f));
 
 const toUser = (r) => r && { id: r.id, email: r.email, displayName: r.display_name, createdAt: r.created_at, lastLoginAt: r.last_login_at, emailVerifiedAt: r.email_verified_at, termsAcceptedAt: r.terms_accepted_at };
 const toItem = (r) => ({ id: r.id, key: r.item_key, payload: r.payload, createdAt: r.created_at, updatedAt: r.updated_at });
@@ -147,6 +147,20 @@ class PostgresStore {
   async listItems(userId, kind) {
     const { rows } = await this.pool.query('SELECT * FROM saved_items WHERE user_id = $1 AND kind = $2 ORDER BY updated_at DESC', [userId, kind]);
     return rows.map(toItem);
+  }
+
+  /** A report of a wrong figure (src/feedback). */
+  async addDataReport({ kind, target, targetName, page, message, contact, userId }) {
+    const { rows } = await this.pool.query(
+      `INSERT INTO data_reports (kind, target, target_name, page, message, contact, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, created_at`,
+      [kind, target, targetName, page, message, contact, userId],
+    );
+    return { id: rows[0].id, createdAt: rows[0].created_at };
+  }
+
+  async listDataReports(limit = 50) {
+    const { rows } = await this.pool.query('SELECT id, kind, target, target_name, page, message, contact, status, created_at FROM data_reports ORDER BY created_at DESC LIMIT $1', [limit]);
+    return rows;
   }
 
   async putItem(userId, kind, key, payload, updatedAt) {

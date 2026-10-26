@@ -123,6 +123,16 @@ class MemoryStore {
     return { userId: t.userId, email: t.email };
   }
 
+  async addDataReport(report) {
+    const entry = { id: crypto.randomUUID(), ...report, status: 'new', createdAt: new Date() };
+    (this.dataReports ??= []).push(entry);
+    return { id: entry.id, createdAt: entry.createdAt };
+  }
+
+  async listDataReports(limit = 50) {
+    return [...(this.dataReports ?? [])].reverse().slice(0, limit);
+  }
+
   async listItems(userId, kind) {
     return [...this.items.values()]
       .filter((it) => it.userId === userId && it.kind === kind)

@@ -1,4 +1,5 @@
 import { MetroHorizon, MetroPoint } from '../property-intel/pi.models';
+import type { CareerLang } from './career.local';
 import { WardFigure } from './career.jobmap';
 
 /** Drive-time limits offered, in minutes by car with no traffic. Wider limits would cover the whole 79-ward area. */
@@ -74,3 +75,18 @@ export const LINK_TEXT: Record<LinkKind, string> = {
   noHome: 'Nhà bạn chưa gần ga',
   noPlace: 'Nơi làm chưa gần ga',
 };
+
+const HORIZONS_EN: Record<MetroHorizon, { label: string; hint: string }> = {
+  now: { label: 'Today', hint: 'Stations in operation' },
+  soon: { label: '2027', hint: 'Adds the stations under construction (the underground section of line 3), expected in 2027' },
+  plan: { label: 'Under the plan', hint: 'Adds the lines in the plan (around 2035); the corridors are only a sketch, with no station sites yet' },
+};
+export const metroHorizonsIn = (lang: CareerLang) => (lang === 'vi' ? METRO_HORIZONS : METRO_HORIZONS.map((h) => ({ ...h, ...HORIZONS_EN[h.id] })));
+
+export const LINK_TEXT_EN: Record<LinkKind, string> = {
+  direct: 'Same line',
+  transfer: 'Different line (change lines, or no connection in the data)',
+  noHome: 'Your home is not near a station yet',
+  noPlace: 'The workplace is not near a station yet',
+};
+export const linkTextIn = (lang: CareerLang): Record<LinkKind, string> => (lang === 'vi' ? LINK_TEXT : LINK_TEXT_EN);

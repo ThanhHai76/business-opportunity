@@ -1,31 +1,29 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { PiApiService } from '../property-intel/pi.service';
-import { CHANNELS, CONTEXT, DATA_DATE, DIRECTIONS, POLICIES, SIGNALS, SOURCES, Background } from './career.data';
+import { DATA_DATE, DIRECTIONS, SOURCES, Background } from './career.data';
 import { TravelItems, WardPoint, commuteText, placementsFor } from './career.geo';
+import { CareerLang, CAREER_LANG_KEY, channelsIn, contextIn, directionsIn, initialCareerLang, localeOf, policiesIn, signalsIn, sourceKindIn, sourceTitleIn } from './career.local';
+import { CAREER_TEXT } from './career.ui';
 import { JobMapSectionComponent } from './job-map-section.component';
 import { CareerStore, MAX_PLANS } from './career.store';
+import { ReportIssueComponent } from '../components/report-issue/report-issue.component';
 import { OpBrandComponent } from '../opportunity/op-brand.component';
 import { OP_TEXT } from '../opportunity/op-i18n';
 import { planPrintHtml } from './career.print';
-import { PHASES, afterThirtyDays, buildPlan, dayOf } from './career.plan';
+import { afterThirtyDays, buildPlan, dayOf, phasesIn } from './career.plan';
 import { BillingService } from '../services/billing.service';
 import { PremiumPromptService } from '../services/premium-prompt.service';
-import { EDUCATIONS, SITUATIONS, TIMES, WORKS } from './career.labels';
-import { BACKGROUND_LABEL, EMPTY_PROFILE, Level, Profile, WEIGHTS, isComplete, rankDirections } from './career.logic';
+import { labelsIn } from './career.labels';
+import { BACKGROUND_LABEL, EMPTY_PROFILE, Profile, WEIGHTS, backgroundLabel, isComplete, rankDirections } from './career.logic';
 
 const SHOWN = 5;
 
 type TabId = 'paths' | 'plan' | 'market' | 'map' | 'support';
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'paths', label: 'Hướng nghề của bạn' },
-  { id: 'plan', label: 'Kế hoạch 30 ngày' },
-  { id: 'market', label: 'Thị trường' },
-  { id: 'map', label: 'Bản đồ' },
-  { id: 'support', label: 'Hỗ trợ và nơi tìm việc' },
-];
+const TABS: { id: TabId }[] = [{ id: 'paths' }, { id: 'plan' }, { id: 'market' }, { id: 'map' }, { id: 'support' }];
 
 /** The tab in the address (?tab=map), so a link can open the page on it. */
 function initialTab(): TabId {
@@ -37,8 +35,6 @@ function initialTab(): TabId {
   }
 }
 
-const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Phù hợp vừa', low: 'Ít phù hợp' };
-
 /**
  * La bàn nghề nghiệp Hà Nội — five short questions, then the career directions that fit, each with what the sources
  * say about Hà Nội, the skills and first steps. Not a job board: it points to the official job channels and to the
@@ -47,33 +43,36 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
 @Component({
   selector: 'app-career',
   standalone: true,
-  imports: [RouterLink, JobMapSectionComponent, OpBrandComponent],
+  imports: [RouterLink, JobMapSectionComponent, OpBrandComponent, ReportIssueComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <main class="cc">
+    <main class="cc" [attr.lang]="lang()">
       <header class="cc__hero">
-        <p class="cc__eyebrow">Việc làm · Định hướng nghề nghiệp</p>
-        <h1>La bàn nghề nghiệp Hà Nội</h1>
-        <p class="cc__lead">
-          Dành cho người đang thất nghiệp, muốn đổi nghề, mới ra trường, và cả người đang đi làm muốn tham khảo thị trường việc làm.
-          Trả lời 5 câu hỏi ngắn để thấy những hướng nghề hợp với bạn, gắn với cách Hà Nội đang thay đổi. Mỗi con số đều có nguồn.
-        </p>
+        <div class="cc__herotop">
+          <p class="cc__eyebrow">{{ tx().eyebrow }}</p>
+          <div class="cc__lang" role="group" [attr.aria-label]="tx().language">
+            <button type="button" lang="vi" [attr.aria-pressed]="lang() === 'vi'" (click)="setLang('vi')">Tiếng Việt</button>
+            <button type="button" lang="en" [attr.aria-pressed]="lang() === 'en'" (click)="setLang('en')">English</button>
+          </div>
+        </div>
+        <h1>{{ tx().title }}</h1>
+        <p class="cc__lead">{{ tx().lead }}</p>
       </header>
 
-      <nav class="cc__tabs" role="tablist" aria-label="Các phần của trang">
-        @for (t of tabs; track t.id) {
+      <nav class="cc__tabs" role="tablist" [attr.aria-label]="tx().tabsLabel">
+        @for (tb of tabs; track tb.id) {
           <button
             type="button"
             role="tab"
-            [id]="'cc-tab-' + t.id"
-            [attr.aria-selected]="tab() === t.id"
-            [attr.aria-controls]="'cc-panel-' + t.id"
-            [attr.tabindex]="tab() === t.id ? 0 : -1"
-            (click)="openTab(t.id)"
+            [id]="'cc-tab-' + tb.id"
+            [attr.aria-selected]="tab() === tb.id"
+            [attr.aria-controls]="'cc-panel-' + tb.id"
+            [attr.tabindex]="tab() === tb.id ? 0 : -1"
+            (click)="openTab(tb.id)"
             (keydown)="onTabKey($event)"
           >
-            {{ t.label }}
-            @if (t.id === 'plan' && planView(); as pv) {
+            {{ tx().tabs[tb.id] }}
+            @if (tb.id === 'plan' && planView(); as pv) {
               <span class="cc__tabbadge">{{ pv.done }}/{{ pv.total }}</span>
             }
           </button>
@@ -85,57 +84,57 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
       @if (tab() === 'paths') {
         <div class="cc__panel" role="tabpanel" id="cc-panel-paths" aria-labelledby="cc-tab-paths" tabindex="0">
           <section class="cc__form" aria-labelledby="cc-form">
-            <h2 id="cc-form">Về bạn</h2>
+            <h2 id="cc-form">{{ tx().aboutYou }}</h2>
 
             <fieldset>
-              <legend>1. Bạn đang ở hoàn cảnh nào?</legend>
+              <legend>{{ tx().q1 }}</legend>
               <div class="cc__chips">
-                @for (o of situations; track o.value) {
+                @for (o of labels().situations; track o.value) {
                   <button type="button" [attr.aria-pressed]="profile().situation === o.value" (click)="set('situation', o.value)">{{ o.label }}</button>
                 }
               </div>
             </fieldset>
 
             <fieldset>
-              <legend>2. Nghề hiện tại, nghề cũ hoặc ngành đã học của bạn? <small>Chọn một hoặc nhiều</small></legend>
+              <legend>{{ tx().q2 }} <small>{{ tx().q2Hint }}</small></legend>
               <div class="cc__chips">
-                @for (b of backgrounds; track b.value) {
+                @for (b of backgrounds(); track b.value) {
                   <button type="button" [attr.aria-pressed]="profile().backgrounds.includes(b.value)" (click)="toggleBackground(b.value)">{{ b.label }}</button>
                 }
               </div>
             </fieldset>
 
             <fieldset>
-              <legend>3. Trình độ cao nhất của bạn?</legend>
+              <legend>{{ tx().q3 }}</legend>
               <div class="cc__chips">
-                @for (o of educations; track o.value) {
+                @for (o of labels().educations; track o.value) {
                   <button type="button" [attr.aria-pressed]="profile().education === o.value" (click)="set('education', o.value)">{{ o.label }}</button>
                 }
               </div>
             </fieldset>
 
             <fieldset>
-              <legend>4. Bạn có bao lâu để học thêm trước khi bắt đầu việc mới?</legend>
+              <legend>{{ tx().q4 }}</legend>
               <div class="cc__chips">
-                @for (o of times; track o.value) {
+                @for (o of labels().times; track o.value) {
                   <button type="button" [attr.aria-pressed]="profile().time === o.value" (click)="set('time', o.value)">{{ o.label }}</button>
                 }
               </div>
             </fieldset>
 
             <fieldset>
-              <legend>5. Bạn muốn làm thuê hay tự kinh doanh?</legend>
+              <legend>{{ tx().q5 }}</legend>
               <div class="cc__chips">
-                @for (o of works; track o.value) {
+                @for (o of labels().works; track o.value) {
                   <button type="button" [attr.aria-pressed]="profile().work === o.value" (click)="set('work', o.value)">{{ o.label }}</button>
                 }
               </div>
             </fieldset>
 
             <fieldset>
-              <legend>6. Bạn đang ở phường/xã nào? <small>Không bắt buộc: để xem khoảng cách tới nơi làm việc</small></legend>
-              <select class="cc__select" aria-label="Phường hoặc xã bạn đang ở" [value]="profile().ward ?? ''" (change)="setWard($any($event.target).value)">
-                <option value="">Chưa chọn</option>
+              <legend>{{ tx().q6 }} <small>{{ tx().q6Hint }}</small></legend>
+              <select class="cc__select" [attr.aria-label]="tx().wardAria" [value]="profile().ward ?? ''" (change)="setWard($any($event.target).value)">
+                <option value="">{{ tx().notChosen }}</option>
                 @for (w of wards(); track w.slug) {
                   <option [value]="w.slug" [selected]="w.slug === profile().ward">{{ w.name }}</option>
                 }
@@ -144,23 +143,23 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
 
             <div class="cc__formfoot">
               @if (complete()) {
-                <button type="button" class="cc__go" (click)="goToResults()">Xem hướng nghề của bạn ↓</button>
+                <button type="button" class="cc__go" (click)="goToResults()">{{ tx().seeResults }}</button>
               } @else {
-                <span class="cc__hint">Trả lời đủ 5 câu để xem kết quả. Câu trả lời chỉ lưu trên trình duyệt này.</span>
+                <span class="cc__hint">{{ tx().answerAll }}</span>
               }
-              <button type="button" class="cc__link" (click)="reset()">Làm lại</button>
+              <button type="button" class="cc__link" (click)="reset()">{{ tx().redo }}</button>
             </div>
           </section>
 
           @if (complete()) {
             <section class="cc__results" id="cc-results" aria-labelledby="cc-results-title" tabindex="-1">
-              <h2 id="cc-results-title">Hướng nghề gợi ý cho bạn</h2>
+              <h2 id="cc-results-title">{{ tx().resultsTitle }}</h2>
               <p class="cc__note">
-                Xếp theo mức phù hợp với câu trả lời của bạn. Đây là gợi ý để bạn tìm hiểu thêm, không phải lời hứa có việc làm.
+                {{ tx().resultsNote }}
                 @if (profile().situation === 'employed') {
-                  Bạn không cần đổi việc: hãy dùng kết quả để so sánh nghề hiện tại với các hướng khác và với thị trường.
+                  {{ tx().employedNote }}
                 }
-                <button type="button" class="cc__link" (click)="goToMap()">Xem bản đồ ngành nghề theo khu vực ↓</button>
+                <button type="button" class="cc__link" (click)="goToMap()">{{ tx().seeMap }}</button>
               </p>
               <ol class="cc__list">
                 @for (r of shown(); track r.direction.id; let i = $index) {
@@ -171,7 +170,7 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
                         <h3>{{ r.direction.name }}</h3>
                         <p>{{ r.direction.blurb }}</p>
                       </div>
-                      <span class="cc__badge" [attr.data-level]="r.level">{{ levelLabel[r.level] }} · {{ r.score }}</span>
+                      <span class="cc__badge" [attr.data-level]="r.level">{{ tx().levels[r.level] }} · {{ r.score }}</span>
                     </div>
 
                     @if (r.reasons.length || r.cautions.length) {
@@ -186,8 +185,8 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
                     }
 
                     <details [open]="i === 0">
-                      <summary>Hà Nội đang thay đổi thế nào, kỹ năng và bước đầu tiên</summary>
-                      <h4>Hà Nội</h4>
+                      <summary>{{ tx().details }}</summary>
+                      <h4>{{ tx().hanoi }}</h4>
                       <ul class="cc__facts">
                         @for (f of r.direction.facts; track f.text) {
                           <li>{{ f.text }} @for (s of cites(f.sources); track s.id) { <a class="cc__cite" [href]="s.url" target="_blank" rel="noopener noreferrer" [title]="s.title">[{{ s.n }}]</a> }</li>
@@ -195,7 +194,7 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
                       </ul>
                       <div class="cc__two">
                         <div>
-                          <h4>Vị trí thường gặp</h4>
+                          <h4>{{ tx().roles }}</h4>
                           <ul>
                             @for (x of r.direction.roles; track x) {
                               <li>{{ x }}</li>
@@ -203,7 +202,7 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
                           </ul>
                         </div>
                         <div>
-                          <h4>Kỹ năng cần có</h4>
+                          <h4>{{ tx().skills }}</h4>
                           <ul>
                             @for (x of r.direction.skills; track x) {
                               <li>{{ x }}</li>
@@ -211,7 +210,7 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
                           </ul>
                         </div>
                       </div>
-                      <h4>Gợi ý lộ trình</h4>
+                      <h4>{{ tx().route }}</h4>
                       <ol class="cc__steps">
                         @for (s of r.direction.steps; track s.when) {
                           <li><b>{{ s.when }}</b> {{ s.text }}</li>
@@ -219,23 +218,23 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
                       </ol>
                       @if (placementsOf(r.direction.id); as places) {
                         @if (places.length) {
-                          <h4>Nơi làm việc và nơi ở</h4>
+                          <h4>{{ tx().placesTitle }}</h4>
                           <ul class="cc__places">
                             @for (pl of places; track pl.area.id) {
                               <li>
                                 <div class="cc__areahead">
                                   <b>{{ pl.area.name }}</b>
-                                  <span class="cc__tag" [attr.data-kind]="pl.area.kind">{{ pl.area.kind === 'plan' ? 'Theo quy hoạch' : 'Điểm mốc' }}</span>
+                                  <span class="cc__tag" [attr.data-kind]="pl.area.kind">{{ pl.area.kind === 'plan' ? tx().planTag : tx().landmarkTag }}</span>
                                 </div>
                                 <p>{{ pl.area.note }} @for (s of cites(pl.area.sources); track s.id) { <a class="cc__cite" [href]="s.url" target="_blank" rel="noopener noreferrer" [title]="s.title">[{{ s.n }}]</a> }</p>
                                 @if (pl.commute) {
-                                  <p class="cc__commute">Từ {{ wardName() }}: {{ commuteText(pl.commute) }}.</p>
+                                  <p class="cc__commute">{{ tx().from(wardName(), commuteText(pl.commute, lang())) }}</p>
                                 }
                                 @if (pl.near.length) {
                                   <p class="cc__near">
-                                    Phường/xã gần nhất trong 79 nơi có dữ liệu:
+                                    {{ tx().nearestWards }}
                                     @for (n of pl.near; track n.ward.slug; let last = $last) {
-                                      <a [routerLink]="'/property-intelligence/map'" [queryParams]="{ ward: n.ward.slug }">{{ n.ward.name }}</a> ({{ km(n.km) }} km){{ last ? '' : ', ' }}
+                                      <a [routerLink]="'/property-intelligence/map'" [queryParams]="{ ward: n.ward.slug }">{{ n.ward.name }}</a> ({{ km(n.km) }} {{ tx().nearKm }}){{ last ? '' : ', ' }}
                                     }
                                   </p>
                                 }
@@ -244,9 +243,9 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
                           </ul>
                           <p class="cc__note">
                             @if (!profile().ward) {
-                              Chọn phường/xã bạn ở (câu 6) để xem khoảng cách.
+                              {{ tx().chooseWard }}
                             }
-                            Cực theo quy hoạch là hướng phát triển, chưa phải nơi đã có sẵn việc làm, và danh sách phường/xã chỉ gồm 79 nơi mà Chấm điểm bất động sản có dữ liệu (chưa phủ hết các xã xa trung tâm). Thời gian lái xe tính bằng ô tô, đường thông thoáng, giờ cao điểm lâu hơn nhiều.
+                            {{ tx().placesNote }}
                           </p>
                         }
                       }
@@ -261,15 +260,11 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
                 }
               </ol>
               @if (ranked().length > shownCount) {
-                <button type="button" class="cc__more" (click)="showAll.set(!showAll())">{{ showAll() ? 'Chỉ xem ' + shownCount + ' hướng đầu' : 'Xem thêm ' + (ranked().length - shownCount) + ' hướng khác' }}</button>
+                <button type="button" class="cc__more" (click)="showAll.set(!showAll())">{{ showAll() ? tx().fewer(shownCount) : tx().more(ranked().length - shownCount) }}</button>
               }
               <details class="cc__how">
-                <summary>Cách tính điểm phù hợp</summary>
-                <p>
-                  Điểm tối đa 100: nền tảng gần với hướng nghề ({{ weights.background }}), thời gian học thêm đủ chưa ({{ weights.training }}),
-                  trình độ thường được hỏi ({{ weights.education }}), và hợp với việc làm thuê hay tự kinh doanh bạn chọn ({{ weights.work }}).
-                  Điểm không tính đến lương hay số tin tuyển, vì chưa có số liệu đủ tin cậy cho từng vị trí.
-                </p>
+                <summary>{{ tx().howTitle }}</summary>
+                <p>{{ tx().how(weights) }}</p>
               </details>
             </section>
           }
@@ -283,7 +278,7 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
             <p class="cc__planmsg" role="status">{{ msg }}</p>
           }
           @if (planChips().length > 1 || (planChips().length === 1 && !locked())) {
-            <div class="cc__plans" role="group" aria-label="Kế hoạch đã lưu">
+            <div class="cc__plans" role="group" [attr.aria-label]="tx().plansLabel">
               @for (c of planChips(); track c.id) {
                 <button type="button" class="cc__planchip" [class.is-on]="c.id === plan()?.directionId" [attr.aria-pressed]="c.id === plan()?.directionId" (click)="selectPlan(c.id)">
                   {{ c.icon }} {{ c.name }} <small>{{ c.done }}/{{ c.total }}</small>
@@ -294,20 +289,20 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
           @if (syncNote(); as note) {
             <p class="cc__sync" role="status">{{ note }}</p>
           } @else if (locked()) {
-            <button type="button" class="cc__premiumnote" (click)="askPremium('Lưu kế hoạch vào tài khoản')">
-              <span aria-hidden="true">★</span> Lưu kế hoạch vào tài khoản, mở trên mọi thiết bị và giữ tới {{ maxPlans }} kế hoạch cùng lúc (Premium)
+            <button type="button" class="cc__premiumnote" (click)="askPremium(tx().askSave)">
+              <span aria-hidden="true">★</span> {{ tx().premiumPlans(maxPlans) }}
             </button>
           }
           @if (planView(); as pv) {
             <section class="cc__plan" id="cc-plan" tabindex="-1" aria-labelledby="cc-plan-title">
               <div class="cc__planhead">
                 <div>
-                  <h2 id="cc-plan-title">Kế hoạch 30 ngày: {{ pv.direction.name }}</h2>
-                  <p>Bắt đầu {{ pv.started }} · {{ pv.dayText }}</p>
+                  <h2 id="cc-plan-title">{{ tx().planHead(pv.direction.name) }}</h2>
+                  <p>{{ tx().planSub(pv.started, pv.dayText) }}</p>
                 </div>
                 <div class="cc__progress">
-                  <b>{{ pv.done }}/{{ pv.total }} việc</b>
-                  <progress [value]="pv.done" [max]="pv.total" aria-label="Tiến độ kế hoạch"></progress>
+                  <b>{{ tx().tasks(pv.done, pv.total) }}</b>
+                  <progress [value]="pv.done" [max]="pv.total" [attr.aria-label]="tx().progressAria"></progress>
                 </div>
               </div>
               @for (ph of pv.phases; track ph.id) {
@@ -334,25 +329,25 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
                   }
                 </ul>
               }
-              <p class="cc__after"><b>Sau 30 ngày:</b> {{ pv.after }}</p>
+              <p class="cc__after"><b>{{ tx().after }}</b> {{ pv.after }}</p>
           <div class="cc__export">
             <button type="button" class="cc__go" (click)="exportPdf()">
-              <span aria-hidden="true">⬇</span> Xuất PDF kế hoạch @if (locked()) { <span class="cc__star" aria-hidden="true">★</span> }
+              <span aria-hidden="true">⬇</span> {{ tx().exportPdf }} @if (locked()) { <span class="cc__star" aria-hidden="true">★</span> }
             </button>
-            <span class="cc__hint">Mở trang in của trình duyệt: chọn "Lưu dưới dạng PDF".</span>
+            <span class="cc__hint">{{ tx().exportHint }}</span>
             @if (exportMessage(); as em) {
               <span class="cc__hint" role="status">{{ em }}</span>
             }
           </div>
-          <app-op-brand [t]="brandText" [lang]="'vi'" [teaser]="brandTeaser" [hint]="brandHint" />
-              <p class="cc__note">Đây là gợi ý để bạn tự theo dõi, lưu trên trình duyệt này.</p>
-              <button type="button" class="cc__link" (click)="clearPlan()">Xoá kế hoạch</button>
+          <app-op-brand [t]="brandText()" [lang]="lang()" [teaser]="tx().brandTeaser" [hint]="tx().brandHint" />
+              <p class="cc__note">{{ tx().keepNote }}</p>
+              <button type="button" class="cc__link" (click)="clearPlan()">{{ tx().clear }}</button>
             </section>
           } @else {
       <section class="cc__plan cc__plan--empty" id="cc-plan" aria-labelledby="cc-plan-title">
-        <h2 id="cc-plan-title">Kế hoạch 30 ngày</h2>
-        <p>Bạn chưa có kế hoạch. Chọn một hướng nghề rồi bấm "Lập kế hoạch 30 ngày cho hướng này": bạn sẽ có danh sách việc theo từng tuần để tick khi làm xong.</p>
-        <button type="button" class="cc__go" (click)="openTab('paths')">Xem hướng nghề của bạn</button>
+        <h2 id="cc-plan-title">{{ tx().emptyTitle }}</h2>
+        <p>{{ tx().emptyText }}</p>
+        <button type="button" class="cc__go" (click)="openTab('paths')">{{ tx().emptyButton }}</button>
       </section>
           }
         </div>
@@ -362,31 +357,31 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
       @if (tab() === 'market') {
         <div class="cc__panel" role="tabpanel" id="cc-panel-market" aria-labelledby="cc-tab-market" tabindex="0">
           <section class="cc__context" aria-labelledby="cc-context">
-            <h2 id="cc-context">Bức tranh chung</h2>
+            <h2 id="cc-context">{{ tx().contextTitle }}</h2>
             <div class="cc__stats">
-              @for (c of context; track c.label) {
+              @for (c of context(); track c.label) {
                 <div class="cc__stat">
                   <b>{{ c.value }}</b>
                   <span>{{ c.label }} @for (s of cites(c.sources); track s.id) { <a class="cc__cite" [href]="s.url" target="_blank" rel="noopener noreferrer" [title]="s.title">[{{ s.n }}]</a> }</span>
                 </div>
               }
             </div>
-            <p class="cc__note">Chưa tìm thấy số liệu thất nghiệp riêng của Hà Nội: đây là số liệu cả nước.</p>
+            <p class="cc__note">{{ tx().contextNote }}</p>
 
-            <h3 class="cc__subhead">Thị trường theo hướng nghề</h3>
-            <p class="cc__note">Mỗi hướng nghề một dòng tín hiệu từ nguồn công khai, để bạn so sánh. Đây không phải mức lương hay số vị trí đang tuyển.</p>
+            <h3 class="cc__subhead">{{ tx().marketTitle }}</h3>
+            <p class="cc__note">{{ tx().marketNote }}</p>
             <div class="cc__scroll">
               <table class="cc__market">
                 <thead>
                   <tr>
-                    <th scope="col">Hướng nghề</th>
-                    <th scope="col">Tín hiệu từ nguồn công khai</th>
+                    <th scope="col">{{ tx().colField }}</th>
+                    <th scope="col">{{ tx().colSignal }}</th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (m of market(); track m.direction.id) {
                     <tr [class.is-yours]="m.yours">
-                      <th scope="row">{{ m.direction.icon }} {{ m.direction.name }} @if (m.yours) { <span class="cc__yours">gần nghề của bạn</span> }</th>
+                      <th scope="row">{{ m.direction.icon }} {{ m.direction.name }} @if (m.yours) { <span class="cc__yours">{{ tx().yours }}</span> }</th>
                       <td>{{ m.signal.text }} @for (s of cites(m.signal.sources); track s.id) { <a class="cc__cite" [href]="s.url" target="_blank" rel="noopener noreferrer" [title]="s.title">[{{ s.n }}]</a> }</td>
                     </tr>
                   }
@@ -401,9 +396,9 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
       <div class="cc__panel" role="tabpanel" id="cc-panel-map" aria-labelledby="cc-tab-map" tabindex="0" [hidden]="tab() !== 'map'">
         @if (mapSeen()) {
           @defer {
-            <app-job-map-section [home]="profile().ward" (homeChange)="setWard($event)" />
+            <app-job-map-section [home]="profile().ward" [lang]="lang()" (homeChange)="setWard($event)" />
           } @placeholder {
-            <div class="cc__mapph">Đang tải bản đồ…</div>
+            <div class="cc__mapph">{{ tx().mapLoading }}</div>
           }
         }
       </div>
@@ -412,29 +407,29 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
       @if (tab() === 'support') {
         <div class="cc__panel" role="tabpanel" id="cc-panel-support" aria-labelledby="cc-tab-support" tabindex="0">
           <section class="cc__support" aria-labelledby="cc-support">
-            <h2 id="cc-support">Hỗ trợ và nơi tìm việc chính thống</h2>
+            <h2 id="cc-support">{{ tx().supportTitle }}</h2>
             <div class="cc__grid">
               <div>
-                <h3>Chính sách cho người thất nghiệp</h3>
+                <h3>{{ tx().policiesTitle }}</h3>
                 <dl class="cc__policies">
-                  @for (p of policies; track p.title) {
+                  @for (p of policies(); track p.title) {
                     <dt>{{ p.title }}</dt>
                     <dd>{{ p.text }} @for (s of cites(p.sources); track s.id) { <a class="cc__cite" [href]="s.url" target="_blank" rel="noopener noreferrer" [title]="s.title">[{{ s.n }}]</a> }</dd>
                   }
                 </dl>
-                <p class="cc__note">Tóm tắt từ Luật Việc làm 2025 (có hiệu lực từ 1/1/2026). Mức hưởng, điều kiện và thủ tục thay đổi: hãy hỏi trung tâm dịch vụ việc làm hoặc cơ quan bảo hiểm xã hội trước khi quyết định.</p>
+                <p class="cc__note">{{ tx().policiesNote }}</p>
               </div>
               <div>
-                <h3>Nơi tìm việc</h3>
+                <h3>{{ tx().findTitle }}</h3>
                 <ul class="cc__channels">
-                  @for (c of channels; track c.url) {
+                  @for (c of channels(); track c.url) {
                     <li>
                       <a [href]="c.url" target="_blank" rel="noopener noreferrer">{{ c.name }} ↗</a>
                       <span>{{ c.text }} @for (s of cites(c.sources); track s.id) { <a class="cc__cite" [href]="s.url" target="_blank" rel="noopener noreferrer" [title]="s.title">[{{ s.n }}]</a> }</span>
                     </li>
                   }
                 </ul>
-                <p class="cc__note">Trang này không đăng tin tuyển dụng. Hãy dùng các kênh chính thống và cảnh giác với lời mời việc làm đòi tiền đặt cọc.</p>
+                <p class="cc__note">{{ tx().findNote }}</p>
               </div>
             </div>
           </section>
@@ -442,19 +437,17 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
       }
 
       <section class="cc__sources" aria-labelledby="cc-sources">
-        <h2 id="cc-sources">Nguồn</h2>
+        <h2 id="cc-sources">{{ tx().sourcesTitle }}</h2>
         <ol>
           @for (s of sources; track s.id) {
             <li>
-              <a [href]="s.url" target="_blank" rel="noopener noreferrer">{{ s.title }}</a> — {{ s.publisher }}
-              <small>({{ s.kind === 'official' ? 'văn bản, số liệu chính thức' : s.kind === 'computed' ? 'số liệu tính từ dữ liệu mở' : 'báo chí đưa tin' }})</small>
+              <a [href]="s.url" target="_blank" rel="noopener noreferrer" [attr.lang]="s.kind === 'computed' ? lang() : 'vi'">{{ sourceTitle(s) }}</a> — {{ s.publisher }}
+              <small>({{ sourceKind(s.kind) }})</small>
+              <app-report-issue kind="source" [target]="s.id" [targetName]="s.title" page="career" [lang]="lang()" [compact]="true" />
             </li>
           }
         </ol>
-        <p class="cc__note">
-          Dữ liệu tổng hợp ngày {{ dataDate }} từ nguồn công khai. Phần lớn là báo chí dẫn lại số liệu và kế hoạch của cơ quan nhà nước, chưa phải văn bản gốc:
-          hãy đối chiếu trước khi dùng cho quyết định quan trọng. Đây là công cụ tham khảo, không đảm bảo việc làm hay thu nhập.
-        </p>
+        <p class="cc__note">{{ tx().sourcesNote(dataDate) }} {{ tx().sourcesLang }}</p>
       </section>
     </main>
   `,
@@ -462,6 +455,10 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
     :host { display: block; min-height: 100%; background: var(--app-bg); color: var(--app-ink); font-family: 'Manrope', -apple-system, 'Segoe UI', sans-serif; line-height: 1.55; }
     .cc { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; display: grid; gap: 28px; }
     .cc__hero h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 560; font-size: clamp(28px, 5vw, 44px); line-height: 1.12; margin: 4px 0 10px; }
+    .cc__herotop { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+    .cc__lang { display: inline-flex; gap: 4px; padding: 3px; border: 1px solid var(--app-line); border-radius: 999px; background: var(--app-surface-2); }
+    .cc__lang button { padding: 6px 14px; min-height: 34px; border: 0; border-radius: 999px; background: transparent; color: inherit; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .cc__lang button[aria-pressed='true'] { background: var(--app-career); color: #fff; }
     .cc__eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--app-career); }
     .cc__lead { margin: 0; max-width: 720px; color: var(--app-ink-dim); font-size: 16px; }
     h2 { margin: 0 0 10px; font-size: 20px; }
@@ -529,7 +526,8 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
     .cc__market tbody th { font-weight: 700; width: 36%; }
     .cc__market tr.is-yours { background: var(--app-career-soft); }
     .cc__yours { margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--app-career); color: #fff; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
-    .cc__tabs { display: flex; gap: 6px; overflow-x: auto; position: sticky; top: var(--site-nav-h, 56px); z-index: 5; padding: 8px 0; background: var(--app-bg); border-bottom: 1px solid var(--app-line); scrollbar-width: thin; }
+    .cc__tabs { display: flex; gap: 6px; overflow-x: auto; position: sticky; top: var(--site-nav-h, 56px); z-index: 5; padding: 8px 0; background: var(--app-bg); border-bottom: 1px solid var(--app-line); scrollbar-width: none; }
+    .cc__tabs::-webkit-scrollbar { display: none; }
     .cc__tabs button { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; min-height: 42px; border: 1px solid transparent; border-radius: 999px; background: transparent; color: var(--app-ink-dim); font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; white-space: nowrap; }
     .cc__tabs button:hover { background: var(--app-surface-2); color: var(--app-ink); }
     .cc__tabs button[aria-selected='true'] { border-color: var(--app-career); background: var(--app-career-soft); color: var(--app-career); }
@@ -573,23 +571,26 @@ const LEVEL_LABEL: Record<Level, string> = { high: 'Phù hợp cao', medium: 'Ph
     .cc__tag[data-kind='plan'] { color: var(--app-time); border-color: var(--app-time); }
     .cc__places .cc__commute { color: var(--app-ink); font-weight: 600; }
     .cc__near a { color: var(--app-career); font-weight: 700; }
+    /* The tabs scroll sideways on a phone: no scrollbar, and the fade at the right edge says there are more. */
+    @media (max-width: 700px) { .cc__tabs { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); padding-right: 24px; } .cc__herotop { margin-bottom: 8px; } }
     @media (max-width: 560px) { .cc__cardhead { grid-template-columns: auto 1fr; } .cc__badge { grid-column: 1 / -1; justify-self: start; } }
   `,
 })
 export class CareerComponent {
-  protected readonly context = CONTEXT;
-  protected readonly policies = POLICIES;
-  protected readonly channels = CHANNELS;
+  /** The language of the page: in the address (?lang=en), else the one remembered, else Vietnamese. */
+  protected readonly lang = signal<CareerLang>(initialCareerLang());
+  protected readonly tx = computed(() => CAREER_TEXT[this.lang()]);
+  protected readonly labels = computed(() => labelsIn(this.lang()));
+  private readonly directions = computed(() => directionsIn(this.lang()));
+  protected readonly context = computed(() => contextIn(this.lang()));
+  protected readonly policies = computed(() => policiesIn(this.lang()));
+  protected readonly channels = computed(() => channelsIn(this.lang()));
+  private readonly signals = computed(() => signalsIn(this.lang()));
   protected readonly sources = SOURCES;
   protected readonly dataDate = DATA_DATE;
   protected readonly weights = WEIGHTS;
-  protected readonly levelLabel = LEVEL_LABEL;
   protected readonly shownCount = SHOWN;
-  protected readonly situations = SITUATIONS;
-  protected readonly educations = EDUCATIONS;
-  protected readonly times = TIMES;
-  protected readonly works = WORKS;
-  protected readonly backgrounds = (Object.keys(BACKGROUND_LABEL) as Background[]).map((value) => ({ value, label: BACKGROUND_LABEL[value] }));
+  protected readonly backgrounds = computed(() => (Object.keys(BACKGROUND_LABEL) as Background[]).map((value) => ({ value, label: backgroundLabel(value, this.lang()) })));
 
   private readonly api = inject(PiApiService);
   protected readonly tabs = TABS;
@@ -597,6 +598,7 @@ export class CareerComponent {
   /** The map is created when its tab is first opened and then kept, so what you chose on it stays. */
   protected readonly mapSeen = signal(initialTab() === 'map');
   private readonly store = inject(CareerStore);
+  private readonly title = inject(Title);
   private readonly billing = inject(BillingService);
   private readonly premiumPrompt = inject(PremiumPromptService);
   /** The answers and the 30-day plans: kept in this browser, and in the account with Premium (career.store.ts). */
@@ -622,60 +624,68 @@ export class CareerComponent {
     ),
     { initialValue: null as TravelItems | null },
   );
-  private readonly placements = computed(() => new Map(DIRECTIONS.map((d) => [d.id, placementsFor(d.id, this.currentWard(), this.wards(), this.travel())])));
+  private readonly placements = computed(() => new Map(DIRECTIONS.map((d) => [d.id, placementsFor(d.id, this.currentWard(), this.wards(), this.travel(), this.lang())])));
 
   protected readonly planView = computed(() => {
     const plan = this.plan();
-    const direction = plan ? DIRECTIONS.find((d) => d.id === plan.directionId) : null;
+    const direction = plan ? this.directions().find((d) => d.id === plan.directionId) : null;
     if (!plan || !direction) return null;
-    const items = buildPlan(this.profile(), direction);
+    const lang = this.lang();
+    const tx = this.tx();
+    const items = buildPlan(this.profile(), direction, lang);
     const doneIds = new Set(plan.done);
     const day = dayOf(plan);
     return {
       direction,
-      started: new Date(plan.startedAt).toLocaleDateString('vi-VN'),
-      dayText: day ? `ngày thứ ${day}/30` : 'đã qua 30 ngày: xem lại và chỉnh kế hoạch nếu cần',
+      started: new Date(plan.startedAt).toLocaleDateString(localeOf(lang)),
+      dayText: day ? tx.dayOf(day) : tx.over30,
       done: items.filter((i) => doneIds.has(i.id)).length,
       total: items.length,
       doneIds,
-      phases: PHASES.map((p) => ({ ...p, items: items.filter((i) => i.phase === p.id) })),
+      phases: phasesIn(lang).map((p) => ({ ...p, items: items.filter((i) => i.phase === p.id) })),
       after: afterThirtyDays(direction),
     };
   });
   /** One chip per plan kept, with its progress. */
   protected readonly planChips = computed(() =>
     this.store.plans().map((p) => {
-      const direction = DIRECTIONS.find((d) => d.id === p.directionId)!;
-      const items = buildPlan(this.profile(), direction);
+      const direction = this.directions().find((d) => d.id === p.directionId)!;
+      const items = buildPlan(this.profile(), direction, this.lang());
       return { id: p.directionId, name: direction.name, icon: direction.icon, done: items.filter((i) => p.done.includes(i.id)).length, total: items.length };
     }),
   );
   /** What the account is doing with the plans, for people whose plans are kept there. */
   protected readonly syncNote = computed(() => {
     if (!this.store.inAccount()) return null;
-    if (this.store.syncing()) return 'Đang đồng bộ với tài khoản…';
-    return this.store.syncError() ?? '✓ Đã lưu vào tài khoản của bạn: mở được trên mọi thiết bị.';
+    if (this.store.syncing()) return this.tx().syncing;
+    return this.store.syncError() ?? this.tx().saved;
   });
   protected readonly maxPlans = MAX_PLANS;
-  protected readonly brandText = OP_TEXT.vi.premium;
-  protected readonly brandTeaser = 'In kế hoạch mang tên và liên hệ của bạn (dành cho tư vấn viên, giáo viên hướng nghiệp, trung tâm đào tạo)';
-  protected readonly brandHint = 'Bản PDF kế hoạch nghề nghiệp sẽ mang tên công ty, tên và liên hệ của bạn thay cho tên trang web, để bạn gửi học viên hoặc khách hàng.';
+  protected readonly brandText = computed(() => OP_TEXT[this.lang()].premium);
   protected readonly exportMessage = signal<string | null>(null);
   protected readonly showAll = signal(false);
   protected readonly complete = computed(() => isComplete(this.profile()));
   /** One market signal per direction, with those close to the visitor's own field marked. */
   protected readonly market = computed(() =>
-    DIRECTIONS.map((direction) => ({ direction, signal: SIGNALS[direction.id], yours: this.profile().backgrounds.some((b) => direction.fit[b] === 3) })),
+    this.directions().map((direction) => ({ direction, signal: this.signals()[direction.id], yours: this.profile().backgrounds.some((b) => direction.fit[b] === 3) })),
   );
-  protected readonly ranked = computed(() => rankDirections(this.profile()));
+  protected readonly ranked = computed(() => rankDirections(this.profile(), this.directions(), this.lang()));
   protected readonly shown = computed(() => (this.showAll() ? this.ranked() : this.ranked().slice(0, SHOWN)));
 
   /** The sources of a figure, with their number in the list at the end of the page. */
   protected cites(ids: string[]): { id: string; n: number; url: string; title: string }[] {
     return ids.map((id) => {
       const i = SOURCES.findIndex((s) => s.id === id);
-      return { id, n: i + 1, url: SOURCES[i]?.url ?? '', title: SOURCES[i]?.title ?? '' };
+      return { id, n: i + 1, url: SOURCES[i]?.url ?? '', title: SOURCES[i] ? sourceTitleIn(SOURCES[i], this.lang()) : '' };
     });
+  }
+
+  protected sourceTitle(s: (typeof SOURCES)[number]): string {
+    return sourceTitleIn(s, this.lang());
+  }
+
+  protected sourceKind(kind: (typeof SOURCES)[number]['kind']): string {
+    return sourceKindIn(kind, this.lang());
   }
 
   protected set<K extends 'situation' | 'education' | 'time' | 'work'>(key: K, value: Profile[K]): void {
@@ -693,7 +703,27 @@ export class CareerComponent {
   protected readonly commuteText = commuteText;
 
   protected km(n: number): string {
-    return n.toLocaleString('vi-VN', { maximumFractionDigits: 1 });
+    return n.toLocaleString(localeOf(this.lang()), { maximumFractionDigits: 1 });
+  }
+
+  /** Switches the page between Vietnamese and English, and remembers it (in the address and in this browser). */
+  protected setLang(lang: CareerLang): void {
+    if (lang === this.lang()) return;
+    this.lang.set(lang);
+    this.title.setTitle(CAREER_TEXT[lang].docTitle);
+    try {
+      localStorage.setItem(CAREER_LANG_KEY, lang);
+    } catch {
+      /* not remembered */
+    }
+    try {
+      const url = new URL(location.href);
+      if (lang === 'en') url.searchParams.set('lang', 'en');
+      else url.searchParams.delete('lang');
+      history.replaceState(history.state, '', url.pathname + url.search);
+    } catch {
+      /* no history (tests) */
+    }
   }
 
   /** Starts the 30-day plan of a direction and shows it. Without Premium one plan is kept: another needs Premium. */
@@ -701,9 +731,9 @@ export class CareerComponent {
     this.planMessage.set(null);
     const result = this.store.start(directionId);
     if (result === 'limit') {
-      if (this.locked()) this.askPremium('Giữ nhiều kế hoạch cùng lúc');
+      if (this.locked()) this.askPremium(this.tx().askMany);
       else {
-        this.planMessage.set(`Bạn đang giữ ${MAX_PLANS} kế hoạch, là mức tối đa: hãy xoá bớt một kế hoạch rồi lập kế hoạch mới.`);
+        this.planMessage.set(this.tx().planLimit(MAX_PLANS));
         this.openTab('plan');
       }
       return;
@@ -716,8 +746,9 @@ export class CareerComponent {
   }
 
   protected planLabel(directionId: string): string {
-    if (this.hasPlan(directionId)) return '✓ Đang theo kế hoạch này';
-    return this.locked() && this.planChips().length >= 1 ? '★ Lập thêm kế hoạch (Premium)' : 'Lập kế hoạch 30 ngày cho hướng này';
+    const tx = this.tx();
+    if (this.hasPlan(directionId)) return tx.planOn;
+    return this.locked() && this.planChips().length >= 1 ? tx.planExtra : tx.planStart;
   }
 
   protected selectPlan(directionId: string): void {
@@ -736,15 +767,17 @@ export class CareerComponent {
 
   /** Opens the printable plan in a new tab (Premium); a Premium account with saved details gets them on it. */
   protected exportPdf(): void {
-    if (this.locked()) return this.askPremium('Xuất PDF kế hoạch nghề nghiệp');
+    if (this.locked()) return this.askPremium(this.tx().askPdf);
     const view = this.planView();
     const plan = this.plan();
     if (!view || !plan) return;
     this.exportMessage.set(null);
     const direction = view.direction;
+    const lang = this.lang();
     const html = planPrintHtml({
+      lang,
       direction,
-      items: buildPlan(this.profile(), direction),
+      items: buildPlan(this.profile(), direction, lang),
       done: view.doneIds,
       profile: this.profile(),
       ranked: this.ranked().find((r) => r.direction.id === direction.id) ?? null,
@@ -752,7 +785,7 @@ export class CareerComponent {
         name: p.area.name,
         kind: p.area.kind,
         note: p.area.note,
-        commute: commuteText(p.commute),
+        commute: commuteText(p.commute, lang),
         near: p.near.map((n) => `${n.ward.name} (${this.km(n.km)} km)`).join(', '),
         sources: p.area.sources,
       })),
@@ -763,12 +796,12 @@ export class CareerComponent {
     });
     const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
     const tab = window.open(url, '_blank');
-    if (!tab) this.exportMessage.set('Trình duyệt đã chặn tab mới: hãy cho phép cửa sổ bật lên rồi thử lại.');
+    if (!tab) this.exportMessage.set(this.tx().exportBlocked);
     setTimeout(() => URL.revokeObjectURL(url), 120_000);
   }
 
   protected askPremium(feature: string): void {
-    this.premiumPrompt.open(feature, 'vi');
+    this.premiumPrompt.open(feature, this.lang());
   }
 
   protected toggleBackground(b: Background): void {

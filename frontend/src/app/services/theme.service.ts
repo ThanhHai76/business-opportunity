@@ -20,9 +20,10 @@ function readChoice(): ThemeChoice {
       if (valid(parsed)) return parsed;
     }
   } catch {
-    // storage blocked or corrupt — fall back to the system setting
+    // storage blocked or corrupt — fall back to the default
   }
-  return 'system';
+  // A first visit opens in the light theme; the system setting is followed only when the visitor chooses 'system'.
+  return 'light';
 }
 
 /**

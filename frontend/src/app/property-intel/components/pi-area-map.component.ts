@@ -96,7 +96,12 @@ export const LAND_STOPS = [10, 30, 60, 120, 250] as const;
         display: flex;
         gap: 10px;
         font: 500 11px var(--pi-font-mono);
+        flex-wrap: wrap;
+        gap: 2px 10px;
         color: var(--pi-dim);
+      }
+      .pi-map-callout span span,
+      .pi-map-callout em {
         white-space: nowrap;
       }
       .pi-map-callout em {
@@ -425,7 +430,18 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
     }
     el.append(b, line);
     const at = (label.geometry as GeoJSON.Point).coordinates as [number, number];
+    // On a narrow map the card would run off an edge: once it is on the map and has its real width, it slides sideways just enough to stay inside.
+    const container = map.getContainer();
+    el.style.maxWidth = `${container.clientWidth - 16}px`;
     this.callout = new maplibregl.Marker({ element: el, anchor: 'top-left', offset: [16, 14] }).setLngLat(at).addTo(map);
+    const callout = this.callout;
+    // After the first layout, when the card has its width.
+    requestAnimationFrame(() => {
+      if (this.callout !== callout || !el.offsetWidth) return;
+      const x = map.project(at).x;
+      const left = Math.min(Math.max(x + 16, 8), Math.max(8, container.clientWidth - 8 - el.offsetWidth));
+      callout.setOffset([left - x, 14]);
+    });
     if (fly) {
       const bounds = new maplibregl.LngLatBounds(at, at);
       const polys = ward.geometry.type === 'Polygon' ? [ward.geometry.coordinates] : (ward.geometry as GeoJSON.MultiPolygon).coordinates;

@@ -1346,3 +1346,22 @@ button:disabled {
     flex-wrap: wrap;
   }
 }
+
+/* "trên OSM" next to the figures that are counts of what OpenStreetMap shows, and the note that explains it. */
+.op-osm {
+  display: inline-block;
+  margin-left: 3px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--op-ink) 9%, transparent);
+  font-size: 9.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: help;
+}
+.op-osm-note {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--op-ink-faint);
+}

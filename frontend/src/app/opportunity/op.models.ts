@@ -87,6 +87,8 @@ export interface WardFacts {
   areaKm2: number;
   counts: Record<string, number>;
   metroStations: string[];
+  /** The station in service nearest to the ward's centre (null: none). */
+  metroNearest: { name: string; line: string; distanceM: number } | null;
   metroBuildingKm: number | null;
   constructionHa: number;
 }

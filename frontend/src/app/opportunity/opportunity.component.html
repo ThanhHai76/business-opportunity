@@ -1,4 +1,4 @@
-<section class="op" [attr.data-theme]="theme()" [attr.lang]="lang()">
+<section class="op" role="main" [attr.data-theme]="theme()" [attr.lang]="lang()">
   <op-map
     [wards]="wards()"
     [places]="places()"
@@ -184,14 +184,21 @@
 
         <dl class="op-facts">
           <div><dt>{{ t().metro }}</dt><dd>{{ d.facts.metroStations.length ? d.facts.metroStations.join(', ') : t().metroNone }}</dd></div>
-          <div><dt>{{ t().offices }}</dt><dd>{{ d.facts.counts['offices'] }}</dd></div>
-          <div><dt>{{ t().apartments }}</dt><dd>{{ d.facts.counts['apartments'] }}</dd></div>
-          <div><dt>{{ t().schools }}</dt><dd>{{ d.facts.counts['schools'] }}</dd></div>
+          @if (!d.facts.metroStations.length && d.facts.metroNearest; as near) {
+            <div class="op-facts__wide"><dt></dt><dd>🚇 {{ t().metroNearest(near.name, near.line, num(near.distanceM / 1000, 1)) }}</dd></div>
+          }
+          <div><dt>{{ t().offices }} <span class="op-osm" [title]="t().osmNote">{{ t().onOsm }}</span></dt><dd>{{ d.facts.counts['offices'] }}</dd></div>
+          <div><dt>{{ t().apartments }} <span class="op-osm" [title]="t().osmNote">{{ t().onOsm }}</span></dt><dd>{{ d.facts.counts['apartments'] }}</dd></div>
+          <div><dt [title]="t().schoolsHint">{{ t().schools }} <span class="op-osm" [title]="t().osmNote">{{ t().onOsm }}</span></dt><dd>{{ d.facts.counts['schools'] }}</dd></div>
+          @if (d.facts.counts['kindergartens'] !== undefined) {
+            <div><dt [title]="t().kindergartensHint">{{ t().kindergartens }} <span class="op-osm" [title]="t().osmNote">{{ t().onOsm }}</span></dt><dd>{{ d.facts.counts['kindergartens'] }}</dd></div>
+          }
           <div><dt>{{ t().construction }}</dt><dd>{{ num(d.facts.constructionHa) }} ha</dd></div>
           @if (d.facts.metroBuildingKm !== null && d.facts.metroBuildingKm <= 3) {
             <div class="op-facts__wide"><dt></dt><dd>🚇 {{ t().metroBuilding(d.facts.metroBuildingKm) }}</dd></div>
           }
         </dl>
+        <p class="op-osm-note">{{ t().osmNote }}</p>
 
         @if (!d.scored) {
           <p class="op-warn"><ls-icon name="info" [size]="14" /> {{ t().notScoredHint }}</p>
@@ -311,6 +318,7 @@
             <a [href]="s.url" target="_blank" rel="noopener noreferrer" [title]="s.title">{{ s.publisher }}</a>{{ last ? '' : ' · ' }}
           }
         </p>
+        <app-report-issue kind="ward" [target]="d.slug" [targetName]="d.name" page="opportunity" [lang]="lang()" />
       } @else {
         <p class="op-muted">{{ t().loading }}</p>
       }
@@ -341,7 +349,7 @@
           <p class="op-warn"><ls-icon name="alert" [size]="14" /> {{ w.meta.caveat }}</p>
           <ul class="op-sourcelist">
             @for (s of w.meta.sources; track s.id) {
-              <li><a [href]="s.url" target="_blank" rel="noopener noreferrer">{{ s.title }}</a> <small>— {{ s.publisher }}</small></li>
+              <li><a [href]="s.url" target="_blank" rel="noopener noreferrer">{{ s.title }}</a> <small>— {{ s.publisher }}</small><app-report-issue kind="source" [target]="s.id" [targetName]="s.title" page="opportunity" [lang]="lang()" [compact]="true" /></li>
             }
             <li>{{ t().baseMap }}</li>
           </ul>

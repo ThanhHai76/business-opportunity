@@ -1,4 +1,6 @@
 import { Education, Situation, TrainTime, WorkType } from './career.data';
+import { EN_EDUCATIONS, EN_SITUATIONS, EN_TIMES, EN_WORKS } from './career.en';
+import type { CareerLang } from './career.local';
 
 /** The answers as the questions offer them (the page's buttons) and as the printed plan words them. */
 export const SITUATIONS: { value: Situation; label: string }[] = [
@@ -22,3 +24,14 @@ export const WORKS: { value: WorkType; label: string }[] = [
   { value: 'self', label: 'Tự kinh doanh' },
   { value: 'either', label: 'Cả hai đều được' },
 ];
+
+/** The same lists in the page's language (the values, which are stored, do not change). */
+export const labelsIn = (lang: CareerLang) =>
+  lang === 'vi'
+    ? { situations: SITUATIONS, educations: EDUCATIONS, times: TIMES, works: WORKS }
+    : {
+        situations: SITUATIONS.map((o) => ({ ...o, label: EN_SITUATIONS[o.value] })),
+        educations: EDUCATIONS.map((o) => ({ ...o, label: EN_EDUCATIONS[o.value] })),
+        times: TIMES.map((o) => ({ ...o, label: EN_TIMES[o.value] })),
+        works: WORKS.map((o) => ({ ...o, label: EN_WORKS[o.value] })),
+      };

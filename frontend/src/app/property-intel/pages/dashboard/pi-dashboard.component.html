@@ -8,6 +8,10 @@
   [class.hide-charts]="hidden().charts"
   [class.hide-ai]="hidden().ai"
 >
+  <!-- The ward's name is the page heading once one is chosen; until then the page still has one. -->
+  @if (!d()) {
+    <h1 class="sr-only">{{ tx.mapAria }}</h1>
+  }
   <!-- ============================== left: map layers (inert while hidden: no focus, not read out) -->
   <aside class="layers" [attr.aria-label]="tx.layersTitle" [attr.inert]="hidden().layers ? '' : null">
     <div class="layers__head">

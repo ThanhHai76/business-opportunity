@@ -1,0 +1,641 @@
+{
+ "source": {
+  "title": "Tra cứu 126 xã, phường của Thành phố Hà Nội sau sắp xếp (diện tích, dân số)",
+  "publisher": "Báo Hà Nội Mới",
+  "url": "https://xaphuong.hanoimoi.vn/",
+  "note": "Đơn vị hành chính cấp xã hiệu lực từ 1/7/2025 theo Nghị quyết 1656/NQ-UBTVQH15. Số liệu chép từ 16 trang tra cứu (126 đơn vị). Phương án dự thảo tháng 4/2025 có số khác: không dùng."
+ },
+ "retrievedAt": "2026-10-22",
+ "units": [
+  {
+   "name": "Phường Hoàn Kiếm",
+   "areaKm2": 1.91,
+   "population": 105301
+  },
+  {
+   "name": "Phường Cửa Nam",
+   "areaKm2": 1.68,
+   "population": 52751
+  },
+  {
+   "name": "Phường Ba Đình",
+   "areaKm2": 2.97,
+   "population": 65023
+  },
+  {
+   "name": "Phường Ngọc Hà",
+   "areaKm2": 2.68,
+   "population": 93536
+  },
+  {
+   "name": "Phường Giảng Võ",
+   "areaKm2": 2.6,
+   "population": 97034
+  },
+  {
+   "name": "Phường Hai Bà Trưng",
+   "areaKm2": 2.65,
+   "population": 87801
+  },
+  {
+   "name": "Phường Vĩnh Tuy",
+   "areaKm2": 2.33,
+   "population": 90583
+  },
+  {
+   "name": "Phường Bạch Mai",
+   "areaKm2": 2.95,
+   "population": 129571
+  },
+  {
+   "name": "Phường Đống Đa",
+   "areaKm2": 2.07,
+   "population": 81358
+  },
+  {
+   "name": "Phường Kim Liên",
+   "areaKm2": 2.46,
+   "population": 109107
+  },
+  {
+   "name": "Phường Văn Miếu - Quốc Tử Giám",
+   "areaKm2": 1.92,
+   "population": 105604
+  },
+  {
+   "name": "Phường Láng",
+   "areaKm2": 1.88,
+   "population": 61135
+  },
+  {
+   "name": "Phường Ô Chợ Dừa",
+   "areaKm2": 1.83,
+   "population": 71293
+  },
+  {
+   "name": "Phường Hồng Hà",
+   "areaKm2": 15.09,
+   "population": 123282
+  },
+  {
+   "name": "Phường Lĩnh Nam",
+   "areaKm2": 10.86,
+   "population": 20706
+  },
+  {
+   "name": "Phường Hoàng Mai",
+   "areaKm2": 9.04,
+   "population": 98502
+  },
+  {
+   "name": "Phường Vĩnh Hưng",
+   "areaKm2": 4.47,
+   "population": 67561
+  },
+  {
+   "name": "Phường Tương Mai",
+   "areaKm2": 3.56,
+   "population": 136292
+  },
+  {
+   "name": "Phường Định Công",
+   "areaKm2": 5.34,
+   "population": 85502
+  },
+  {
+   "name": "Phường Hoàng Liệt",
+   "areaKm2": 4.04,
+   "population": 55820
+  },
+  {
+   "name": "Phường Yên Sở",
+   "areaKm2": 5.61,
+   "population": 40913
+  },
+  {
+   "name": "Phường Thanh Xuân",
+   "areaKm2": 3.24,
+   "population": 106316
+  },
+  {
+   "name": "Phường Khương Đình",
+   "areaKm2": 3.1,
+   "population": 86286
+  },
+  {
+   "name": "Phường Phương Liệt",
+   "areaKm2": 3.2,
+   "population": 81977
+  },
+  {
+   "name": "Phường Cầu Giấy",
+   "areaKm2": 3.74,
+   "population": 74516
+  },
+  {
+   "name": "Phường Nghĩa Đô",
+   "areaKm2": 4.34,
+   "population": 125568
+  },
+  {
+   "name": "Phường Yên Hòa",
+   "areaKm2": 4.1,
+   "population": 77029
+  },
+  {
+   "name": "Phường Tây Hồ",
+   "areaKm2": 10.72,
+   "population": 100122
+  },
+  {
+   "name": "Phường Phú Thượng",
+   "areaKm2": 7.21,
+   "population": 64258
+  },
+  {
+   "name": "Phường Tây Tựu",
+   "areaKm2": 7.54,
+   "population": 39436
+  },
+  {
+   "name": "Phường Phú Diễn",
+   "areaKm2": 6.29,
+   "population": 74603
+  },
+  {
+   "name": "Phường Xuân Đỉnh",
+   "areaKm2": 5.46,
+   "population": 48658
+  },
+  {
+   "name": "Phường Đông Ngạc",
+   "areaKm2": 8.85,
+   "population": 83544
+  },
+  {
+   "name": "Phường Thượng Cát",
+   "areaKm2": 14.77,
+   "population": 24692
+  },
+  {
+   "name": "Phường Từ Liêm",
+   "areaKm2": 10.18,
+   "population": 119997
+  },
+  {
+   "name": "Phường Xuân Phương",
+   "areaKm2": 10.81,
+   "population": 104947
+  },
+  {
+   "name": "Phường Tây Mỗ",
+   "areaKm2": 5.56,
+   "population": 46894
+  },
+  {
+   "name": "Phường Đại Mỗ",
+   "areaKm2": 8.1,
+   "population": 80462
+  },
+  {
+   "name": "Phường Long Biên",
+   "areaKm2": 19.04,
+   "population": 62887
+  },
+  {
+   "name": "Phường Bồ Đề",
+   "areaKm2": 12.94,
+   "population": 120028
+  },
+  {
+   "name": "Phường Việt Hưng",
+   "areaKm2": 12.91,
+   "population": 83188
+  },
+  {
+   "name": "Phường Phúc Lợi",
+   "areaKm2": 10.41,
+   "population": 66790
+  },
+  {
+   "name": "Phường Hà Đông",
+   "areaKm2": 9,
+   "population": 185205
+  },
+  {
+   "name": "Phường Dương Nội",
+   "areaKm2": 7.9,
+   "population": 56091
+  },
+  {
+   "name": "Phường Yên Nghĩa",
+   "areaKm2": 13.18,
+   "population": 49643
+  },
+  {
+   "name": "Phường Phú Lương",
+   "areaKm2": 9.4,
+   "population": 52024
+  },
+  {
+   "name": "Phường Kiến Hưng",
+   "areaKm2": 6.65,
+   "population": 70833
+  },
+  {
+   "name": "Xã Thanh Trì",
+   "areaKm2": 10.15,
+   "population": 55378
+  },
+  {
+   "name": "Xã Đại Thanh",
+   "areaKm2": 18.92,
+   "population": 92557
+  },
+  {
+   "name": "Xã Nam Phù",
+   "areaKm2": 13.74,
+   "population": 42772
+  },
+  {
+   "name": "Xã Ngọc Hồi",
+   "areaKm2": 13.35,
+   "population": 43864
+  },
+  {
+   "name": "Phường Thanh Liệt",
+   "areaKm2": 6.44,
+   "population": 76238
+  },
+  {
+   "name": "Xã Thượng Phúc",
+   "areaKm2": 28.91,
+   "population": 45464
+  },
+  {
+   "name": "Xã Thường Tín",
+   "areaKm2": 28.29,
+   "population": 70739
+  },
+  {
+   "name": "Xã Chương Dương",
+   "areaKm2": 28.89,
+   "population": 59973
+  },
+  {
+   "name": "Xã Hồng Vân",
+   "areaKm2": 24.53,
+   "population": 58685
+  },
+  {
+   "name": "Xã Phú Xuyên",
+   "areaKm2": 60.02,
+   "population": 96635
+  },
+  {
+   "name": "Xã Phượng Dực",
+   "areaKm2": 44.69,
+   "population": 60281
+  },
+  {
+   "name": "Xã Chuyên Mỹ",
+   "areaKm2": 35.54,
+   "population": 44859
+  },
+  {
+   "name": "Xã Đại Xuyên",
+   "areaKm2": 51.66,
+   "population": 74906
+  },
+  {
+   "name": "Xã Thanh Oai",
+   "areaKm2": 26.86,
+   "population": 54475
+  },
+  {
+   "name": "Xã Bình Minh",
+   "areaKm2": 29.86,
+   "population": 80066
+  },
+  {
+   "name": "Xã Tam Hưng",
+   "areaKm2": 29.45,
+   "population": 39087
+  },
+  {
+   "name": "Xã Dân Hòa",
+   "areaKm2": 38.43,
+   "population": 62755
+  },
+  {
+   "name": "Xã Vân Đình",
+   "areaKm2": 41.6,
+   "population": 60828
+  },
+  {
+   "name": "Xã Ứng Thiên",
+   "areaKm2": 38.4,
+   "population": 53962
+  },
+  {
+   "name": "Xã Hòa Xá",
+   "areaKm2": 40.42,
+   "population": 69428
+  },
+  {
+   "name": "Xã Ứng Hòa",
+   "areaKm2": 67.8,
+   "population": 63750
+  },
+  {
+   "name": "Xã Mỹ Đức",
+   "areaKm2": 52.73,
+   "population": 53640
+  },
+  {
+   "name": "Xã Hồng Sơn",
+   "areaKm2": 54.38,
+   "population": 63130
+  },
+  {
+   "name": "Xã Phúc Sơn",
+   "areaKm2": 49.31,
+   "population": 54084
+  },
+  {
+   "name": "Xã Hương Sơn",
+   "areaKm2": 69.11,
+   "population": 52634
+  },
+  {
+   "name": "Phường Chương Mỹ",
+   "areaKm2": 38.9,
+   "population": 87913
+  },
+  {
+   "name": "Xã Phú Nghĩa",
+   "areaKm2": 40.25,
+   "population": 71048
+  },
+  {
+   "name": "Xã Xuân Mai",
+   "areaKm2": 50.72,
+   "population": 67310
+  },
+  {
+   "name": "Xã Trần Phú",
+   "areaKm2": 44.36,
+   "population": 47528
+  },
+  {
+   "name": "Xã Hòa Phú",
+   "areaKm2": 29.87,
+   "population": 49948
+  },
+  {
+   "name": "Xã Quảng Bị",
+   "areaKm2": 37.14,
+   "population": 62968
+  },
+  {
+   "name": "Xã Minh Châu",
+   "areaKm2": 10.36,
+   "population": 6646
+  },
+  {
+   "name": "Xã Quảng Oai",
+   "areaKm2": 49.26,
+   "population": 59001
+  },
+  {
+   "name": "Xã Vật Lại",
+   "areaKm2": 51.75,
+   "population": 58579
+  },
+  {
+   "name": "Xã Cổ Đô",
+   "areaKm2": 53.25,
+   "population": 70706
+  },
+  {
+   "name": "Xã Bất Bạt",
+   "areaKm2": 56.43,
+   "population": 40066
+  },
+  {
+   "name": "Xã Suối Hai",
+   "areaKm2": 51.56,
+   "population": 35201
+  },
+  {
+   "name": "Xã Ba Vì",
+   "areaKm2": 81.27,
+   "population": 26651
+  },
+  {
+   "name": "Xã Yên Bài",
+   "areaKm2": 68.19,
+   "population": 21416
+  },
+  {
+   "name": "Phường Sơn Tây",
+   "areaKm2": 23.08,
+   "population": 71301
+  },
+  {
+   "name": "Phường Tùng Thiện",
+   "areaKm2": 32.34,
+   "population": 42052
+  },
+  {
+   "name": "Xã Đoài Phương",
+   "areaKm2": 57.1,
+   "population": 39828
+  },
+  {
+   "name": "Xã Phúc Thọ",
+   "areaKm2": 39.66,
+   "population": 75425
+  },
+  {
+   "name": "Xã Phúc Lộc",
+   "areaKm2": 41.15,
+   "population": 61457
+  },
+  {
+   "name": "Xã Hát Môn",
+   "areaKm2": 37.67,
+   "population": 72227
+  },
+  {
+   "name": "Xã Thạch Thất",
+   "areaKm2": 31.93,
+   "population": 57645
+  },
+  {
+   "name": "Xã Hạ Bằng",
+   "areaKm2": 32.14,
+   "population": 38721
+  },
+  {
+   "name": "Xã Tây Phương",
+   "areaKm2": 31.06,
+   "population": 99874
+  },
+  {
+   "name": "Xã Hòa Lạc",
+   "areaKm2": 35.37,
+   "population": 20815
+  },
+  {
+   "name": "Xã Yên Xuân",
+   "areaKm2": 78.01,
+   "population": 29375
+  },
+  {
+   "name": "Xã Quốc Oai",
+   "areaKm2": 24,
+   "population": 63344
+  },
+  {
+   "name": "Xã Hưng Đạo",
+   "areaKm2": 24.9,
+   "population": 49357
+  },
+  {
+   "name": "Xã Kiều Phú",
+   "areaKm2": 34.53,
+   "population": 60885
+  },
+  {
+   "name": "Xã Phú Cát",
+   "areaKm2": 51.21,
+   "population": 43339
+  },
+  {
+   "name": "Xã Hoài Đức",
+   "areaKm2": 16.73,
+   "population": 69239
+  },
+  {
+   "name": "Xã Dương Hòa",
+   "areaKm2": 17.41,
+   "population": 58830
+  },
+  {
+   "name": "Xã Sơn Đồng",
+   "areaKm2": 21.57,
+   "population": 63267
+  },
+  {
+   "name": "Xã An Khánh",
+   "areaKm2": 28.69,
+   "population": 102136
+  },
+  {
+   "name": "Xã Đan Phượng",
+   "areaKm2": 15.3,
+   "population": 47629
+  },
+  {
+   "name": "Xã Ô Diên",
+   "areaKm2": 32.06,
+   "population": 97506
+  },
+  {
+   "name": "Xã Liên Minh",
+   "areaKm2": 23.57,
+   "population": 47769
+  },
+  {
+   "name": "Xã Gia Lâm",
+   "areaKm2": 25.72,
+   "population": 90498
+  },
+  {
+   "name": "Xã Thuận An",
+   "areaKm2": 29.67,
+   "population": 68292
+  },
+  {
+   "name": "Xã Bát Tràng",
+   "areaKm2": 20.67,
+   "population": 48987
+  },
+  {
+   "name": "Xã Phù Đổng",
+   "areaKm2": 41.62,
+   "population": 111484
+  },
+  {
+   "name": "Xã Thư Lâm",
+   "areaKm2": 43.84,
+   "population": 102580
+  },
+  {
+   "name": "Xã Đông Anh",
+   "areaKm2": 48.68,
+   "population": 118183
+  },
+  {
+   "name": "Xã Phúc Thịnh",
+   "areaKm2": 42.63,
+   "population": 95951
+  },
+  {
+   "name": "Xã Thiên Lộc",
+   "areaKm2": 27.96,
+   "population": 74597
+  },
+  {
+   "name": "Xã Vĩnh Thanh",
+   "areaKm2": 22.52,
+   "population": 64698
+  },
+  {
+   "name": "Xã Mê Linh",
+   "areaKm2": 34.97,
+   "population": 62197
+  },
+  {
+   "name": "Xã Yên Lãng",
+   "areaKm2": 44.81,
+   "population": 71339
+  },
+  {
+   "name": "Xã Tiến Thắng",
+   "areaKm2": 36.34,
+   "population": 64246
+  },
+  {
+   "name": "Xã Quang Minh",
+   "areaKm2": 32.17,
+   "population": 69623
+  },
+  {
+   "name": "Xã Sóc Sơn",
+   "areaKm2": 68.24,
+   "population": 117876
+  },
+  {
+   "name": "Xã Đa Phúc",
+   "areaKm2": 55.32,
+   "population": 83649
+  },
+  {
+   "name": "Xã Nội Bài",
+   "areaKm2": 51.64,
+   "population": 70469
+  },
+  {
+   "name": "Xã Trung Giã",
+   "areaKm2": 77.52,
+   "population": 61315
+  },
+  {
+   "name": "Xã Kim Anh",
+   "areaKm2": 52.8,
+   "population": 48564
+  }
+ ]
+}

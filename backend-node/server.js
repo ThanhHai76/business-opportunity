@@ -9,10 +9,14 @@
  *   /api/billing/...                                   Purchases: report credits, AI question packs, Premium (src/billing).
  *   /api/reports/...                                   Paid feasibility reports, computed and stored by the server (src/reports).
  */
-try {
-  process.loadEnvFile(); // optional .env (Node >= 20.12); real environment variables win
-} catch {
-  // no .env file
+// Not under `node --test` (it sets NODE_TEST_CONTEXT): the tests must not pick up the machine's .env, whose real
+// payment and email settings would make them charge, or send mail, for real.
+if (!process.env.NODE_TEST_CONTEXT) {
+  try {
+    process.loadEnvFile(); // optional .env (Node >= 20.12); real environment variables win
+  } catch {
+    // no .env file
+  }
 }
 
 const express = require('express');
@@ -28,6 +32,7 @@ const { createPaidReports } = require('./src/reports');
 const { createAiMeter } = require('./src/billing/ai-meter');
 const { createPremiumGate } = require('./src/billing/premium-gate');
 const { createMailer } = require('./src/mailer');
+const { createFeedback } = require('./src/feedback');
 
 const PORT = process.env.PORT || 8000;
 
@@ -112,6 +117,9 @@ function createApp(options = {}) {
   const billing = createBilling({ accounts, isAllowedOrigin, meter, premium, ...options.billing });
   app.use('/api/billing', billing.router);
   app.use('/api/reports', createPaidReports({ accounts, premium }).router);
+
+  // Reports of wrong figures ("Báo sai số liệu"), kept in the accounts database when there is one.
+  app.use('/api/feedback', createFeedback({ accounts, ...options.feedback }).router);
 
   // Unmatched routes and uncaught errors still respond with JSON, matching
   // every other endpoint's contract (the frontend never has to special-case

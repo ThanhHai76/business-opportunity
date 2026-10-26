@@ -32,6 +32,9 @@ export const FUTURE_MAP_API_URL = `${API_BASE_URL}/api/future-map`;
 // AI Property Intelligence: area + project intelligence (sample data), served by backend-node.
 export const PROPERTY_INTEL_API_URL = `${API_BASE_URL}/api/property-intel`;
 
+// Reports of wrong figures ("Báo sai số liệu"), under /api/feedback.
+export const FEEDBACK_API_URL = `${API_BASE_URL}/api/feedback`;
+
 // Hanoi Time Machine: AI Storyteller grounded in the page's landmark data, served by backend-node.
 export const TIME_MACHINE_API_URL = `${API_BASE_URL}/api/time-machine`;
 

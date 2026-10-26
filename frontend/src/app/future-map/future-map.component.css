@@ -306,6 +306,11 @@ input:focus-visible {
 
 /* ---------- rail ---------- */
 
+/* The tools, the search box and the timeline sit in one wrapper that only matters on a phone (see max-width: 700px). */
+.fm-dock {
+  display: contents;
+}
+
 .fm-rail {
   position: absolute;
   z-index: 10;
@@ -343,6 +348,26 @@ input:focus-visible {
 
 .fm-rail__layers {
   display: none !important;
+}
+
+/* The title card and the tool rail share the left edge: the card scrolls inside the space the rail leaves, and on a short
+   window the rail lies down in a row, so neither hides the figures of the other. */
+@media (min-width: 1101px) {
+  .fm-hero {
+    max-height: calc(100% - 392px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (min-width: 1101px) and (max-height: 820px) {
+  .fm-rail {
+    flex-direction: row;
+  }
+
+  .fm-hero {
+    max-height: calc(100% - 156px);
+  }
 }
 
 /* ---------- search ---------- */
@@ -1313,12 +1338,25 @@ input:focus-visible {
     font-size: 12px;
   }
 
-  .fm-search {
-    top: auto;
-    bottom: 258px;
+  /* One stack above the map, the timeline last: the rail, then the search box, flush on top of it. */
+  .fm-dock {
+    position: absolute;
+    z-index: 10;
     left: 8px;
     right: 8px;
+    bottom: 52px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .fm-dock > .fm-rail,
+  .fm-dock > .fm-search,
+  .fm-dock > .fm-timeline {
+    position: relative;
+    inset: auto;
     width: auto;
+    transform: none;
   }
 
   .fm-search .fm-suggest {
@@ -1330,17 +1368,14 @@ input:focus-visible {
     height: 38px;
   }
 
+  /* A bar as wide as the search box and the timeline, stacked with them above the map: it never reaches up into the title card. */
   .fm-rail {
-    left: auto;
-    right: 8px;
-    bottom: 306px;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 4px 6px;
   }
 
   .fm-timeline {
-    left: 8px;
-    right: 8px;
-    bottom: 52px;
     grid-template-columns: 1fr;
     gap: 8px;
     padding: 10px 8px;

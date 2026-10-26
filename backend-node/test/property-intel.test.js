@@ -100,9 +100,11 @@ describe('AI Property Intelligence API', () => {
     const first = body.wards[0];
     assert.deepEqual(Object.keys(first.values), ['connectivity', 'infrastructure', 'planning', 'amenities', 'population', 'development']);
     assert.ok(first.landMedian > 0 && first.drive.centre >= 0);
-    // Communes without a population figure are scored on the other criteria and flagged.
+    // A ward without a population figure is scored on the other criteria and flagged: since the official list
+    // (ward-list-2025.json) fills the 16 communes OpenStreetMap lacked, none is flagged today.
     const partial = body.wards.filter((w) => w.partial);
-    assert.ok(partial.length > 0 && partial.every((w) => w.population === null));
+    assert.ok(partial.every((w) => w.population === null));
+    assert.equal(partial.length, 0);
   });
 
   it('explains a ward with real criteria, infrastructure and sources', async () => {
@@ -154,7 +156,8 @@ describe('AI Property Intelligence API', () => {
   it('serves ward text in English', async () => {
     const { body } = await get('/wards/phuong-ha-dong?lang=en');
     assert.equal(body.criteria[0].label, 'Metro & bus access');
-    assert.match(body.criteria[0].detail, /^Nearest station in service: Hà Đông \(line 2A\)/);
+    // With OpenStreetMap coordinates (src/metro/stations.js) the nearest station to this ward's centre is Văn Quán (546 m), then Hà Đông (777 m).
+    assert.match(body.criteria[0].detail, /^Nearest station in service: Văn Quán \(line 2A\)/);
   });
 
   it('returns 404 for an unknown ward and 400 for a bad language', async () => {

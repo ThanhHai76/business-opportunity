@@ -116,6 +116,115 @@ main {
   font-size: 1.05rem;
 }
 
+/* ---------- quick start: what do you need? ---------- */
+
+.intents {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vh, 2.5rem) clamp(18px, 4vw, 48px) clamp(2rem, 5vh, 3rem);
+}
+
+.intents h2 {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+}
+
+.intents-sub {
+  margin-top: 0.35rem;
+  color: var(--ink-dim);
+}
+
+.intents-list {
+  list-style: none;
+  margin: 1.1rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 0.75rem;
+}
+
+.intents-list li {
+  display: flex;
+}
+
+.intent {
+  flex: 1;
+  --c: var(--accent-biz);
+  --c-soft: var(--accent-biz-soft);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 64px;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--c);
+  border-radius: 12px;
+  background: var(--surface);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.intent-career { --c: var(--accent-career); --c-soft: var(--accent-career-soft); }
+.intent-live { --c: var(--accent-live); --c-soft: var(--accent-live-soft); }
+.intent-property { --c: var(--accent-property); --c-soft: var(--accent-property-soft); }
+.intent-future { --c: var(--accent-future); --c-soft: var(--accent-future-soft); }
+.intent-time { --c: var(--accent-time); --c-soft: var(--accent-time-soft); }
+
+.intent:hover,
+.intent:focus-visible {
+  transform: translateY(-2px);
+  background: var(--c-soft);
+  box-shadow: 0 12px 24px -18px color-mix(in srgb, var(--ink) 40%, transparent);
+}
+
+.intent:focus-visible {
+  outline: 2px solid var(--c);
+  outline-offset: 2px;
+}
+
+.intent-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--c-soft);
+  font-size: 1.35rem;
+}
+
+.intent-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.intent-text strong {
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.intent-text small {
+  color: var(--ink-dim);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.intent-go {
+  color: var(--c);
+  font-weight: 800;
+  transition: transform 0.15s ease;
+}
+
+.intent:hover .intent-go {
+  transform: translateX(3px);
+}
+
+.intents-trust {
+  margin-top: 1rem;
+  max-width: 78ch;
+  color: var(--ink-dim);
+  font-size: 0.86rem;
+}
+
 .cards {
   max-width: 1200px;
   margin: 0 auto;

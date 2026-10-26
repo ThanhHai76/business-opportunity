@@ -11,8 +11,8 @@
  *   GET  /mock/checkout/:orderCode  BILLING_PROVIDER=mock only: a pretend checkout page; its buttons POST to
  *   POST /mock/checkout/:orderCode/pay · /cancel
  *
- * BILLING_PROVIDER: mock (default outside production, refused in production) | off (default in production).
- * A real provider (PayOS) implements the interface described in mock-provider.js and is selected in createProvider().
+ * BILLING_PROVIDER: mock (default outside production, refused in production) | payos (payos-provider.js: PAYOS_CLIENT_ID,
+ * PAYOS_API_KEY, PAYOS_CHECKSUM_KEY) | off (default in production). Providers share the interface of mock-provider.js.
  *
  * Credits are added only by a verified webhook — never by the browser coming back to returnUrl.
  */
@@ -23,6 +23,7 @@ const { AccountError, badRequest, forbidden, notFound } = require('../accounts/e
 const { PRODUCTS, STORY_TOOLS, grantsOf, productList } = require('./products');
 const { NO_METER, statusView, dayStartVn } = require('./ai-meter');
 const { createMockProvider } = require('./mock-provider');
+const { createPayosProvider } = require('./payos-provider');
 const { wrap, signedInWith, finishRouter, escapeHtml, UUID } = require('./common');
 
 const ORDER_MINUTES = 30;
@@ -36,7 +37,8 @@ function createProvider(name, options) {
     if (process.env.NODE_ENV === 'production') throw new Error('BILLING_PROVIDER=mock is for development only');
     return createMockProvider({ secret: options.webhookSecret });
   }
-  throw new Error(`BILLING_PROVIDER=${name} is not supported yet (mock, off)`);
+  if (name === 'payos') return createPayosProvider();
+  throw new Error(`BILLING_PROVIDER=${name} is not supported (mock, payos, off)`);
 }
 
 const CheckoutSchema = z.strictObject({
@@ -121,6 +123,8 @@ function createBilling(options) {
       console.warn(`[billing] rejected ${providerName} webhook: ${error.message}`);
       throw badRequest('Thông báo thanh toán không hợp lệ.', 'bad_webhook');
     }
+    // Signed, but nothing to credit (a failed payment, or the provider's test call): answered 200 so it is not sent again.
+    if (!paid) return { order: null, credited: false, ignored: true };
     const result = await store().markOrderPaid(paid.orderCode, { amountVnd: paid.amountVnd, providerRef: paid.reference, paidAt: new Date() });
     if (!result.order) console.warn(`[billing] payment for unknown order ${paid.orderCode} (${paid.amountVnd} VND, ${paid.reference})`);
     else if (result.mismatch) console.warn(`[billing] order ${paid.orderCode}: paid ${paid.amountVnd} VND, expected ${result.order.amountVnd} — not credited, check by hand`);

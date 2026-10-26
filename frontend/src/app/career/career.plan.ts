@@ -1,5 +1,7 @@
-import { AREAS_OF, CHANNELS, DIRECTIONS, Direction } from './career.data';
-import { EDU_LABEL, EMPTY_PROFILE, Profile, TRAIN_LABEL } from './career.logic';
+import { AREAS_OF, DIRECTIONS, Direction } from './career.data';
+import { channelsIn } from './career.local';
+import type { CareerLang } from './career.local';
+import { EMPTY_PROFILE, Profile, eduLabel, trainLabel } from './career.logic';
 
 export type Phase = 'w1' | 'w2' | 'w34';
 
@@ -8,6 +10,14 @@ export const PHASES: { id: Phase; title: string; hint: string }[] = [
   { id: 'w2', title: 'Tuần 2 · Học và thử', hint: 'Học nền tảng, xem nơi làm việc' },
   { id: 'w34', title: 'Tuần 3–4 · Hành động', hint: 'Ứng tuyển hoặc thử kinh doanh nhỏ, rồi nhìn lại' },
 ];
+
+const PHASES_EN: Record<Phase, { title: string; hint: string }> = {
+  w1: { title: 'Week 1 · Prepare', hint: 'Your CV, accounts, and the first step of the direction you chose' },
+  w2: { title: 'Week 2 · Learn and try', hint: 'Learn the basics, look at where the work is' },
+  w34: { title: 'Weeks 3–4 · Act', hint: 'Apply, or test a small business, then look back' },
+};
+
+export const phasesIn = (lang: CareerLang = 'vi') => (lang === 'vi' ? PHASES : PHASES.map((p) => ({ ...p, ...PHASES_EN[p.id] })));
 
 export interface PlanLink {
   label: string;
@@ -35,13 +45,59 @@ export interface PlanState {
   updatedAt?: string;
 }
 
-const PORTALS: PlanLink[] = CHANNELS.map((c) => ({ label: c.name, href: c.url }));
+const portalsIn = (lang: CareerLang): PlanLink[] => channelsIn(lang).map((c) => ({ label: c.name, href: c.url }));
+
+/** The steps every plan has, in both languages (the direction's own steps come with the direction). */
+const PLAN_TEXT = {
+  vi: {
+    cvGraduate: 'Viết CV một trang: học vấn, dự án, thực tập và kỹ năng nổi bật.',
+    cvWorking: 'Cập nhật CV một trang với thành tích gần đây, để sẵn sàng khi có cơ hội tốt.',
+    cv: (name: string) => `Cập nhật CV một trang: kinh nghiệm, kết quả cụ thể và kỹ năng, viết theo hướng "${name}".`,
+    accounts: 'Tạo hồ sơ trên Sàn giao dịch việc làm quốc gia và Cổng việc làm Hà Nội.',
+    supportGraduate: 'Hỏi trung tâm dịch vụ việc làm về tư vấn và giới thiệu việc làm.',
+    supportWorking: 'Tìm hiểu trước quyền lợi bảo hiểm thất nghiệp của bạn (điều kiện, mức hưởng, thủ tục) để biết khi cân nhắc đổi việc.',
+    support: 'Nếu bạn đã đóng bảo hiểm thất nghiệp: hỏi trung tâm dịch vụ việc làm hoặc cơ quan bảo hiểm xã hội về điều kiện, hồ sơ, thời hạn hưởng trợ cấp và hỗ trợ đào tạo.',
+    keep: 'Giữ việc hiện tại trong lúc tìm hiểu: dành vài giờ mỗi tuần để học hoặc thử, chưa cần vội nghỉ việc.',
+    time: (t: string) => `Hướng này thường cần chuẩn bị ${t}, dài hơn thời gian bạn có: tìm việc tạm hoặc bán thời gian trong lúc học.`,
+    edu: (e: string) => `Hướng này thường hỏi trình độ ${e}: tìm khoá nghề hoặc chứng chỉ có thể thay thế, và hỏi người đang làm trong ngành.`,
+    where: 'Xem phần "Nơi làm việc" của hướng này: khu vực nào, cách nơi bạn ở bao xa.',
+    calc: 'Tính thử lãi lỗ bằng máy tính khả thi của Mở gì ở đâu, với số của chính bạn.',
+    calcLink: 'Mở gì ở đâu',
+    scout: 'Khảo sát thực địa vài phường có điểm cơ hội cao và hỏi giá thuê thật.',
+    applyWorking: 'Nếu quyết định đổi việc, ứng tuyển đều mỗi tuần (ví dụ 3–5 vị trí) qua kênh chính thống; nếu chưa, so sánh đãi ngộ và cơ hội phát triển hiện tại với thị trường.',
+    apply: 'Ứng tuyển đều mỗi tuần (ví dụ 3–5 vị trí) qua kênh chính thống và ghi lại kết quả.',
+    contact: 'Nhắn hỏi người quen hoặc đồng nghiệp cũ trong ngành về cơ hội.',
+    review: 'Cuối tháng: xem lại việc đã làm được và chỉnh hướng nếu cần (có thể làm lại bảng hỏi ở đầu trang).',
+  },
+  en: {
+    cvGraduate: 'Write a one-page CV: education, projects, internships and your strongest skills.',
+    cvWorking: 'Update your one-page CV with recent achievements, so you are ready when a good chance comes.',
+    cv: (name: string) => `Update your one-page CV: experience, concrete results and skills, written for "${name}".`,
+    accounts: 'Create a profile on the National Job Exchange and the Hanoi city job portal.',
+    supportGraduate: 'Ask the employment service centre about career counselling and job referral.',
+    supportWorking: 'Find out your unemployment insurance rights in advance (conditions, amounts, procedure), so you know them when you consider changing jobs.',
+    support: 'If you have paid unemployment insurance: ask the employment service centre or the social insurance office about the conditions, the application, how long the allowance lasts, and training support.',
+    keep: 'Keep your current job while you explore: spend a few hours a week learning or trying things, with no need to rush out.',
+    time: (t: string) => `This direction usually needs ${t} of preparation, longer than the time you have: find temporary or part-time work while you learn.`,
+    edu: (e: string) => `This direction usually asks for ${e} education: look for a vocational course or certificate that can stand in for it, and ask people who work in the field.`,
+    where: 'See the "Where to work" part of this direction: which areas, and how far from where you live.',
+    calc: 'Try out the profit and loss with the feasibility calculator of the Business Opportunity Map, using your own numbers.',
+    calcLink: 'Business Opportunity Map',
+    scout: 'Visit a few wards with a high opportunity score and ask for real rents.',
+    applyWorking: 'If you decide to change jobs, apply steadily each week (for example 3–5 roles) through official channels; if not, compare your current pay and prospects with the market.',
+    apply: 'Apply steadily each week (for example 3–5 roles) through official channels and note the results.',
+    contact: 'Message people you know or former colleagues in the field to ask about openings.',
+    review: 'End of the month: look back at what you did and adjust your direction if needed (you can redo the questions at the top of the page).',
+  },
+} as const;
 
 /**
  * The 30-day checklist for a direction: the same few steps for everyone (CV, official accounts, support), then the
  * direction's own steps, then applying (or testing a small business). It is advice for the visitor to follow, not data.
  */
-export function buildPlan(p: Profile, d: Direction): PlanItem[] {
+export function buildPlan(p: Profile, d: Direction, lang: CareerLang = 'vi'): PlanItem[] {
+  const x = PLAN_TEXT[lang];
+  const PORTALS = portalsIn(lang);
   const graduate = p.situation === 'graduate';
   // Someone in work is looking around, not necessarily leaving: the plan keeps the job and compares.
   const working = p.situation === 'employed';
@@ -50,56 +106,46 @@ export function buildPlan(p: Profile, d: Direction): PlanItem[] {
     {
       id: 'cv',
       phase: 'w1',
-      text: graduate
-        ? 'Viết CV một trang: học vấn, dự án, thực tập và kỹ năng nổi bật.'
-        : working
-          ? 'Cập nhật CV một trang với thành tích gần đây, để sẵn sàng khi có cơ hội tốt.'
-          : `Cập nhật CV một trang: kinh nghiệm, kết quả cụ thể và kỹ năng, viết theo hướng "${d.name}".`,
+      text: graduate ? x.cvGraduate : working ? x.cvWorking : x.cv(d.name),
     },
-    { id: 'accounts', phase: 'w1', text: 'Tạo hồ sơ trên Sàn giao dịch việc làm quốc gia và Cổng việc làm Hà Nội.', links: PORTALS, sources: ['nhandan-san-qg', 'vneconomy-cong-hn'] },
+    { id: 'accounts', phase: 'w1', text: x.accounts, links: PORTALS, sources: ['nhandan-san-qg', 'vneconomy-cong-hn'] },
     {
       id: 'support',
       phase: 'w1',
-      text: graduate
-        ? 'Hỏi trung tâm dịch vụ việc làm về tư vấn và giới thiệu việc làm.'
-        : working
-          ? 'Tìm hiểu trước quyền lợi bảo hiểm thất nghiệp của bạn (điều kiện, mức hưởng, thủ tục) để biết khi cân nhắc đổi việc.'
-          : 'Nếu bạn đã đóng bảo hiểm thất nghiệp: hỏi trung tâm dịch vụ việc làm hoặc cơ quan bảo hiểm xã hội về điều kiện, hồ sơ, thời hạn hưởng trợ cấp và hỗ trợ đào tạo.',
+      text: graduate ? x.supportGraduate : working ? x.supportWorking : x.support,
       sources: ['luat-viec-lam', 'lsvn-bhtn'],
     },
-    ...(working ? [{ id: 'keep', phase: 'w1' as const, text: 'Giữ việc hiện tại trong lúc tìm hiểu: dành vài giờ mỗi tuần để học hoặc thử, chưa cần vội nghỉ việc.' }] : []),
+    ...(working ? [{ id: 'keep', phase: 'w1' as const, text: x.keep }] : []),
     { id: 'first', phase: 'w1', text: d.steps[0].text },
     { id: 'learn', phase: 'w2', text: d.steps[1].text },
   ];
 
   if (p.time !== null && d.training > p.time) {
-    items.push({ id: 'time', phase: 'w2', text: `Hướng này thường cần chuẩn bị ${TRAIN_LABEL[d.training]}, dài hơn thời gian bạn có: tìm việc tạm hoặc bán thời gian trong lúc học.` });
+    items.push({ id: 'time', phase: 'w2', text: x.time(trainLabel(d.training, lang)) });
   }
   if (p.education !== null && d.minEducation > p.education) {
-    items.push({ id: 'edu', phase: 'w2', text: `Hướng này thường hỏi trình độ ${EDU_LABEL[d.minEducation]}: tìm khoá nghề hoặc chứng chỉ có thể thay thế, và hỏi người đang làm trong ngành.` });
+    items.push({ id: 'edu', phase: 'w2', text: x.edu(eduLabel(d.minEducation, lang)) });
   }
   if ((AREAS_OF[d.id] ?? []).length) {
-    items.push({ id: 'where', phase: 'w2', text: 'Xem phần "Nơi làm việc" của hướng này: khu vực nào, cách nơi bạn ở bao xa.' });
+    items.push({ id: 'where', phase: 'w2', text: x.where });
   }
 
   if (self) {
     items.push(
-      { id: 'calc', phase: 'w34', text: 'Tính thử lãi lỗ bằng máy tính khả thi của Mở gì ở đâu, với số của chính bạn.', links: [{ label: 'Mở gì ở đâu', path: '/opportunity-map' }] },
-      { id: 'scout', phase: 'w34', text: 'Khảo sát thực địa vài phường có điểm cơ hội cao và hỏi giá thuê thật.' },
+      { id: 'calc', phase: 'w34', text: x.calc, links: [{ label: x.calcLink, path: '/opportunity-map' }] },
+      { id: 'scout', phase: 'w34', text: x.scout },
     );
   } else {
     items.push(
       {
         id: 'apply',
         phase: 'w34',
-        text: working
-          ? 'Nếu quyết định đổi việc, ứng tuyển đều mỗi tuần (ví dụ 3–5 vị trí) qua kênh chính thống; nếu chưa, so sánh đãi ngộ và cơ hội phát triển hiện tại với thị trường.'
-          : 'Ứng tuyển đều mỗi tuần (ví dụ 3–5 vị trí) qua kênh chính thống và ghi lại kết quả.',
+        text: working ? x.applyWorking : x.apply,
       },
-      { id: 'contact', phase: 'w34', text: 'Nhắn hỏi người quen hoặc đồng nghiệp cũ trong ngành về cơ hội.' },
+      { id: 'contact', phase: 'w34', text: x.contact },
     );
   }
-  items.push({ id: 'review', phase: 'w34', text: 'Cuối tháng: xem lại việc đã làm được và chỉnh hướng nếu cần (có thể làm lại bảng hỏi ở đầu trang).' });
+  items.push({ id: 'review', phase: 'w34', text: x.review });
   return items;
 }
 

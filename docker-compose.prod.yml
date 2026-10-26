@@ -83,6 +83,12 @@ services:
       # Payments: off until a real provider (PayOS) is connected; the mock provider is refused in production.
       BILLING_PROVIDER: ${BILLING_PROVIDER:-off}
       BILLING_WEBHOOK_SECRET: ${BILLING_WEBHOOK_SECRET:-}
+      # PayOS (BILLING_PROVIDER=payos): the three keys of the payment channel on my.payos.vn.
+      PAYOS_CLIENT_ID: ${PAYOS_CLIENT_ID:-}
+      PAYOS_API_KEY: ${PAYOS_API_KEY:-}
+      PAYOS_CHECKSUM_KEY: ${PAYOS_CHECKSUM_KEY:-}
+      PAYOS_ORDER_OFFSET: ${PAYOS_ORDER_OFFSET:-0}
+      PAYOS_DESCRIPTION_MAX: ${PAYOS_DESCRIPTION_MAX:-9}
       # Email (verify the address, reset the password): without SMTP_URL these features stay off.
       SMTP_URL: ${SMTP_URL:-}
       MAIL_FROM: ${MAIL_FROM:-}

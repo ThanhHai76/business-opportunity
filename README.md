@@ -29,8 +29,13 @@ theo điểm cơ hội của **12 ngành** (☕ cà phê, 🍜 ăn uống, 🏋�
 🏠 môi giới BĐS, 🧺 giặt ủi, 📚 nhà sách, 🚗 sửa/rửa xe).
 
 - **Dữ liệu thật từ OpenStreetMap** (`npm run data:opportunity` → `backend-node/src/opportunity/data/hanoi-wards.json`): ranh giới và **dân số
-  phường/xã (1/7/2025, nguồn gis.vn)**, số cơ sở kinh doanh từng ngành (mức cạnh tranh), văn phòng, chung cư, trường học, ga metro đang chạy,
-  công trường đang xây (`landuse=construction`) và đoạn metro đang xây.
+  phường/xã**, số cơ sở kinh doanh từng ngành (mức cạnh tranh), văn phòng, chung cư, trường học và **mầm non (đếm riêng,
+  `npm run data:kindergartens`)**, ga metro đang chạy, công trường đang xây (`landuse=construction`) và đoạn metro đang xây. Bảng chi tiết phường ghi
+  rõ các số văn phòng, chung cư, trường, mầm non là **đếm trên OpenStreetMap, có thể thấp hơn thực tế**.
+- **Dân số và diện tích chính thức**: dân số từng phường/xã (1/7/2025) lấy từ danh sách 126 xã, phường sau sắp xếp
+  (`src/opportunity/data/ward-list-2025.json`, nguồn Báo Hà Nội Mới), áp bằng `npm run data:wards-official` (và tự áp khi dựng lại dữ liệu OSM).
+  Test `ward-data.test.js` kiểm tra mọi phường khớp danh sách và diện tích ranh giới lệch dưới 8%.
+- **Ga metro dùng chung** (`src/metro/stations.js`, `npm run data:stations`): toạ độ ga bám OpenStreetMap, dùng cho cả Mở gì ở đâu và Chấm điểm bất động sản.
 - **Cách tính** (`src/opportunity/model.js`): Nhu cầu = dân số và các tín hiệu nhu cầu theo trọng số từng ngành, tương đối giữa các phường (thang căn bậc hai,
   100 = cao nhất). Cạnh tranh = số cơ sở cùng ngành trên 10.000 dân, tương đối. **Cơ hội = nhu cầu − 0,4 × cạnh tranh.** Mốc **2030** cộng thêm
   0,25 × tín hiệu tăng trưởng (công trình đang xây trong phường, metro đang xây gần đó).
@@ -142,6 +147,11 @@ npm start        # = ng serve, chạy tại http://localhost:4200
 Trên localhost frontend gọi backend tại `http://localhost:8000`; khi deploy (tên miền khác localhost) frontend gọi `/api` trên **chính tên miền
 của trang** — nginx chuyển tiếp sang backend (`frontend/nginx.conf`). Cấu hình trong `frontend/src/app/config.ts`.
 
+**Ảnh xem trước khi chia sẻ link** (Facebook, Zalo, Messenger đọc thẻ trong file HTML, không chạy JavaScript): sau `ng build`, `npm run build` chạy
+`scripts/route-meta.mjs` tạo thêm `career.html`, `opportunity-map.html`… — bản sao của `index.html` với tiêu đề, mô tả, link chuẩn và thẻ chia sẻ riêng
+của từng trang (tiêu đề lấy từ `app.routes.ts`, mô tả từ `seo.service.ts`). `frontend/nginx.conf` phục vụ `/career` từ `career.html`.
+Thêm một trang mới: thêm vào `PAGES` của script đó và vào `ROUTE_DESCRIPTIONS`.
+
 **Lưu ý:** phải chạy backend trước (hoặc song song) thì bản đồ mới có dữ liệu — CORS đã được mở sẵn cho `http://localhost:4200`.
 
 ## Tài khoản & lưu báo cáo (API `/api/account`, PostgreSQL)
@@ -192,8 +202,12 @@ tab mới (trang này tự cập nhật khi tiền về) → **Tạo báo cáo**
   sai số tiền thì không cộng và ghi log để kiểm tra tay; trả tiền cho đơn đã huỷ/hết hạn vẫn được cộng (tiền đã về). Trừ lượt nằm trong
   transaction có khoá theo người dùng: tạo hai báo cáo cùng lúc không dùng chung một lượt. `returnUrl` chỉ được trỏ về trang của ứng dụng.
 - **Cổng thanh toán** (`BILLING_PROVIDER`): `mock` — cổng **giả** để thử cả luồng không cần tiền (mặc định khi không phải production; production
-  từ chối khởi động với `mock`); `off` — không bán (mặc định ở production). **PayOS chưa kết nối**: thêm một provider cùng giao diện với
-  `src/billing/mock-provider.js` (`createPayment`, `verifyWebhook`) rồi chọn nó trong `createProvider()` (`src/billing/index.js`).
+  từ chối khởi động với `mock`); `off` — không bán (mặc định ở production); `payos` — thanh toán thật qua **PayOS** (VietQR, `src/billing/payos-provider.js`):
+  cần `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`. Đơn gửi sang PayOS có chữ ký HMAC-SHA256, nội dung chuyển khoản `HCV<mã đơn>`
+  (tối đa `PAYOS_DESCRIPTION_MAX` ký tự), hết hạn cùng đơn (30 phút). Webhook `POST /api/billing/webhook/payos` kiểm chữ ký của `data`
+  (khoá xếp theo bảng chữ cái); chỉ giao dịch `code: "00"` mới được cộng; giao dịch thử khi đăng ký webhook trả 200 mà không cộng gì.
+  Đăng ký địa chỉ webhook: `npm run payos:webhook -- https://tên-miền/api/billing/webhook/payos`. `PAYOS_ORDER_OFFSET` cộng vào mã đơn để
+  máy thử và máy thật không gửi trùng mã. Kiểm thử: `test/payos.test.js` (API PayOS giả, không cần mạng).
 
 | Method | Đường dẫn | Mô tả |
 |---|---|---|
@@ -376,6 +390,10 @@ cd backend-node && npm test      # node --test: scoring, seed, recommendation en
 
 Định hướng việc làm cho người thất nghiệp, đổi nghề, sinh viên mới ra trường và người đang đi làm muốn tham khảo thị trường: 5 câu hỏi → các hướng nghề hợp nhất, kèm điều nguồn công khai nói về Hà Nội, kỹ năng, lộ trình, chính sách hỗ trợ (Luật Việc làm 2025) và kênh việc làm chính thống. **Không đăng tin tuyển dụng.**
 Trang chia 5 tab (có thể mở thẳng bằng `?tab=`: `paths`, `plan`, `market`, `map`, `support`): Hướng nghề của bạn (bảng hỏi và kết quả), Kế hoạch 30 ngày (kèm tiến độ trên tab), Thị trường, Bản đồ (tạo khi mở lần đầu và giữ nguyên ngành, nhà, vùng đã chọn khi đổi tab), Hỗ trợ và nơi tìm việc; phần Nguồn luôn nằm dưới cùng.
+**Báo sai số liệu**: mỗi phường và mỗi nguồn có nút gửi báo cáo (component `report-issue`, API `POST /api/feedback/data-report`, không cần tài khoản, giới hạn 5 báo cáo/giờ mỗi địa chỉ và 300/ngày cả trang, có ô bẫy bot). Lưu ở bảng `data_reports` (`database/accounts/07-data-reports.sql`); đọc bằng `npm run reports:list`. Không có cơ sở dữ liệu thì báo cáo chỉ ghi vào log và bộ nhớ.
+
+**Hai ngôn ngữ**: tiếng Việt và tiếng Anh (nút đổi ở đầu trang, `?lang=en`, nhớ lựa chọn dùng chung khoá với Mở gì ở đâu, tiêu đề trang đổi theo). Con số, trích dẫn và liên kết nằm một chỗ ở `career.data.ts`; lời tiếng Anh ở `career.en.ts` (nội dung), `career.ui.ts` (chữ của trang và bản đồ), cùng tham số `lang` của `career.logic.ts`, `career.plan.ts`, `career.print.ts` (bản in PDF). Tên nguồn giữ nguyên tiếng Việt. Kiểm thử `career-en.spec.ts` bắt lỗi thiếu bản dịch, lệch con số/nguồn so với bản tiếng Việt và chữ tiếng Việt còn sót.
+
 Chỉ có giao diện (không có API): dữ liệu nằm ở `frontend/src/app/career/career.data.ts`, mỗi con số gắn mã nguồn trích dẫn (có kiểm thử: mọi nguồn được dẫn đều có trong danh sách và ngược lại).
 Mỗi hướng có mục **Nơi làm việc và nơi ở**: các điểm mốc đã có thời gian lái xe (OSRM, từ API Chấm điểm bất động sản) và các cực phát triển theo quy hoạch (khoảng cách đường chim bay, ghi rõ chưa phải nơi đã có việc làm); và **kế hoạch 30 ngày** (`career.plan.ts`) có checklist tick, lưu trên trình duyệt.
 **Bản đồ ngành nghề theo khu vực** (`job-map-section.component.ts`, tải lười khi cuộn tới): chọn một trong 12 ngành dịch vụ của Mở gì ở đâu, tô 79 phường/xã theo số cơ sở (hoặc mật độ trên 10.000 dân; 5 nhóm theo phân vị, `career.jobmap.ts`), phủ lớp cực theo quy hoạch và điểm mốc; bấm một phường để xem ngành dày quanh đó. Là dấu hiệu nơi ngành tập trung (OpenStreetMap), **không phải số vị trí tuyển dụng**; công nghiệp, bán dẫn, logistics không tô màu vì không có số cơ sở đáng tin.
@@ -478,6 +496,7 @@ Xã chưa có số dân được chấm trên 5 tiêu chí còn lại và gắn 
   giá thương mại). Dự án bài báo chỉ nêu phường thì đặt gần đúng ở tâm phường và ghi chú. Đây là giá chào bán, không phải giá giao dịch.
 - **Thời gian lái xe** (`npm run data:travel` → `src/property-intel/data/travel.json`): từ tâm mỗi phường và từng dự án tới Hồ Gươm, khu văn
   phòng Cầu Giấy – Duy Tân, sân bay Nội Bài và ga metro gần nhất theo đường bộ — OSRM trên mạng đường OSM, đường thông thoáng (chưa tính kẹt xe).
+- **Ga metro dùng chung** (`src/metro/stations.js`, `npm run data:stations` → `src/metro/data/metro-stations.json`): ga nào có, thuộc tuyến nào, đang chạy hay đang xây lấy từ bản chụp của Điểm đáng sống, còn **toạ độ lấy từ các nút ga trên OpenStreetMap** (bản chụp lệch tới ~1 km nên từng xếp nhầm ga vào phường bên cạnh). Bản đồ Cơ hội Kinh doanh, Chấm điểm bất động sản và La bàn nghề nghiệp cùng dùng bộ này; mỗi phường có "ga trong phường" và "ga gần nhất", và điểm cơ hội tính theo độ gần ga. Kiểm thử `metro-stations.test.js` bắt lỗi nếu hai công cụ lệch nhau.
 - **Cập nhật mỗi quý**: thêm bài báo vào `SOURCES` và quý mới vào `QUARTERS` trong `market.js` (ghi rõ số suy ra), thêm dự án có giá công bố,
   chạy `npm run data:travel` rồi `npm test`. Số liệu hiện tính đến quý II/2026.
 - Đã bỏ: giá theo quận mẫu, tỷ lệ hấp thụ và lợi suất mẫu, kịch bản tăng giá, lịch sử giá nội suy, điểm phát triển/rủi ro dự án và nút đổi

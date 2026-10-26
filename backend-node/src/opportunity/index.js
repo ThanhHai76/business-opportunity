@@ -42,6 +42,12 @@ const SOURCES = {
     publisher: 'OpenStreetMap contributors / gis.vn',
     url: 'https://www.openstreetmap.org/relation/1903516',
   },
+  wardList: {
+    title: 'Tra cứu 126 xã, phường của Hà Nội sau sắp xếp (diện tích, dân số từ 1/7/2025)',
+    titleEn: 'Look-up of the 126 wards and communes of Hà Nội after the reorganisation (area, population from 01/07/2025)',
+    publisher: 'Báo Hà Nội Mới',
+    url: 'https://xaphuong.hanoimoi.vn/',
+  },
   metro: {
     title: 'Ga metro đang khai thác và đoạn ngầm tuyến 3 đang xây (mục tiêu 2027) — OpenStreetMap; tiến độ theo VIUP',
     titleEn: 'Metro stations in service and line 3 underground section under construction (due 2027) — OpenStreetMap; schedule per VIUP',
@@ -130,6 +136,8 @@ function wardFacts(w) {
     areaKm2: w.areaKm2,
     counts: w.counts,
     metroStations: w.metroStations,
+    /** The nearest station in service to the ward's centre (null: none). */
+    metroNearest: w.metroNearest,
     metroBuildingKm: w.metroBuildingKm,
     constructionHa: w.constructionHa,
   };
@@ -168,7 +176,7 @@ function wardsGeoJson(type, horizon, lang) {
         method: L(METHOD, lang),
         caveat: L(CAVEAT, lang),
         osmDate: M.DATA.osmBase,
-        sources: sourceList(['osm', 'population', 'metro'], lang),
+        sources: sourceList(['osm', 'population', 'wardList', 'metro'], lang),
       },
     };
   });
@@ -191,7 +199,7 @@ function wardDetail(slug, horizon, lang) {
       opportunities: scores ? scores.map((s) => scoreView(s, lang)) : [],
       method: L(METHOD, lang),
       caveat: L(CAVEAT, lang),
-      sources: sourceList(['osm', 'population', 'metro'], lang),
+      sources: sourceList(['osm', 'population', 'wardList', 'metro'], lang),
     };
   });
 }
@@ -273,7 +281,7 @@ function createOpportunityMap(options = {}) {
           // Every demand signal (0-100, relative between wards), whatever the type weighs — for the radar chart.
           signals: w.scored ? Object.fromEntries(M.scoresFor(w.slug, horizon)[0].parts.map((p) => [p.signal, p.value])) : null,
         })),
-        sources: sourceList(['osm', 'population', 'metro'], lang),
+        sources: sourceList(['osm', 'population', 'wardList', 'metro'], lang),
       });
     }),
   );

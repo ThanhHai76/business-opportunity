@@ -13,6 +13,26 @@
       </section>
     </div>
 
+    <section class="intents" aria-labelledby="intents-title">
+      <h2 id="intents-title">Bạn đang cần gì?</h2>
+      <p class="intents-sub">Chọn điều gần nhất với bạn, chúng tôi đưa bạn tới đúng công cụ. Không cần đăng nhập để bắt đầu.</p>
+      <ul class="intents-list">
+        @for (i of intents; track i.id) {
+          <li>
+            <a class="intent" [class]="'intent intent-' + i.accent" [routerLink]="i.path" [queryParams]="i.query">
+              <span class="intent-icon" aria-hidden="true">{{ i.icon }}</span>
+              <span class="intent-text">
+                <strong>{{ i.want }}</strong>
+                <small>{{ i.tool }}</small>
+              </span>
+              <span class="intent-go" aria-hidden="true">→</span>
+            </a>
+          </li>
+        }
+      </ul>
+      <p class="intents-trust">Mỗi con số có nguồn: dữ liệu OpenStreetMap, danh sách xã phường chính thức, văn bản và số liệu của cơ quan nhà nước. Chỗ nào chưa chắc chắn, chúng tôi nói rõ.</p>
+    </section>
+
     <section class="cards">
       <h2 class="group-title">Khám phá Hà Nội <small>Lịch sử, quy hoạch, tương lai</small></h2>
       <article class="card card-future">

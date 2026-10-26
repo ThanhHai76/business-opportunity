@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { PasswordFieldComponent } from '../../components/password-field/password-field.component';
 import { AccountService, accountError } from '../../services/account.service';
 
 type Mode = 'forgot' | 'reset' | 'verify';
@@ -13,7 +14,7 @@ type Mode = 'forgot' | 'reset' | 'verify';
 @Component({
   selector: 'app-auth-link',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, PasswordFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="al">
@@ -41,7 +42,7 @@ type Mode = 'forgot' | 'reset' | 'verify';
             <p class="al__err">Liên kết không hợp lệ. <a routerLink="/forgot-password">Yêu cầu liên kết mới</a>.</p>
           } @else {
             <form (submit)="$event.preventDefault(); reset()">
-              <label><span>Mật khẩu mới (ít nhất 8 ký tự)</span><input type="password" name="password" autocomplete="new-password" minlength="8" required (input)="password.set($any($event.target).value)" /></label>
+              <label><span>Mật khẩu mới (ít nhất 8 ký tự)</span><app-password-field name="password" autocomplete="new-password" [minlength]="8" (valueChange)="password.set($event)" /></label>
               <button type="submit" [disabled]="busy()">{{ busy() ? 'Đang lưu…' : 'Đổi mật khẩu' }}</button>
             </form>
           }

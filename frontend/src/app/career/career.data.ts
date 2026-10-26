@@ -22,17 +22,19 @@ export interface Source {
   kind: 'official' | 'press' | 'computed';
 }
 
-export const DATA_DATE = '21/10/2026';
+export const DATA_DATE = '23/10/2026';
 
 export const SOURCES: Source[] = [
   { id: 'nso-q2-2026', title: 'Thông cáo báo chí về tình hình lao động, việc làm quý II năm 2026', publisher: 'Cục Thống kê', url: 'https://www.nso.gov.vn/wp-content/uploads/2026/07/Thong-cao-bao-chi-Lao-dong-viec-lam-QII.2026.pdf', kind: 'official' },
-  { id: 'vneconomy-q1-2026', title: 'Quý I/2026: tình trạng thất nghiệp cơ bản được kiểm soát', publisher: 'VnEconomy', url: 'https://vneconomy.vn/quy-12026-tinh-trang-that-nghiep-co-ban-duoc-kiem-soat.htm', kind: 'press' },
   { id: 'vneconomy-50000', title: 'Hà Nội đang thiếu khoảng 50.000 lao động chất lượng cao', publisher: 'VnEconomy', url: 'https://vneconomy.vn/ha-noi-dang-thieu-khoang-50000-lao-dong-chat-luong-cao.htm', kind: 'press' },
-  { id: 'dbnd-tuyen-dung', title: 'Hà Nội duy trì xu hướng tích cực với nhu cầu tuyển dụng ở mức cao', publisher: 'Báo Đại biểu Nhân dân', url: 'https://daibieunhandan.vn/ha-noi-duy-tri-xu-huong-tich-cuc-voi-nhu-cau-tuyen-dung-o-muc-cao-10404912.html', kind: 'press' },
+  { id: 'dbnd-50000', title: 'Hà Nội cần khoảng 50.000 lao động chất lượng cao (19/6/2026, dự báo quý II/2026 của Trung tâm Dịch vụ việc làm Hà Nội)', publisher: 'Báo Đại biểu Nhân dân', url: 'https://daibieunhandan.vn/ha-noi-can-khoang-50-000-lao-dong-chat-luong-cao-10420998.html', kind: 'press' },
+  { id: 'hanoi-212', title: 'Hanoi targets semiconductor industry leadership by 2030 (Kế hoạch 212/KH-UBND ngày 2/6/2026 của UBND thành phố Hà Nội)', publisher: 'Cổng thông tin điện tử UBND thành phố Hà Nội (bản tiếng Anh)', url: 'https://english.hanoi.gov.vn/direction-of-hanoi-peoples-committee/hanoi-targets-semiconductor-industry-leadership-by-2030-2655260608111901721.htm', kind: 'official' },
+  { id: 'dbnd-tuyen-dung', title: 'Hà Nội duy trì xu hướng tích cực với nhu cầu tuyển dụng ở mức cao (26/1/2026, số liệu của Trung tâm Dịch vụ việc làm Hà Nội)', publisher: 'Báo Đại biểu Nhân dân', url: 'https://daibieunhandan.vn/ha-noi-duy-tri-xu-huong-tich-cuc-voi-nhu-cau-tuyen-dung-o-muc-cao-10404912.html', kind: 'press' },
   { id: 'dn-40000', title: 'Hà Nội cần khoảng 40.000 lao động trong tháng 1/2026', publisher: 'Doanh nghiệp & Hội nhập', url: 'https://doanhnghiephoinhap.vn/ha-noi-can-khoang-40000-lao-dong-trong-thang-12026-126375.html', kind: 'press' },
   { id: 'dn-143089', title: 'Thị trường lao động Hà Nội tăng nhiệt, doanh nghiệp ưu tiên nhân sự chất lượng cao', publisher: 'Doanh nghiệp & Hội nhập', url: 'https://doanhnghiephoinhap.vn/thi-truong-lao-dong-ha-noi-tang-nhiet-doanh-nghiep-uu-tien-nhan-su-chat-luong-cao-143089.html', kind: 'press' },
   { id: 'baodautu-bandan', title: 'Giải cơn khát nhân lực bán dẫn', publisher: 'Báo Đầu tư', url: 'https://baodautu.vn/giai-con-khat-nhan-luc-ban-dan-d453594.html', kind: 'press' },
   { id: 'qh1569-vcci', title: 'Phê duyệt Quy hoạch Thủ đô Hà Nội thời kỳ 2021–2030, tầm nhìn đến năm 2050 (QĐ 1569/QĐ-TTg)', publisher: 'VCCI', url: 'https://vcci.com.vn/tin-tuc/phe-duyet-quy-hoach-thu-do-ha-noi-thoi-ky-2021-2030-tam-nhin-den-nam-2050', kind: 'press' },
+  { id: 'qh1569-baovanhoa', title: 'Phát triển 5 vùng đô thị (nội dung Quy hoạch Thủ đô 2021–2030, QĐ 1569/QĐ-TTg)', publisher: 'Báo Văn hoá', url: 'https://baovanhoa.vn/doi-song/phat-trien-5-vung-do-thi-115177.html', kind: 'press' },
   { id: 'qd2512-poles', title: 'Quy hoạch Hà Nội 100 năm: 9 cực phát triển, 9 trung tâm lớn, 9 trục động lực (29/6/2026)', publisher: 'Báo Tiền Phong', url: 'https://tienphong.vn/quy-hoach-ha-noi-100-nam-9-cuc-phat-trien-9-trung-tam-lon-9-truc-dong-luc-post1855351.tpo', kind: 'press' },
   { id: 'pole-roles', title: 'Hà Nội định hướng 9 cực phát triển (28/1/2026)', publisher: 'Quỹ Đầu tư phát triển TP Hà Nội', url: 'https://quydautuphattrien.hanoi.gov.vn/ban-tin/ha-noi-dinh-huong-9-cuc-phat-trien-565.html', kind: 'official' },
   { id: 'osrm', title: 'Thời gian lái xe tính bằng OSRM trên mạng đường OpenStreetMap (đường thông thoáng, chưa tính kẹt xe)', publisher: 'Chấm điểm bất động sản · © OpenStreetMap contributors (ODbL)', url: 'https://project-osrm.org', kind: 'computed' },
@@ -44,10 +46,10 @@ export const SOURCES: Source[] = [
 
 /** What the page says about the job market as a whole: national figures (no Hà Nội figure was found). */
 export const CONTEXT = [
-  { value: '8,86%', label: 'thanh niên 15–24 tuổi thất nghiệp, quý I/2026 (cả nước)', sources: ['vneconomy-q1-2026'] },
-  { value: '10,7%', label: 'cùng nhóm tuổi ở khu vực thành thị', sources: ['vneconomy-q1-2026'] },
-  { value: '≈ 1,6 triệu', label: 'thanh niên 15–24 tuổi không làm việc, không đi học, không đào tạo', sources: ['vneconomy-q1-2026'] },
-  { value: '≈ 2,2%', label: 'tỷ lệ thất nghiệp chung, 6 tháng đầu 2026 (cả nước)', sources: ['nso-q2-2026'] },
+  { value: '8,67%', label: 'thanh niên 15–24 tuổi thất nghiệp, quý II/2026 (cả nước)', sources: ['nso-q2-2026'] },
+  { value: '9,75%', label: 'cùng nhóm tuổi ở khu vực thành thị', sources: ['nso-q2-2026'] },
+  { value: '≈ 1,4 triệu', label: 'thanh niên 15–24 tuổi không làm việc, không đi học, không đào tạo (10,0%)', sources: ['nso-q2-2026'] },
+  { value: '2,22%', label: 'tỷ lệ thất nghiệp chung, 6 tháng đầu 2026 (cả nước)', sources: ['nso-q2-2026'] },
 ];
 
 export interface Fact {
@@ -98,9 +100,9 @@ export const DIRECTIONS: Direction[] = [
     training: 2,
     workType: 'employee',
     facts: [
-      { text: 'Hà Nội đang thiếu khoảng 50.000 lao động chất lượng cao, tập trung ở công nghệ cao, kỹ thuật và phát triển bền vững.', sources: ['vneconomy-50000'] },
-      { text: 'Kế hoạch 212/KH-UBND đặt mục tiêu đến 2030 đào tạo ít nhất 22.000 nhân lực trình độ đại học trở lên cho ngành bán dẫn, và hình thành trường đại học công nghệ quốc tế tại Khu Công nghệ cao Hòa Lạc.', sources: ['baodautu-bandan'] },
-      { text: 'Báo chí nêu mức thu nhập phổ biến của kỹ thuật viên bán dẫn là 15–25 triệu đồng/tháng (tham khảo, thay đổi theo vị trí và kinh nghiệm).', sources: ['vneconomy-50000'] },
+      { text: 'Theo ước tính trong dự báo quý II/2026 của Trung tâm Dịch vụ việc làm Hà Nội, thành phố đang thiếu khoảng 50.000 lao động chất lượng cao, tập trung ở công nghệ cao, kỹ thuật và phát triển bền vững.', sources: ['dbnd-50000', 'vneconomy-50000'] },
+      { text: 'Kế hoạch 212/KH-UBND (2/6/2026) của UBND thành phố đặt mục tiêu đến 2030 đào tạo ít nhất 22.000 nhân lực trình độ đại học trở lên cho ngành bán dẫn, và hình thành ít nhất một trường đại học công nghệ quốc tế tại Khu Công nghệ cao Hòa Lạc.', sources: ['hanoi-212', 'baodautu-bandan'] },
+      { text: 'Theo Trung tâm Dịch vụ việc làm Hà Nội (qua báo chí), thu nhập phổ biến của kỹ thuật viên bán dẫn là 15–25 triệu đồng/tháng (tham khảo, thay đổi theo vị trí và kinh nghiệm).', sources: ['dbnd-50000', 'vneconomy-50000'] },
     ],
     roles: ['Kỹ thuật viên vận hành thiết bị', 'Kỹ thuật viên kiểm định chất lượng', 'Kỹ sư điện – điện tử', 'Kỹ sư quy trình'],
     skills: ['Điện – điện tử cơ bản', 'Đọc bản vẽ và quy trình kỹ thuật', 'Tiếng Anh kỹ thuật', 'Làm việc theo ca và quy chuẩn sạch'],
@@ -124,7 +126,7 @@ export const DIRECTIONS: Direction[] = [
     training: 1,
     workType: 'both',
     facts: [
-      { text: 'Dự báo quý 2/2026: nhu cầu tuyển ngành chế biến, chế tạo và xây dựng tăng khoảng 5%.', sources: ['dbnd-tuyen-dung', 'dn-40000'] },
+      { text: 'Dự báo của Trung tâm Dịch vụ việc làm Hà Nội (1/2026): nhu cầu tuyển ngành chế biến, chế tạo và xây dựng tăng khoảng 5%.', sources: ['dbnd-tuyen-dung', 'dn-40000'] },
       { text: 'Các dự án hạ tầng và đô thị là một động lực nhu cầu nhân lực xây dựng của Hà Nội (theo báo chí tháng 7/2026).', sources: ['dn-143089'] },
     ],
     roles: ['Thợ điện, thợ cơ khí, thợ hàn', 'Công nhân và tổ trưởng xây dựng', 'Giám sát thi công', 'Nhân viên vận hành máy'],
@@ -149,8 +151,8 @@ export const DIRECTIONS: Direction[] = [
     training: 1,
     workType: 'employee',
     facts: [
-      { text: 'Dự báo quý 2/2026: nhu cầu tuyển ngành vận tải và logistics tăng khoảng 4%.', sources: ['dbnd-tuyen-dung', 'dn-40000'] },
-      { text: 'Logistics là một trong các ngành dịch vụ được định hướng phát triển trong Quy hoạch Thủ đô 2021–2030.', sources: ['qh1569-vcci'] },
+      { text: 'Dự báo của Trung tâm Dịch vụ việc làm Hà Nội (1/2026): nhu cầu tuyển ngành vận tải và logistics tăng khoảng 4%.', sources: ['dbnd-tuyen-dung', 'dn-40000'] },
+      { text: 'Logistics là một trong các ngành dịch vụ được định hướng phát triển trong Quy hoạch Thủ đô 2021–2030.', sources: ['qh1569-baovanhoa'] },
     ],
     roles: ['Nhân viên kho', 'Nhân viên điều phối, giao nhận', 'Nhân viên chứng từ', 'Tài xế, quản lý đội xe'],
     skills: ['Phần mềm quản lý kho và đơn hàng', 'Excel', 'Tiếng Anh giao dịch cơ bản', 'Giấy phép lái xe phù hợp (với tài xế)'],
@@ -171,7 +173,7 @@ export const DIRECTIONS: Direction[] = [
     training: 0,
     workType: 'employee',
     facts: [
-      { text: 'Dự báo quý 2/2026: nhu cầu tuyển ngành bán buôn, bán lẻ tăng khoảng 6%, mức tăng cao nhất trong các nhóm được nêu.', sources: ['dbnd-tuyen-dung', 'dn-40000'] },
+      { text: 'Dự báo của Trung tâm Dịch vụ việc làm Hà Nội (1/2026): nhu cầu tuyển ngành bán buôn, bán lẻ tăng khoảng 6%, mức tăng cao nhất trong các nhóm được nêu.', sources: ['dbnd-tuyen-dung', 'dn-40000'] },
       { text: 'Tháng 1/2026 Hà Nội ước cần tuyển khoảng 40.000 vị trí, tập trung ở bán buôn, bán lẻ, chế biến chế tạo, xây dựng, vận tải và logistics.', sources: ['dn-40000'] },
     ],
     roles: ['Nhân viên bán hàng', 'Nhân viên chăm sóc khách hàng', 'Trưởng ca, quản lý cửa hàng', 'Bán hàng trực tuyến'],
@@ -218,7 +220,7 @@ export const DIRECTIONS: Direction[] = [
     training: 1,
     workType: 'employee',
     facts: [
-      { text: 'Tài chính, ngân hàng, bảo hiểm và kinh tế số nằm trong định hướng phát triển ngành dịch vụ của Quy hoạch Thủ đô 2021–2030.', sources: ['qh1569-vcci'] },
+      { text: 'Tài chính, ngân hàng, bảo hiểm và kinh tế số nằm trong định hướng phát triển ngành dịch vụ của Quy hoạch Thủ đô 2021–2030.', sources: ['qh1569-baovanhoa'] },
       { text: 'Hà Nội đang thiếu lao động chất lượng cao; doanh nghiệp ưu tiên nhân sự có chuyên môn (theo báo chí tháng 7/2026).', sources: ['vneconomy-50000', 'dn-143089'] },
     ],
     roles: ['Kế toán, kiểm toán viên', 'Chuyên viên tín dụng, tư vấn bảo hiểm', 'Phân tích dữ liệu', 'Vận hành thương mại điện tử'],
@@ -262,9 +264,9 @@ export interface Policy {
 /** What the Employment Law 2025 gives to the unemployed (summarised from the sources: check the law itself). */
 export const POLICIES: Policy[] = [
   { title: 'Bốn chế độ bảo hiểm thất nghiệp', text: 'Tư vấn và giới thiệu việc làm; hỗ trợ đào tạo, nâng cao kỹ năng nghề; trợ cấp thất nghiệp; hỗ trợ doanh nghiệp đào tạo để duy trì việc làm.', sources: ['luat-viec-lam', 'lsvn-bhtn'] },
-  { title: 'Trợ cấp thất nghiệp', text: 'Mỗi tháng bằng 60% mức lương bình quân đóng bảo hiểm thất nghiệp của 6 tháng gần nhất, có mức trần. Đóng đủ 12 đến dưới 36 tháng được hưởng 3 tháng; mỗi 12 tháng đóng thêm được thêm 1 tháng, tối đa 12 tháng.', sources: ['lsvn-bhtn'] },
-  { title: 'Thời gian chờ', text: 'Từ 1/1/2026, thời gian giải quyết sau khi nộp hồ sơ rút còn 10 ngày làm việc (trước đây 15 ngày).', sources: ['lsvn-bhtn'] },
-  { title: 'Hỗ trợ đào tạo', text: 'Người tham gia bảo hiểm thất nghiệp có thể được hỗ trợ khi học nâng cao kỹ năng nghề. Hãy hỏi trung tâm dịch vụ việc làm về điều kiện và mức hỗ trợ hiện hành.', sources: ['luat-viec-lam', 'lsvn-bhtn'] },
+  { title: 'Trợ cấp thất nghiệp', text: 'Mỗi tháng bằng 60% mức lương bình quân đóng bảo hiểm thất nghiệp của 6 tháng gần nhất, tối đa 5 lần lương tối thiểu vùng. Đóng đủ 12 đến dưới 36 tháng được hưởng 3 tháng; mỗi 12 tháng đóng thêm được thêm 1 tháng, tối đa 12 tháng.', sources: ['lsvn-bhtn'] },
+  { title: 'Thời gian chờ', text: 'Từ 1/1/2026, cơ quan giải quyết trong 10 ngày làm việc kể từ khi nhận đủ hồ sơ; trợ cấp được tính từ ngày làm việc thứ 11 (Điều 38, 39 Luật Việc làm 2025).', sources: ['lsvn-bhtn'] },
+  { title: 'Hỗ trợ đào tạo', text: 'Người đang hưởng trợ cấp thất nghiệp có thể được hỗ trợ học nghề tối đa 6 tháng, gồm học phí và tiền ăn (Điều 37). Hãy hỏi trung tâm dịch vụ việc làm về điều kiện và mức hỗ trợ hiện hành.', sources: ['luat-viec-lam', 'lsvn-bhtn'] },
 ];
 
 export interface Channel {
@@ -328,11 +330,11 @@ export const AREAS_OF: Record<string, string[]> = {
  * who want to compare). Signals from public sources, not wages and not the number of vacancies open.
  */
 export const SIGNALS: Record<string, Fact> = {
-  semiconductor: { text: 'Hà Nội thiếu khoảng 50.000 lao động chất lượng cao, tập trung ở công nghệ cao và kỹ thuật.', sources: ['vneconomy-50000'] },
-  engineering: { text: 'Dự báo quý 2/2026: nhu cầu tuyển ngành chế biến, chế tạo và xây dựng tăng khoảng 5%.', sources: ['dbnd-tuyen-dung', 'dn-40000'] },
-  logistics: { text: 'Dự báo quý 2/2026: nhu cầu tuyển ngành vận tải và logistics tăng khoảng 4%.', sources: ['dbnd-tuyen-dung', 'dn-40000'] },
-  retail: { text: 'Dự báo quý 2/2026: nhu cầu tuyển ngành bán buôn, bán lẻ tăng khoảng 6%, cao nhất trong các nhóm được nêu.', sources: ['dbnd-tuyen-dung', 'dn-40000'] },
+  semiconductor: { text: 'Theo dự báo quý II/2026 của Trung tâm Dịch vụ việc làm Hà Nội, thành phố thiếu khoảng 50.000 lao động chất lượng cao, tập trung ở công nghệ cao và kỹ thuật.', sources: ['dbnd-50000', 'vneconomy-50000'] },
+  engineering: { text: 'Dự báo của Trung tâm Dịch vụ việc làm Hà Nội (1/2026): nhu cầu tuyển ngành chế biến, chế tạo và xây dựng tăng khoảng 5%.', sources: ['dbnd-tuyen-dung', 'dn-40000'] },
+  logistics: { text: 'Dự báo của Trung tâm Dịch vụ việc làm Hà Nội (1/2026): nhu cầu tuyển ngành vận tải và logistics tăng khoảng 4%.', sources: ['dbnd-tuyen-dung', 'dn-40000'] },
+  retail: { text: 'Dự báo của Trung tâm Dịch vụ việc làm Hà Nội (1/2026): nhu cầu tuyển ngành bán buôn, bán lẻ tăng khoảng 6%, cao nhất trong các nhóm được nêu.', sources: ['dbnd-tuyen-dung', 'dn-40000'] },
   tourism: { text: 'Du lịch, thương mại và dịch vụ nằm trong định hướng quy hoạch; F&B có nhu cầu nhân lực lớn (báo chí tháng 7/2026).', sources: ['qh1569-vcci', 'dn-143089'] },
-  finance: { text: 'Tài chính, ngân hàng, bảo hiểm và kinh tế số nằm trong định hướng quy hoạch; doanh nghiệp ưu tiên nhân sự chuyên môn.', sources: ['qh1569-vcci', 'dn-143089'] },
+  finance: { text: 'Tài chính, ngân hàng, bảo hiểm và kinh tế số nằm trong định hướng quy hoạch; doanh nghiệp ưu tiên nhân sự chuyên môn.', sources: ['qh1569-baovanhoa', 'dn-143089'] },
   self: { text: 'Không có số liệu thống kê ở đây; xem điểm cơ hội từng phường và máy tính khả thi trong Mở gì ở đâu.', sources: [] },
 };

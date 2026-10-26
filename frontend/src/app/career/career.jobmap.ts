@@ -1,4 +1,5 @@
 import { AREAS, WorkArea } from './career.data';
+import { CareerLang, localeOf } from './career.local';
 
 /** What the colours show: how many places of the sector the map has in the ward, or how many per 10,000 residents. */
 export type Metric = 'count' | 'per10k';
@@ -55,12 +56,12 @@ export function classOf(value: number | null, limits: number[]): number | null {
   return c;
 }
 
-export function legend(limits: number[], digits = 0): { color: string; label: string }[] {
-  const fmt = (n: number) => n.toLocaleString('vi-VN', { maximumFractionDigits: digits });
+export function legend(limits: number[], digits = 0, lang: CareerLang = 'vi'): { color: string; label: string }[] {
+  const fmt = (n: number) => n.toLocaleString(localeOf(lang), { maximumFractionDigits: digits });
   const lows = [0, ...limits];
   return lows.map((low, i) => ({
     color: RAMP[Math.min(i, RAMP.length - 1)],
-    label: i === lows.length - 1 ? `${fmt(low)} trở lên` : `${fmt(low)}–${fmt(limits[i])}`,
+    label: i === lows.length - 1 ? (lang === 'en' ? `${fmt(low)} or more` : `${fmt(low)} trở lên`) : `${fmt(low)}–${fmt(limits[i])}`,
   }));
 }
 

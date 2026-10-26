@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { AccountService, accountError } from '../../services/account.service';
 import { BillingService } from '../../services/billing.service';
 import { LegalLinksComponent } from '../../pages/legal/legal-links.component';
+import { PasswordFieldComponent } from '../password-field/password-field.component';
 
 type View = 'login' | 'register' | 'account';
 
@@ -14,7 +15,7 @@ type View = 'login' | 'register' | 'account';
 @Component({
   selector: 'app-account-dialog',
   standalone: true,
-  imports: [RouterLink, LegalLinksComponent],
+  imports: [RouterLink, LegalLinksComponent, PasswordFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="ad-backdrop" (click)="close()"></div>
@@ -69,11 +70,11 @@ type View = 'login' | 'register' | 'account';
           <form class="ad__form" (submit)="$event.preventDefault(); changePassword()">
             <label>
               <span>Mật khẩu hiện tại</span>
-              <input type="password" name="current" autocomplete="current-password" required (input)="password.set($any($event.target).value)" />
+              <app-password-field name="current" autocomplete="current-password" (valueChange)="password.set($event)" />
             </label>
             <label>
               <span>Mật khẩu mới (ít nhất 8 ký tự)</span>
-              <input type="password" name="new" autocomplete="new-password" minlength="8" required (input)="newPassword.set($any($event.target).value)" />
+              <app-password-field name="new" autocomplete="new-password" [minlength]="8" (valueChange)="newPassword.set($event)" />
             </label>
             <button type="submit" class="ad__btn" [disabled]="busy()">Đổi mật khẩu</button>
             <small class="ad__hint">Các thiết bị khác đang đăng nhập sẽ bị đăng xuất.</small>
@@ -86,7 +87,7 @@ type View = 'login' | 'register' | 'account';
             <p class="ad__hint">Xoá vĩnh viễn tài khoản và mọi báo cáo đã lưu. Không thể khôi phục.</p>
             <label>
               <span>Nhập mật khẩu để xác nhận</span>
-              <input type="password" name="confirm" autocomplete="current-password" required (input)="password.set($any($event.target).value)" />
+              <app-password-field name="confirm" autocomplete="current-password" (valueChange)="password.set($event)" />
             </label>
             <button type="submit" class="ad__btn ad__btn--danger" [disabled]="busy()">Xoá tài khoản</button>
           </form>
@@ -110,14 +111,7 @@ type View = 'login' | 'register' | 'account';
           </label>
           <label>
             <span>Mật khẩu{{ view() === 'register' ? ' (ít nhất 8 ký tự)' : '' }}</span>
-            <input
-              type="password"
-              name="password"
-              required
-              [attr.minlength]="view() === 'register' ? 8 : null"
-              [attr.autocomplete]="view() === 'register' ? 'new-password' : 'current-password'"
-              (input)="password.set($any($event.target).value)"
-            />
+            <app-password-field name="password" [minlength]="view() === 'register' ? 8 : null" [autocomplete]="view() === 'register' ? 'new-password' : 'current-password'" (valueChange)="password.set($event)" />
           </label>
           @if (view() === 'register') {
             <label class="ad__check">
@@ -385,11 +379,16 @@ export class AccountDialogComponent implements AfterViewInit {
     const email = this.email().trim();
     const password = this.password();
     const call = this.view() === 'register' ? this.account.register(email, password, this.name(), this.terms()) : this.account.login(email, password);
-    this.run(call, () => this.close());
+    const registering = this.view() === 'register';
+    this.run(call, () => {
+      // A new account with email on: stay open and say where the verification mail went (it may be in the spam folder).
+      if (registering && this.account.mail()) this.done.set(`Đã tạo tài khoản. Chúng tôi vừa gửi email xác minh tới ${email}. Nếu chưa thấy thư, hãy kiểm tra cả mục Thư rác (Spam) và chọn "Không phải thư rác".`);
+      else this.close();
+    });
   }
 
   protected resend(): void {
-    this.run(this.account.resendVerification(), () => this.done.set('Đã gửi email xác minh. Hãy kiểm tra hộp thư.'));
+    this.run(this.account.resendVerification(), () => this.done.set('Đã gửi email xác minh. Hãy kiểm tra hộp thư, và cả mục Thư rác (Spam) nếu chưa thấy.'));
   }
 
   protected saveName(): void {

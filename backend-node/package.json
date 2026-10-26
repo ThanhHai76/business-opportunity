@@ -17,7 +17,12 @@
     "data:property": "node scripts/build-property-osm.js",
     "data:landprice": "node scripts/build-landprice.js",
     "data:travel": "node scripts/build-property-travel.js",
-    "data:wardtimes": "node scripts/build-property-commute.js"
+    "data:wardtimes": "node scripts/build-property-commute.js",
+    "data:stations": "node scripts/build-metro-stations.js",
+    "data:kindergartens": "node scripts/add-opportunity-kindergartens.js",
+    "data:wards-official": "node scripts/apply-official-wards.js",
+    "reports:list": "node scripts/list-data-reports.js",
+    "payos:webhook": "node scripts/payos-webhook.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",
