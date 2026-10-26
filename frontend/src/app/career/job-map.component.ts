@@ -68,7 +68,7 @@ function labelPoints(wards: GeoJSON.FeatureCollection | null): GeoJSON.FeatureCo
 }
 
 function markerPoints(markers: readonly Marker[]): GeoJSON.FeatureCollection {
-  return { type: 'FeatureCollection', features: markers.map((m) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: m.lngLat }, properties: { id: m.id, name: m.name, short: m.name.replace(/^Cực[^:]*:\s*/, ''), kind: m.kind } })) };
+  return { type: 'FeatureCollection', features: markers.map((m) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: m.lngLat }, properties: { id: m.id, name: m.name, short: m.name.replace(/^(?:Cực[^:]*|[^:]*\bpole):\s*/, ''), kind: m.kind } })) };
 }
 
 function layers(theme: 'light' | 'dark', glyphs: boolean, mode: MapMode): { fill: maplibregl.LayerSpecification[]; top: maplibregl.LayerSpecification[] } {

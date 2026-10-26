@@ -1,5 +1,16 @@
 import { Routes } from '@angular/router';
 
+/** The career page is in Vietnamese and English: its title follows the language in the address or the one remembered (the key of the Business Opportunity Map). */
+function careerTitle(): string {
+  try {
+    const lang = new URLSearchParams(location.search).get('lang') ?? localStorage.getItem('hanoi100.op.lang');
+    if (lang === 'en') return 'Hanoi Career Compass · Hanoi Century Vista';
+  } catch {
+    /* no address or storage: Vietnamese */
+  }
+  return 'La bàn nghề nghiệp Hà Nội · Hanoi Century Vista';
+}
+
 export const routes: Routes = [
   {
     path: '',
@@ -32,7 +43,7 @@ export const routes: Routes = [
   },
   {
     path: 'career',
-    title: 'La bàn nghề nghiệp Hà Nội · Hanoi Century Vista',
+    title: careerTitle,
     loadComponent: () => import('./career/career.component').then((m) => m.CareerComponent),
   },
   // The Business Copilot was merged into the Business Opportunity Map: every old link lands there.

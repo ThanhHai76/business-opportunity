@@ -1,4 +1,5 @@
 import { MetroHorizon, MetroPoint } from '../property-intel/pi.models';
+import type { CareerLang } from './career.local';
 import { sharedLines } from './career.reach';
 
 /** Drive-time limits (minutes by car, no traffic) offered for "how far from each workplace". */
@@ -81,3 +82,5 @@ export function liveClasses(rows: LiveRow[]): Map<string, number> {
 }
 
 export const METRO_FROM_TEXT: Record<MetroHorizon, string> = { now: 'có từ nay', soon: 'từ 2027', plan: 'theo quy hoạch' };
+
+export const metroFromTextIn = (lang: CareerLang): Record<MetroHorizon, string> => (lang === 'vi' ? METRO_FROM_TEXT : { now: 'available today', soon: 'from 2027', plan: 'under the plan' });

@@ -1,4 +1,5 @@
 import { AREAS, AREAS_OF, WorkArea } from './career.data';
+import { CareerLang, areaIn, localeOf } from './career.local';
 
 export type LngLat = [number, number];
 
@@ -52,15 +53,16 @@ export interface Placement {
 }
 
 /** The areas of a direction with their distance from the ward the visitor lives in (null ward: no distances). */
-export function placementsFor(directionId: string, ward: WardPoint | null, wards: WardPoint[], travel: TravelItems | null): Placement[] {
+export function placementsFor(directionId: string, ward: WardPoint | null, wards: WardPoint[], travel: TravelItems | null, lang: CareerLang = 'vi'): Placement[] {
   return (AREAS_OF[directionId] ?? []).map((id) => {
-    const area = AREAS[id];
+    const area = areaIn(AREAS[id], lang);
     return { area, commute: ward ? commuteTo(area, ward, travel) : null, near: area.kind === 'plan' ? nearestWards(area, wards) : [] };
   });
 }
 
-export function commuteText(c: Commute | null): string {
+export function commuteText(c: Commute | null, lang: CareerLang = 'vi'): string {
   if (!c) return '';
-  const km = c.km.toLocaleString('vi-VN', { maximumFractionDigits: 1 });
+  const km = c.km.toLocaleString(localeOf(lang), { maximumFractionDigits: 1 });
+  if (lang === 'en') return c.kind === 'drive' ? `about ${c.minutes} minutes by car (${km} km, traffic not included)` : `about ${km} km in a straight line (the real route is longer)`;
   return c.kind === 'drive' ? `khoảng ${c.minutes} phút lái xe (${km} km, chưa tính kẹt xe)` : `khoảng ${km} km theo đường chim bay (đường đi thực tế dài hơn)`;
 }
