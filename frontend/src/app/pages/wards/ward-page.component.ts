@@ -67,7 +67,7 @@ const LOADING: PageState = { state: 'loading', dir: null, unit: null, detail: nu
                     </li>
                   }
                 </ol>
-                <p class="wp__note">{{ tx().opportunitiesNote }}</p>
+                <p class="wp__note">{{ tx().opportunitiesNote }} <a routerLink="/giai-thich-diem">{{ tx().guide }}</a></p>
               </section>
             }
           } @else if (!u.covered) {

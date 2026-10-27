@@ -157,6 +157,8 @@ của trang** — nginx chuyển tiếp sang backend (`frontend/nginx.conf`). C�
 
 **Trang riêng cho từng phường/xã** (`/phuong-xa` và `/phuong-xa/<tên>`, 126 đơn vị): số liệu chính thức (dân số 1/7/2025, diện tích, mật độ) cho mọi đơn vị; nơi bản đồ OSM đã phủ có thêm ga metro gần nhất, ngành có điểm cao nhất và nút "Báo sai số liệu"; đơn vị chưa phủ ghi rõ "chưa có dữ liệu bản đồ". Dữ liệu từ `GET /api/opportunity/directory`. Tiêu đề/mô tả/sitemap của 127 trang lấy từ `frontend/scripts/ward-pages.json`, tạo bằng `npm run data:wardpages` trong `backend-node/` (chạy lại mỗi khi đổi dữ liệu phường).
 
+**Giải thích điểm bằng lời thường** (`/giai-thich-diem`, song ngữ): điểm cơ hội (nhu cầu, cạnh tranh, công thức nhu cầu − 0,4 × cạnh tranh, nhãn "dữ liệu ít"), điểm đáng sống (năm tiêu chí và trọng số mặc định, các mức điểm) và điểm tiềm năng bất động sản (sáu tiêu chí, phần trăm mặc định), kèm điều điểm số không nói. Nội dung ở `frontend/src/app/pages/guide/score-guide.i18n.ts`; **khi đổi công thức hoặc trọng số ở máy chủ phải sửa trang này cho khớp** (test chỉ giữ hai ngôn ngữ cùng cấu trúc và công thức cơ hội). Có link từ hộp "Cách tính & nguồn", trang phường/xã và chân trang.
+
 **Ảnh xem trước khi chia sẻ link** (Facebook, Zalo, Messenger đọc thẻ trong file HTML, không chạy JavaScript): sau `ng build`, `npm run build` chạy
 `scripts/route-meta.mjs` tạo thêm `career.html`, `opportunity-map.html`… — bản sao của `index.html` với tiêu đề, mô tả, link chuẩn và thẻ chia sẻ riêng
 của từng trang (tiêu đề lấy từ `app.routes.ts`, mô tả từ `seo.service.ts`). `frontend/nginx.conf` phục vụ `/career` từ `career.html`.
@@ -194,9 +196,9 @@ trong trình duyệt được **chuyển vào tài khoản** (bản mới hơn t
 | POST · DELETE | `/reports/import` · `/reports/:id` | Chuyển báo cáo từ trình duyệt vào tài khoản · xoá một báo cáo |
 
 **Kiểm thử đầu-cuối** (`backend-node/e2e/`): `cd frontend && npm run build`, rồi `cd backend-node && npm run test:e2e`. Chạy bằng **Chrome thật trên máy** (không thêm gói nào): backend thật
-(store trong bộ nhớ, cổng thanh toán giả, hộp thư giả đọc được) và frontend đã build, trên cùng một địa chỉ (`127.0.0.2`). Bảy luồng: trang chủ → La bàn nghề nghiệp
+(store trong bộ nhớ, cổng thanh toán giả, hộp thư giả đọc được) và frontend đã build, trên cùng một địa chỉ (`127.0.0.2`). Mười hai luồng: trang chủ → La bàn nghề nghiệp
 (và bản tiếng Anh) · trả lời, lập kế hoạch 30 ngày, tick việc, tải lại vẫn còn · đăng ký, nút mắt, đọc email, xác minh, đăng xuất, sai mật khẩu, đăng nhập · báo sai số liệu ·
-tải về dữ liệu · mua Premium bằng cổng giả · không có lỗi JavaScript. Không có Chrome hoặc chưa build thì cả bộ bị bỏ qua và nói lý do; `npm test` không chạy bộ này.
+tải về dữ liệu · mua Premium bằng cổng giả · quên mật khẩu (email, đặt lại, link chỉ dùng một lần) · danh bạ và trang phường/xã · trang giải thích điểm · quản trị đọc và phân loại báo sai số liệu · một ngôn ngữ cho cả trang · không có lỗi JavaScript. Trong CI (`.github/workflows/ci.yml`, job `e2e`) bộ này chạy bằng Chrome của runner và job thất bại nếu có test bị bỏ qua. Không có Chrome hoặc chưa build thì cả bộ bị bỏ qua và nói lý do; `npm test` không chạy bộ này.
 
 **Kiểm thử**: `npm test` chạy bộ kiểm thử tài khoản trên store trong bộ nhớ; đặt `TEST_DATABASE_URL=postgres://…` (database dùng một lần —
 bảng bị xoá sạch) để chạy cùng bộ đó trên PostgreSQL thật.
@@ -406,7 +408,7 @@ cd backend-node && npm test      # node --test: scoring, seed, recommendation en
 
 Định hướng việc làm cho người thất nghiệp, đổi nghề, sinh viên mới ra trường và người đang đi làm muốn tham khảo thị trường: 5 câu hỏi → các hướng nghề hợp nhất, kèm điều nguồn công khai nói về Hà Nội, kỹ năng, lộ trình, chính sách hỗ trợ (Luật Việc làm 2025) và kênh việc làm chính thống. **Không đăng tin tuyển dụng.**
 Trang chia 5 tab (có thể mở thẳng bằng `?tab=`: `paths`, `plan`, `market`, `map`, `support`): Hướng nghề của bạn (bảng hỏi và kết quả), Kế hoạch 30 ngày (kèm tiến độ trên tab), Thị trường, Bản đồ (tạo khi mở lần đầu và giữ nguyên ngành, nhà, vùng đã chọn khi đổi tab), Hỗ trợ và nơi tìm việc; phần Nguồn luôn nằm dưới cùng.
-**Báo sai số liệu**: mỗi phường và mỗi nguồn có nút gửi báo cáo (component `report-issue`, API `POST /api/feedback/data-report`, không cần tài khoản, giới hạn 5 báo cáo/giờ mỗi địa chỉ và 300/ngày cả trang, có ô bẫy bot). Lưu ở bảng `data_reports` (`database/accounts/07-data-reports.sql`); đọc bằng `npm run reports:list`. Không có cơ sở dữ liệu thì báo cáo chỉ ghi vào log và bộ nhớ.
+**Báo sai số liệu**: mỗi phường và mỗi nguồn có nút gửi báo cáo (component `report-issue`, API `POST /api/feedback/data-report`, không cần tài khoản, giới hạn 5 báo cáo/giờ mỗi địa chỉ và 300/ngày cả trang, có ô bẫy bot). Lưu ở bảng `data_reports` (`database/accounts/07-data-reports.sql`); đọc ở trang **/admin/reports** (đăng nhập bằng tài khoản đã xác minh email và nằm trong biến `ADMIN_EMAILS`; API `GET/PATCH /api/feedback/admin/reports`; mỗi báo cáo đánh dấu được Mới / Đã xem / Đã sửa / Không đúng) hoặc bằng `npm run reports:list`. Không có cơ sở dữ liệu thì báo cáo chỉ ghi vào log và bộ nhớ.
 
 **Hai ngôn ngữ**: tiếng Việt và tiếng Anh (nút đổi ở đầu trang, `?lang=en`, nhớ lựa chọn dùng chung khoá với Mở gì ở đâu, tiêu đề trang đổi theo). Con số, trích dẫn và liên kết nằm một chỗ ở `career.data.ts`; lời tiếng Anh ở `career.en.ts` (nội dung), `career.ui.ts` (chữ của trang và bản đồ), cùng tham số `lang` của `career.logic.ts`, `career.plan.ts`, `career.print.ts` (bản in PDF). Tên nguồn giữ nguyên tiếng Việt. Kiểm thử `career-en.spec.ts` bắt lỗi thiếu bản dịch, lệch con số/nguồn so với bản tiếng Việt và chữ tiếng Việt còn sót.
 

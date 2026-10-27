@@ -129,8 +129,14 @@ class MemoryStore {
     return { id: entry.id, createdAt: entry.createdAt };
   }
 
-  async listDataReports(limit = 50) {
-    return [...(this.dataReports ?? [])].reverse().slice(0, limit);
+  async listDataReports(limit = 50, status = null) {
+    return [...(this.dataReports ?? [])].reverse().filter((r) => !status || r.status === status).slice(0, limit);
+  }
+
+  async setDataReportStatus(id, status) {
+    const report = (this.dataReports ?? []).find((r) => r.id === id);
+    if (report) report.status = status;
+    return Boolean(report);
   }
 
   /** What else the account holds, for the data export: AI questions asked, and the reports of wrong figures it sent. */

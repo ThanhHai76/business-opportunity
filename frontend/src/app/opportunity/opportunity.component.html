@@ -347,6 +347,7 @@
         @if (wards(); as w) {
           <p>{{ w.meta.method }}</p>
           <p class="op-warn"><ls-icon name="alert" [size]="14" /> {{ w.meta.caveat }}</p>
+          <p><a routerLink="/giai-thich-diem">{{ lang() === 'en' ? 'The scores in plain words →' : 'Giải thích điểm bằng lời thường →' }}</a></p>
           <ul class="op-sourcelist">
             @for (s of w.meta.sources; track s.id) {
               <li><a [href]="s.url" target="_blank" rel="noopener noreferrer">{{ s.title }}</a> <small>— {{ s.publisher }}</small><app-report-issue kind="source" [target]="s.id" [targetName]="s.title" page="opportunity" [lang]="lang()" [compact]="true" /></li>

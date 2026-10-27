@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const site = (process.env.SITE_URL || 'https://hanoicenturyvista.com').replace(/\/+$/, '');
 const dist = join(root, 'dist', 'opportunity-map', 'browser');
-const PAGES = ['opportunity-map', 'time-machine', 'living-score', 'future-map', 'property-intelligence', 'career', 'premium', 'terms', 'privacy', 'refund'];
+const PAGES = ['opportunity-map', 'time-machine', 'living-score', 'future-map', 'property-intelligence', 'career', 'giai-thich-diem', 'premium', 'terms', 'privacy', 'refund'];
 /** The career page's title is chosen in code (Vietnamese or English), so the file carries the Vietnamese one. */
 const FIXED_TITLES = { career: 'La bàn nghề nghiệp Hà Nội · Hanoi Century Vista' };
 

@@ -17,7 +17,8 @@ export const ROUTE_DESCRIPTIONS: Record<string, string> = {
   'future-map': 'Hà Nội tương lai (Hanoi Future Map): các mốc quy hoạch Hà Nội giai đoạn 2026–2065 và Vùng Thủ đô, có nguồn trích dẫn.',
   'property-intelligence': 'Chấm điểm bất động sản (AI Property Intelligence): giá đất, thị trường và dự án bất động sản Hà Nội, kèm nguồn, ngày dữ liệu và độ tin cậy.',
   career: 'La bàn nghề nghiệp Hà Nội: định hướng việc làm cho người thất nghiệp, đổi nghề, sinh viên mới ra trường và người đang đi làm muốn tham khảo thị trường, theo cách Hà Nội thay đổi, có nguồn trích dẫn.',
-  'phuong-xa': 'Danh bạ 126 phường/xã của Hà Nội sau sắp xếp 2025: dân số, diện tích, mật độ, ga metro gần nhất và ngành có điểm cơ hội cao nhất, từ dữ liệu có nguồn.',
+  'giai-thich-diem': 'Điểm số nghĩa là gì: giải thích bằng lời thường điểm cơ hội, điểm đáng sống và điểm tiềm năng bất động sản của Hanoi Century Vista, cách tính và giới hạn.',
+  'phuong-xa':'Danh bạ 126 phường/xã của Hà Nội sau sắp xếp 2025: dân số, diện tích, mật độ, ga metro gần nhất và ngành có điểm cơ hội cao nhất, từ dữ liệu có nguồn.',
   premium: 'Gói Premium và lượt hỏi AI chuyên sâu cho các công cụ của Hanoi Century Vista.',
   terms: 'Điều khoản sử dụng Hanoi Century Vista.',
   privacy: 'Chính sách quyền riêng tư của Hanoi Century Vista.',
@@ -25,7 +26,7 @@ export const ROUTE_DESCRIPTIONS: Record<string, string> = {
 };
 
 /** Pages with no value in search results (links from emails, password screens). */
-const NO_INDEX = new Set(['forgot-password', 'reset-password', 'verify-email']);
+const NO_INDEX = new Set(['forgot-password', 'reset-password', 'verify-email', 'admin']);
 
 /**
  * Keeps the description, canonical link, robots and Open Graph / Twitter tags in step with the route.

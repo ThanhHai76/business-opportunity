@@ -23,7 +23,7 @@ Cập nhật lần cuối: 23/10/2026. Đánh dấu `[x]` khi xong. Hướng d�
 - [x] Gắn nhãn "trên OpenStreetMap" cạnh văn phòng, chung cư, trường học trong bảng phường của Mở gì ở đâu; ghi chú "có thể thấp hơn thực tế"; tách riêng số mầm non khỏi trường học. *Xong 22/10/2026.*
 - [x] Đối chiếu **dân số và diện tích** từng phường với danh sách 126 xã, phường sau sắp xếp (Báo Hà Nội Mới). Đã sửa Phú Thượng và 16 xã; 79/79 đơn vị có dân số chính thức; diện tích ranh giới lệch dưới 8%. *Đã đối chiếu tên và số đơn vị với Nghị quyết 1656/NQ-UBTVQH15 (23/10/2026): đúng 126 đơn vị, 51 phường và 75 xã, khớp 126/126 tên. Nghị quyết không ghi diện tích, dân số từng đơn vị nên hai số này vẫn theo danh sách Báo Hà Nội Mới; số chính thức nằm trong đề án của Chính phủ (chưa tìm thấy bản công khai).*
 - [x] Đối chiếu các số của **La bàn nghề nghiệp** (22/10/2026): thống kê chung dùng số Cục Thống kê quý II/2026; dự báo 6%/5%/4% ghi đúng nguồn (Trung tâm DVVL Hà Nội, 1/2026, không phải quý 2); chính sách thất nghiệp sửa theo Luật Việc làm 74/2025/QH15 (Điều 37–39). *Kế hoạch 212/KH-UBND (2/6/2026) nay dẫn cổng thông tin UBND thành phố (nguồn chính thức, bản tiếng Anh; chưa có bản văn bản gốc tiếng Việt). "Thiếu 50.000 lao động chất lượng cao" là ước tính trong dự báo quý II/2026 của Trung tâm Dịch vụ việc làm Hà Nội, chỉ có qua báo chí (23/10/2026).* Cập nhật `DATA_DATE` mỗi lần rà lại.
-- [x] Nút **"Báo sai số liệu"** trên mỗi phường (Mở gì ở đâu, bản đồ việc làm) và mỗi nguồn (danh sách nguồn của hai trang). Báo cáo lưu ở bảng `data_reports`; xem bằng `npm run reports:list` trong `backend-node`. *Chưa có trang quản trị và chưa báo qua email: bạn cần chạy lệnh trên để đọc.* (23/10/2026)
+- [x] Nút **"Báo sai số liệu"** trên mỗi phường (Mở gì ở đâu, bản đồ việc làm) và mỗi nguồn (danh sách nguồn của hai trang). Báo cáo lưu ở bảng `data_reports`; xem ở trang `/admin/reports` (điền email của bạn vào `ADMIN_EMAILS` trong `.env`, đăng nhập bằng tài khoản đã xác minh; 27/10/2026) hoặc bằng `npm run reports:list`. *Chưa báo qua email khi có báo cáo mới.* (23/10/2026)
 - [ ] Đặt lịch rà soát số liệu việc làm mỗi quý (đã có lịch cho thị trường bất động sản).
 - [x] Living Score và Mở gì ở đâu dùng chung `src/metro/stations.js` (toạ độ ga bám OpenStreetMap).
 
@@ -34,13 +34,14 @@ Cập nhật lần cuối: 23/10/2026. Đánh dấu `[x]` khi xong. Hướng d�
 - [ ] Bật CSP (chính sách nội dung) sau khi thử kỹ vì bản đồ và font tải từ nhiều nguồn.
 - [ ] Thử trên Safari, iPhone và điện thoại Android thật (mới thử bằng Chrome và giả lập).
 - [ ] Đo tải của một máy chủ nhỏ.
+- [x] Trang **giải thích điểm** bằng lời thường (`/giai-thich-diem`, song ngữ, 27/10/2026): ba loại điểm, cách tính, điều điểm số không nói. *Khi đổi công thức hoặc trọng số ở máy chủ, sửa `score-guide.i18n.ts` cho khớp.*
 - [x] Trang riêng cho 126 phường/xã (`/phuong-xa/<tên>`, có trong sitemap và có ảnh xem trước riêng, 27/10/2026). *47 đơn vị nằm ngoài khu vực dữ liệu OSM chỉ có số liệu chính thức, chưa có điểm cơ hội.*
 - [x] Ảnh xem trước khi dán link: mỗi trang công cụ có tiêu đề, mô tả, link chuẩn và thẻ chia sẻ riêng (`frontend/scripts/route-meta.mjs`, 26/10/2026). *Chưa thử dán link thật vào Facebook/Zalo (cần địa chỉ công khai); ảnh xem trước vẫn dùng chung một ảnh `og-image.png`.*
 - [x] Trang chủ có phần "Bạn đang cần gì?" dẫn người mới tới đúng công cụ (26/10/2026).
 - [x] Rà cấu trúc truy cập (nhãn nút, ô nhập, h1, vùng main) ở 9 trang bằng Chrome: đã sửa trang Mở gì ở đâu, Hà Nội tương lai, bản đồ BĐS. *Chưa rà độ tương phản màu, thứ tự Tab và đọc bằng trình đọc màn hình.*
 - [ ] Hiệu năng trên điện thoại chậm: đo giả lập 4G chậm, CPU chậm 4 lần, các trang bản đồ có LCP khoảng 9 giây (trang chủ, La bàn nghề nghiệp khoảng 4,7 giây). Số này đo trên bản chạy không nén; trên máy chủ thật Caddy nén nên nhỏ hơn. *Cần đo lại trên máy chủ thật.*
 - [x] Tải về dữ liệu cá nhân: nút trong mục Tài khoản, cần nhập lại mật khẩu, một tệp JSON (`POST /api/account/me/export`, 26/10/2026). Trang Quyền riêng tư đã cập nhật.
-- [x] Kiểm thử đầu-cuối bằng Chrome thật cho 7 luồng chính (`npm run test:e2e` trong `backend-node`, 26/10/2026). *Chưa chạy trong CI GitHub Actions; chưa phủ bản đồ, AI và luồng quên mật khẩu.*
+- [x] Kiểm thử đầu-cuối bằng Chrome thật cho 12 luồng chính, gồm quên mật khẩu, phường/xã, giải thích điểm và trang quản trị (`npm run test:e2e` trong `backend-node`, 27/10/2026). Đã thêm job `e2e` vào `.github/workflows/ci.yml`. *Job này chưa được chạy trên GitHub (chưa đẩy lên); lần đẩy đầu tiên cần xem nó có xanh không. Chưa phủ bản đồ và hỏi đáp AI.*
 
 ## 3. Sau khi có người dùng thật
 

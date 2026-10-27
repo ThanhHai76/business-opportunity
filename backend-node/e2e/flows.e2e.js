@@ -47,6 +47,13 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     return email;
   }
 
+  /** Signs up (and, for the administrator, confirms the address, as the link of the email would) from the page itself. */
+  async function signUpByApi(email) {
+    const res = await page.evaluate(`fetch('/api/account/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: ${JSON.stringify(email)}, password: ${JSON.stringify(PASSWORD)}, acceptTerms: true }) }).then((r) => r.json())`);
+    assert.ok(res.user?.id, JSON.stringify(res));
+    if (email === site.adminEmail) await site.store.updateUser(res.user.id, { emailVerifiedAt: new Date() });
+  }
+
   const closeDialog = () => page.evaluate(`document.querySelector('.ad__close, [aria-label="Đóng"]')?.click(); true`);
   const me = () => page.evaluate(`fetch('/api/account/me').then((r) => r.json())`);
 
@@ -252,6 +259,76 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     // And the page follows the site's language.
     await page.click('.lang-toggle');
     await page.waitFor(`/Official figures/.test(document.querySelector('.wp')?.textContent ?? '')`, 'the English page');
+  });
+
+  it('score guide: reached from a ward page, explains the three scores in both languages', async () => {
+    await fresh('/phuong-xa/phuong-cau-giay');
+    await page.waitFor(`!!document.querySelector('.wp__note a[href="/giai-thich-diem"]')`, 'the link to the guide on a ward page');
+    await page.click('.wp__note a[href="/giai-thich-diem"]');
+    await page.waitFor(`location.pathname === '/giai-thich-diem' && document.querySelector('h1')?.textContent === 'Điểm số nghĩa là gì?'`, 'the guide');
+    assert.equal(await page.evaluate(`document.querySelectorAll('.sg__sec').length`), 3);
+    assert.match(await page.text('.sg'), /Cơ hội = nhu cầu − 0,4 × cạnh tranh/);
+    await page.click('.lang-toggle');
+    await page.waitFor(`document.querySelector('h1')?.textContent === 'What do the scores mean?'`, 'the English guide');
+    assert.equal(await page.evaluate('document.title'), 'Điểm số nghĩa là gì? · Hanoi Century Vista');
+  });
+
+  it('reports of wrong figures: sent by a visitor, read and sorted by the administrator, closed to others', async () => {
+    const message = `Số dân của phường này khác danh sách chính thức (${Date.now()}).`;
+    await fresh('/');
+    const sent = await page.evaluate(`fetch('/api/feedback/data-report', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind: 'ward', target: 'phuong-cau-giay', targetName: 'Phường Cầu Giấy', page: 'e2e', message: ${JSON.stringify(message)} }) }).then((r) => r.status)`);
+    assert.equal(sent, 201);
+
+    // Not signed in: asked to sign in. A signed-in stranger: refused.
+    await page.goto(site.origin + '/admin/reports');
+    await page.waitFor(`/Hãy đăng nhập/.test(document.querySelector('.ar')?.textContent ?? '')`, 'the request to sign in');
+    await signUpByApi(`khach${++n}-${Date.now()}@example.com`);
+    await page.goto(site.origin + '/admin/reports');
+    await page.waitFor(`/không có quyền/.test(document.querySelector('.ar')?.textContent ?? '')`, 'the refusal');
+
+    // The administrator sees the report and marks it fixed; the server keeps it.
+    await fresh('/');
+    await signUpByApi(site.adminEmail);
+    await page.goto(site.origin + '/admin/reports');
+    await page.waitFor(`[...document.querySelectorAll('.ar__item')].some((i) => i.textContent.includes(${JSON.stringify(message)}))`, 'the report in the list');
+    await page.evaluate(`[...document.querySelectorAll('.ar__item')].find((i) => i.textContent.includes(${JSON.stringify(message)})).querySelectorAll('.ar__actions button')[2].click()`);
+    await page.waitFor(`[...document.querySelectorAll('.ar__item')].find((i) => i.textContent.includes(${JSON.stringify(message)}))?.dataset.status === 'fixed'`, 'the report to be marked fixed');
+    const saved = await page.evaluate(`fetch('/api/feedback/admin/reports?status=fixed').then((r) => r.json())`);
+    assert.ok(saved.reports.some((r) => r.message === message));
+  });
+
+  it('forgot password: the email carries a link, the new password works and the old one does not', async () => {
+    const email = `quen${++n}-${Date.now()}@example.com`;
+    await fresh('/');
+    await signUpByApi(email);
+    await page.evaluate(`fetch('/api/account/logout', { method: 'POST' }).then(() => true)`);
+    const before = site.mailbox.length;
+    await page.goto(site.origin + '/forgot-password');
+    await page.waitFor(`!!document.querySelector('input[name=email]')`, 'the form');
+    await page.type('input[name=email]', email);
+    await page.click('button[type=submit]');
+    await page.waitFor(`!!document.querySelector('.al__ok')`, 'the "link sent" note');
+    await page.waitFor(`true`);
+    assert.equal(site.mailbox.length, before + 1);
+    const mail = site.mailbox.at(-1);
+    assert.equal(mail.to, email);
+    const link = mail.text.match(/https?:\/\/\S+reset-password\?token=\S+/)[0];
+
+    await page.goto(link);
+    await page.waitFor(`!!document.querySelector('app-password-field input')`, 'the new-password form');
+    await page.type('app-password-field input', 'mat-khau-moi-456');
+    await page.click('button[type=submit]');
+    await page.waitFor(`!!document.querySelector('.al__ok')`, 'the "password changed" note');
+
+    const login = (password) => page.evaluate(`fetch('/api/account/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: ${JSON.stringify(email)}, password: ${JSON.stringify(password)} }) }).then((r) => r.status)`);
+    assert.equal(await login(PASSWORD), 401);
+    assert.equal(await login('mat-khau-moi-456'), 200);
+    // The link works once.
+    await page.goto(link);
+    await page.waitFor(`!!document.querySelector('app-password-field input')`, 'the form again');
+    await page.type('app-password-field input', 'mat-khau-khac-789');
+    await page.click('button[type=submit]');
+    await page.waitFor(`!!document.querySelector('.al__err')`, 'the refusal of a used link');
   });
 
   it('left no uncaught error in the page', () => {

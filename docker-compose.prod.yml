@@ -61,6 +61,8 @@ services:
       CORS_ORIGIN: https://${DOMAIN:?Đặt DOMAIN trong file .env}
       # The address in the links of the emails (verify the address, reset the password).
       APP_URL: https://${DOMAIN}
+      # Who reads the reports of wrong figures at /admin/reports (verified accounts); empty: nobody.
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       DATA_SOURCE: postgres
       DATABASE_URL: postgres://living:${POSTGRES_PASSWORD}@db:5432/living_score
       AUTO_SEED: 'true'

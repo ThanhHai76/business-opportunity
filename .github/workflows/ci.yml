@@ -38,6 +38,39 @@ jobs:
       - run: npx ng test --watch=false --browsers=ChromeHeadless
       - run: npm run build
 
+  # The main flows in a real Chrome, on the built frontend and the real backend (sign up, reports, Premium, languages...).
+  # Without Chrome or a build the tests skip themselves, so the job fails when anything was skipped.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend-node/package-lock.json
+            frontend/package-lock.json
+      - name: Build the frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+      - name: Install the backend
+        working-directory: backend-node
+        run: npm ci
+      - name: Chrome is there
+        run: google-chrome --version
+      - name: End-to-end flows
+        working-directory: backend-node
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: |
+          npm run test:e2e | tee e2e.log
+          grep -q "^# skipped 0" e2e.log
+      - name: The page of a ward has its own title in the built files
+        run: grep -q "<title>Phường Cầu Giấy, Hà Nội" frontend/dist/opportunity-map/browser/phuong-xa/phuong-cau-giay.html
+
   # The files that put the site on a server (docker-compose.prod.yml, deploy/Caddyfile): checked, built, and the database
   # and the API started for real, with the settings of the server. Needs no secret: every value below is a dummy.
   production-stack:

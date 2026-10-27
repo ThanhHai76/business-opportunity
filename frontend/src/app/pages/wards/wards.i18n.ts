@@ -39,6 +39,7 @@ export interface WardsText {
   openMap: string;
   openProperty: string;
   sources: string;
+  guide: string;
 }
 
 export const WARDS_TEXT: Record<SiteLang, WardsText> = {
@@ -80,6 +81,7 @@ export const WARDS_TEXT: Record<SiteLang, WardsText> = {
     openMap: 'Xem trên bản đồ Mở gì ở đâu',
     openProperty: 'Chấm điểm bất động sản',
     sources: 'Nguồn',
+    guide: 'Điểm nghĩa là gì?',
   },
   en: {
     title: 'Hanoi wards and communes',
@@ -119,5 +121,6 @@ export const WARDS_TEXT: Record<SiteLang, WardsText> = {
     openMap: 'See it on the Business Opportunity Map',
     openProperty: 'AI Property Intelligence',
     sources: 'Sources',
+    guide: 'What does the score mean?',
   },
 };

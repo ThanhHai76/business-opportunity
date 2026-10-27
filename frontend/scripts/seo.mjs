@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const site = (process.env.SITE_URL || 'https://hanoicenturyvista.com').replace(/\/+$/, '');
 const publicDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
-const pages = ['', 'opportunity-map', 'time-machine', 'living-score', 'future-map', 'property-intelligence', 'career', 'premium', 'terms', 'privacy', 'refund'];
+const pages = ['', 'opportunity-map', 'time-machine', 'living-score', 'future-map', 'property-intelligence', 'career', 'giai-thich-diem', 'premium', 'terms', 'privacy', 'refund'];
 const lastmod = new Date().toISOString().slice(0, 10);
 // The page of each ward and commune (scripts/ward-pages.json, built by npm run data:wardpages in backend-node).
 const wardFile = join(dirname(fileURLToPath(import.meta.url)), 'ward-pages.json');
@@ -15,7 +15,7 @@ if (existsSync(wardFile)) pages.push('phuong-xa', ...JSON.parse(readFileSync(war
 mkdirSync(publicDir, { recursive: true });
 writeFileSync(
   join(publicDir, 'robots.txt'),
-  `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /reset-password\nDisallow: /verify-email\nDisallow: /forgot-password\n\nSitemap: ${site}/sitemap.xml\n`,
+  `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin/\nDisallow: /reset-password\nDisallow: /verify-email\nDisallow: /forgot-password\n\nSitemap: ${site}/sitemap.xml\n`,
 );
 writeFileSync(
   join(publicDir, 'sitemap.xml'),

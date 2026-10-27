@@ -44,6 +44,9 @@ function unavailable() {
   return null;
 }
 
+/** The address that may read the reports at /admin/reports in the test site. */
+const ADMIN_EMAIL = 'quan-tri-e2e@example.com';
+
 /** The site: backend and built frontend on one port. */
 async function startSite() {
   const mailbox = [];
@@ -73,16 +76,16 @@ async function startSite() {
     accounts: { store, appUrl: origin, rateLimits: { login: 1000, register: 1000, mail: 1000, export: 1000 } },
     aiMeter: { mode: 'off' },
     billing: { rateLimits: { checkout: 1000 } },
-    feedback: { rateLimits: { perHour: 1000, perDay: 1000 } },
+    feedback: { rateLimits: { perHour: 1000, perDay: 1000 }, adminEmails: ADMIN_EMAIL },
   }));
-  return { origin, mailbox, store, close: () => new Promise((resolve) => server.close(resolve)) };
+  return { origin, mailbox, store, adminEmail: ADMIN_EMAIL, close: () => new Promise((resolve) => server.close(resolve)) };
 }
 
 /** A Chrome window with a few verbs: goto, click, type, text, waitFor. */
 async function startBrowser({ width = 1280, height = 900 } = {}) {
   const port = 9400 + Math.floor(Math.random() * 400);
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'hcv-e2e-'));
-  const chrome = spawn(findChrome(), ['--headless=new', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--no-first-run', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
+  const chrome = spawn(findChrome(), [...(process.env.CI ? ['--no-sandbox'] : []), '--headless=new', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--no-first-run', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
   let target;
   for (let i = 0; i < 50 && !target; i++) {
     await sleep(200);

@@ -170,9 +170,18 @@ class PostgresStore {
     };
   }
 
-  async listDataReports(limit = 50) {
-    const { rows } = await this.pool.query('SELECT id, kind, target, target_name, page, message, contact, status, created_at FROM data_reports ORDER BY created_at DESC LIMIT $1', [limit]);
+  async listDataReports(limit = 50, status = null) {
+    const { rows } = await this.pool.query(
+      'SELECT id, kind, target, target_name, page, message, contact, status, created_at FROM data_reports WHERE ($2::text IS NULL OR status = $2) ORDER BY created_at DESC LIMIT $1',
+      [limit, status],
+    );
     return rows;
+  }
+
+  /** Marks a report as checked, fixed or rejected; false when there is no such report. */
+  async setDataReportStatus(id, status) {
+    const { rowCount } = await this.pool.query('UPDATE data_reports SET status = $2 WHERE id = $1', [id, status]);
+    return rowCount > 0;
   }
 
   async putItem(userId, kind, key, payload, updatedAt) {

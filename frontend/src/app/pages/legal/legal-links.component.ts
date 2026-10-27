@@ -8,7 +8,7 @@ import { SiteLangService } from '../../services/site-lang.service';
   standalone: true,
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<nav class="ll" [attr.aria-label]="tx().aria"><a routerLink="/phuong-xa">{{ tx().wards }}</a><a routerLink="/terms">{{ tx().terms }}</a><a routerLink="/privacy">{{ tx().privacy }}</a><a routerLink="/refund">{{ tx().refund }}</a></nav>`,
+  template: `<nav class="ll" [attr.aria-label]="tx().aria"><a routerLink="/phuong-xa">{{ tx().wards }}</a><a routerLink="/giai-thich-diem">{{ tx().guide }}</a><a routerLink="/terms">{{ tx().terms }}</a><a routerLink="/privacy">{{ tx().privacy }}</a><a routerLink="/refund">{{ tx().refund }}</a></nav>`,
   styles: `
     .ll { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; padding: 16px; font-size: 13px; }
     a { color: var(--app-ink-dim); text-decoration: none; }
@@ -18,6 +18,6 @@ import { SiteLangService } from '../../services/site-lang.service';
 export class LegalLinksComponent {
   private readonly site = inject(SiteLangService);
   protected readonly tx = computed(() =>
-    this.site.lang() === 'en' ? { aria: 'Links', wards: 'Wards and communes', terms: 'Terms', privacy: 'Privacy', refund: 'Refunds' } : { aria: 'Liên kết', wards: 'Phường/xã', terms: 'Điều khoản', privacy: 'Quyền riêng tư', refund: 'Hoàn tiền' },
+    this.site.lang() === 'en' ? { aria: 'Links', wards: 'Wards and communes', guide: 'What scores mean', terms: 'Terms', privacy: 'Privacy', refund: 'Refunds' } : { aria: 'Liên kết', wards: 'Phường/xã', guide: 'Giải thích điểm', terms: 'Điều khoản', privacy: 'Quyền riêng tư', refund: 'Hoàn tiền' },
   );
 }
