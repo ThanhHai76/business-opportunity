@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { DirectoryResponse, DirectoryUnit } from '../../opportunity/op.models';
 import { OpportunityService } from '../../opportunity/op.service';
@@ -32,7 +32,7 @@ export const plain = (s: string): string =>
       @if (data().dir; as dir) {
         <p class="wd__intro">{{ tx().intro(dir.units.length) }}</p>
         <div class="wd__tools">
-          <input type="search" [attr.aria-label]="tx().search" [placeholder]="tx().search" (input)="query.set($any($event.target).value)" />
+          <input type="search" [attr.aria-label]="tx().search" [placeholder]="tx().search" [value]="query()" (input)="query.set($any($event.target).value)" />
           <select [attr.aria-label]="tx().kindAll" (change)="kind.set($any($event.target).value)">
             <option value="all">{{ tx().kindAll }}</option>
             <option value="ward">{{ tx().kindWard }}</option>
@@ -95,7 +95,8 @@ export class WardsComponent {
   private readonly api = inject(OpportunityService);
   private readonly site = inject(SiteLangService);
   protected readonly tx = computed(() => WARDS_TEXT[this.site.lang()]);
-  protected readonly query = signal('');
+  /** The search typed on the home page arrives as ?q=. */
+  protected readonly query = signal(inject(ActivatedRoute).snapshot.queryParamMap.get('q') ?? '');
   protected readonly kind = signal<Kind>('all');
   protected readonly sort = signal<Sort>('name');
 

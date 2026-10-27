@@ -225,6 +225,17 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
   });
 
   it('wards and communes: the directory finds a unit without accents, its page shows the figures, and an uncovered unit says so', async () => {
+    // From the home page: the lookup box carries the search to the list.
+    await fresh('/');
+    await page.waitFor(`!!document.querySelector('.wardfind input')`, 'the lookup box on the home page');
+    await page.type('.wardfind input', 'cau giay');
+    await page.click('.wardfind button');
+    await page.waitFor(`location.pathname === '/phuong-xa' && document.querySelectorAll('.wd__card').length === 1`, 'the list already narrowed to Cầu Giấy');
+    // From the top bar: the entry sits in the "Khám phá Hà Nội" group.
+    await page.goto(site.origin + '/career');
+    await page.clickText('.group-btn', 'Khám phá Hà Nội');
+    await page.clickText('.group-item', 'Phường/xã của Hà Nội');
+    await page.waitFor(`location.pathname === '/phuong-xa'`, 'the directory from the top bar');
     await fresh('/phuong-xa');
     await page.waitFor(`document.querySelectorAll('.wd__card').length === 126`, 'the 126 units');
     await page.type('input[type=search]', 'cau giay');

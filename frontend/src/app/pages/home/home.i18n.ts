@@ -32,6 +32,11 @@ export interface HomeText {
   quickTitle: string;
   quickSub: string;
   quickTrust: string;
+  wardTitle: string;
+  wardSub: string;
+  wardPlaceholder: string;
+  wardGo: string;
+  wardAll: string;
   intents: Intent[];
   groups: Record<'explore' | 'biz' | 'property', { title: string; hint: string }>;
   cards: ToolCard[];
@@ -52,6 +57,11 @@ export const HOME_TEXT: Record<SiteLang, HomeText> = {
     sub: 'Từ cơ hội kinh doanh, hành trình xuyên thời gian đến việc chọn nơi an cư — năm công cụ tương tác dựng trên nền bản đồ đô thị, phục vụ năm mục đích rất khác nhau.',
     quickTitle: 'Bạn đang cần gì?',
     quickSub: 'Chọn điều gần nhất với bạn, chúng tôi đưa bạn tới đúng công cụ. Không cần đăng nhập để bắt đầu.',
+    wardTitle: 'Tra cứu phường/xã của bạn',
+    wardSub: 'Dân số, diện tích, ga metro gần nhất và ngành nổi bật của từng phường/xã trong 126 đơn vị mới.',
+    wardPlaceholder: 'Ví dụ: Cầu Giấy, Hoàn Kiếm',
+    wardGo: 'Tra cứu',
+    wardAll: 'Xem cả danh sách',
     quickTrust: 'Mỗi con số có nguồn: dữ liệu OpenStreetMap, danh sách xã phường chính thức, văn bản và số liệu của cơ quan nhà nước. Chỗ nào chưa chắc chắn, chúng tôi nói rõ.',
     intents: [
       { id: 'shop', icon: '☕', want: 'Tôi muốn mở quán hoặc cửa hàng', tool: 'Mở gì ở đâu · phường nào hợp, có lời không', path: '/opportunity-map', accent: 'biz' },
@@ -89,6 +99,11 @@ export const HOME_TEXT: Record<SiteLang, HomeText> = {
     sub: 'From business opportunities and a journey through time to choosing where to live: five interactive tools built on an urban map, for five very different purposes.',
     quickTitle: 'What do you need?',
     quickSub: 'Pick what is closest to you and we will take you to the right tool. No sign-in needed to start.',
+    wardTitle: 'Look up your ward or commune',
+    wardSub: 'Population, area, nearest metro station and top sector for each of the 126 new wards and communes.',
+    wardPlaceholder: 'For example: Cau Giay, Hoan Kiem',
+    wardGo: 'Look up',
+    wardAll: 'See the full list',
     quickTrust: 'Every figure has a source: OpenStreetMap data, the official list of wards and communes, documents and statistics of State agencies. Where we are not sure, we say so.',
     intents: [
       { id: 'shop', icon: '☕', want: 'I want to open a café or shop', tool: 'Business Opportunity Map · which ward suits it, and does it pay', path: '/opportunity-map', accent: 'biz' },

@@ -29,6 +29,23 @@
       <p class="intents-trust">{{ tx().quickTrust }}</p>
     </section>
 
+    <section class="wardfind" aria-labelledby="wardfind-title">
+      <div class="wardfind-box">
+        <div class="wardfind-head">
+          <span class="wardfind-icon" aria-hidden="true">📍</span>
+          <h2 id="wardfind-title">{{ tx().wardTitle }}</h2>
+          <p class="wardfind-sub">{{ tx().wardSub }}</p>
+        </div>
+        <form (submit)="$event.preventDefault(); lookUp(q.value)">
+          <div class="wardfind-row">
+            <input #q type="search" name="q" [placeholder]="tx().wardPlaceholder" [attr.aria-label]="tx().wardTitle" maxlength="60" />
+            <button type="submit">{{ tx().wardGo }}</button>
+          </div>
+          <a class="wardfind-all" routerLink="/phuong-xa">{{ tx().wardAll }} →</a>
+        </form>
+      </div>
+    </section>
+
     <section class="cards">
       @for (g of groups; track g.id) {
         <h2 class="group-title">{{ tx().groups[g.id].title }} <small>{{ tx().groups[g.id].hint }}</small></h2>

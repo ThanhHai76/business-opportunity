@@ -479,3 +479,110 @@ main {
   background: var(--accent-career-soft);
   color: var(--accent-career);
 }
+
+/* ---------- look up a ward or commune ---------- */
+
+.wardfind {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(18px, 4vw, 48px) clamp(2rem, 5vh, 3rem);
+}
+
+.wardfind-box {
+  --c: var(--accent-biz);
+  --c-soft: var(--accent-biz-soft);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 1rem clamp(1.2rem, 4vw, 2.5rem);
+  padding: clamp(1.1rem, 2.5vw, 1.6rem) clamp(1.1rem, 3vw, 1.8rem);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--c);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.wardfind-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.2rem 0.9rem;
+}
+
+.wardfind-icon {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--c-soft);
+  font-size: 1.35rem;
+}
+
+.wardfind h2 {
+  font-size: clamp(1.15rem, 2.2vw, 1.4rem);
+}
+
+.wardfind-sub {
+  grid-column: 2;
+  color: var(--ink-dim);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.wardfind form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.wardfind-row {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg, var(--surface));
+  overflow: hidden;
+}
+
+.wardfind-row:focus-within {
+  border-color: var(--c);
+  box-shadow: 0 0 0 3px var(--c-soft);
+}
+
+.wardfind input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.8rem 1rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+
+.wardfind button {
+  padding: 0 1.3rem;
+  border: 0;
+  background: var(--c);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wardfind button:hover {
+  filter: brightness(1.08);
+}
+
+.wardfind-all {
+  justify-self: start;
+  color: var(--c);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+@media (max-width: 800px) {
+  .wardfind-box {
+    grid-template-columns: 1fr;
+  }
+}

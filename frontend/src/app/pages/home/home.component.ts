@@ -1,5 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AccountService } from '../../services/account.service';
 import { BillingService } from '../../services/billing.service';
 import { SiteLangService } from '../../services/site-lang.service';
@@ -28,6 +28,13 @@ export class HomeComponent {
   private readonly site = inject(SiteLangService);
   protected readonly tx = computed(() => HOME_TEXT[this.site.lang()]);
   protected readonly groups = GROUPS;
+  private readonly router = inject(Router);
+
+  /** Opens the list of wards and communes with the search already typed. */
+  protected lookUp(q: string): void {
+    const text = q.trim();
+    void this.router.navigate(['/phuong-xa'], { queryParams: text ? { q: text } : {} });
+  }
 
   protected card(id: ToolCard['id']): ToolCard | undefined {
     return this.tx().cards.find((c) => c.id === id);
