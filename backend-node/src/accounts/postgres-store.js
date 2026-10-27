@@ -158,6 +158,18 @@ class PostgresStore {
     return { id: rows[0].id, createdAt: rows[0].created_at };
   }
 
+  /** What else the account holds, for the data export: AI questions asked, and the reports of wrong figures it sent. */
+  async exportExtras(userId) {
+    const [usage, reports] = await Promise.all([
+      this.pool.query('SELECT tool, source, used_at FROM ai_usage WHERE user_id = $1 ORDER BY used_at DESC LIMIT 5000', [userId]),
+      this.pool.query('SELECT kind, target, target_name, page, message, contact, status, created_at FROM data_reports WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1000', [userId]),
+    ]);
+    return {
+      aiUsage: usage.rows.map((r) => ({ tool: r.tool, source: r.source, usedAt: r.used_at })),
+      dataReports: reports.rows.map((r) => ({ kind: r.kind, target: r.target, targetName: r.target_name, page: r.page, message: r.message, contact: r.contact, status: r.status, createdAt: r.created_at })),
+    };
+  }
+
   async listDataReports(limit = 50) {
     const { rows } = await this.pool.query('SELECT id, kind, target, target_name, page, message, contact, status, created_at FROM data_reports ORDER BY created_at DESC LIMIT $1', [limit]);
     return rows;

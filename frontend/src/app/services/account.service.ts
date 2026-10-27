@@ -103,6 +103,11 @@ export class AccountService {
     return this.http.post(`${ACCOUNT_API_URL}/verify-email/send`, null, opts);
   }
 
+  /** Everything the account holds (the password is asked again). The page saves it as a file: see downloadJson(). */
+  exportData(password: string): Observable<unknown> {
+    return this.http.post<unknown>(`${ACCOUNT_API_URL}/me/export`, { password }, opts);
+  }
+
   deleteAccount(password: string): Observable<void> {
     return this.http.delete<void>(`${ACCOUNT_API_URL}/me`, { ...opts, body: { password } }).pipe(tap(() => this.user.set(null)));
   }

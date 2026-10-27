@@ -8,6 +8,18 @@ import { PasswordFieldComponent } from '../password-field/password-field.compone
 
 type View = 'login' | 'register' | 'account';
 
+/** Hands a value to the browser as a downloaded .json file. */
+export function downloadJson(data: unknown, filename: string): void {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 /**
  * Sign in / sign up, and — once signed in — the account: name, password, sign out, delete the account.
  * Shown by the site header while AccountService.dialogOpen() is true.
@@ -78,6 +90,18 @@ type View = 'login' | 'register' | 'account';
             </label>
             <button type="submit" class="ad__btn" [disabled]="busy()">Đổi mật khẩu</button>
             <small class="ad__hint">Các thiết bị khác đang đăng nhập sẽ bị đăng xuất.</small>
+          </form>
+        </details>
+
+        <details class="ad__more">
+          <summary>Tải về dữ liệu của tôi</summary>
+          <form class="ad__form" (submit)="$event.preventDefault(); exportData()">
+            <p class="ad__hint">Một tệp JSON gồm thông tin tài khoản, báo cáo và kế hoạch đã lưu, đơn hàng và các báo cáo sai số liệu bạn đã gửi. Không gồm mật khẩu.</p>
+            <label>
+              <span>Nhập mật khẩu để xác nhận</span>
+              <app-password-field name="export" autocomplete="current-password" (valueChange)="password.set($event)" />
+            </label>
+            <button type="submit" class="ad__btn" [disabled]="busy()">{{ busy() ? 'Đang chuẩn bị…' : 'Tải tệp dữ liệu' }}</button>
           </form>
         </details>
 
@@ -358,15 +382,15 @@ export class AccountDialogComponent implements AfterViewInit {
     setTimeout(() => this.host.nativeElement.querySelector<HTMLInputElement>('input')?.focus());
   }
 
-  private run(call: Observable<unknown>, onDone: () => void): void {
+  private run<T = unknown>(call: Observable<T>, onDone: (value: T) => void): void {
     if (this.busy()) return;
     this.busy.set(true);
     this.error.set(null);
     this.done.set(null);
     call.subscribe({
-      next: () => {
+      next: (value) => {
         this.busy.set(false);
-        onDone();
+        onDone(value);
       },
       error: (e: unknown) => {
         this.busy.set(false);
@@ -397,6 +421,13 @@ export class AccountDialogComponent implements AfterViewInit {
 
   protected changePassword(): void {
     this.run(this.account.changePassword(this.password(), this.newPassword()), () => this.done.set('Đã đổi mật khẩu.'));
+  }
+
+  protected exportData(): void {
+    this.run(this.account.exportData(this.password()), (data) => {
+      downloadJson(data, `hanoi-century-vista-du-lieu-${new Date().toISOString().slice(0, 10)}.json`);
+      this.done.set('Đã tải tệp dữ liệu về máy bạn.');
+    });
   }
 
   protected deleteAccount(): void {

@@ -179,8 +179,14 @@ trong trình duyệt được **chuyển vào tài khoản** (bản mới hơn t
 | POST | `/register` · `/login` · `/logout` | Đăng ký · đăng nhập (đặt cookie) · đăng xuất |
 | PATCH · DELETE | `/me` | Đổi tên hiển thị · xoá tài khoản (cần mật khẩu) |
 | POST | `/me/password` | Đổi mật khẩu |
+| POST | `/me/export` | **Tải về dữ liệu của tôi**: `{ password }` → một tệp JSON (tài khoản, báo cáo và kế hoạch đã lưu, đơn hàng, báo cáo trả phí, lượt hỏi AI, báo cáo sai số liệu đã gửi; không có mật khẩu hay phiên). 5 lần/giờ mỗi địa chỉ. Nút "Tải về dữ liệu của tôi" trong mục Tài khoản |
 | GET · PUT · DELETE | `/reports` | Danh sách · lưu (cùng ngành + phường + mốc thì thay bản cũ) · xoá tất cả |
 | POST · DELETE | `/reports/import` · `/reports/:id` | Chuyển báo cáo từ trình duyệt vào tài khoản · xoá một báo cáo |
+
+**Kiểm thử đầu-cuối** (`backend-node/e2e/`): `cd frontend && npm run build`, rồi `cd backend-node && npm run test:e2e`. Chạy bằng **Chrome thật trên máy** (không thêm gói nào): backend thật
+(store trong bộ nhớ, cổng thanh toán giả, hộp thư giả đọc được) và frontend đã build, trên cùng một địa chỉ (`127.0.0.2`). Bảy luồng: trang chủ → La bàn nghề nghiệp
+(và bản tiếng Anh) · trả lời, lập kế hoạch 30 ngày, tick việc, tải lại vẫn còn · đăng ký, nút mắt, đọc email, xác minh, đăng xuất, sai mật khẩu, đăng nhập · báo sai số liệu ·
+tải về dữ liệu · mua Premium bằng cổng giả · không có lỗi JavaScript. Không có Chrome hoặc chưa build thì cả bộ bị bỏ qua và nói lý do; `npm test` không chạy bộ này.
 
 **Kiểm thử**: `npm test` chạy bộ kiểm thử tài khoản trên store trong bộ nhớ; đặt `TEST_DATABASE_URL=postgres://…` (database dùng một lần —
 bảng bị xoá sạch) để chạy cùng bộ đó trên PostgreSQL thật.

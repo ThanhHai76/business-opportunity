@@ -38,8 +38,8 @@ Cập nhật lần cuối: 23/10/2026. Đánh dấu `[x]` khi xong. Hướng d�
 - [x] Trang chủ có phần "Bạn đang cần gì?" dẫn người mới tới đúng công cụ (26/10/2026).
 - [x] Rà cấu trúc truy cập (nhãn nút, ô nhập, h1, vùng main) ở 9 trang bằng Chrome: đã sửa trang Mở gì ở đâu, Hà Nội tương lai, bản đồ BĐS. *Chưa rà độ tương phản màu, thứ tự Tab và đọc bằng trình đọc màn hình.*
 - [ ] Hiệu năng trên điện thoại chậm: đo giả lập 4G chậm, CPU chậm 4 lần, các trang bản đồ có LCP khoảng 9 giây (trang chủ, La bàn nghề nghiệp khoảng 4,7 giây). Số này đo trên bản chạy không nén; trên máy chủ thật Caddy nén nên nhỏ hơn. *Cần đo lại trên máy chủ thật.*
-- [ ] Thêm chức năng tải về dữ liệu cá nhân (đã có xoá tài khoản).
-- [ ] Thêm kiểm thử đầu-cuối cho các luồng chính (hiện chỉ có kiểm thử đơn vị và kiểm tra tay bằng Chrome).
+- [x] Tải về dữ liệu cá nhân: nút trong mục Tài khoản, cần nhập lại mật khẩu, một tệp JSON (`POST /api/account/me/export`, 26/10/2026). Trang Quyền riêng tư đã cập nhật.
+- [x] Kiểm thử đầu-cuối bằng Chrome thật cho 7 luồng chính (`npm run test:e2e` trong `backend-node`, 26/10/2026). *Chưa chạy trong CI GitHub Actions; chưa phủ bản đồ, AI và luồng quên mật khẩu.*
 
 ## 3. Sau khi có người dùng thật
 

@@ -262,7 +262,7 @@ function createAccounts(options = {}) {
       await handler(req, res);
     });
 
-  const limits = { login: 10, register: 10, mail: 5, ...options.rateLimits };
+  const limits = { login: 10, register: 10, mail: 5, export: 5, ...options.rateLimits };
   const limiter = (limit, windowMs) =>
     rateLimit({
       windowMs,
@@ -275,6 +275,7 @@ function createAccounts(options = {}) {
   const registerLimiter = limiter(limits.register, 60 * 60 * 1000);
   const mailLimiter = limiter(limits.mail, 60 * 60 * 1000); // forgot password / send the verification link again
   const tokenLimiter = limiter(limits.login * 3, 15 * 60 * 1000); // trying links (verify, reset)
+  const exportLimiter = limiter(limits.export, 60 * 60 * 1000); // downloading one's own data
 
   /**
    * Makes a one-time token for the user and starts sending its email; resolves once the token is stored, without
@@ -427,6 +428,48 @@ function createAccounts(options = {}) {
       if (await sentJustNow(req.user, 'verify')) throw new AccountError(429, 'too_soon', 'Email xác minh vừa được gửi. Vui lòng đợi một phút rồi thử lại.');
       await sendLink(req.user, 'verify');
       res.status(202).json({ sent: true });
+    }),
+  );
+
+  // Everything the account holds, as one JSON file the person can keep (Decree 13/2023/ND-CP: the right of access).
+  // A POST with the password, like deleting the account: a session left open on a shared computer must not hand it over.
+  router.post(
+    '/me/export',
+    exportLimiter,
+    signedIn(async (req, res) => {
+      const body = parse(DeleteSchema, req.body);
+      if (!(await verifyPassword(body.password, req.user.passwordHash))) throw forbidden('Mật khẩu không đúng.', 'bad_credentials');
+      const id = req.user.id;
+      const [reports, plans, profile, brand, orders, credits, paidList, extras, premiumUntil] = await Promise.all([
+        store.listItems(id, REPORT_KIND),
+        store.listItems(id, PLAN_KIND),
+        store.listItems(id, PROFILE_KIND),
+        store.listItems(id, 'broker_brand'),
+        store.listOrders(id, 1000),
+        store.creditBalance ? store.creditBalance(id) : null,
+        store.listPaidReports ? store.listPaidReports(id, 200) : [],
+        store.exportExtras ? store.exportExtras(id) : { aiUsage: [], dataReports: [] },
+        store.premiumUntil ? store.premiumUntil(id) : null,
+      ]);
+      const paidReports = (await Promise.all(paidList.map((r) => store.getPaidReport(id, r.id)))).filter(Boolean);
+      const item = (it) => ({ key: it.key, savedAt: it.createdAt, updatedAt: it.updatedAt, content: it.payload });
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Content-Disposition', `attachment; filename="hanoi-century-vista-du-lieu-${new Date().toISOString().slice(0, 10)}.json"`);
+      res.json({
+        format: 'hanoi-century-vista-export/1',
+        exportedAt: new Date().toISOString(),
+        note: 'Dữ liệu cá nhân của tài khoản này. Không gồm mật khẩu (chúng tôi chỉ giữ bản băm), phiên đăng nhập và mã dùng một lần.',
+        account: { email: req.user.email, displayName: req.user.displayName ?? null, createdAt: req.user.createdAt, lastLoginAt: req.user.lastLoginAt ?? null, emailVerifiedAt: req.user.emailVerifiedAt ?? null, termsAcceptedAt: req.user.termsAcceptedAt ?? null, premiumUntil },
+        savedReports: reports.map(item),
+        careerPlans: plans.map(item),
+        careerAnswers: profile.map(item),
+        brandDetails: brand.map(item),
+        orders: orders.map((o) => ({ orderCode: o.orderCode, product: o.product, amountVnd: o.amountVnd, provider: o.provider, status: o.status, createdAt: o.createdAt, paidAt: o.paidAt })),
+        reportCreditsLeft: credits,
+        paidReports: paidReports.map((r) => ({ id: r.id, title: r.title, createdAt: r.createdAt, input: r.input, content: r.content })),
+        aiQuestions: extras.aiUsage,
+        reportsSent: extras.dataReports,
+      });
     }),
   );
 
