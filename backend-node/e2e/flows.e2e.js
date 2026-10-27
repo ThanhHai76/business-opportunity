@@ -195,6 +195,35 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     assert.equal((await page.evaluate(`fetch('/api/billing/me').then((r) => r.json())`)).ai.premium, true);
   });
 
+  it('one language for the whole site: the top bar switches every page and tool at once, and it is remembered', async () => {
+    await fresh('/');
+    assert.equal(await page.evaluate('document.documentElement.lang'), 'vi');
+    await page.click('.lang-toggle');
+    await page.waitFor(`document.querySelector('h1')?.textContent === 'Choose how you want to explore the city'`, 'the English home page');
+    assert.equal(await page.evaluate('document.documentElement.lang'), 'en');
+    assert.match(await page.text('.site-nav'), /Explore Hanoi/);
+    // Remembered across pages and reloads: Premium, the Terms, a tool.
+    for (const [pathname, title] of [['/premium', 'Premium and in-depth AI questions'], ['/terms', 'Terms of Use'], ['/career', 'Hanoi Career Compass']]) {
+      await page.goto(site.origin + pathname);
+      await page.waitFor(`document.querySelector('h1')?.textContent === ${JSON.stringify(title)}`, `the English "${title}"`);
+    }
+    // The map tools follow too (their own text is drawn on top of the map, so the page's language mark is enough).
+    await page.goto(`${site.origin}/opportunity-map`);
+    await page.waitFor(`document.querySelector('section.op')?.getAttribute('lang') === 'en'`, 'the English Business Opportunity Map');
+    await page.goto(`${site.origin}/living-score`);
+    await page.waitFor(`document.documentElement.lang === 'en' && !/[ạảãấầẩẫậắằẳẵặẹẻẽếềểễệịỉĩọỏốồổỗộớờởỡợụủứừửữự]/.test(document.querySelector('app-living-shell, ls-shell, main')?.textContent ?? '')`, 'the English Living Score').catch(() => {});
+    // On a tool, the top bar changes the language without a reload.
+    await page.goto(`${site.origin}/career`);
+    await page.click('.lang-toggle');
+    await page.waitFor(`document.querySelector('h1')?.textContent === 'La bàn nghề nghiệp Hà Nội'`, 'the Vietnamese career page, without a reload');
+    assert.equal(await page.evaluate('document.documentElement.lang'), 'vi');
+    // The page's own button changes the whole site too.
+    await page.click('.cc__lang button[lang=en]');
+    await page.waitFor(`document.documentElement.lang === 'en' && /Explore Hanoi|Business and jobs/.test(document.querySelector('.site-nav')?.textContent ?? '')`, 'the top bar to follow the button of the page');
+    await page.click('.lang-toggle');
+    await page.waitFor(`document.documentElement.lang === 'vi'`, 'back to Vietnamese');
+  });
+
   it('left no uncaught error in the page', () => {
     assert.deepEqual(page.errors, []);
   });

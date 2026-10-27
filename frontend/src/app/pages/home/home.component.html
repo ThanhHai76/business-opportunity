@@ -3,21 +3,17 @@
     <div class="hero-wrap">
       <app-hero-skyline class="hero-art" />
       <section class="hero">
-        <span class="eyebrow">Năm công cụ · Ba nhóm · Một bản đồ khởi đầu</span>
-        <h1>Chọn cách bạn muốn khám phá thành phố</h1>
-        <p class="hero-sub">
-          Từ cơ hội kinh doanh, hành trình xuyên thời gian đến việc chọn nơi an cư —
-          năm công cụ tương tác dựng trên nền bản đồ đô thị, phục vụ năm mục đích
-          rất khác nhau.
-        </p>
+        <span class="eyebrow">{{ tx().eyebrow }}</span>
+        <h1>{{ tx().title }}</h1>
+        <p class="hero-sub">{{ tx().sub }}</p>
       </section>
     </div>
 
     <section class="intents" aria-labelledby="intents-title">
-      <h2 id="intents-title">Bạn đang cần gì?</h2>
-      <p class="intents-sub">Chọn điều gần nhất với bạn, chúng tôi đưa bạn tới đúng công cụ. Không cần đăng nhập để bắt đầu.</p>
+      <h2 id="intents-title">{{ tx().quickTitle }}</h2>
+      <p class="intents-sub">{{ tx().quickSub }}</p>
       <ul class="intents-list">
-        @for (i of intents; track i.id) {
+        @for (i of tx().intents; track i.id) {
           <li>
             <a class="intent" [class]="'intent intent-' + i.accent" [routerLink]="i.path" [queryParams]="i.query">
               <span class="intent-icon" aria-hidden="true">{{ i.icon }}</span>
@@ -30,164 +26,56 @@
           </li>
         }
       </ul>
-      <p class="intents-trust">Mỗi con số có nguồn: dữ liệu OpenStreetMap, danh sách xã phường chính thức, văn bản và số liệu của cơ quan nhà nước. Chỗ nào chưa chắc chắn, chúng tôi nói rõ.</p>
+      <p class="intents-trust">{{ tx().quickTrust }}</p>
     </section>
 
     <section class="cards">
-      <h2 class="group-title">Khám phá Hà Nội <small>Lịch sử, quy hoạch, tương lai</small></h2>
-      <article class="card card-future">
-        <div class="card-top">
-          <span class="card-eyebrow">Tầm nhìn · Quy hoạch &amp; tương lai</span>
-          <span class="card-icon">🛰️</span>
-        </div>
-        <h2>Hà Nội tương lai</h2>
-        <p class="card-desc">
-          Quy hoạch Thủ đô trên bản đồ, từ hiện trạng 2026 đến tầm nhìn 2065:
-          9 cực phát triển, 9 trục động lực, metro đang chạy, đang thi công và
-          theo quy hoạch — mỗi đối tượng ghi nguồn; hỏi đáp, so sánh các mốc.
-        </p>
-        <ul class="card-meta">
-          <li>4 mốc · 9 cực phát triển · 9 lớp bản đồ · Việt/Anh</li>
-          <li>Theo QĐ 2512/QĐ-UBND, 1668 và 1569/QĐ-TTg — hình học là sơ đồ</li>
-          <li>Dành cho người quan tâm quy hoạch, nhà đầu tư, sinh viên đô thị</li>
-        </ul>
-        <a class="cta" routerLink="/future-map">
-          Khám phá Hà Nội tương lai <span aria-hidden="true">→</span>
-        </a>
-      </article>
-      <article class="card card-time">
-        <div class="card-top">
-          <span class="card-eyebrow">Trải nghiệm · Văn hoá &amp; giáo dục</span>
-          <span class="card-icon">🕰️</span>
-        </div>
-        <h2>Hà Nội xưa và nay</h2>
-        <p class="card-desc">
-          Chọn một địa danh, kéo timeline từ 1926 đến 2100, nghe AI kể
-          chuyện lịch sử có nguồn xác thực — hoặc mở chế độ AR để đặt Hà
-          Nội xưa và những kịch bản tương lai lên đúng khung cảnh bạn đang
-          đứng.
-        </p>
-        <ul class="card-meta">
-          <li>1926 → 2100 · 13 địa danh tiêu biểu</li>
-          <li>Historical Mode có nguồn · Future Mode gắn nhãn kịch bản</li>
-          <li>Dành cho du khách, trường học, bảo tàng</li>
-        </ul>
-        <a class="cta" routerLink="/time-machine">
-          Bước vào cỗ máy thời gian <span aria-hidden="true">→</span>
-        </a>
-      </article>
-
-      <h2 class="group-title">Kinh doanh và việc làm <small>Mở quán, tìm hướng nghề nghiệp</small></h2>
-      <article class="card card-biz">
-        <div class="card-top">
-          <span class="card-eyebrow">B2B · Phân tích thị trường</span>
-          <span class="card-icon">🗺️</span>
-        </div>
-        <h2>Mở gì ở đâu</h2>
-        <p class="card-desc">
-          Phường nào ở Hà Nội nên mở gì — hôm nay và 3–5 năm tới — và có lời
-          không? Điểm cơ hội cho 12 ngành theo từng phường/xã mới (2025) từ dữ
-          liệu OpenStreetMap, kèm máy tính khả thi (doanh thu, chi phí, hoàn
-          vốn theo số của bạn), so sánh, hỏi AI và báo cáo.
-        </p>
-        <ul class="card-meta">
-          <li>79 phường/xã · 12 ngành · mốc hiện tại và 2030 · tính khả thi</li>
-          <li>Chấm điểm minh bạch, mỗi điểm có số liệu và nguồn</li>
-          <li>Dành cho chủ shop, SME, F&amp;B, chuỗi bán lẻ, nhà đầu tư</li>
-        </ul>
-        <a class="cta" routerLink="/opportunity-map">
-          Tìm nơi mở cửa hàng <span aria-hidden="true">→</span>
-        </a>
-      </article>
-      <article class="card card-career">
-        <div class="card-top">
-          <span class="card-eyebrow">Người tìm việc · Định hướng nghề nghiệp</span>
-          <span class="card-icon">🧭</span>
-        </div>
-        <h2>La bàn nghề nghiệp Hà Nội</h2>
-        <p class="card-desc">
-          Trả lời 5 câu hỏi ngắn để thấy những hướng nghề hợp với bạn theo cách Hà
-          Nội đang thay đổi: công nghệ cao, xây dựng, logistics, bán lẻ, du lịch,
-          tài chính hoặc tự kinh doanh — kèm kỹ năng, lộ trình và nơi tìm việc
-          chính thống.
-        </p>
-        <ul class="card-meta">
-          <li>7 hướng nghề · số liệu thị trường lao động và quy hoạch có nguồn</li>
-          <li>Chính sách hỗ trợ người thất nghiệp theo Luật Việc làm 2025</li>
-          <li>Dành cho người thất nghiệp, đổi nghề, sinh viên mới ra trường và người đang đi làm muốn xem thị trường</li>
-        </ul>
-        <a class="cta" routerLink="/career">
-          Tìm hướng đi nghề nghiệp <span aria-hidden="true">→</span>
-        </a>
-      </article>
-
-      <h2 class="group-title">Bất động sản <small>Mua nhà, đầu tư, chọn nơi ở</small></h2>
-      <article class="card card-property">
-        <div class="card-top">
-          <span class="card-eyebrow">Nhà đầu tư · Bất động sản</span>
-          <span class="card-icon">🏙️</span>
-        </div>
-        <h2>Chấm điểm bất động sản</h2>
-        <p class="card-desc">
-          Điểm tiềm năng của 79 phường/xã Hà Nội từ dữ liệu thật: khoảng cách
-          tới metro, cầu và Vành đai 4 đang xây, tuyến metro quy hoạch, cực phát
-          triển theo QĐ 2512, tiện ích và dân cư — hỏi AI “Phường Bồ Đề có đáng
-          mua trong 5 năm tới?”.
-        </p>
-        <ul class="card-meta">
-          <li>79 phường/xã · mốc quy hoạch 2026 / 2030 / 2045 · Việt/Anh</li>
-          <li>Giá đất Nhà nước 2026, thị trường CBRE/Savills, 24 dự án, thời gian lái xe — mọi số có nguồn</li>
-          <li>Dành cho người mua nhà, nhà đầu tư, môi giới</li>
-        </ul>
-        <a class="cta" routerLink="/property-intelligence">
-          Xem điểm bất động sản <span aria-hidden="true">→</span>
-        </a>
-      </article>
-      <article class="card card-live">
-        <div class="card-top">
-          <span class="card-eyebrow">Người ở · Chọn nơi an cư</span>
-          <span class="card-icon">📍</span>
-        </div>
-        <h2>Điểm đáng sống</h2>
-        <p class="card-desc">
-          Chấm điểm mức độ đáng sống quanh 10 quận cũ của Hà Nội theo giao thông,
-          giáo dục, y tế, công viên – hồ nước và tiện ích, đo từ dữ liệu
-          OpenStreetMap — so sánh 2–3 khu vực và nhận gợi ý cá nhân hoá từ AI.
-        </p>
-        <ul class="card-meta">
-          <li>10 khu vực · 5 tiêu chí có dữ liệu · điểm cá nhân hoá</li>
-          <li>Bản đồ, so sánh, AI gợi ý Top 3 kèm lý do</li>
-          <li>Dành cho người tìm nhà, gia đình trẻ, người chuyển việc</li>
-        </ul>
-        <a class="cta" routerLink="/living-score">
-          Tìm nơi sống phù hợp <span aria-hidden="true">→</span>
-        </a>
-      </article>
+      @for (g of groups; track g.id) {
+        <h2 class="group-title">{{ tx().groups[g.id].title }} <small>{{ tx().groups[g.id].hint }}</small></h2>
+        @for (id of g.cards; track id) {
+          @if (card(id); as c) {
+            <article class="card" [class]="'card card-' + c.id">
+              <div class="card-top">
+                <span class="card-eyebrow">{{ c.eyebrow }}</span>
+                <span class="card-icon">{{ c.icon }}</span>
+              </div>
+              <h2>{{ c.title }}</h2>
+              <p class="card-desc">{{ c.desc }}</p>
+              <ul class="card-meta">
+                @for (m of c.meta; track m) {
+                  <li>{{ m }}</li>
+                }
+              </ul>
+              <a class="cta" [routerLink]="c.path">
+                {{ c.cta }} <span aria-hidden="true">→</span>
+              </a>
+            </article>
+          }
+        }
+      }
     </section>
 
     @if (billing.enabled()) {
       <section class="promo" aria-labelledby="promo-title">
         <div>
-          <h2 id="promo-title">Dùng thử miễn phí, nâng cấp khi cần</h2>
+          <h2 id="promo-title">{{ tx().promoTitle }}</h2>
           <p>
-            Bản đồ, điểm số và câu trả lời cơ bản luôn miễn phí.
+            {{ tx().promoFree }}
             @if (billing.aiMetering()) {
-              Đăng nhập để nhận {{ billing.aiLimits().freePerDay }} lượt AI chuyên sâu mỗi ngày
-              ({{ billing.aiLimits().storyFreePerDay }} lượt cho Hà Nội xưa và nay).
-              Premium nâng lên {{ billing.aiLimits().premiumPerDay }} lượt mỗi ngày.
+              {{ tx().promoMetered(billing.aiLimits().freePerDay, billing.aiLimits().storyFreePerDay, billing.aiLimits().premiumPerDay) }}
             } @else {
-              Premium thêm lượt hỏi AI chuyên sâu và credit báo cáo.
+              {{ tx().promoUnmetered }}
             }
           </p>
         </div>
         <div class="promo-actions">
           @if (!account.user() && account.enabled()) {
-            <button type="button" class="promo-btn" (click)="account.dialogOpen.set(true)">Đăng nhập dùng thử</button>
+            <button type="button" class="promo-btn" (click)="account.dialogOpen.set(true)">{{ tx().promoSignIn }}</button>
           }
           @if (!billing.ai()?.premium) {
-            <a class="promo-btn promo-btn--primary" routerLink="/premium">★ Nâng cấp Premium</a>
+            <a class="promo-btn promo-btn--primary" routerLink="/premium">{{ tx().promoUpgrade }}</a>
           } @else {
-            <a class="promo-btn" routerLink="/premium">Quản lý Premium</a>
+            <a class="promo-btn" routerLink="/premium">{{ tx().promoManage }}</a>
           }
         </div>
       </section>
@@ -195,7 +83,7 @@
   </main>
 
   <footer class="footer">
-    <p>Demo dự án bản đồ đô thị tương tác · © 2026</p>
+    <p>{{ tx().footer }}</p>
     <app-legal-links />
   </footer>
 </div>

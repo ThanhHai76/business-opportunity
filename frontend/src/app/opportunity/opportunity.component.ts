@@ -30,7 +30,8 @@ import { OpBuyComponent } from './op-buy.component';
 import { AiQuotaComponent } from '../components/ai-quota/ai-quota.component';
 import { FREE_REPORTS, SavedReport, SavedReportsStore } from './op-reports';
 import { OpRadarComponent, RadarSeries } from './op-radar.component';
-import { OP_LANG_KEY, OP_TEXT } from './op-i18n';
+import { OP_TEXT } from './op-i18n';
+import { SiteLangService, initialSiteLang } from '../services/site-lang.service';
 import { OpMapComponent, SCORE_STOPS } from './op-map.component';
 import { AskAnswer, BusinessType, CompareResponse, Horizon, Lang, Opportunity, ParsedIdea, Signal, WardDetail, WardProps, WardsResponse } from './op.models';
 import { OpportunityService, describeError } from './op.service';
@@ -40,14 +41,9 @@ const MAX_COMPARE = 3;
 /** Wards of the business plan shown without Premium (while Premium is for sale). */
 const FREE_PLAN_ROWS = 3;
 
-function initialLang(params: URLSearchParams): Lang {
-  const fromUrl = params.get('lang');
-  if (fromUrl === 'vi' || fromUrl === 'en') return fromUrl;
-  try {
-    return localStorage.getItem(OP_LANG_KEY) === 'en' ? 'en' : 'vi';
-  } catch {
-    return 'vi';
-  }
+/** The site's language (?lang= in the address, else the one chosen anywhere on the site). */
+function initialLang(): Lang {
+  return initialSiteLang();
 }
 
 /**
@@ -72,7 +68,15 @@ export class OpportunityComponent {
   @ViewChild(OpMapComponent) protected map?: OpMapComponent;
 
   private readonly params = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
-  protected readonly lang = signal<Lang>(initialLang(this.params));
+  protected readonly lang = signal<Lang>(initialLang());
+  private readonly site = inject(SiteLangService);
+  /** The language is chosen once for the whole site (top bar or this page's own button): this page follows it. */
+  private readonly followSiteLang = effect(() => {
+    const next = this.site.lang();
+    untracked(() => {
+      if (next !== this.lang()) this.applyLang(next);
+    });
+  });
   protected readonly t = computed(() => OP_TEXT[this.lang()]);
   protected readonly scoreStops = SCORE_STOPS;
 
@@ -554,15 +558,13 @@ export class OpportunityComponent {
   }
 
   protected toggleLang(): void {
-    const next: Lang = this.lang() === 'vi' ? 'en' : 'vi';
+    this.site.toggle();
+  }
+
+  private applyLang(next: Lang): void {
     this.lang.set(next);
     this.answer.set(null);
     this.compareResult.set(null);
-    try {
-      localStorage.setItem(OP_LANG_KEY, next);
-    } catch {
-      /* not remembered */
-    }
     if (this.compareOpen()) this.loadCompare();
   }
 

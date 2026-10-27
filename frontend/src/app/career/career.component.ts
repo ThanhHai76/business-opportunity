@@ -1,12 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
+import { SiteLangService } from '../services/site-lang.service';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { PiApiService } from '../property-intel/pi.service';
 import { DATA_DATE, DIRECTIONS, SOURCES, Background } from './career.data';
 import { TravelItems, WardPoint, commuteText, placementsFor } from './career.geo';
-import { CareerLang, CAREER_LANG_KEY, channelsIn, contextIn, directionsIn, initialCareerLang, localeOf, policiesIn, signalsIn, sourceKindIn, sourceTitleIn } from './career.local';
+import { CareerLang, channelsIn, contextIn, directionsIn, initialCareerLang, localeOf, policiesIn, signalsIn, sourceKindIn, sourceTitleIn } from './career.local';
 import { CAREER_TEXT } from './career.ui';
 import { JobMapSectionComponent } from './job-map-section.component';
 import { CareerStore, MAX_PLANS } from './career.store';
@@ -579,6 +580,13 @@ function initialTab(): TabId {
 export class CareerComponent {
   /** The language of the page: in the address (?lang=en), else the one remembered, else Vietnamese. */
   protected readonly lang = signal<CareerLang>(initialCareerLang());
+  private readonly site = inject(SiteLangService);
+  private readonly followSiteLang = effect(() => {
+    const next = this.site.lang();
+    untracked(() => {
+      if (next !== this.lang()) this.applyLang(next);
+    });
+  });
   protected readonly tx = computed(() => CAREER_TEXT[this.lang()]);
   protected readonly labels = computed(() => labelsIn(this.lang()));
   private readonly directions = computed(() => directionsIn(this.lang()));
@@ -708,14 +716,13 @@ export class CareerComponent {
 
   /** Switches the page between Vietnamese and English, and remembers it (in the address and in this browser). */
   protected setLang(lang: CareerLang): void {
-    if (lang === this.lang()) return;
+    this.site.set(lang);
+  }
+
+  /** The site's language changed (here or in the top bar): the page, its title and its address follow. */
+  private applyLang(lang: CareerLang): void {
     this.lang.set(lang);
     this.title.setTitle(CAREER_TEXT[lang].docTitle);
-    try {
-      localStorage.setItem(CAREER_LANG_KEY, lang);
-    } catch {
-      /* not remembered */
-    }
     try {
       const url = new URL(location.href);
       if (lang === 'en') url.searchParams.set('lang', 'en');

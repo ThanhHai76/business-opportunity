@@ -9,6 +9,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { EMPTY, catchError, of, switchMap, tap } from 'rxjs';
@@ -17,7 +18,8 @@ import { AiQuotaComponent } from '../components/ai-quota/ai-quota.component';
 import { IconComponent } from '../living-score/components/icon/icon.component';
 import { ThemeService } from '../services/theme.service';
 import { normalizeText } from '../utils/text';
-import { FM_LANG_KEY, FM_TEXT } from './fm-i18n';
+import { FM_TEXT } from './fm-i18n';
+import { SiteLangService, initialSiteLang } from '../services/site-lang.service';
 import { FutureMapCanvasComponent, THEME_COLORS } from './future-map-canvas.component';
 import {
   Answer,
@@ -73,14 +75,8 @@ const SLUG = /^[a-z0-9-]{1,40}$/;
 type Suggestion = { type: 'hub'; slug: string; name: string; sub: string } | { type: 'corridor'; slug: string; name: string; sub: string };
 
 /** Language: ?lang= in the URL (not remembered), else the stored choice, else Vietnamese. */
-function initialLang(params: URLSearchParams): Lang {
-  const fromUrl = params.get('lang');
-  if (fromUrl === 'vi' || fromUrl === 'en') return fromUrl;
-  try {
-    return localStorage.getItem(FM_LANG_KEY) === 'en' ? 'en' : 'vi';
-  } catch {
-    return 'vi';
-  }
+function initialLang(): Lang {
+  return initialSiteLang();
 }
 
 @Component({
@@ -105,7 +101,15 @@ export class FutureMapComponent {
   protected readonly themeColors = computed(() => THEME_COLORS[this.theme()]);
 
   private readonly params = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
-  protected readonly lang = signal<Lang>(initialLang(this.params));
+  protected readonly lang = signal<Lang>(initialLang());
+  private readonly site = inject(SiteLangService);
+  /** The language is chosen once for the whole site (top bar or this page's own button): this page follows it. */
+  private readonly followSiteLang = effect(() => {
+    const next = this.site.lang();
+    untracked(() => {
+      if (next !== this.lang()) this.applyLang(next);
+    });
+  });
   protected readonly t = computed(() => FM_TEXT[this.lang()]);
 
   protected readonly timeline = signal<Timeline | null>(null);
@@ -322,13 +326,11 @@ export class FutureMapComponent {
   }
 
   protected toggleLang(): void {
-    const next: Lang = this.lang() === 'vi' ? 'en' : 'vi';
+    this.site.toggle();
+  }
+
+  private applyLang(next: Lang): void {
     this.lang.set(next);
-    try {
-      localStorage.setItem(FM_LANG_KEY, next);
-    } catch {
-      // storage blocked — not remembered
-    }
     this.questions.set([]);
     this.answer.set(null);
     this.compare.set(null);

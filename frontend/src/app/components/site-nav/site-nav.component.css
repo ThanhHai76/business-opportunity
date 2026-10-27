@@ -551,3 +551,11 @@ button:focus-visible {
     animation: none;
   }
 }
+
+/* Language: two letters (the language you would switch to), the same size as the round buttons beside it. */
+.lang-toggle {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}

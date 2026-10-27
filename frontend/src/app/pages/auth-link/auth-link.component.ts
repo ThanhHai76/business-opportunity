@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PasswordFieldComponent } from '../../components/password-field/password-field.component';
+import { SiteLangService } from '../../services/site-lang.service';
+import { AUTH_TEXT } from './auth-link.i18n';
 import { AccountService, accountError } from '../../services/account.service';
 
 type Mode = 'forgot' | 'reset' | 'verify';
@@ -20,39 +22,39 @@ type Mode = 'forgot' | 'reset' | 'verify';
     <main class="al">
       @switch (mode) {
         @case ('forgot') {
-          <h1>Quên mật khẩu</h1>
+          <h1>{{ tx().forgotTitle }}</h1>
           @if (sent()) {
-            <p class="al__ok" role="status">Nếu email này có tài khoản, chúng tôi vừa gửi một liên kết đặt lại mật khẩu (hiệu lực 1 giờ). Hãy kiểm tra hộp thư, kể cả thư rác.</p>
+            <p class="al__ok" role="status">{{ tx().forgotSent }}</p>
           } @else if (account.ready() && !account.mail()) {
-            <p class="al__err">Máy chủ này chưa bật gửi email, nên chưa thể đặt lại mật khẩu tự động.</p>
+            <p class="al__err">{{ tx().mailOff }}</p>
           } @else {
-            <p>Nhập email đăng ký, chúng tôi sẽ gửi liên kết để đặt mật khẩu mới.</p>
+            <p>{{ tx().forgotAsk }}</p>
             <form (submit)="$event.preventDefault(); forgot()">
-              <label><span>Email</span><input type="email" name="email" autocomplete="email" required maxlength="254" (input)="email.set($any($event.target).value)" /></label>
-              <button type="submit" [disabled]="busy()">{{ busy() ? 'Đang gửi…' : 'Gửi liên kết' }}</button>
+              <label><span>{{ tx().email }}</span><input type="email" name="email" autocomplete="email" required maxlength="254" (input)="email.set($any($event.target).value)" /></label>
+              <button type="submit" [disabled]="busy()">{{ busy() ? tx().sending : tx().sendLink }}</button>
             </form>
           }
         }
         @case ('reset') {
-          <h1>Đặt mật khẩu mới</h1>
+          <h1>{{ tx().resetTitle }}</h1>
           @if (finished()) {
-            <p class="al__ok" role="status">Đã đổi mật khẩu. Bạn đã được đăng xuất khỏi mọi thiết bị.</p>
-            <button type="button" (click)="account.dialogOpen.set(true)">Đăng nhập</button>
+            <p class="al__ok" role="status">{{ tx().resetDone }}</p>
+            <button type="button" (click)="account.dialogOpen.set(true)">{{ tx().signIn }}</button>
           } @else if (!token) {
-            <p class="al__err">Liên kết không hợp lệ. <a routerLink="/forgot-password">Yêu cầu liên kết mới</a>.</p>
+            <p class="al__err">{{ tx().badLink }} <a routerLink="/forgot-password">{{ tx().newLink }}</a>.</p>
           } @else {
             <form (submit)="$event.preventDefault(); reset()">
-              <label><span>Mật khẩu mới (ít nhất 8 ký tự)</span><app-password-field name="password" autocomplete="new-password" [minlength]="8" (valueChange)="password.set($event)" /></label>
-              <button type="submit" [disabled]="busy()">{{ busy() ? 'Đang lưu…' : 'Đổi mật khẩu' }}</button>
+              <label><span>{{ tx().newPassword }}</span><app-password-field name="password" autocomplete="new-password" [minlength]="8" (valueChange)="password.set($event)" /></label>
+              <button type="submit" [disabled]="busy()">{{ busy() ? tx().saving : tx().changePassword }}</button>
             </form>
           }
         }
         @case ('verify') {
-          <h1>Xác minh email</h1>
+          <h1>{{ tx().verifyTitle }}</h1>
           @if (finished()) {
-            <p class="al__ok" role="status">Email của bạn đã được xác minh. Cảm ơn bạn!</p>
+            <p class="al__ok" role="status">{{ tx().verified }}</p>
           } @else if (!error()) {
-            <p>Đang xác minh…</p>
+            <p>{{ tx().verifying }}</p>
           }
         }
       }
@@ -61,12 +63,12 @@ type Mode = 'forgot' | 'reset' | 'verify';
         @if (mode === 'forgot') {
           <!-- nothing: the form stays -->
         } @else if (mode === 'reset') {
-          <p><a routerLink="/forgot-password">Yêu cầu liên kết mới</a></p>
+          <p><a routerLink="/forgot-password">{{ tx().newLink }}</a></p>
         } @else {
-          <p>Đăng nhập rồi chọn “Gửi lại email xác minh” trong mục Tài khoản.</p>
+          <p>{{ tx().verifyHint }}</p>
         }
       }
-      <p class="al__back"><a routerLink="/">← Về trang chủ</a></p>
+      <p class="al__back"><a routerLink="/">{{ tx().back }}</a></p>
     </main>
   `,
   styles: `
@@ -92,6 +94,9 @@ export class AuthLinkComponent implements OnInit {
   protected readonly mode: Mode = this.route.snapshot.data['mode'];
   protected readonly token = this.route.snapshot.queryParamMap.get('token') ?? '';
   protected readonly email = signal('');
+  private readonly site = inject(SiteLangService);
+  /** The page's words, in the site's language. */
+  protected readonly tx = computed(() => AUTH_TEXT[this.site.lang()]);
   protected readonly password = signal('');
   protected readonly busy = signal(false);
   protected readonly sent = signal(false);
@@ -101,7 +106,7 @@ export class AuthLinkComponent implements OnInit {
   ngOnInit(): void {
     if (this.mode !== 'verify') return;
     if (!this.token) {
-      this.error.set('Liên kết không hợp lệ hoặc đã hết hạn.');
+      this.error.set(this.tx().badLinkExpired);
       return;
     }
     this.account.verifyEmail(this.token).subscribe({

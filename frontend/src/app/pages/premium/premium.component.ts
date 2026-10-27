@@ -5,6 +5,8 @@ import { LegalLinksComponent } from '../legal/legal-links.component';
 import { Subscription } from 'rxjs';
 import { AccountService, accountError } from '../../services/account.service';
 import { BillingService, Order, Product } from '../../services/billing.service';
+import { SiteLangService } from '../../services/site-lang.service';
+import { PREMIUM_TEXT } from './premium.i18n';
 
 const vndFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
 
@@ -20,100 +22,98 @@ const vndFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
   template: `
     <main class="pm">
       <header class="pm__hero">
-        <p class="pm__eyebrow">Gói & lượt hỏi AI</p>
-        <h1>Premium và lượt hỏi AI chuyên sâu</h1>
-        <p class="pm__lead">
-          Bản đồ, điểm số và câu trả lời cơ bản luôn miễn phí. Câu trả lời do AI phân tích sâu từ dữ liệu
-          (Mở gì ở đâu, Hà Nội tương lai, Chấm điểm bất động sản, Điểm đáng sống, kể chuyện Hà Nội xưa và nay) dùng lượt hỏi AI.
-        </p>
+        <p class="pm__eyebrow">{{ tx().eyebrow }}</p>
+        <h1>{{ tx().title }}</h1>
+        <p class="pm__lead">{{ tx().lead }}</p>
       </header>
 
       @if (account.user()) {
         <section class="pm__status" aria-labelledby="pm-status">
-          <h2 id="pm-status">Tài khoản của bạn</h2>
+          <h2 id="pm-status">{{ tx().yourAccount }}</h2>
           @if (billing.ai(); as ai) {
             <dl>
               <div>
-                <dt>Gói</dt>
+                <dt>{{ tx().plan }}</dt>
                 <dd>
                   @if (ai.premium) {
-                    <strong class="pm__badge">Premium</strong> đến {{ date(ai.premiumUntil) }}
+                    <strong class="pm__badge">Premium</strong> {{ tx().until }} {{ date(ai.premiumUntil) }}
                   } @else {
-                    Miễn phí
+                    {{ tx().free }}
                   }
                 </dd>
               </div>
               <div>
-                <dt>Lượt AI hôm nay</dt>
+                <dt>{{ tx().aiToday }}</dt>
                 <dd>
                   @if (ai.premium) {
-                    {{ ai.premiumLeft }}/{{ ai.premiumPerDay }} Premium ·
+                    {{ ai.premiumLeft }}/{{ ai.premiumPerDay }} {{ tx().premiumSuffix }}
                   }
-                  {{ ai.freeLeft }}/{{ ai.freePerDay }} miễn phí
+                  {{ ai.freeLeft }}/{{ ai.freePerDay }} {{ tx().freeSuffix }}
                 </dd>
               </div>
               <div>
-                <dt>Lượt kể chuyện Hà Nội xưa và nay hôm nay</dt>
-                <dd>{{ ai.storyFreeLeft }}/{{ ai.storyFreePerDay }} miễn phí@if (ai.premium) { · hoặc dùng lượt Premium }</dd>
+                <dt>{{ tx().storyToday }}</dt>
+                <dd>{{ ai.storyFreeLeft }}/{{ ai.storyFreePerDay }} {{ tx().freeSuffix }}@if (ai.premium) { {{ tx().orPremium }} }</dd>
               </div>
               <div>
-                <dt>Lượt AI đã mua</dt>
+                <dt>{{ tx().bought }}</dt>
                 <dd>{{ ai.aiCredits }}</dd>
               </div>
               <div>
-                <dt>Credit báo cáo khả thi</dt>
+                <dt>{{ tx().creditsReport }}</dt>
                 <dd>{{ billing.credits() ?? 0 }}</dd>
               </div>
             </dl>
           } @else {
-            <p class="pm__muted">Đang tải…</p>
+            <p class="pm__muted">{{ tx().loading }}</p>
           }
         </section>
       }
 
       <section class="pm__plans" aria-labelledby="pm-plans">
-        <h2 id="pm-plans" class="pm__sr">So sánh gói</h2>
+        <h2 id="pm-plans" class="pm__sr">{{ tx().compare }}</h2>
         <article class="pm__plan">
-          <h3>Miễn phí</h3>
-          <p class="pm__price">0 đ</p>
+          <h3>{{ tx().freeTitle }}</h3>
+          <p class="pm__price">{{ vnd(0) }}</p>
           <ul>
-            <li>Mọi bản đồ và điểm số hôm nay</li>
-            <li>Xem thử mốc 2030 từng phường, 3 phường hợp kế hoạch nhất, so sánh 2 phường, theo dõi 3 mục</li>
-            <li>Câu trả lời cơ bản (theo mẫu, từ dữ liệu) không giới hạn</li>
-            <li><strong>{{ limits().freePerDay }} câu trả lời AI chuyên sâu mỗi ngày</strong> khi đăng nhập</li>
-            <li>Thêm <strong>{{ limits().storyFreePerDay }} lượt AI kể chuyện mỗi ngày</strong> ở Hà Nội xưa và nay</li>
-            <li>Lưu 5 báo cáo, mở trên mọi thiết bị</li>
-            <li>La bàn nghề nghiệp: bảng hỏi, kết quả, thị trường, bản đồ ngành nghề, vùng đi làm và metro; 1 kế hoạch 30 ngày lưu trên trình duyệt</li>
+            @for (f of tx().freeFeatures; track f) {
+              <li>{{ f }}</li>
+            }
+            <li><strong>{{ tx().freeDaily(limits().freePerDay) }}</strong></li>
+            <li><strong>{{ tx().freeStory(limits().storyFreePerDay) }}</strong></li>
+            @for (f of tx().freeTail; track f) {
+              <li>{{ f }}</li>
+            }
           </ul>
           @if (!account.user()) {
-            <button type="button" class="pm__btn" (click)="account.dialogOpen.set(true)">Đăng nhập miễn phí</button>
+            <button type="button" class="pm__btn" (click)="account.dialogOpen.set(true)">{{ tx().signInFree }}</button>
           }
         </article>
 
         <article class="pm__plan pm__plan--premium">
           <h3>Premium</h3>
           @if (premium()[0]; as p) {
-            <p class="pm__price">{{ vnd(p.amountVnd) }} <small>/ {{ p.premiumDays }} ngày</small></p>
+            <p class="pm__price">{{ vnd(p.amountVnd) }} <small>{{ tx().perDays(p.premiumDays) }}</small></p>
           }
           <ul>
-            <li>Mọi thứ của gói Miễn phí</li>
-            <li><strong>{{ limits().premiumPerDay }} câu trả lời AI chuyên sâu mỗi ngày</strong>, dùng chung cho cả 5 công cụ, kể cả Hà Nội xưa và nay</li>
-            <li><strong>Mở gì ở đâu:</strong> mốc 2030 trên toàn bản đồ, danh sách đầy đủ theo kế hoạch, xuất CSV</li>
-            <li><strong>Chấm điểm bất động sản:</strong> lớp quy hoạch 2030 và 2045, trọng số tuỳ chỉnh, so sánh tới 5 phường và xuất CSV, theo dõi không giới hạn</li>
-            <li><strong>Báo cáo khả thi mang thương hiệu của bạn:</strong> tên công ty, liên hệ và lời nhắn trên bản PDF gửi khách (dành cho môi giới)</li>
-            <li>Lưu tới 100 báo cáo, kèm ghi chú và thẻ cho từng báo cáo</li>
-            <li><strong>La bàn nghề nghiệp:</strong> lưu kế hoạch vào tài khoản (tới 5 kế hoạch, mọi thiết bị), xuất PDF kế hoạch mang tên và liên hệ của bạn (cho tư vấn viên, trung tâm đào tạo), tìm nơi ở theo nơi làm</li>
-            <li>Kèm credit báo cáo khả thi (xuất PDF) theo gói</li>
-            <li>Mua thêm thì cộng dồn thời hạn</li>
+            <li>{{ tx().premiumPre }}</li>
+            <li><strong>{{ tx().premiumDaily(limits().premiumPerDay) }}</strong></li>
+            <li><strong>{{ tx().premiumFeatures.bizLabel }}</strong> {{ tx().premiumFeatures.biz }}</li>
+            <li><strong>{{ tx().premiumFeatures.propLabel }}</strong> {{ tx().premiumFeatures.prop }}</li>
+            <li><strong>{{ tx().premiumFeatures.brandLabel }}</strong> {{ tx().premiumFeatures.brand }}</li>
+            <li>{{ tx().premiumFeatures.save }}</li>
+            <li><strong>{{ tx().premiumFeatures.careerLabel }}</strong> {{ tx().premiumFeatures.career }}</li>
+            <li>{{ tx().premiumFeatures.credits }}</li>
+            <li>{{ tx().premiumFeatures.extend }}</li>
           </ul>
           <div class="pm__buy">
             @for (p of premium(); track p.id) {
               <div class="pm__offer">
                 <span>
-                  <b>{{ p.name.vi }}</b>
-                  <small>{{ vnd(p.amountVnd) }}@if (p.credits) { · kèm {{ p.credits }} credit báo cáo}</small>
+                  <b>{{ p.name[lang()] }}</b>
+                  <small>{{ vnd(p.amountVnd) }}@if (p.credits) {{{ tx().withCredits(p.credits) }}}</small>
                 </span>
-                <button type="button" class="pm__btn pm__btn--primary" [disabled]="!canBuy() || busy()" (click)="buy(p)">Mua</button>
+                <button type="button" class="pm__btn pm__btn--primary" [disabled]="!canBuy() || busy()" (click)="buy(p)">{{ tx().buy }}</button>
               </div>
             }
           </div>
@@ -121,36 +121,36 @@ const vndFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
       </section>
 
       <section class="pm__packs" aria-labelledby="pm-packs">
-        <h2 id="pm-packs">Gói lượt hỏi AI</h2>
-        <p class="pm__muted">Dùng sau khi hết lượt miễn phí (và lượt Premium) trong ngày. Không hết hạn.</p>
+        <h2 id="pm-packs">{{ tx().packsTitle }}</h2>
+        <p class="pm__muted">{{ tx().packsHint }}</p>
         <div class="pm__grid">
           @for (p of packs(); track p.id) {
             <div class="pm__pack">
-              <b>{{ p.name.vi }}</b>
+              <b>{{ p.name[lang()] }}</b>
               <span class="pm__price">{{ vnd(p.amountVnd) }}</span>
-              <small>{{ vnd(p.amountVnd / p.aiCredits) }} / lượt</small>
-              <button type="button" class="pm__btn" [disabled]="!canBuy() || busy()" (click)="buy(p)">Mua</button>
+              <small>{{ vnd(p.amountVnd / p.aiCredits) }} {{ tx().perQuestion }}</small>
+              <button type="button" class="pm__btn" [disabled]="!canBuy() || busy()" (click)="buy(p)">{{ tx().buy }}</button>
             </div>
           }
         </div>
         <p class="pm__muted">
-          Báo cáo khả thi chi tiết (dòng tiền 36 tháng, độ nhạy, PDF) mua theo credit ngay trong
-          <a routerLink="/opportunity-map">Mở gì ở đâu</a>.
+          {{ lang() === 'en' ? 'Detailed feasibility reports (36-month cash flow, sensitivity, PDF) are bought with credits right in the' : 'Báo cáo khả thi chi tiết (dòng tiền 36 tháng, độ nhạy, PDF) mua theo credit ngay trong' }}
+          <a routerLink="/opportunity-map">{{ tx().reportsLink }}</a>.
         </p>
       </section>
 
       @if (!billing.enabled()) {
-        <p class="pm__msg is-error" role="status">Thanh toán chưa được bật trên máy chủ này.</p>
+        <p class="pm__msg is-error" role="status">{{ tx().billingOff }}</p>
       } @else if (!account.user()) {
         <p class="pm__msg" role="status">
-          Đăng nhập để mua gói.
-          <button type="button" class="pm__btn" (click)="account.dialogOpen.set(true)">Đăng nhập</button>
+          {{ tx().signInToBuy }}
+          <button type="button" class="pm__btn" (click)="account.dialogOpen.set(true)">{{ tx().signIn }}</button>
         </p>
       }
       @if (waiting(); as o) {
         <p class="pm__msg" role="status">
-          Đang chờ thanh toán đơn {{ o.orderCode }} ở tab vừa mở…
-          <button type="button" class="pm__btn" (click)="cancel(o)">Huỷ</button>
+          {{ tx().waiting(o.orderCode) }}
+          <button type="button" class="pm__btn" (click)="cancel(o)">{{ tx().cancel }}</button>
         </p>
       }
       @if (message(); as m) {
@@ -158,9 +158,8 @@ const vndFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
       }
 
       <p class="pm__note">
-        Một lượt chỉ bị trừ khi câu trả lời thật sự do AI viết; nếu AI lỗi và hệ thống trả lời theo mẫu, lượt được
-        hoàn lại. Lượt miễn phí và Premium tính theo ngày (giờ Việt Nam). Khi mua, bạn đồng ý với
-        <a routerLink="/terms">Điều khoản</a> và <a routerLink="/refund">Chính sách hoàn tiền</a>.
+        {{ lang() === 'en' ? 'A question is only used when the answer is really written by the AI; if the AI fails and the system answers from a template, the question is given back. Free and Premium questions are counted by day (Vietnam time). By buying you agree to the' : 'Một lượt chỉ bị trừ khi câu trả lời thật sự do AI viết; nếu AI lỗi và hệ thống trả lời theo mẫu, lượt được hoàn lại. Lượt miễn phí và Premium tính theo ngày (giờ Việt Nam). Khi mua, bạn đồng ý với' }}
+        <a routerLink="/terms">{{ tx().terms }}</a> {{ lang() === 'en' ? 'and the' : 'và' }} <a routerLink="/refund">{{ tx().refund }}</a>.
       </p>
       <app-legal-links />
     </main>
@@ -207,6 +206,10 @@ const vndFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
 export class PremiumComponent {
   protected readonly account = inject(AccountService);
   protected readonly billing = inject(BillingService);
+  private readonly site = inject(SiteLangService);
+  protected readonly lang = this.site.lang;
+  /** The page's words, in the site's language. */
+  protected readonly tx = computed(() => PREMIUM_TEXT[this.site.lang()]);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly premium = this.billing.premiumProducts;
@@ -225,11 +228,11 @@ export class PremiumComponent {
   }
 
   protected vnd(v: number): string {
-    return `${vndFormat.format(Math.round(v))} đ`;
+    return this.site.lang() === 'en' ? `${Math.round(v).toLocaleString('en-US')} ₫` : `${vndFormat.format(Math.round(v))} đ`;
   }
 
   protected date(iso: string | null): string {
-    return iso ? new Date(iso).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' }) : '';
+    return iso ? new Date(iso).toLocaleDateString(this.site.lang() === 'en' ? 'en-GB' : 'vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' }) : '';
   }
 
   protected buy(product: Product): void {
@@ -237,7 +240,7 @@ export class PremiumComponent {
     // Opened now, while the click still counts as the user's, so the browser does not block it later.
     const tab = window.open('', '_blank');
     if (!tab) {
-      this.message.set({ text: 'Trình duyệt đã chặn tab thanh toán — hãy cho phép cửa sổ bật lên rồi thử lại.', error: true });
+      this.message.set({ text: this.tx().popupBlocked, error: true });
       return;
     }
     tab.opener = null;
@@ -275,15 +278,12 @@ export class PremiumComponent {
     this.waiting.set(null);
     if (order.status === 'paid') {
       const g = order.grants;
-      const parts = [
-        g?.premiumDays ? `${g.premiumDays} ngày Premium` : '',
-        g?.aiCredits ? `${g.aiCredits} lượt hỏi AI` : '',
-        g?.reportCredits ? `${g.reportCredits} credit báo cáo` : '',
-      ].filter(Boolean);
-      this.message.set({ text: `Thanh toán thành công — đã cộng ${parts.join(', ') || 'gói đã mua'}.`, error: false });
+      const tx = this.tx();
+      const parts = [g?.premiumDays ? tx.paidDays(g.premiumDays) : '', g?.aiCredits ? tx.paidQuestions(g.aiCredits) : '', g?.reportCredits ? tx.paidCredits(g.reportCredits) : ''].filter(Boolean);
+      this.message.set({ text: tx.paid(parts.join(', ') || tx.paidFallback), error: false });
       this.billing.refresh();
     } else {
-      this.message.set({ text: order.status === 'cancelled' ? 'Đã huỷ thanh toán.' : 'Đơn đã hết hạn — bạn có thể mua lại.', error: true });
+      this.message.set({ text: order.status === 'cancelled' ? this.tx().cancelled : this.tx().expired, error: true });
     }
   }
 }

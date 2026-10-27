@@ -4,6 +4,7 @@ import { Observable, shareReplay } from 'rxjs';
 import { PROPERTY_INTEL_API_URL } from '../config';
 import { BillingService } from '../services/billing.service';
 import { PremiumPromptService } from '../services/premium-prompt.service';
+import { SiteLangService } from '../services/site-lang.service';
 import { PI_TEXT } from './pi-i18n';
 import { DEFAULT_WEIGHTS, Weights, decodeWeights, encodeWeights, isDefaultWeights } from './pi-weights';
 import {
@@ -215,7 +216,9 @@ export class PiStateService {
   private readonly initial = initialState(readStorage(), typeof location !== 'undefined' ? location.search : '');
   private nextId = 1;
 
-  readonly lang = signal<Lang>(this.initial.lang);
+  private readonly site = inject(SiteLangService);
+  /** The site's language wins over the one saved with the rest of this page's state. */
+  readonly lang = signal<Lang>(this.site.lang());
   readonly t = computed(() => PI_TEXT[this.lang()]);
   readonly horizon = signal<Horizon>(this.initial.horizon);
   readonly basemap = signal<Basemap>(this.initial.basemap);
@@ -236,6 +239,13 @@ export class PiStateService {
   readonly reportOpen = signal(false);
 
   constructor() {
+    // The language is chosen once for the whole site (top bar or this page's button): this state follows it.
+    effect(() => {
+      const next = this.site.lang();
+      untracked(() => {
+        if (next !== this.lang()) this.set('lang', next);
+      });
+    });
     // Once the future layers turn out to be locked (saved state or a shared link on 2030/2045), show today.
     effect(() => {
       if (this.premiumLocked() && this.horizon() !== HORIZONS[0]) untracked(() => this.set('horizon', HORIZONS[0]));
@@ -271,6 +281,7 @@ export class PiStateService {
   }
 
   set<K extends 'lang' | 'horizon' | 'basemap' | 'lens' | 'ward' | 'project'>(key: K, value: Persisted[K]): void {
+    if (key === 'lang') this.site.set(value as Lang);
     (this[key] as WritableSignal<Persisted[K]>).set(value);
     this.save();
   }

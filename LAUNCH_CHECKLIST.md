@@ -44,7 +44,7 @@ Cập nhật lần cuối: 23/10/2026. Đánh dấu `[x]` khi xong. Hướng d�
 ## 3. Sau khi có người dùng thật
 
 - [ ] Kết nối PayOS: *code xong (23/10/2026)*; còn đăng ký webhook và thử một đơn nhỏ thật. Quy trình hoàn tiền và hoá đơn.
-- [x] Bản tiếng Anh cho La bàn nghề nghiệp (22/10/2026). *Còn lại: thanh menu chung của trang vẫn tiếng Việt.*
+- [x] Bản tiếng Anh cho La bàn nghề nghiệp (22/10/2026), và **một nút ngôn ngữ chung** VI/EN cho cả trang (thanh chung, Trang chủ, Premium, tài khoản, Điều khoản, các công cụ; 26/10/2026). *Bản tiếng Anh của Điều khoản/Quyền riêng tư/Hoàn tiền là bản dịch nháp, cần người có chuyên môn xem; thông báo lỗi từ máy chủ dịch theo mã lỗi, chưa phủ hết.*
 - [ ] Hỏi AI định hướng nghề.
 - [ ] Hướng dẫn lần đầu cho người mới (trang chủ có nhiều công cụ).
 - [ ] Làm video giới thiệu; nói chuyện với vài khách thật trước khi chốt giá.

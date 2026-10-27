@@ -14,7 +14,9 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/ro
 import { filter } from 'rxjs';
 import { AccountService } from '../../services/account.service';
 import { BillingService } from '../../services/billing.service';
+import { SiteLangService } from '../../services/site-lang.service';
 import { ThemeService } from '../../services/theme.service';
+import { NAV_TEXT } from './site-nav.i18n';
 import { AccountDialogComponent } from '../account/account-dialog.component';
 
 interface SiteTab {
@@ -63,21 +65,30 @@ export class SiteNavComponent {
   private readonly router = inject(Router);
   private readonly url = signal(this.router.url);
 
-  protected readonly tabs: SiteTab[] = [
-    { path: '/future-map', label: 'Hà Nội tương lai', short: 'Tương lai', hint: 'Quy hoạch Thủ đô 2026 → 2065, có nguồn', key: 'future' },
-    { path: '/time-machine', label: 'Hà Nội xưa và nay', short: 'Xưa và nay', hint: 'Du hành thời gian 1926 → 2100, có AR', key: 'time' },
-    { path: '/living-score', label: 'Điểm đáng sống', short: 'Đáng sống', hint: 'Chấm điểm nơi an cư từ dữ liệu OpenStreetMap', key: 'live' },
-    { path: '/property-intelligence', label: 'Chấm điểm bất động sản', short: 'Điểm BĐS', hint: 'Tiềm năng 79 phường/xã: metro, hạ tầng, quy hoạch', key: 'property' },
-    { path: '/opportunity-map', label: 'Mở gì ở đâu', short: 'Mở gì ở đâu', hint: 'Phường nào nên mở gì, có lời không — dữ liệu OSM', key: 'biz' },
-    { path: '/career', label: 'La bàn nghề nghiệp', short: 'Nghề nghiệp', hint: 'Hướng nghề theo cách Hà Nội thay đổi, có nguồn', key: 'career' },
-  ];
-
+  protected readonly site = inject(SiteLangService);
+  /** The words of the bar, in the site's language. */
+  protected readonly nx = computed(() => NAV_TEXT[this.site.lang()]);
+  protected readonly tabs = computed<SiteTab[]>(() => {
+    const t = this.nx().tools;
+    return [
+      { path: '/future-map', ...t.future, key: 'future' },
+      { path: '/time-machine', ...t.time, key: 'time' },
+      { path: '/living-score', ...t.live, key: 'live' },
+      { path: '/property-intelligence', ...t.property, key: 'property' },
+      { path: '/opportunity-map', ...t.biz, key: 'biz' },
+      { path: '/career', ...t.career, key: 'career' },
+    ];
+  });
   /** Business · Real estate · Explore Hanoi. A group with one tool is a plain link. */
-  protected readonly groups: SiteGroup[] = [
-    { id: 'explore', label: 'Khám phá Hà Nội', hint: 'Lịch sử, quy hoạch, tương lai', tabs: [this.tabs[0], this.tabs[1]] },
-    { id: 'biz', label: 'Kinh doanh và việc làm', hint: 'Mở quán, tìm hướng nghề nghiệp', tabs: [this.tabs[4], this.tabs[5]] },
-    { id: 'property', label: 'Bất động sản', hint: 'Mua nhà, đầu tư, chọn nơi ở', tabs: [this.tabs[3], this.tabs[2]] },
-  ];
+  protected readonly groups = computed<SiteGroup[]>(() => {
+    const tabs = this.tabs();
+    const g = this.nx().groups;
+    return [
+      { id: 'explore', ...g.explore, tabs: [tabs[0], tabs[1]] },
+      { id: 'biz', ...g.biz, tabs: [tabs[4], tabs[5]] },
+      { id: 'property', ...g.property, tabs: [tabs[3], tabs[2]] },
+    ];
+  });
 
   /** Whether the visitor closed the invitation bar this session. */
   private readonly nudgeClosed = signal(this.readClosed());
@@ -88,29 +99,25 @@ export class SiteNavComponent {
    */
   protected readonly nudge = computed(() => {
     // The career compass has no AI answers (yet): no invitation to try them there.
-    const onTool = this.tabs.some((t) => t.key !== 'career' && this.url().split(/[?#]/)[0].startsWith(t.path));
+    const onTool = this.tabs().some((t) => t.key !== 'career' && this.url().split(/[?#]/)[0].startsWith(t.path));
     if (!onTool || this.nudgeClosed() || !this.billing.enabled()) return null;
     const metered = this.billing.aiMetering();
     const limits = this.billing.aiLimits();
     if (!this.account.user()) {
       if (!this.account.ready() || !this.account.enabled()) return null;
+      const nx = this.nx();
       return {
-        text: metered
-          ? `Dùng thử miễn phí: đăng nhập để nhận ${limits.freePerDay} lượt AI chuyên sâu mỗi ngày (Hà Nội xưa và nay ${limits.storyFreePerDay}).`
-          : 'Đăng nhập để lưu báo cáo và mở trên mọi thiết bị.',
-        cta: 'Đăng nhập miễn phí',
+        text: metered ? nx.nudgeFree(limits.freePerDay, limits.storyFreePerDay) : nx.nudgeSave,
+        cta: nx.nudgeSignIn,
         action: 'login' as const,
       };
     }
     const ai = this.billing.ai();
     if (!ai || ai.premium) return null;
+    const nx = this.nx();
     return {
-      text: metered
-        ? ai.freeLeft + ai.aiCredits > 0
-          ? `Hôm nay bạn còn ${ai.freeLeft} lượt AI miễn phí${ai.aiCredits ? ` và ${ai.aiCredits} lượt đã mua` : ''}. Premium: ${limits.premiumPerDay} lượt mỗi ngày.`
-          : `Bạn đã dùng hết lượt AI miễn phí hôm nay. Premium: ${limits.premiumPerDay} lượt mỗi ngày.`
-        : 'Premium: thêm lượt hỏi AI chuyên sâu và credit báo cáo.',
-      cta: 'Nâng cấp Premium',
+      text: metered ? (ai.freeLeft + ai.aiCredits > 0 ? nx.nudgeLeft(ai.freeLeft, ai.aiCredits, limits.premiumPerDay) : nx.nudgeUsed(limits.premiumPerDay)) : nx.nudgePremium,
+      cta: nx.nudgeUpgrade,
       action: 'premium' as const,
     };
   });
@@ -118,7 +125,7 @@ export class SiteNavComponent {
   /** The group that contains the page on screen (highlighted in the bar). */
   protected readonly activeGroup = computed(() => {
     const path = this.url().split(/[?#]/)[0];
-    return this.groups.find((g) => g.tabs.some((t) => path === t.path || path.startsWith(`${t.path}/`)))?.id ?? null;
+    return this.groups().find((g) => g.tabs.some((t) => path === t.path || path.startsWith(`${t.path}/`)))?.id ?? null;
   });
 
   constructor() {

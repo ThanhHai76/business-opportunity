@@ -84,6 +84,14 @@ Cả năm công cụ (Bản đồ Cơ hội Kinh doanh, Hanoi Time Machine, Hano
 (chọn thành phố / mục lục chương / Khám phá · So sánh · AI · Đã lưu · Cá nhân). Chiều cao thanh chung là biến CSS `--site-nav-h` (`styles.css`);
 trang chiếm cả khung nhìn phải trừ biến này thay vì dùng `100vh`.
 
+### Ngôn ngữ chung (Việt / Anh)
+
+Nút **VI/EN** trên thanh chung đổi ngôn ngữ của **cả trang**: thanh chung, Trang chủ, Premium, đăng nhập/tài khoản, các trang qua email, Điều khoản, Quyền riêng tư, Hoàn tiền và cả sáu công cụ.
+`SiteLangService` (`frontend/src/app/services/site-lang.service.ts`) giữ một lựa chọn duy nhất (`localStorage` `hanoi100.lang`; `?lang=en` trên địa chỉ thắng và được cập nhật khi đổi);
+nó cũng ghi khoá cũ của từng công cụ và `<html lang>`. Mỗi công cụ vẫn có nút riêng, gọi `site.set()`, và theo dõi `site.lang()` nên đổi ở đâu cũng đổi cả trang không cần tải lại.
+Lời của từng phần nằm cạnh nó: `site-nav.i18n.ts`, `home.i18n.ts`, `account.i18n.ts`, `auth-link.i18n.ts`, `premium.i18n.ts`, `legal-content.ts` (bản tiếng Anh của Điều khoản chỉ là bản dịch tham khảo: bản tiếng Việt là bản có hiệu lực).
+Thông báo lỗi của máy chủ là tiếng Việt: bản tiếng Anh dịch theo mã lỗi (`ERROR_EN`). Test: `site-lang.service.spec.ts`, và luồng "một ngôn ngữ cho cả trang" trong `backend-node/e2e/flows.e2e.js`.
+
 ### Giao diện sáng / tối
 
 Nút mặt trăng/mặt trời trên thanh chung đổi giao diện cho **toàn bộ** ứng dụng (Trang chủ, Cơ hội Kinh doanh, Time Machine, Living Score, Future Map, Property Intelligence).
