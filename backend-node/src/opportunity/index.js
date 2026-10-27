@@ -18,6 +18,7 @@ const { z } = require('zod');
 const { HttpError, asyncHandler, badRequest, errorBody, notFound, singleString } = require('../living-score/common/http');
 const { createLogger } = require('../living-score/common/logger');
 const M = require('./model');
+const { LIST, slugify } = require('./official-wards');
 const { createAnswerers, ask, parseIdea } = require('./ai');
 /** Official land price per ward (2026 table, median street-front VT1) — a relative rent indicator for the business plan. */
 const LAND = require('../property-intel/data/land-price.json');
@@ -182,6 +183,34 @@ function wardsGeoJson(type, horizon, lang) {
   });
 }
 
+/** The 126 units of the official list, each with the map's data when the map covers it (the first sector the data can judge, the nearest metro station). */
+function directory(lang) {
+  return cached(`directory|${lang}`, () => ({
+    source: { title: LIST.source.title, publisher: LIST.source.publisher, url: LIST.source.url },
+    populationDate: '2025-07-01',
+    units: LIST.units
+      .map((u) => {
+        const slug = slugify(u.name);
+        const w = M.WARD_BY_SLUG.get(slug);
+        const scores = w ? M.scoresFor(slug, 'now') : null;
+        const top = scores?.[0] && !scores[0].sparseType ? scores[0] : null;
+        return {
+          slug,
+          name: u.name,
+          kind: u.name.startsWith('Phường') ? 'ward' : 'commune',
+          population: u.population,
+          areaKm2: u.areaKm2,
+          density: Math.round(u.population / u.areaKm2),
+          covered: Boolean(w),
+          scored: Boolean(scores),
+          top: top ? { type: top.type, name: typeView(top.type, lang).name, icon: M.TYPES[top.type].icon, score: top.opportunity } : null,
+          metroNearest: w ? (wardFacts(w).metroNearest ?? null) : null,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name, 'vi')),
+  }));
+}
+
 function wardDetail(slug, horizon, lang) {
   return cached(`ward|${slug}|${horizon}|${lang}`, () => {
     const w = requireWard(slug);
@@ -237,6 +266,12 @@ function createOpportunityMap(options = {}) {
       res.json(wardsGeoJson(type, horizon, lang));
     }),
   );
+
+  // Every one of the 126 wards and communes, with the official figures, and what the map adds where it covers the unit.
+  router.get('/directory', (req, res) => {
+    const lang = requireLang(singleString(req.query.lang, 'lang'));
+    res.json(directory(lang));
+  });
 
   // One ward, any horizon: its 2030 is free on purpose (the preview of what Premium adds to the whole map).
 
@@ -336,4 +371,4 @@ function createOpportunityMap(options = {}) {
   return { router, answerers };
 }
 
-module.exports = { createOpportunityMap, wardDetail, wardsGeoJson, sourceList, SOURCES, METHOD, CAVEAT, typeView };
+module.exports = { createOpportunityMap, directory, wardDetail, wardsGeoJson, sourceList, SOURCES, METHOD, CAVEAT, typeView };

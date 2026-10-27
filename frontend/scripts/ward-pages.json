@@ -1,0 +1,758 @@
+[
+ {
+  "slug": "phuong-ba-dinh",
+  "name": "Phường Ba Đình",
+  "title": "Phường Ba Đình, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Ba Đình (phường của Hà Nội): dân số 65.023 người (1/7/2025), diện tích 3 km², mật độ 21.893 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (38/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 1,5 km)."
+ },
+ {
+  "slug": "phuong-bach-mai",
+  "name": "Phường Bạch Mai",
+  "title": "Phường Bạch Mai, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Bạch Mai (phường của Hà Nội): dân số 129.571 người (1/7/2025), diện tích 3 km², mật độ 43.922 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (69/100). Ga metro gần nhất: La Thành (tuyến 2A, cách 3,3 km)."
+ },
+ {
+  "slug": "phuong-bo-de",
+  "name": "Phường Bồ Đề",
+  "title": "Phường Bồ Đề, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Bồ Đề (phường của Hà Nội): dân số 120.028 người (1/7/2025), diện tích 12,9 km², mật độ 9.276 người/km². Ngành có điểm cơ hội cao nhất: Giáo dục trẻ em (40/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 5,5 km)."
+ },
+ {
+  "slug": "phuong-cau-giay",
+  "name": "Phường Cầu Giấy",
+  "title": "Phường Cầu Giấy, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Cầu Giấy (phường của Hà Nội): dân số 74.516 người (1/7/2025), diện tích 3,7 km², mật độ 19.924 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (64/100). Ga metro gần nhất: Chùa Hà (tuyến 3, cách 0,5 km)."
+ },
+ {
+  "slug": "phuong-chuong-my",
+  "name": "Phường Chương Mỹ",
+  "title": "Phường Chương Mỹ, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Chương Mỹ (phường của Hà Nội): dân số 87.913 người (1/7/2025), diện tích 38,9 km², mật độ 2.260 người/km². Ngành có điểm cơ hội cao nhất: Nhà hàng / ăn uống (39/100). Ga metro gần nhất: Yên Nghĩa (tuyến 2A, cách 5,2 km)."
+ },
+ {
+  "slug": "phuong-cua-nam",
+  "name": "Phường Cửa Nam",
+  "title": "Phường Cửa Nam, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Cửa Nam (phường của Hà Nội): dân số 52.751 người (1/7/2025), diện tích 1,7 km², mật độ 31.399 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (37/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 2,3 km)."
+ },
+ {
+  "slug": "phuong-duong-noi",
+  "name": "Phường Dương Nội",
+  "title": "Phường Dương Nội, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Dương Nội (phường của Hà Nội): dân số 56.091 người (1/7/2025), diện tích 7,9 km², mật độ 7.100 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (45/100). Ga metro gần nhất: Văn Khê (tuyến 2A, cách 2,4 km)."
+ },
+ {
+  "slug": "phuong-dai-mo",
+  "name": "Phường Đại Mỗ",
+  "title": "Phường Đại Mỗ, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Đại Mỗ (phường của Hà Nội): dân số 80.462 người (1/7/2025), diện tích 8,1 km², mật độ 9.934 người/km². Ngành có điểm cơ hội cao nhất: Nhà thuốc / phòng khám (60/100). Ga metro gần nhất: Văn Quán (tuyến 2A, cách 1,8 km)."
+ },
+ {
+  "slug": "phuong-dinh-cong",
+  "name": "Phường Định Công",
+  "title": "Phường Định Công, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Định Công (phường của Hà Nội): dân số 85.502 người (1/7/2025), diện tích 5,3 km², mật độ 16.012 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (55/100). Ga metro gần nhất: Thượng Đình (tuyến 2A, cách 2,6 km)."
+ },
+ {
+  "slug": "phuong-dong-da",
+  "name": "Phường Đống Đa",
+  "title": "Phường Đống Đa, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Đống Đa (phường của Hà Nội): dân số 81.358 người (1/7/2025), diện tích 2,1 km², mật độ 39.303 người/km². Ngành có điểm cơ hội cao nhất: Nhà hàng / ăn uống (52/100). Ga metro gần nhất: Thái Hà (tuyến 2A, cách 0,5 km)."
+ },
+ {
+  "slug": "phuong-dong-ngac",
+  "name": "Phường Đông Ngạc",
+  "title": "Phường Đông Ngạc, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Đông Ngạc (phường của Hà Nội): dân số 83.544 người (1/7/2025), diện tích 8,9 km², mật độ 9.440 người/km². Ngành có điểm cơ hội cao nhất: Giáo dục trẻ em (48/100). Ga metro gần nhất: Cầu Diễn (tuyến 3, cách 3,5 km)."
+ },
+ {
+  "slug": "phuong-giang-vo",
+  "name": "Phường Giảng Võ",
+  "title": "Phường Giảng Võ, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Giảng Võ (phường của Hà Nội): dân số 97.034 người (1/7/2025), diện tích 2,6 km², mật độ 37.321 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (71/100). Ga metro gần nhất: Cầu Giấy (tuyến 3, cách 0,9 km)."
+ },
+ {
+  "slug": "phuong-ha-dong",
+  "name": "Phường Hà Đông",
+  "title": "Phường Hà Đông, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Hà Đông (phường của Hà Nội): dân số 185.205 người (1/7/2025), diện tích 9 km², mật độ 20.578 người/km². Ngành có điểm cơ hội cao nhất: Nhà hàng / ăn uống (80/100). Ga metro gần nhất: Văn Quán (tuyến 2A, cách 0,5 km)."
+ },
+ {
+  "slug": "phuong-hai-ba-trung",
+  "name": "Phường Hai Bà Trưng",
+  "title": "Phường Hai Bà Trưng, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Hai Bà Trưng (phường của Hà Nội): dân số 87.801 người (1/7/2025), diện tích 2,7 km², mật độ 33.132 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (51/100). Ga metro gần nhất: La Thành (tuyến 2A, cách 3,2 km)."
+ },
+ {
+  "slug": "phuong-hoan-kiem",
+  "name": "Phường Hoàn Kiếm",
+  "title": "Phường Hoàn Kiếm, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Hoàn Kiếm (phường của Hà Nội): dân số 105.301 người (1/7/2025), diện tích 1,9 km², mật độ 55.131 người/km². Ngành có điểm cơ hội cao nhất: Giáo dục trẻ em (44/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 2,3 km)."
+ },
+ {
+  "slug": "phuong-hoang-liet",
+  "name": "Phường Hoàng Liệt",
+  "title": "Phường Hoàng Liệt, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Hoàng Liệt (phường của Hà Nội): dân số 55.820 người (1/7/2025), diện tích 4 km², mật độ 13.817 người/km². Ngành có điểm cơ hội cao nhất: Nhà thuốc / phòng khám (50/100). Ga metro gần nhất: Vành Đai 3 (tuyến 2A, cách 4,5 km)."
+ },
+ {
+  "slug": "phuong-hoang-mai",
+  "name": "Phường Hoàng Mai",
+  "title": "Phường Hoàng Mai, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Hoàng Mai (phường của Hà Nội): dân số 98.502 người (1/7/2025), diện tích 9 km², mật độ 10.896 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (45/100). Ga metro gần nhất: Thượng Đình (tuyến 2A, cách 6,2 km)."
+ },
+ {
+  "slug": "phuong-hong-ha",
+  "name": "Phường Hồng Hà",
+  "title": "Phường Hồng Hà, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Hồng Hà (phường của Hà Nội): dân số 123.282 người (1/7/2025), diện tích 15,1 km², mật độ 8.170 người/km². Ngành có điểm cơ hội cao nhất: Nhà hàng / ăn uống (40/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 3 km)."
+ },
+ {
+  "slug": "phuong-khuong-dinh",
+  "name": "Phường Khương Đình",
+  "title": "Phường Khương Đình, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Khương Đình (phường của Hà Nội): dân số 86.286 người (1/7/2025), diện tích 3,1 km², mật độ 27.834 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (57/100). Ga metro gần nhất: Thượng Đình (tuyến 2A, cách 1,1 km)."
+ },
+ {
+  "slug": "phuong-kien-hung",
+  "name": "Phường Kiến Hưng",
+  "title": "Phường Kiến Hưng, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Kiến Hưng (phường của Hà Nội): dân số 70.833 người (1/7/2025), diện tích 6,7 km², mật độ 10.652 người/km². Ngành có điểm cơ hội cao nhất: Nhà thuốc / phòng khám (51/100). Ga metro gần nhất: Hà Đông (tuyến 2A, cách 1,9 km)."
+ },
+ {
+  "slug": "phuong-kim-lien",
+  "name": "Phường Kim Liên",
+  "title": "Phường Kim Liên, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Kim Liên (phường của Hà Nội): dân số 109.107 người (1/7/2025), diện tích 2,5 km², mật độ 44.352 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (76/100). Ga metro gần nhất: Thái Hà (tuyến 2A, cách 1,6 km)."
+ },
+ {
+  "slug": "phuong-lang",
+  "name": "Phường Láng",
+  "title": "Phường Láng, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Láng (phường của Hà Nội): dân số 61.135 người (1/7/2025), diện tích 1,9 km², mật độ 32.519 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (47/100). Ga metro gần nhất: Cầu Giấy (tuyến 3, cách 0,9 km)."
+ },
+ {
+  "slug": "phuong-linh-nam",
+  "name": "Phường Lĩnh Nam",
+  "title": "Phường Lĩnh Nam, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Lĩnh Nam (phường của Hà Nội): dân số 20.706 người (1/7/2025), diện tích 10,9 km², mật độ 1.907 người/km². Ngành có điểm cơ hội cao nhất: Nhà thuốc / phòng khám (19/100). Ga metro gần nhất: La Thành (tuyến 2A, cách 7,4 km)."
+ },
+ {
+  "slug": "phuong-long-bien",
+  "name": "Phường Long Biên",
+  "title": "Phường Long Biên, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Long Biên (phường của Hà Nội): dân số 62.887 người (1/7/2025), diện tích 19 km², mật độ 3.303 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (30/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 7,3 km)."
+ },
+ {
+  "slug": "phuong-nghia-do",
+  "name": "Phường Nghĩa Đô",
+  "title": "Phường Nghĩa Đô, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Nghĩa Đô (phường của Hà Nội): dân số 125.568 người (1/7/2025), diện tích 4,3 km², mật độ 28.933 người/km². Ngành có điểm cơ hội cao nhất: Quán cà phê (74/100). Ga metro gần nhất: Chùa Hà (tuyến 3, cách 1 km)."
+ },
+ {
+  "slug": "phuong-ngoc-ha",
+  "name": "Phường Ngọc Hà",
+  "title": "Phường Ngọc Hà, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Ngọc Hà (phường của Hà Nội): dân số 93.536 người (1/7/2025), diện tích 2,7 km², mật độ 34.901 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (62/100). Ga metro gần nhất: Cầu Giấy (tuyến 3, cách 1,8 km)."
+ },
+ {
+  "slug": "phuong-o-cho-dua",
+  "name": "Phường Ô Chợ Dừa",
+  "title": "Phường Ô Chợ Dừa, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Ô Chợ Dừa (phường của Hà Nội): dân số 71.293 người (1/7/2025), diện tích 1,8 km², mật độ 38.958 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (53/100). Ga metro gần nhất: La Thành (tuyến 2A, cách 0,3 km)."
+ },
+ {
+  "slug": "phuong-phu-dien",
+  "name": "Phường Phú Diễn",
+  "title": "Phường Phú Diễn, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Phú Diễn (phường của Hà Nội): dân số 74.603 người (1/7/2025), diện tích 6,3 km², mật độ 11.861 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (57/100). Ga metro gần nhất: Cầu Diễn (tuyến 3, cách 1 km)."
+ },
+ {
+  "slug": "phuong-phu-luong",
+  "name": "Phường Phú Lương",
+  "title": "Phường Phú Lương, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Phú Lương (phường của Hà Nội): dân số 52.024 người (1/7/2025), diện tích 9,4 km², mật độ 5.534 người/km². Ngành có điểm cơ hội cao nhất: Giáo dục trẻ em (45/100). Ga metro gần nhất: Yên Nghĩa (tuyến 2A, cách 2 km)."
+ },
+ {
+  "slug": "phuong-phu-thuong",
+  "name": "Phường Phú Thượng",
+  "title": "Phường Phú Thượng, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Phú Thượng (phường của Hà Nội): dân số 64.258 người (1/7/2025), diện tích 7,2 km², mật độ 8.912 người/km². Ngành có điểm cơ hội cao nhất: Nhà thuốc / phòng khám (42/100). Ga metro gần nhất: Chùa Hà (tuyến 3, cách 5,3 km)."
+ },
+ {
+  "slug": "phuong-phuc-loi",
+  "name": "Phường Phúc Lợi",
+  "title": "Phường Phúc Lợi, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Phúc Lợi (phường của Hà Nội): dân số 66.790 người (1/7/2025), diện tích 10,4 km², mật độ 6.416 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (45/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 9,4 km)."
+ },
+ {
+  "slug": "phuong-phuong-liet",
+  "name": "Phường Phương Liệt",
+  "title": "Phường Phương Liệt, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Phương Liệt (phường của Hà Nội): dân số 81.977 người (1/7/2025), diện tích 3,2 km², mật độ 25.618 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (53/100). Ga metro gần nhất: Thượng Đình (tuyến 2A, cách 1,8 km)."
+ },
+ {
+  "slug": "phuong-son-tay",
+  "name": "Phường Sơn Tây",
+  "title": "Phường Sơn Tây, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Sơn Tây (phường của Hà Nội): dân số 71.301 người (1/7/2025), diện tích 23,1 km², mật độ 3.089 người/km²."
+ },
+ {
+  "slug": "phuong-tay-ho",
+  "name": "Phường Tây Hồ",
+  "title": "Phường Tây Hồ, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Tây Hồ (phường của Hà Nội): dân số 100.122 người (1/7/2025), diện tích 10,7 km², mật độ 9.340 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (47/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 3,2 km)."
+ },
+ {
+  "slug": "phuong-tay-mo",
+  "name": "Phường Tây Mỗ",
+  "title": "Phường Tây Mỗ, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Tây Mỗ (phường của Hà Nội): dân số 46.894 người (1/7/2025), diện tích 5,6 km², mật độ 8.434 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (38/100). Ga metro gần nhất: Hà Đông (tuyến 2A, cách 4,2 km)."
+ },
+ {
+  "slug": "phuong-tay-tuu",
+  "name": "Phường Tây Tựu",
+  "title": "Phường Tây Tựu, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Tây Tựu (phường của Hà Nội): dân số 39.436 người (1/7/2025), diện tích 7,5 km², mật độ 5.230 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (37/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 1,2 km)."
+ },
+ {
+  "slug": "phuong-thanh-liet",
+  "name": "Phường Thanh Liệt",
+  "title": "Phường Thanh Liệt, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Thanh Liệt (phường của Hà Nội): dân số 76.238 người (1/7/2025), diện tích 6,4 km², mật độ 11.838 người/km². Ngành có điểm cơ hội cao nhất: Nhà thuốc / phòng khám (52/100). Ga metro gần nhất: Phùng Khoang (tuyến 2A, cách 2,5 km)."
+ },
+ {
+  "slug": "phuong-thanh-xuan",
+  "name": "Phường Thanh Xuân",
+  "title": "Phường Thanh Xuân, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Thanh Xuân (phường của Hà Nội): dân số 106.316 người (1/7/2025), diện tích 3,2 km², mật độ 32.814 người/km². Ngành có điểm cơ hội cao nhất: Quán cà phê (61/100). Ga metro gần nhất: Thượng Đình (tuyến 2A, cách 0,8 km)."
+ },
+ {
+  "slug": "phuong-thuong-cat",
+  "name": "Phường Thượng Cát",
+  "title": "Phường Thượng Cát, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Thượng Cát (phường của Hà Nội): dân số 24.692 người (1/7/2025), diện tích 14,8 km², mật độ 1.672 người/km². Ngành có điểm cơ hội cao nhất: Quán cà phê (23/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 4 km)."
+ },
+ {
+  "slug": "phuong-tung-thien",
+  "name": "Phường Tùng Thiện",
+  "title": "Phường Tùng Thiện, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Tùng Thiện (phường của Hà Nội): dân số 42.052 người (1/7/2025), diện tích 32,3 km², mật độ 1.300 người/km²."
+ },
+ {
+  "slug": "phuong-tu-liem",
+  "name": "Phường Từ Liêm",
+  "title": "Phường Từ Liêm, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Từ Liêm (phường của Hà Nội): dân số 119.997 người (1/7/2025), diện tích 10,2 km², mật độ 11.788 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (69/100). Ga metro gần nhất: Lê Đức Thọ (tuyến 3, cách 2 km)."
+ },
+ {
+  "slug": "phuong-tuong-mai",
+  "name": "Phường Tương Mai",
+  "title": "Phường Tương Mai, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Tương Mai (phường của Hà Nội): dân số 136.292 người (1/7/2025), diện tích 3,6 km², mật độ 38.284 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (62/100). Ga metro gần nhất: Láng (tuyến 2A, cách 4,5 km)."
+ },
+ {
+  "slug": "phuong-van-mieu-quoc-tu-giam",
+  "name": "Phường Văn Miếu - Quốc Tử Giám",
+  "title": "Phường Văn Miếu - Quốc Tử Giám, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Văn Miếu - Quốc Tử Giám (phường của Hà Nội): dân số 105.604 người (1/7/2025), diện tích 1,9 km², mật độ 55.002 người/km². Ngành có điểm cơ hội cao nhất: Nhà hàng / ăn uống (47/100). Ga metro gần nhất: La Thành (tuyến 2A, cách 1,3 km)."
+ },
+ {
+  "slug": "phuong-viet-hung",
+  "name": "Phường Việt Hưng",
+  "title": "Phường Việt Hưng, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Việt Hưng (phường của Hà Nội): dân số 83.188 người (1/7/2025), diện tích 12,9 km², mật độ 6.444 người/km². Ngành có điểm cơ hội cao nhất: Nhà hàng / ăn uống (46/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 8,5 km)."
+ },
+ {
+  "slug": "phuong-vinh-hung",
+  "name": "Phường Vĩnh Hưng",
+  "title": "Phường Vĩnh Hưng, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Vĩnh Hưng (phường của Hà Nội): dân số 67.561 người (1/7/2025), diện tích 4,5 km², mật độ 15.114 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (36/100). Ga metro gần nhất: La Thành (tuyến 2A, cách 6,6 km)."
+ },
+ {
+  "slug": "phuong-vinh-tuy",
+  "name": "Phường Vĩnh Tuy",
+  "title": "Phường Vĩnh Tuy, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Vĩnh Tuy (phường của Hà Nội): dân số 90.583 người (1/7/2025), diện tích 2,3 km², mật độ 38.877 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (53/100). Ga metro gần nhất: La Thành (tuyến 2A, cách 4,9 km)."
+ },
+ {
+  "slug": "phuong-xuan-dinh",
+  "name": "Phường Xuân Đỉnh",
+  "title": "Phường Xuân Đỉnh, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Xuân Đỉnh (phường của Hà Nội): dân số 48.658 người (1/7/2025), diện tích 5,5 km², mật độ 8.912 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (43/100). Ga metro gần nhất: Chùa Hà (tuyến 3, cách 3,3 km)."
+ },
+ {
+  "slug": "phuong-xuan-phuong",
+  "name": "Phường Xuân Phương",
+  "title": "Phường Xuân Phương, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Xuân Phương (phường của Hà Nội): dân số 104.947 người (1/7/2025), diện tích 10,8 km², mật độ 9.708 người/km². Ngành có điểm cơ hội cao nhất: Nhà hàng / ăn uống (52/100). Ga metro gần nhất: Minh Khai (tuyến 3, cách 1,8 km)."
+ },
+ {
+  "slug": "phuong-yen-hoa",
+  "name": "Phường Yên Hòa",
+  "title": "Phường Yên Hòa, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Yên Hòa (phường của Hà Nội): dân số 77.029 người (1/7/2025), diện tích 4,1 km², mật độ 18.788 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (66/100). Ga metro gần nhất: Cầu Giấy (tuyến 3, cách 1,5 km)."
+ },
+ {
+  "slug": "phuong-yen-nghia",
+  "name": "Phường Yên Nghĩa",
+  "title": "Phường Yên Nghĩa, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Yên Nghĩa (phường của Hà Nội): dân số 49.643 người (1/7/2025), diện tích 13,2 km², mật độ 3.767 người/km². Ngành có điểm cơ hội cao nhất: Nhà hàng / ăn uống (38/100). Ga metro gần nhất: Yên Nghĩa (tuyến 2A, cách 1,9 km)."
+ },
+ {
+  "slug": "phuong-yen-so",
+  "name": "Phường Yên Sở",
+  "title": "Phường Yên Sở, Hà Nội · Hanoi Century Vista",
+  "description": "Phường Yên Sở (phường của Hà Nội): dân số 40.913 người (1/7/2025), diện tích 5,6 km², mật độ 7.293 người/km². Ngành có điểm cơ hội cao nhất: Nhà hàng / ăn uống (33/100). Ga metro gần nhất: Thượng Đình (tuyến 2A, cách 7 km)."
+ },
+ {
+  "slug": "xa-an-khanh",
+  "name": "Xã An Khánh",
+  "title": "Xã An Khánh, Hà Nội · Hanoi Century Vista",
+  "description": "Xã An Khánh (xã của Hà Nội): dân số 102.136 người (1/7/2025), diện tích 28,7 km², mật độ 3.560 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (41/100). Ga metro gần nhất: Yên Nghĩa (tuyến 2A, cách 5,4 km)."
+ },
+ {
+  "slug": "xa-ba-vi",
+  "name": "Xã Ba Vì",
+  "title": "Xã Ba Vì, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Ba Vì (xã của Hà Nội): dân số 26.651 người (1/7/2025), diện tích 81,3 km², mật độ 328 người/km²."
+ },
+ {
+  "slug": "xa-bat-trang",
+  "name": "Xã Bát Tràng",
+  "title": "Xã Bát Tràng, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Bát Tràng (xã của Hà Nội): dân số 48.987 người (1/7/2025), diện tích 20,7 km², mật độ 2.370 người/km²."
+ },
+ {
+  "slug": "xa-bat-bat",
+  "name": "Xã Bất Bạt",
+  "title": "Xã Bất Bạt, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Bất Bạt (xã của Hà Nội): dân số 40.066 người (1/7/2025), diện tích 56,4 km², mật độ 710 người/km²."
+ },
+ {
+  "slug": "xa-binh-minh",
+  "name": "Xã Bình Minh",
+  "title": "Xã Bình Minh, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Bình Minh (xã của Hà Nội): dân số 80.066 người (1/7/2025), diện tích 29,9 km², mật độ 2.681 người/km². Ngành có điểm cơ hội cao nhất: Nhà thuốc / phòng khám (43/100). Ga metro gần nhất: Yên Nghĩa (tuyến 2A, cách 4,7 km)."
+ },
+ {
+  "slug": "xa-chuyen-my",
+  "name": "Xã Chuyên Mỹ",
+  "title": "Xã Chuyên Mỹ, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Chuyên Mỹ (xã của Hà Nội): dân số 44.859 người (1/7/2025), diện tích 35,5 km², mật độ 1.262 người/km²."
+ },
+ {
+  "slug": "xa-chuong-duong",
+  "name": "Xã Chương Dương",
+  "title": "Xã Chương Dương, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Chương Dương (xã của Hà Nội): dân số 59.973 người (1/7/2025), diện tích 28,9 km², mật độ 2.076 người/km²."
+ },
+ {
+  "slug": "xa-co-do",
+  "name": "Xã Cổ Đô",
+  "title": "Xã Cổ Đô, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Cổ Đô (xã của Hà Nội): dân số 70.706 người (1/7/2025), diện tích 53,3 km², mật độ 1.328 người/km²."
+ },
+ {
+  "slug": "xa-dan-hoa",
+  "name": "Xã Dân Hòa",
+  "title": "Xã Dân Hòa, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Dân Hòa (xã của Hà Nội): dân số 62.755 người (1/7/2025), diện tích 38,4 km², mật độ 1.633 người/km²."
+ },
+ {
+  "slug": "xa-duong-hoa",
+  "name": "Xã Dương Hòa",
+  "title": "Xã Dương Hòa, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Dương Hòa (xã của Hà Nội): dân số 58.830 người (1/7/2025), diện tích 17,4 km², mật độ 3.379 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (26/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 7 km)."
+ },
+ {
+  "slug": "xa-da-phuc",
+  "name": "Xã Đa Phúc",
+  "title": "Xã Đa Phúc, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Đa Phúc (xã của Hà Nội): dân số 83.649 người (1/7/2025), diện tích 55,3 km², mật độ 1.512 người/km². Ngành có điểm cơ hội cao nhất: Nhà thuốc / phòng khám (27/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 25,4 km)."
+ },
+ {
+  "slug": "xa-dai-thanh",
+  "name": "Xã Đại Thanh",
+  "title": "Xã Đại Thanh, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Đại Thanh (xã của Hà Nội): dân số 92.557 người (1/7/2025), diện tích 18,9 km², mật độ 4.892 người/km². Ngành có điểm cơ hội cao nhất: Nhà thuốc / phòng khám (41/100). Ga metro gần nhất: Văn Quán (tuyến 2A, cách 5,5 km)."
+ },
+ {
+  "slug": "xa-dai-xuyen",
+  "name": "Xã Đại Xuyên",
+  "title": "Xã Đại Xuyên, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Đại Xuyên (xã của Hà Nội): dân số 74.906 người (1/7/2025), diện tích 51,7 km², mật độ 1.450 người/km²."
+ },
+ {
+  "slug": "xa-dan-phuong",
+  "name": "Xã Đan Phượng",
+  "title": "Xã Đan Phượng, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Đan Phượng (xã của Hà Nội): dân số 47.629 người (1/7/2025), diện tích 15,3 km², mật độ 3.113 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (26/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 8,3 km)."
+ },
+ {
+  "slug": "xa-doai-phuong",
+  "name": "Xã Đoài Phương",
+  "title": "Xã Đoài Phương, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Đoài Phương (xã của Hà Nội): dân số 39.828 người (1/7/2025), diện tích 57,1 km², mật độ 698 người/km²."
+ },
+ {
+  "slug": "xa-dong-anh",
+  "name": "Xã Đông Anh",
+  "title": "Xã Đông Anh, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Đông Anh (xã của Hà Nội): dân số 118.183 người (1/7/2025), diện tích 48,7 km², mật độ 2.428 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (40/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 9,8 km)."
+ },
+ {
+  "slug": "xa-gia-lam",
+  "name": "Xã Gia Lâm",
+  "title": "Xã Gia Lâm, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Gia Lâm (xã của Hà Nội): dân số 90.498 người (1/7/2025), diện tích 25,7 km², mật độ 3.519 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (53/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 13,7 km)."
+ },
+ {
+  "slug": "xa-ha-bang",
+  "name": "Xã Hạ Bằng",
+  "title": "Xã Hạ Bằng, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Hạ Bằng (xã của Hà Nội): dân số 38.721 người (1/7/2025), diện tích 32,1 km², mật độ 1.205 người/km²."
+ },
+ {
+  "slug": "xa-hat-mon",
+  "name": "Xã Hát Môn",
+  "title": "Xã Hát Môn, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Hát Môn (xã của Hà Nội): dân số 72.227 người (1/7/2025), diện tích 37,7 km², mật độ 1.917 người/km²."
+ },
+ {
+  "slug": "xa-hoa-lac",
+  "name": "Xã Hòa Lạc",
+  "title": "Xã Hòa Lạc, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Hòa Lạc (xã của Hà Nội): dân số 20.815 người (1/7/2025), diện tích 35,4 km², mật độ 588 người/km²."
+ },
+ {
+  "slug": "xa-hoa-phu",
+  "name": "Xã Hòa Phú",
+  "title": "Xã Hòa Phú, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Hòa Phú (xã của Hà Nội): dân số 49.948 người (1/7/2025), diện tích 29,9 km², mật độ 1.672 người/km²."
+ },
+ {
+  "slug": "xa-hoa-xa",
+  "name": "Xã Hòa Xá",
+  "title": "Xã Hòa Xá, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Hòa Xá (xã của Hà Nội): dân số 69.428 người (1/7/2025), diện tích 40,4 km², mật độ 1.718 người/km²."
+ },
+ {
+  "slug": "xa-hoai-duc",
+  "name": "Xã Hoài Đức",
+  "title": "Xã Hoài Đức, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Hoài Đức (xã của Hà Nội): dân số 69.239 người (1/7/2025), diện tích 16,7 km², mật độ 4.139 người/km². Ngành có điểm cơ hội cao nhất: Quán cà phê (47/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 3,5 km)."
+ },
+ {
+  "slug": "xa-hong-son",
+  "name": "Xã Hồng Sơn",
+  "title": "Xã Hồng Sơn, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Hồng Sơn (xã của Hà Nội): dân số 63.130 người (1/7/2025), diện tích 54,4 km², mật độ 1.161 người/km²."
+ },
+ {
+  "slug": "xa-hong-van",
+  "name": "Xã Hồng Vân",
+  "title": "Xã Hồng Vân, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Hồng Vân (xã của Hà Nội): dân số 58.685 người (1/7/2025), diện tích 24,5 km², mật độ 2.392 người/km². Ngành có điểm cơ hội cao nhất: Giáo dục trẻ em (30/100). Ga metro gần nhất: Phùng Khoang (tuyến 2A, cách 15,4 km)."
+ },
+ {
+  "slug": "xa-hung-dao",
+  "name": "Xã Hưng Đạo",
+  "title": "Xã Hưng Đạo, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Hưng Đạo (xã của Hà Nội): dân số 49.357 người (1/7/2025), diện tích 24,9 km², mật độ 1.982 người/km². Ngành có điểm cơ hội cao nhất: Giáo dục trẻ em (29/100). Ga metro gần nhất: Yên Nghĩa (tuyến 2A, cách 8,1 km)."
+ },
+ {
+  "slug": "xa-huong-son",
+  "name": "Xã Hương Sơn",
+  "title": "Xã Hương Sơn, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Hương Sơn (xã của Hà Nội): dân số 52.634 người (1/7/2025), diện tích 69,1 km², mật độ 762 người/km²."
+ },
+ {
+  "slug": "xa-kieu-phu",
+  "name": "Xã Kiều Phú",
+  "title": "Xã Kiều Phú, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Kiều Phú (xã của Hà Nội): dân số 60.885 người (1/7/2025), diện tích 34,5 km², mật độ 1.763 người/km²."
+ },
+ {
+  "slug": "xa-kim-anh",
+  "name": "Xã Kim Anh",
+  "title": "Xã Kim Anh, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Kim Anh (xã của Hà Nội): dân số 48.564 người (1/7/2025), diện tích 52,8 km², mật độ 920 người/km²."
+ },
+ {
+  "slug": "xa-lien-minh",
+  "name": "Xã Liên Minh",
+  "title": "Xã Liên Minh, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Liên Minh (xã của Hà Nội): dân số 47.769 người (1/7/2025), diện tích 23,6 km², mật độ 2.027 người/km². Ngành có điểm cơ hội cao nhất: Giáo dục trẻ em (25/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 10,9 km)."
+ },
+ {
+  "slug": "xa-me-linh",
+  "name": "Xã Mê Linh",
+  "title": "Xã Mê Linh, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Mê Linh (xã của Hà Nội): dân số 62.197 người (1/7/2025), diện tích 35 km², mật độ 1.779 người/km². Ngành có điểm cơ hội cao nhất: Giáo dục trẻ em (27/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 10,1 km)."
+ },
+ {
+  "slug": "xa-minh-chau",
+  "name": "Xã Minh Châu",
+  "title": "Xã Minh Châu, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Minh Châu (xã của Hà Nội): dân số 6.646 người (1/7/2025), diện tích 10,4 km², mật độ 642 người/km²."
+ },
+ {
+  "slug": "xa-my-duc",
+  "name": "Xã Mỹ Đức",
+  "title": "Xã Mỹ Đức, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Mỹ Đức (xã của Hà Nội): dân số 53.640 người (1/7/2025), diện tích 52,7 km², mật độ 1.017 người/km²."
+ },
+ {
+  "slug": "xa-nam-phu",
+  "name": "Xã Nam Phù",
+  "title": "Xã Nam Phù, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Nam Phù (xã của Hà Nội): dân số 42.772 người (1/7/2025), diện tích 13,7 km², mật độ 3.113 người/km². Ngành có điểm cơ hội cao nhất: Nhà thuốc / phòng khám (22/100). Ga metro gần nhất: Thượng Đình (tuyến 2A, cách 11,9 km)."
+ },
+ {
+  "slug": "xa-ngoc-hoi",
+  "name": "Xã Ngọc Hồi",
+  "title": "Xã Ngọc Hồi, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Ngọc Hồi (xã của Hà Nội): dân số 43.864 người (1/7/2025), diện tích 13,4 km², mật độ 3.286 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (25/100). Ga metro gần nhất: Văn Quán (tuyến 2A, cách 9,2 km)."
+ },
+ {
+  "slug": "xa-noi-bai",
+  "name": "Xã Nội Bài",
+  "title": "Xã Nội Bài, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Nội Bài (xã của Hà Nội): dân số 70.469 người (1/7/2025), diện tích 51,6 km², mật độ 1.365 người/km². Ngành có điểm cơ hội cao nhất: Giáo dục trẻ em (26/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 21 km)."
+ },
+ {
+  "slug": "xa-o-dien",
+  "name": "Xã Ô Diên",
+  "title": "Xã Ô Diên, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Ô Diên (xã của Hà Nội): dân số 97.506 người (1/7/2025), diện tích 32,1 km², mật độ 3.041 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (38/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 5,9 km)."
+ },
+ {
+  "slug": "xa-phu-cat",
+  "name": "Xã Phú Cát",
+  "title": "Xã Phú Cát, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Phú Cát (xã của Hà Nội): dân số 43.339 người (1/7/2025), diện tích 51,2 km², mật độ 846 người/km²."
+ },
+ {
+  "slug": "xa-phu-dong",
+  "name": "Xã Phù Đổng",
+  "title": "Xã Phù Đổng, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Phù Đổng (xã của Hà Nội): dân số 111.484 người (1/7/2025), diện tích 41,6 km², mật độ 2.679 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (39/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 13 km)."
+ },
+ {
+  "slug": "xa-phu-nghia",
+  "name": "Xã Phú Nghĩa",
+  "title": "Xã Phú Nghĩa, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Phú Nghĩa (xã của Hà Nội): dân số 71.048 người (1/7/2025), diện tích 40,3 km², mật độ 1.765 người/km²."
+ },
+ {
+  "slug": "xa-phu-xuyen",
+  "name": "Xã Phú Xuyên",
+  "title": "Xã Phú Xuyên, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Phú Xuyên (xã của Hà Nội): dân số 96.635 người (1/7/2025), diện tích 60 km², mật độ 1.610 người/km²."
+ },
+ {
+  "slug": "xa-phuc-loc",
+  "name": "Xã Phúc Lộc",
+  "title": "Xã Phúc Lộc, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Phúc Lộc (xã của Hà Nội): dân số 61.457 người (1/7/2025), diện tích 41,2 km², mật độ 1.493 người/km²."
+ },
+ {
+  "slug": "xa-phuc-son",
+  "name": "Xã Phúc Sơn",
+  "title": "Xã Phúc Sơn, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Phúc Sơn (xã của Hà Nội): dân số 54.084 người (1/7/2025), diện tích 49,3 km², mật độ 1.097 người/km²."
+ },
+ {
+  "slug": "xa-phuc-thinh",
+  "name": "Xã Phúc Thịnh",
+  "title": "Xã Phúc Thịnh, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Phúc Thịnh (xã của Hà Nội): dân số 95.951 người (1/7/2025), diện tích 42,6 km², mật độ 2.251 người/km². Ngành có điểm cơ hội cao nhất: Nhà thuốc / phòng khám (34/100). Ga metro gần nhất: Chùa Hà (tuyến 3, cách 15,2 km)."
+ },
+ {
+  "slug": "xa-phuc-tho",
+  "name": "Xã Phúc Thọ",
+  "title": "Xã Phúc Thọ, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Phúc Thọ (xã của Hà Nội): dân số 75.425 người (1/7/2025), diện tích 39,7 km², mật độ 1.902 người/km²."
+ },
+ {
+  "slug": "xa-phuong-duc",
+  "name": "Xã Phượng Dực",
+  "title": "Xã Phượng Dực, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Phượng Dực (xã của Hà Nội): dân số 60.281 người (1/7/2025), diện tích 44,7 km², mật độ 1.349 người/km²."
+ },
+ {
+  "slug": "xa-quang-bi",
+  "name": "Xã Quảng Bị",
+  "title": "Xã Quảng Bị, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Quảng Bị (xã của Hà Nội): dân số 62.968 người (1/7/2025), diện tích 37,1 km², mật độ 1.695 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (27/100). Ga metro gần nhất: Yên Nghĩa (tuyến 2A, cách 10,1 km)."
+ },
+ {
+  "slug": "xa-quang-minh",
+  "name": "Xã Quang Minh",
+  "title": "Xã Quang Minh, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Quang Minh (xã của Hà Nội): dân số 69.623 người (1/7/2025), diện tích 32,2 km², mật độ 2.164 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (37/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 16,3 km)."
+ },
+ {
+  "slug": "xa-quang-oai",
+  "name": "Xã Quảng Oai",
+  "title": "Xã Quảng Oai, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Quảng Oai (xã của Hà Nội): dân số 59.001 người (1/7/2025), diện tích 49,3 km², mật độ 1.198 người/km²."
+ },
+ {
+  "slug": "xa-quoc-oai",
+  "name": "Xã Quốc Oai",
+  "title": "Xã Quốc Oai, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Quốc Oai (xã của Hà Nội): dân số 63.344 người (1/7/2025), diện tích 24 km², mật độ 2.639 người/km²."
+ },
+ {
+  "slug": "xa-soc-son",
+  "name": "Xã Sóc Sơn",
+  "title": "Xã Sóc Sơn, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Sóc Sơn (xã của Hà Nội): dân số 117.876 người (1/7/2025), diện tích 68,2 km², mật độ 1.727 người/km²."
+ },
+ {
+  "slug": "xa-son-dong",
+  "name": "Xã Sơn Đồng",
+  "title": "Xã Sơn Đồng, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Sơn Đồng (xã của Hà Nội): dân số 63.267 người (1/7/2025), diện tích 21,6 km², mật độ 2.933 người/km². Ngành có điểm cơ hội cao nhất: Làm đẹp / spa (37/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 2,9 km)."
+ },
+ {
+  "slug": "xa-suoi-hai",
+  "name": "Xã Suối Hai",
+  "title": "Xã Suối Hai, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Suối Hai (xã của Hà Nội): dân số 35.201 người (1/7/2025), diện tích 51,6 km², mật độ 683 người/km²."
+ },
+ {
+  "slug": "xa-tam-hung",
+  "name": "Xã Tam Hưng",
+  "title": "Xã Tam Hưng, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Tam Hưng (xã của Hà Nội): dân số 39.087 người (1/7/2025), diện tích 29,5 km², mật độ 1.327 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (21/100). Ga metro gần nhất: Yên Nghĩa (tuyến 2A, cách 9 km)."
+ },
+ {
+  "slug": "xa-tay-phuong",
+  "name": "Xã Tây Phương",
+  "title": "Xã Tây Phương, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Tây Phương (xã của Hà Nội): dân số 99.874 người (1/7/2025), diện tích 31,1 km², mật độ 3.216 người/km²."
+ },
+ {
+  "slug": "xa-thach-that",
+  "name": "Xã Thạch Thất",
+  "title": "Xã Thạch Thất, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Thạch Thất (xã của Hà Nội): dân số 57.645 người (1/7/2025), diện tích 31,9 km², mật độ 1.805 người/km²."
+ },
+ {
+  "slug": "xa-thanh-oai",
+  "name": "Xã Thanh Oai",
+  "title": "Xã Thanh Oai, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Thanh Oai (xã của Hà Nội): dân số 54.475 người (1/7/2025), diện tích 26,9 km², mật độ 2.028 người/km²."
+ },
+ {
+  "slug": "xa-thanh-tri",
+  "name": "Xã Thanh Trì",
+  "title": "Xã Thanh Trì, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Thanh Trì (xã của Hà Nội): dân số 55.378 người (1/7/2025), diện tích 10,2 km², mật độ 5.456 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (36/100). Ga metro gần nhất: Vành Đai 3 (tuyến 2A, cách 7,7 km)."
+ },
+ {
+  "slug": "xa-thien-loc",
+  "name": "Xã Thiên Lộc",
+  "title": "Xã Thiên Lộc, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Thiên Lộc (xã của Hà Nội): dân số 74.597 người (1/7/2025), diện tích 28 km², mật độ 2.668 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (43/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 9 km)."
+ },
+ {
+  "slug": "xa-thuan-an",
+  "name": "Xã Thuận An",
+  "title": "Xã Thuận An, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Thuận An (xã của Hà Nội): dân số 68.292 người (1/7/2025), diện tích 29,7 km², mật độ 2.302 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (40/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 16,9 km)."
+ },
+ {
+  "slug": "xa-thu-lam",
+  "name": "Xã Thư Lâm",
+  "title": "Xã Thư Lâm, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Thư Lâm (xã của Hà Nội): dân số 102.580 người (1/7/2025), diện tích 43,8 km², mật độ 2.340 người/km². Ngành có điểm cơ hội cao nhất: Giáo dục trẻ em (28/100). Ga metro gần nhất: Cát Linh (tuyến 2A, cách 17,3 km)."
+ },
+ {
+  "slug": "xa-thuong-phuc",
+  "name": "Xã Thượng Phúc",
+  "title": "Xã Thượng Phúc, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Thượng Phúc (xã của Hà Nội): dân số 45.464 người (1/7/2025), diện tích 28,9 km², mật độ 1.573 người/km²."
+ },
+ {
+  "slug": "xa-thuong-tin",
+  "name": "Xã Thường Tín",
+  "title": "Xã Thường Tín, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Thường Tín (xã của Hà Nội): dân số 70.739 người (1/7/2025), diện tích 28,3 km², mật độ 2.500 người/km². Ngành có điểm cơ hội cao nhất: Sửa xe / rửa xe (34/100). Ga metro gần nhất: La Khê (tuyến 2A, cách 12,6 km)."
+ },
+ {
+  "slug": "xa-tien-thang",
+  "name": "Xã Tiến Thắng",
+  "title": "Xã Tiến Thắng, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Tiến Thắng (xã của Hà Nội): dân số 64.246 người (1/7/2025), diện tích 36,3 km², mật độ 1.768 người/km². Ngành có điểm cơ hội cao nhất: Giáo dục trẻ em (29/100). Ga metro gần nhất: Nhổn (tuyến 3, cách 19,5 km)."
+ },
+ {
+  "slug": "xa-tran-phu",
+  "name": "Xã Trần Phú",
+  "title": "Xã Trần Phú, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Trần Phú (xã của Hà Nội): dân số 47.528 người (1/7/2025), diện tích 44,4 km², mật độ 1.071 người/km²."
+ },
+ {
+  "slug": "xa-trung-gia",
+  "name": "Xã Trung Giã",
+  "title": "Xã Trung Giã, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Trung Giã (xã của Hà Nội): dân số 61.315 người (1/7/2025), diện tích 77,5 km², mật độ 791 người/km²."
+ },
+ {
+  "slug": "xa-ung-hoa",
+  "name": "Xã Ứng Hòa",
+  "title": "Xã Ứng Hòa, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Ứng Hòa (xã của Hà Nội): dân số 63.750 người (1/7/2025), diện tích 67,8 km², mật độ 940 người/km²."
+ },
+ {
+  "slug": "xa-ung-thien",
+  "name": "Xã Ứng Thiên",
+  "title": "Xã Ứng Thiên, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Ứng Thiên (xã của Hà Nội): dân số 53.962 người (1/7/2025), diện tích 38,4 km², mật độ 1.405 người/km²."
+ },
+ {
+  "slug": "xa-van-dinh",
+  "name": "Xã Vân Đình",
+  "title": "Xã Vân Đình, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Vân Đình (xã của Hà Nội): dân số 60.828 người (1/7/2025), diện tích 41,6 km², mật độ 1.462 người/km²."
+ },
+ {
+  "slug": "xa-vat-lai",
+  "name": "Xã Vật Lại",
+  "title": "Xã Vật Lại, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Vật Lại (xã của Hà Nội): dân số 58.579 người (1/7/2025), diện tích 51,8 km², mật độ 1.132 người/km²."
+ },
+ {
+  "slug": "xa-vinh-thanh",
+  "name": "Xã Vĩnh Thanh",
+  "title": "Xã Vĩnh Thanh, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Vĩnh Thanh (xã của Hà Nội): dân số 64.698 người (1/7/2025), diện tích 22,5 km², mật độ 2.873 người/km². Ngành có điểm cơ hội cao nhất: Nhà hàng / ăn uống (25/100). Ga metro gần nhất: Chùa Hà (tuyến 3, cách 8,6 km)."
+ },
+ {
+  "slug": "xa-xuan-mai",
+  "name": "Xã Xuân Mai",
+  "title": "Xã Xuân Mai, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Xuân Mai (xã của Hà Nội): dân số 67.310 người (1/7/2025), diện tích 50,7 km², mật độ 1.327 người/km²."
+ },
+ {
+  "slug": "xa-yen-bai",
+  "name": "Xã Yên Bài",
+  "title": "Xã Yên Bài, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Yên Bài (xã của Hà Nội): dân số 21.416 người (1/7/2025), diện tích 68,2 km², mật độ 314 người/km²."
+ },
+ {
+  "slug": "xa-yen-lang",
+  "name": "Xã Yên Lãng",
+  "title": "Xã Yên Lãng, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Yên Lãng (xã của Hà Nội): dân số 71.339 người (1/7/2025), diện tích 44,8 km², mật độ 1.592 người/km²."
+ },
+ {
+  "slug": "xa-yen-xuan",
+  "name": "Xã Yên Xuân",
+  "title": "Xã Yên Xuân, Hà Nội · Hanoi Century Vista",
+  "description": "Xã Yên Xuân (xã của Hà Nội): dân số 29.375 người (1/7/2025), diện tích 78 km², mật độ 377 người/km²."
+ }
+]

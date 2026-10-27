@@ -23,7 +23,8 @@
     "data:kindergartens": "node scripts/add-opportunity-kindergartens.js",
     "data:wards-official": "node scripts/apply-official-wards.js",
     "reports:list": "node scripts/list-data-reports.js",
-    "payos:webhook": "node scripts/payos-webhook.js"
+    "payos:webhook": "node scripts/payos-webhook.js",
+    "data:wardpages": "node scripts/build-ward-pages.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",

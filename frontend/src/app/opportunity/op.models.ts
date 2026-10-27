@@ -153,3 +153,23 @@ export interface ParsedIdea {
   budget: number | null;
   ward: { slug: string; name: string } | null;
 }
+
+/** One of the 126 wards and communes, with the official figures and what the map adds where it covers the unit. */
+export interface DirectoryUnit {
+  slug: string;
+  name: string;
+  kind: 'ward' | 'commune';
+  population: number;
+  areaKm2: number;
+  density: number;
+  covered: boolean;
+  scored: boolean;
+  top: { type: string; name: string; icon: string; score: number } | null;
+  metroNearest: { name: string; line: string; distanceM: number } | null;
+}
+
+export interface DirectoryResponse {
+  source: { title: string; publisher: string; url: string };
+  populationDate: string;
+  units: DirectoryUnit[];
+}

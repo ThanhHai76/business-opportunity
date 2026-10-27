@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, shareReplay, throwError } from 'rxjs';
 import { OPPORTUNITY_API_URL } from '../config';
-import { AskAnswer, CompareResponse, Horizon, Lang, TypesResponse, WardDetail, WardsResponse, ParsedIdea } from './op.models';
+import { AskAnswer, CompareResponse, DirectoryResponse, Horizon, Lang, TypesResponse, WardDetail, WardsResponse, ParsedIdea } from './op.models';
 
 /** Message shown to the user when a request fails (never the raw HTTP error). */
 export function describeError(error: unknown, lang: Lang): string {
@@ -47,6 +47,10 @@ export class OpportunityService {
 
   wards(type: string | null, horizon: Horizon, lang: Lang): Observable<WardsResponse> {
     return this.cached('/wards', { horizon, lang, ...(type ? { type } : {}) });
+  }
+
+  directory(lang: Lang): Observable<DirectoryResponse> {
+    return this.cached('/directory', { lang });
   }
 
   ward(slug: string, horizon: Horizon, lang: Lang): Observable<WardDetail> {

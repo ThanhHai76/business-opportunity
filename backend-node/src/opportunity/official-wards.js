@@ -9,6 +9,16 @@
 const LIST = require('./data/ward-list-2025.json');
 
 const BY_NAME = new Map(LIST.units.map((u) => [u.name, u]));
+
+/** The address of a ward: "Phường Cầu Giấy" → "phuong-cau-giay" (the same rule the map data was built with). */
+const slugify = (name) =>
+  name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/đ/gi, 'd')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 const POPULATION_DATE = '2025-07-01';
 
 /** Sets the population of each ward to the official figure. Returns what changed, for the log. */
@@ -25,4 +35,4 @@ function applyOfficialPopulation(wards) {
   return changed;
 }
 
-module.exports = { LIST, applyOfficialPopulation, POPULATION_DATE };
+module.exports = { LIST, applyOfficialPopulation, POPULATION_DATE, slugify };

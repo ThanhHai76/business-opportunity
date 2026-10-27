@@ -58,6 +58,8 @@ export const routes: Routes = [
     path: 'property-intelligence',
     loadChildren: () => import('./property-intel/pi.routes').then((m) => m.PROPERTY_INTEL_ROUTES),
   },
+  { path: 'phuong-xa', title: 'Phường/xã của Hà Nội · Hanoi Century Vista', loadComponent: () => import('./pages/wards/wards.component').then((m) => m.WardsComponent) },
+  { path: 'phuong-xa/:slug', title: 'Phường/xã Hà Nội · Hanoi Century Vista', loadComponent: () => import('./pages/wards/ward-page.component').then((m) => m.WardPageComponent) },
   { path: 'terms', title: 'Điều khoản sử dụng · Hanoi Century Vista', data: { kind: 'terms' }, loadComponent: () => import('./pages/legal/legal.component').then((m) => m.LegalComponent) },
   { path: 'privacy', title: 'Quyền riêng tư · Hanoi Century Vista', data: { kind: 'privacy' }, loadComponent: () => import('./pages/legal/legal.component').then((m) => m.LegalComponent) },
   { path: 'refund', title: 'Chính sách hoàn tiền · Hanoi Century Vista', data: { kind: 'refund' }, loadComponent: () => import('./pages/legal/legal.component').then((m) => m.LegalComponent) },

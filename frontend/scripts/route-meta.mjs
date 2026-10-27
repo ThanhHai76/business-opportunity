@@ -4,7 +4,7 @@
 //
 // The titles come from src/app/app.routes.ts and the descriptions from src/app/services/seo.service.ts, so there is one
 // place to edit them. SITE_URL=https://example.com npm run build  for another address.
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -67,4 +67,23 @@ for (const path of PAGES) {
   out = setTag(out, '<meta name="twitter:description"', esc(description));
   writeFileSync(join(dist, `${path}.html`), out);
 }
-console.log(`route-meta: ${PAGES.length} pages written to ${dist}`);
+// The page of each ward and commune, and the list of them (figures from the same data as the pages: npm run data:wardpages in backend-node).
+const wardFile = join(root, 'scripts', 'ward-pages.json');
+const wards = existsSync(wardFile) ? JSON.parse(readFileSync(wardFile, 'utf8')) : [];
+const write = (relative, title, description, url) => {
+  let out = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`);
+  out = setTag(out, '<meta name="description"', esc(description));
+  out = out.replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${url}$2`);
+  out = setTag(out, '<meta property="og:title"', esc(title));
+  out = setTag(out, '<meta property="og:description"', esc(description));
+  out = setTag(out, '<meta property="og:url"', url);
+  out = setTag(out, '<meta name="twitter:title"', esc(title));
+  out = setTag(out, '<meta name="twitter:description"', esc(description));
+  writeFileSync(join(dist, relative), out);
+};
+if (wards.length) {
+  mkdirSync(join(dist, 'phuong-xa'), { recursive: true });
+  write('phuong-xa.html', 'Phường/xã Hà Nội: dân số, diện tích, ga metro, ngành nổi bật · Hanoi Century Vista', 'Danh bạ 126 phường/xã của Hà Nội sau sắp xếp 2025: dân số, diện tích, mật độ, ga metro gần nhất và ngành có điểm cơ hội cao nhất, từ dữ liệu có nguồn.', `${site}/phuong-xa`);
+  for (const w of wards) write(join('phuong-xa', `${w.slug}.html`), w.title, w.description, `${site}/phuong-xa/${w.slug}`);
+}
+console.log(`route-meta: ${PAGES.length} pages and ${wards.length ? wards.length + 1 : 0} ward pages written to ${dist}`);

@@ -34,6 +34,7 @@ Cập nhật lần cuối: 23/10/2026. Đánh dấu `[x]` khi xong. Hướng d�
 - [ ] Bật CSP (chính sách nội dung) sau khi thử kỹ vì bản đồ và font tải từ nhiều nguồn.
 - [ ] Thử trên Safari, iPhone và điện thoại Android thật (mới thử bằng Chrome và giả lập).
 - [ ] Đo tải của một máy chủ nhỏ.
+- [x] Trang riêng cho 126 phường/xã (`/phuong-xa/<tên>`, có trong sitemap và có ảnh xem trước riêng, 27/10/2026). *47 đơn vị nằm ngoài khu vực dữ liệu OSM chỉ có số liệu chính thức, chưa có điểm cơ hội.*
 - [x] Ảnh xem trước khi dán link: mỗi trang công cụ có tiêu đề, mô tả, link chuẩn và thẻ chia sẻ riêng (`frontend/scripts/route-meta.mjs`, 26/10/2026). *Chưa thử dán link thật vào Facebook/Zalo (cần địa chỉ công khai); ảnh xem trước vẫn dùng chung một ảnh `og-image.png`.*
 - [x] Trang chủ có phần "Bạn đang cần gì?" dẫn người mới tới đúng công cụ (26/10/2026).
 - [x] Rà cấu trúc truy cập (nhãn nút, ô nhập, h1, vùng main) ở 9 trang bằng Chrome: đã sửa trang Mở gì ở đâu, Hà Nội tương lai, bản đồ BĐS. *Chưa rà độ tương phản màu, thứ tự Tab và đọc bằng trình đọc màn hình.*

@@ -155,6 +155,8 @@ npm start        # = ng serve, chạy tại http://localhost:4200
 Trên localhost frontend gọi backend tại `http://localhost:8000`; khi deploy (tên miền khác localhost) frontend gọi `/api` trên **chính tên miền
 của trang** — nginx chuyển tiếp sang backend (`frontend/nginx.conf`). Cấu hình trong `frontend/src/app/config.ts`.
 
+**Trang riêng cho từng phường/xã** (`/phuong-xa` và `/phuong-xa/<tên>`, 126 đơn vị): số liệu chính thức (dân số 1/7/2025, diện tích, mật độ) cho mọi đơn vị; nơi bản đồ OSM đã phủ có thêm ga metro gần nhất, ngành có điểm cao nhất và nút "Báo sai số liệu"; đơn vị chưa phủ ghi rõ "chưa có dữ liệu bản đồ". Dữ liệu từ `GET /api/opportunity/directory`. Tiêu đề/mô tả/sitemap của 127 trang lấy từ `frontend/scripts/ward-pages.json`, tạo bằng `npm run data:wardpages` trong `backend-node/` (chạy lại mỗi khi đổi dữ liệu phường).
+
 **Ảnh xem trước khi chia sẻ link** (Facebook, Zalo, Messenger đọc thẻ trong file HTML, không chạy JavaScript): sau `ng build`, `npm run build` chạy
 `scripts/route-meta.mjs` tạo thêm `career.html`, `opportunity-map.html`… — bản sao của `index.html` với tiêu đề, mô tả, link chuẩn và thẻ chia sẻ riêng
 của từng trang (tiêu đề lấy từ `app.routes.ts`, mô tả từ `seo.service.ts`). `frontend/nginx.conf` phục vụ `/career` từ `career.html`.

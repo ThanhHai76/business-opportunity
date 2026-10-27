@@ -224,6 +224,25 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     await page.waitFor(`document.documentElement.lang === 'vi'`, 'back to Vietnamese');
   });
 
+  it('wards and communes: the directory finds a unit without accents, its page shows the figures, and an uncovered unit says so', async () => {
+    await fresh('/phuong-xa');
+    await page.waitFor(`document.querySelectorAll('.wd__card').length === 126`, 'the 126 units');
+    await page.type('input[type=search]', 'cau giay');
+    await page.waitFor(`document.querySelectorAll('.wd__card').length === 1`, 'the search to narrow the list');
+    await page.click('.wd__card');
+    await page.waitFor(`location.pathname === '/phuong-xa/phuong-cau-giay' && document.querySelector('h1')?.textContent === 'Phường Cầu Giấy'`, 'the page of Phường Cầu Giấy');
+    assert.match(await page.text('.wp'), /74.516 người/);
+    assert.match(await page.text('.wp'), /Chùa Hà/);
+    assert.equal(await page.evaluate('document.title'), 'Phường Cầu Giấy, Hà Nội · Hanoi Century Vista');
+    // A unit outside the map's area has the official figures only.
+    await page.goto(site.origin + '/phuong-xa/xa-soc-son');
+    await page.waitFor(`document.querySelector('h1')?.textContent === 'Xã Sóc Sơn'`, 'the page of Xã Sóc Sơn');
+    assert.match(await page.text('.wp'), /Bản đồ chưa phủ khu vực này/);
+    // And the page follows the site's language.
+    await page.click('.lang-toggle');
+    await page.waitFor(`/Official figures/.test(document.querySelector('.wp')?.textContent ?? '')`, 'the English page');
+  });
+
   it('left no uncaught error in the page', () => {
     assert.deepEqual(page.errors, []);
   });

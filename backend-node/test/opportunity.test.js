@@ -197,3 +197,42 @@ describe('Business Opportunity Map API', () => {
     assert.ok(Math.abs(w.score - Math.max(0, Math.min(100, w.demand - 0.4 * w.competition))) < 0.2);
   });
 });
+
+describe('Directory of the 126 wards and communes', () => {
+  let server;
+  let base;
+  before(async () => {
+    const created = createApp({ log: false, living: { config: loadConfig({ DATA_SOURCE: 'memory' }) }, premium: { mode: 'off' } });
+    server = await new Promise((resolve) => {
+      const s = created.app.listen(0, '127.0.0.1', () => resolve(s));
+    });
+    base = `http://127.0.0.1:${server.address().port}/api/opportunity`;
+  });
+  after(() => new Promise((resolve) => server.close(resolve)));
+
+  it('lists all 126 units with the official figures, and the map\'s data only for the ones it covers', async () => {
+    const res = await fetch(`${base}/directory`);
+    assert.equal(res.status, 200);
+    const { units, source } = await res.json();
+    assert.equal(units.length, 126);
+    assert.equal(new Set(units.map((u) => u.slug)).size, 126);
+    assert.equal(units.filter((u) => u.kind === 'ward').length, 51);
+    assert.ok(units.every((u) => u.population > 0 && u.areaKm2 > 0 && u.density > 0));
+    assert.match(source.url, /^https:\/\//);
+    const covered = units.filter((u) => u.covered);
+    assert.equal(covered.length, M.DATA.wards.length);
+    // Every ward of the map is one of the 126, found by the same address the map uses.
+    assert.deepEqual(M.DATA.wards.filter((w) => !units.some((u) => u.slug === w.slug)).map((w) => w.slug), []);
+    assert.ok(units.filter((u) => !u.covered).every((u) => u.top === null && u.scored === false && u.metroNearest === null));
+    const cg = units.find((u) => u.slug === 'phuong-cau-giay');
+    assert.ok(cg.covered && cg.scored && cg.top.score > 0 && /^\p{Extended_Pictographic}/u.test(cg.top.icon));
+    assert.equal(cg.metroNearest.name.length > 0, true);
+  });
+
+  it('names the sector in the language asked for', async () => {
+    const vi = (await (await fetch(`${base}/directory`)).json()).units.find((u) => u.slug === 'phuong-cau-giay').top.name;
+    const en = (await (await fetch(`${base}/directory?lang=en`)).json()).units.find((u) => u.slug === 'phuong-cau-giay').top.name;
+    assert.notEqual(vi, en);
+    assert.equal((await fetch(`${base}/directory?lang=fr`)).status, 400);
+  });
+});
