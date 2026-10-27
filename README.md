@@ -84,6 +84,14 @@ Cả năm công cụ (Bản đồ Cơ hội Kinh doanh, Hanoi Time Machine, Hano
 (chọn thành phố / mục lục chương / Khám phá · So sánh · AI · Đã lưu · Cá nhân). Chiều cao thanh chung là biến CSS `--site-nav-h` (`styles.css`);
 trang chiếm cả khung nhìn phải trừ biến này thay vì dùng `100vh`.
 
+### Ngôn ngữ chung (Việt / Anh)
+
+Nút **VI/EN** trên thanh chung đổi ngôn ngữ của **cả trang**: thanh chung, Trang chủ, Premium, đăng nhập/tài khoản, các trang qua email, Điều khoản, Quyền riêng tư, Hoàn tiền và cả sáu công cụ.
+`SiteLangService` (`frontend/src/app/services/site-lang.service.ts`) giữ một lựa chọn duy nhất (`localStorage` `hanoi100.lang`; `?lang=en` trên địa chỉ thắng và được cập nhật khi đổi);
+nó cũng ghi khoá cũ của từng công cụ và `<html lang>`. Mỗi công cụ vẫn có nút riêng, gọi `site.set()`, và theo dõi `site.lang()` nên đổi ở đâu cũng đổi cả trang không cần tải lại.
+Lời của từng phần nằm cạnh nó: `site-nav.i18n.ts`, `home.i18n.ts`, `account.i18n.ts`, `auth-link.i18n.ts`, `premium.i18n.ts`, `legal-content.ts` (bản tiếng Anh của Điều khoản chỉ là bản dịch tham khảo: bản tiếng Việt là bản có hiệu lực).
+Thông báo lỗi của máy chủ là tiếng Việt: bản tiếng Anh dịch theo mã lỗi (`ERROR_EN`). Test: `site-lang.service.spec.ts`, và luồng "một ngôn ngữ cho cả trang" trong `backend-node/e2e/flows.e2e.js`.
+
 ### Giao diện sáng / tối
 
 Nút mặt trăng/mặt trời trên thanh chung đổi giao diện cho **toàn bộ** ứng dụng (Trang chủ, Cơ hội Kinh doanh, Time Machine, Living Score, Future Map, Property Intelligence).
@@ -179,8 +187,14 @@ trong trình duyệt được **chuyển vào tài khoản** (bản mới hơn t
 | POST | `/register` · `/login` · `/logout` | Đăng ký · đăng nhập (đặt cookie) · đăng xuất |
 | PATCH · DELETE | `/me` | Đổi tên hiển thị · xoá tài khoản (cần mật khẩu) |
 | POST | `/me/password` | Đổi mật khẩu |
+| POST | `/me/export` | **Tải về dữ liệu của tôi**: `{ password }` → một tệp JSON (tài khoản, báo cáo và kế hoạch đã lưu, đơn hàng, báo cáo trả phí, lượt hỏi AI, báo cáo sai số liệu đã gửi; không có mật khẩu hay phiên). 5 lần/giờ mỗi địa chỉ. Nút "Tải về dữ liệu của tôi" trong mục Tài khoản |
 | GET · PUT · DELETE | `/reports` | Danh sách · lưu (cùng ngành + phường + mốc thì thay bản cũ) · xoá tất cả |
 | POST · DELETE | `/reports/import` · `/reports/:id` | Chuyển báo cáo từ trình duyệt vào tài khoản · xoá một báo cáo |
+
+**Kiểm thử đầu-cuối** (`backend-node/e2e/`): `cd frontend && npm run build`, rồi `cd backend-node && npm run test:e2e`. Chạy bằng **Chrome thật trên máy** (không thêm gói nào): backend thật
+(store trong bộ nhớ, cổng thanh toán giả, hộp thư giả đọc được) và frontend đã build, trên cùng một địa chỉ (`127.0.0.2`). Bảy luồng: trang chủ → La bàn nghề nghiệp
+(và bản tiếng Anh) · trả lời, lập kế hoạch 30 ngày, tick việc, tải lại vẫn còn · đăng ký, nút mắt, đọc email, xác minh, đăng xuất, sai mật khẩu, đăng nhập · báo sai số liệu ·
+tải về dữ liệu · mua Premium bằng cổng giả · không có lỗi JavaScript. Không có Chrome hoặc chưa build thì cả bộ bị bỏ qua và nói lý do; `npm test` không chạy bộ này.
 
 **Kiểm thử**: `npm test` chạy bộ kiểm thử tài khoản trên store trong bộ nhớ; đặt `TEST_DATABASE_URL=postgres://…` (database dùng một lần —
 bảng bị xoá sạch) để chạy cùng bộ đó trên PostgreSQL thật.

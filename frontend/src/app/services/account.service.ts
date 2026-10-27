@@ -2,6 +2,8 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, map, tap } from 'rxjs';
 import { ACCOUNT_API_URL } from '../config';
+import { ERROR_EN } from '../components/account/account.i18n';
+import { siteLangNow } from './site-lang.service';
 
 export interface AccountUser {
   id: string;
@@ -17,12 +19,15 @@ const opts = { withCredentials: true } as const;
 
 /** A readable message for an accounts API error (the server answers { code, message } in Vietnamese). */
 export function accountError(error: unknown): string {
+  const en = siteLangNow() === 'en';
   if (error instanceof HttpErrorResponse) {
-    if (error.status === 0) return 'Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.';
-    const message = (error.error as { message?: unknown } | null)?.message;
-    if (typeof message === 'string') return message;
+    if (error.status === 0) return en ? 'Cannot reach the server. Check your connection and try again.' : 'Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.';
+    const body = error.error as { message?: unknown; code?: unknown } | null;
+    // The server's messages are in Vietnamese: a reader of English gets the meaning of its code.
+    if (en && typeof body?.code === 'string' && ERROR_EN[body.code]) return ERROR_EN[body.code];
+    if (typeof body?.message === 'string' && !en) return body.message;
   }
-  return 'Có lỗi xảy ra, vui lòng thử lại.';
+  return en ? 'Something went wrong. Please try again.' : 'Có lỗi xảy ra, vui lòng thử lại.';
 }
 
 /**
@@ -101,6 +106,11 @@ export class AccountService {
 
   resendVerification(): Observable<unknown> {
     return this.http.post(`${ACCOUNT_API_URL}/verify-email/send`, null, opts);
+  }
+
+  /** Everything the account holds (the password is asked again). The page saves it as a file: see downloadJson(). */
+  exportData(password: string): Observable<unknown> {
+    return this.http.post<unknown>(`${ACCOUNT_API_URL}/me/export`, { password }, opts);
   }
 
   deleteAccount(password: string): Observable<void> {

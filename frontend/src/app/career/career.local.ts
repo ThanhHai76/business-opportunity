@@ -1,26 +1,15 @@
-import { OP_LANG_KEY } from '../opportunity/op-i18n';
+import { initialSiteLang } from '../services/site-lang.service';
 import { AREAS, CHANNELS, CONTEXT, Channel, DIRECTIONS, Direction, Fact, POLICIES, Policy, SIGNALS, Source, WorkArea } from './career.data';
 import { EN_AREAS, EN_CHANNELS, EN_CONTEXT, EN_DIRECTIONS, EN_POLICIES, EN_SIGNALS, EN_SOURCE_KIND, EN_SOURCE_TITLES } from './career.en';
 
 /** The page is written in Vietnamese and English; the figures and their sources are the same in both. */
 export type CareerLang = 'vi' | 'en';
 
-/** The same key as the Business Opportunity Map, so one choice of language holds across both pages. */
-export const CAREER_LANG_KEY = OP_LANG_KEY;
-
 /** The locale for numbers and dates. */
 export const localeOf = (lang: CareerLang): string => (lang === 'en' ? 'en-GB' : 'vi-VN');
 
-/** The language in the address (?lang=en), else the one remembered in this browser, else Vietnamese. */
-export function initialCareerLang(): CareerLang {
-  try {
-    const fromUrl = new URLSearchParams(location.search).get('lang');
-    if (fromUrl === 'vi' || fromUrl === 'en') return fromUrl;
-    return localStorage.getItem(CAREER_LANG_KEY) === 'en' ? 'en' : 'vi';
-  } catch {
-    return 'vi';
-  }
-}
+/** The site's language: ?lang=en in the address, else the one chosen anywhere on the site, else Vietnamese. */
+export const initialCareerLang = (): CareerLang => initialSiteLang();
 
 const directionCache = new Map<string, Direction>();
 

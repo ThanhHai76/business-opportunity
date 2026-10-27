@@ -1,3 +1,4 @@
+import { SiteLangService, initialSiteLang } from '../../services/site-lang.service';
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewEncapsulation, effect, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LANDMARK_PHOTOS, LandmarkPhoto } from './time-machine-photos';
@@ -24,11 +25,7 @@ const PD_VI = 'Phạm vi công cộng';
 const VI_TICKER = ['ĐANG HIỆU CHỈNH DÒNG THỜI GIAN', 'ĐANG TẢI DỮ LIỆU 1926', 'ĐANG TẢI KỊCH BẢN 2100', 'SẴN SÀNG MỞ CỔNG THỜI GIAN'];
 
 function readLang(): Lang {
-  try {
-    return localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'vi';
-  } catch {
-    return 'vi';
-  }
+  return initialSiteLang();
 }
 
 /** Eras whose photo can stand as "then" in the before/after comparison, oldest first. */
@@ -62,6 +59,11 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
   private readonly account = inject(AccountService);
   private readonly billing = inject(BillingService);
   private readonly router = inject(Router);
+  private readonly site = inject(SiteLangService);
+  private readonly followSiteLang = effect(() => {
+    const next = this.site.lang();
+    if (next !== this.lang) this.setLang(next);
+  });
   private realMap?: TmRealMap;
   /** Page language; Vietnamese is the source text, English comes from tm-i18n.ts. */
   private lang: Lang = readLang();
@@ -297,11 +299,8 @@ export class TimeMachineComponent implements AfterViewInit, OnDestroy {
 
   private setLang(lang: Lang): void {
     this.lang = lang;
-    try {
-      localStorage.setItem(LANG_KEY, lang);
-    } catch {
-      // storage blocked — the choice just isn't remembered
-    }
+    // One language for the whole site: the top bar and the other tools follow this button, and this page follows them.
+    this.site.set(lang);
     this.translateStatic();
     this.buildEraTicks();
     this.chat?.refresh();

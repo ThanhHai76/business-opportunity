@@ -1,12 +1,26 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, inject, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AccountService, accountError } from '../../services/account.service';
 import { BillingService } from '../../services/billing.service';
 import { LegalLinksComponent } from '../../pages/legal/legal-links.component';
+import { SiteLangService } from '../../services/site-lang.service';
 import { PasswordFieldComponent } from '../password-field/password-field.component';
+import { ACCOUNT_TEXT } from './account.i18n';
 
 type View = 'login' | 'register' | 'account';
+
+/** Hands a value to the browser as a downloaded .json file. */
+export function downloadJson(data: unknown, filename: string): void {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
 
 /**
  * Sign in / sign up, and — once signed in — the account: name, password, sign out, delete the account.
@@ -21,8 +35,8 @@ type View = 'login' | 'register' | 'account';
     <div class="ad-backdrop" (click)="close()"></div>
     <div class="ad" role="dialog" aria-modal="true" aria-labelledby="ad-title">
       <div class="ad__head">
-        <h2 id="ad-title">{{ account.user() ? 'Tài khoản' : view() === 'register' ? 'Tạo tài khoản' : 'Đăng nhập' }}</h2>
-        <button type="button" class="ad__x" (click)="close()" aria-label="Đóng">✕</button>
+        <h2 id="ad-title">{{ account.user() ? tx().titleAccount : view() === 'register' ? tx().titleRegister : tx().titleLogin }}</h2>
+        <button type="button" class="ad__x" (click)="close()" [attr.aria-label]="tx().close">✕</button>
       </div>
 
       @if (account.user(); as u) {
@@ -32,11 +46,11 @@ type View = 'login' | 'register' | 'account';
             <small>{{ u.email }}</small>
           }
         </p>
-        <p class="ad__note">Báo cáo bạn lưu trong công cụ Mở gì ở đâu được giữ trong tài khoản này và mở được trên mọi thiết bị.</p>
+        <p class="ad__note">{{ tx().noteSaved }}</p>
         @if (account.mail() && !u.emailVerified) {
           <div class="ad__verify" role="status">
-            <span>Email chưa được xác minh. Hãy mở liên kết trong email chúng tôi đã gửi.</span>
-            <button type="button" class="ad__btn" (click)="resend()" [disabled]="busy()">Gửi lại email xác minh</button>
+            <span>{{ tx().verifyNeeded }}</span>
+            <button type="button" class="ad__btn" (click)="resend()" [disabled]="busy()">{{ tx().resend }}</button>
           </div>
         }
 
@@ -44,93 +58,105 @@ type View = 'login' | 'register' | 'account';
           <div class="ad__plan">
             @if (billing.ai(); as ai) {
               <p>
-                <strong>{{ ai.premium ? 'Premium' : 'Gói miễn phí' }}</strong>
+                <strong>{{ ai.premium ? 'Premium' : tx().planFree }}</strong>
                 @if (ai.premium && ai.premiumUntil) {
-                  <small>đến {{ day(ai.premiumUntil) }}</small>
+                  <small>{{ tx().planUntil(day(ai.premiumUntil)) }}</small>
                 }
               </p>
               <p class="ad__hint">
-                Lượt AI chuyên sâu hôm nay: {{ ai.premium ? ai.premiumLeft + ' Premium + ' : '' }}{{ ai.freeLeft }} miễn phí · Hà Nội xưa và nay: {{ ai.storyFreeLeft }} miễn phí · đã mua: {{ ai.aiCredits }}
+                {{ tx().aiToday(ai.premium ? ai.premiumLeft : null, ai.freeLeft, ai.storyFreeLeft, ai.aiCredits) }}
               </p>
             }
-            <a class="ad__btn" routerLink="/premium" (click)="close()">{{ billing.ai()?.premium ? 'Quản lý gói' : 'Nâng cấp Premium' }}</a>
+            <a class="ad__btn" routerLink="/premium" (click)="close()">{{ billing.ai()?.premium ? tx().manage : tx().upgrade }}</a>
           </div>
         }
 
         <form class="ad__form" (submit)="$event.preventDefault(); saveName()">
           <label>
-            <span>Tên hiển thị</span>
+            <span>{{ tx().displayName }}</span>
             <input type="text" name="name" maxlength="80" autocomplete="nickname" [value]="u.displayName ?? ''" (input)="name.set($any($event.target).value)" />
           </label>
-          <button type="submit" class="ad__btn" [disabled]="busy()">Lưu tên</button>
+          <button type="submit" class="ad__btn" [disabled]="busy()">{{ tx().saveName }}</button>
         </form>
 
         <details class="ad__more">
-          <summary>Đổi mật khẩu</summary>
+          <summary>{{ tx().changePassword }}</summary>
           <form class="ad__form" (submit)="$event.preventDefault(); changePassword()">
             <label>
-              <span>Mật khẩu hiện tại</span>
+              <span>{{ tx().currentPassword }}</span>
               <app-password-field name="current" autocomplete="current-password" (valueChange)="password.set($event)" />
             </label>
             <label>
-              <span>Mật khẩu mới (ít nhất 8 ký tự)</span>
+              <span>{{ tx().newPassword }}</span>
               <app-password-field name="new" autocomplete="new-password" [minlength]="8" (valueChange)="newPassword.set($event)" />
             </label>
-            <button type="submit" class="ad__btn" [disabled]="busy()">Đổi mật khẩu</button>
-            <small class="ad__hint">Các thiết bị khác đang đăng nhập sẽ bị đăng xuất.</small>
+            <button type="submit" class="ad__btn" [disabled]="busy()">{{ tx().changePassword }}</button>
+            <small class="ad__hint">{{ tx().otherDevices }}</small>
+          </form>
+        </details>
+
+        <details class="ad__more">
+          <summary>{{ tx().exportTitle }}</summary>
+          <form class="ad__form" (submit)="$event.preventDefault(); exportData()">
+            <p class="ad__hint">{{ tx().exportHint }}</p>
+            <label>
+              <span>{{ tx().confirmPassword }}</span>
+              <app-password-field name="export" autocomplete="current-password" (valueChange)="password.set($event)" />
+            </label>
+            <button type="submit" class="ad__btn" [disabled]="busy()">{{ busy() ? tx().exportBusy : tx().exportButton }}</button>
           </form>
         </details>
 
         <details class="ad__more ad__danger">
-          <summary>Xoá tài khoản</summary>
+          <summary>{{ tx().deleteTitle }}</summary>
           <form class="ad__form" (submit)="$event.preventDefault(); deleteAccount()">
-            <p class="ad__hint">Xoá vĩnh viễn tài khoản và mọi báo cáo đã lưu. Không thể khôi phục.</p>
+            <p class="ad__hint">{{ tx().deleteHint }}</p>
             <label>
-              <span>Nhập mật khẩu để xác nhận</span>
+              <span>{{ tx().confirmPassword }}</span>
               <app-password-field name="confirm" autocomplete="current-password" (valueChange)="password.set($event)" />
             </label>
-            <button type="submit" class="ad__btn ad__btn--danger" [disabled]="busy()">Xoá tài khoản</button>
+            <button type="submit" class="ad__btn ad__btn--danger" [disabled]="busy()">{{ tx().deleteButton }}</button>
           </form>
         </details>
 
-        <button type="button" class="ad__btn ad__btn--primary" (click)="logout()" [disabled]="busy()">Đăng xuất</button>
+        <button type="button" class="ad__btn ad__btn--primary" (click)="logout()" [disabled]="busy()">{{ tx().signOut }}</button>
       } @else {
         <p class="ad__note">
-          {{ view() === 'register' ? 'Tạo tài khoản để giữ báo cáo đã lưu trên mọi thiết bị. Báo cáo đang có trong trình duyệt này sẽ được chuyển vào tài khoản.' : 'Đăng nhập để mở các báo cáo đã lưu trên mọi thiết bị.' }}
+          {{ view() === 'register' ? tx().noteRegister : tx().noteLogin }}
         </p>
         <form class="ad__form" (submit)="$event.preventDefault(); submit()">
           @if (view() === 'register') {
             <label>
-              <span>Tên hiển thị (không bắt buộc)</span>
+              <span>{{ tx().nameOptional }}</span>
               <input type="text" name="name" maxlength="80" autocomplete="nickname" (input)="name.set($any($event.target).value)" />
             </label>
           }
           <label>
-            <span>Email</span>
+            <span>{{ tx().email }}</span>
             <input #first type="email" name="email" autocomplete="email" required maxlength="254" (input)="email.set($any($event.target).value)" />
           </label>
           <label>
-            <span>Mật khẩu{{ view() === 'register' ? ' (ít nhất 8 ký tự)' : '' }}</span>
+            <span>{{ tx().password }}{{ view() === 'register' ? tx().passwordMin : '' }}</span>
             <app-password-field name="password" [minlength]="view() === 'register' ? 8 : null" [autocomplete]="view() === 'register' ? 'new-password' : 'current-password'" (valueChange)="password.set($event)" />
           </label>
           @if (view() === 'register') {
             <label class="ad__check">
               <input type="checkbox" name="terms" required (change)="terms.set($any($event.target).checked)" />
-              <span>Tôi đồng ý với <a routerLink="/terms" (click)="close()">Điều khoản sử dụng</a> và <a routerLink="/privacy" (click)="close()">Chính sách quyền riêng tư</a>.</span>
+              <span>{{ tx().termsPre }}<a routerLink="/terms" (click)="close()">{{ tx().termsLink }}</a>{{ tx().termsAnd }}<a routerLink="/privacy" (click)="close()">{{ tx().privacyLink }}</a>{{ tx().termsPost }}</span>
             </label>
           }
           <button type="submit" class="ad__btn ad__btn--primary" [disabled]="busy()">
-            {{ busy() ? 'Đang xử lý…' : view() === 'register' ? 'Tạo tài khoản' : 'Đăng nhập' }}
+            {{ busy() ? tx().working : view() === 'register' ? tx().create : tx().signIn }}
           </button>
           @if (view() === 'login' && account.mail()) {
-            <a class="ad__forgot" routerLink="/forgot-password" (click)="close()">Quên mật khẩu?</a>
+            <a class="ad__forgot" routerLink="/forgot-password" (click)="close()">{{ tx().forgot }}</a>
           }
         </form>
         <p class="ad__switch">
           @if (view() === 'register') {
-            Đã có tài khoản? <button type="button" (click)="switchTo('login')">Đăng nhập</button>
+            {{ tx().haveAccount }} <button type="button" (click)="switchTo('login')">{{ tx().signIn }}</button>
           } @else {
-            Chưa có tài khoản? <button type="button" (click)="switchTo('register')">Tạo tài khoản</button>
+            {{ tx().noAccount }} <button type="button" (click)="switchTo('register')">{{ tx().create }}</button>
           }
         </p>
       }
@@ -325,6 +351,9 @@ export class AccountDialogComponent implements AfterViewInit {
   protected readonly billing = inject(BillingService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
+  private readonly site = inject(SiteLangService);
+  /** The dialog's words, in the site's language. */
+  protected readonly tx = computed(() => ACCOUNT_TEXT[this.site.lang()]);
   protected readonly view = signal<View>('login');
   protected readonly email = signal('');
   protected readonly password = signal('');
@@ -345,7 +374,7 @@ export class AccountDialogComponent implements AfterViewInit {
 
   @HostListener('document:keydown.escape')
   protected day(iso: string): string {
-    return new Date(iso).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' });
+    return new Date(iso).toLocaleDateString(this.site.lang() === 'en' ? 'en-GB' : 'vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' });
   }
 
   protected close(): void {
@@ -358,15 +387,15 @@ export class AccountDialogComponent implements AfterViewInit {
     setTimeout(() => this.host.nativeElement.querySelector<HTMLInputElement>('input')?.focus());
   }
 
-  private run(call: Observable<unknown>, onDone: () => void): void {
+  private run<T = unknown>(call: Observable<T>, onDone: (value: T) => void): void {
     if (this.busy()) return;
     this.busy.set(true);
     this.error.set(null);
     this.done.set(null);
     call.subscribe({
-      next: () => {
+      next: (value) => {
         this.busy.set(false);
-        onDone();
+        onDone(value);
       },
       error: (e: unknown) => {
         this.busy.set(false);
@@ -382,25 +411,32 @@ export class AccountDialogComponent implements AfterViewInit {
     const registering = this.view() === 'register';
     this.run(call, () => {
       // A new account with email on: stay open and say where the verification mail went (it may be in the spam folder).
-      if (registering && this.account.mail()) this.done.set(`Đã tạo tài khoản. Chúng tôi vừa gửi email xác minh tới ${email}. Nếu chưa thấy thư, hãy kiểm tra cả mục Thư rác (Spam) và chọn "Không phải thư rác".`);
+      if (registering && this.account.mail()) this.done.set(this.tx().doneRegistered(email));
       else this.close();
     });
   }
 
   protected resend(): void {
-    this.run(this.account.resendVerification(), () => this.done.set('Đã gửi email xác minh. Hãy kiểm tra hộp thư, và cả mục Thư rác (Spam) nếu chưa thấy.'));
+    this.run(this.account.resendVerification(), () => this.done.set(this.tx().doneResent));
   }
 
   protected saveName(): void {
-    this.run(this.account.updateName(this.name()), () => this.done.set('Đã lưu tên.'));
+    this.run(this.account.updateName(this.name()), () => this.done.set(this.tx().doneName));
   }
 
   protected changePassword(): void {
-    this.run(this.account.changePassword(this.password(), this.newPassword()), () => this.done.set('Đã đổi mật khẩu.'));
+    this.run(this.account.changePassword(this.password(), this.newPassword()), () => this.done.set(this.tx().donePassword));
+  }
+
+  protected exportData(): void {
+    this.run(this.account.exportData(this.password()), (data) => {
+      downloadJson(data, `hanoi-century-vista-du-lieu-${new Date().toISOString().slice(0, 10)}.json`);
+      this.done.set(this.tx().doneExport);
+    });
   }
 
   protected deleteAccount(): void {
-    if (!confirm('Xoá vĩnh viễn tài khoản và mọi báo cáo đã lưu?')) return;
+    if (!confirm(this.tx().confirmDelete)) return;
     this.run(this.account.deleteAccount(this.password()), () => this.close());
   }
 

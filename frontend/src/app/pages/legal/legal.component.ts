@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { SiteLangService } from '../../services/site-lang.service';
 import { map } from 'rxjs';
 import { LEGAL, legalIncomplete } from './legal.config';
 import { LegalKind, legalDoc } from './legal-content';
@@ -13,15 +14,15 @@ import { LegalKind, legalDoc } from './legal-content';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="lg">
-      <nav class="lg__tabs" aria-label="Tài liệu pháp lý">
-        <a routerLink="/terms" [class.on]="kind() === 'terms'">Điều khoản</a>
-        <a routerLink="/privacy" [class.on]="kind() === 'privacy'">Quyền riêng tư</a>
-        <a routerLink="/refund" [class.on]="kind() === 'refund'">Hoàn tiền</a>
+      <nav class="lg__tabs" [attr.aria-label]="tx().aria">
+        <a routerLink="/terms" [class.on]="kind() === 'terms'">{{ tx().terms }}</a>
+        <a routerLink="/privacy" [class.on]="kind() === 'privacy'">{{ tx().privacy }}</a>
+        <a routerLink="/refund" [class.on]="kind() === 'refund'">{{ tx().refund }}</a>
       </nav>
       <h1>{{ doc().title }}</h1>
-      <p class="lg__meta">Có hiệu lực từ {{ effective }}</p>
+      <p class="lg__meta">{{ tx().effective }} {{ effective() }}</p>
       @if (incomplete) {
-        <p class="lg__warn" role="note">Bản nháp: thông tin đơn vị vận hành chưa được điền (legal.config.ts). Cần điền và nhờ chuyên gia pháp lý rà soát trước khi nhận thanh toán thật.</p>
+        <p class="lg__warn" role="note">{{ tx().draft }}</p>
       }
       <p class="lg__lead">{{ doc().lead }}</p>
       @for (s of doc().sections; track s.title) {
@@ -36,7 +37,7 @@ import { LegalKind, legalDoc } from './legal-content';
           }
         </section>
       }
-      <p class="lg__back"><a routerLink="/">← Về trang chủ</a></p>
+      <p class="lg__back"><a routerLink="/">{{ tx().back }}</a></p>
     </main>
   `,
   styles: `
@@ -60,7 +61,13 @@ import { LegalKind, legalDoc } from './legal-content';
 export class LegalComponent {
   private readonly route = inject(ActivatedRoute);
   protected readonly kind = toSignal(this.route.data.pipe(map((d) => d['kind'] as LegalKind)), { initialValue: 'terms' as LegalKind });
-  protected readonly doc = computed(() => legalDoc(this.kind()));
+  private readonly site = inject(SiteLangService);
+  protected readonly doc = computed(() => legalDoc(this.kind(), this.site.lang()));
+  protected readonly tx = computed(() =>
+    this.site.lang() === 'en'
+      ? { aria: 'Legal documents', terms: 'Terms', privacy: 'Privacy', refund: 'Refunds', effective: 'In force from', back: '← Back to the home page', draft: 'Draft: the details of the operator are not filled in yet (legal.config.ts). Fill them in and have a legal professional review the text before taking real payments.' }
+      : { aria: 'Tài liệu pháp lý', terms: 'Điều khoản', privacy: 'Quyền riêng tư', refund: 'Hoàn tiền', effective: 'Có hiệu lực từ', back: '← Về trang chủ', draft: 'Bản nháp: thông tin đơn vị vận hành chưa được điền (legal.config.ts). Cần điền và nhờ chuyên gia pháp lý rà soát trước khi nhận thanh toán thật.' },
+  );
   protected readonly incomplete = legalIncomplete();
-  protected readonly effective = new Date(LEGAL.effectiveDate).toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' });
+  protected readonly effective = computed(() => new Date(LEGAL.effectiveDate).toLocaleDateString(this.site.lang() === 'en' ? 'en-GB' : 'vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' }));
 }

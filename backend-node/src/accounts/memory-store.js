@@ -133,6 +133,14 @@ class MemoryStore {
     return [...(this.dataReports ?? [])].reverse().slice(0, limit);
   }
 
+  /** What else the account holds, for the data export: AI questions asked, and the reports of wrong figures it sent. */
+  async exportExtras(userId) {
+    return {
+      aiUsage: this.aiUsage.filter((u) => u.userId === userId).map((u) => ({ tool: u.tool, source: u.source, usedAt: u.usedAt })),
+      dataReports: (this.dataReports ?? []).filter((r) => r.userId === userId).map((r) => ({ kind: r.kind, target: r.target, targetName: r.targetName, page: r.page, message: r.message, contact: r.contact, status: r.status, createdAt: r.createdAt })),
+    };
+  }
+
   async listItems(userId, kind) {
     return [...this.items.values()]
       .filter((it) => it.userId === userId && it.kind === kind)
