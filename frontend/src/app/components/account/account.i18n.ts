@@ -13,6 +13,7 @@ export interface AccountText {
   planUntil: (day: string) => string;
   aiToday: (premiumLeft: number | null, free: number, story: number, bought: number) => string;
   manage: string;
+  adminReports: string;
   upgrade: string;
   displayName: string;
   saveName: string;
@@ -67,6 +68,7 @@ export const ACCOUNT_TEXT: Record<SiteLang, AccountText> = {
     planUntil: (day) => `đến ${day}`,
     aiToday: (premiumLeft, free, story, bought) => `Lượt AI chuyên sâu hôm nay: ${premiumLeft === null ? '' : `${premiumLeft} Premium + `}${free} miễn phí · Hà Nội xưa và nay: ${story} miễn phí · đã mua: ${bought}`,
     manage: 'Quản lý gói',
+    adminReports: 'Quản trị: báo sai số liệu',
     upgrade: 'Nâng cấp Premium',
     displayName: 'Tên hiển thị',
     saveName: 'Lưu tên',
@@ -119,6 +121,7 @@ export const ACCOUNT_TEXT: Record<SiteLang, AccountText> = {
     planUntil: (day) => `until ${day}`,
     aiToday: (premiumLeft, free, story, bought) => `In-depth AI questions today: ${premiumLeft === null ? '' : `${premiumLeft} Premium + `}${free} free · Hanoi Time Machine: ${story} free · bought: ${bought}`,
     manage: 'Manage plan',
+    adminReports: 'Admin: data error reports',
     upgrade: 'Upgrade to Premium',
     displayName: 'Display name',
     saveName: 'Save name',

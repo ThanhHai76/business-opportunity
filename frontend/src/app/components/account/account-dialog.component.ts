@@ -1,6 +1,8 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
+import { FEEDBACK_API_URL } from '../../config';
 import { AccountService, accountError } from '../../services/account.service';
 import { BillingService } from '../../services/billing.service';
 import { LegalLinksComponent } from '../../pages/legal/legal-links.component';
@@ -69,6 +71,10 @@ export function downloadJson(data: unknown, filename: string): void {
             }
             <a class="ad__btn" routerLink="/premium" (click)="close()">{{ billing.ai()?.premium ? tx().manage : tx().upgrade }}</a>
           </div>
+        }
+
+        @if (admin()) {
+          <a class="ad__btn" routerLink="/admin/reports" (click)="close()">{{ tx().adminReports }}</a>
         }
 
         <form class="ad__form" (submit)="$event.preventDefault(); saveName()">
@@ -349,6 +355,19 @@ export function downloadJson(data: unknown, filename: string): void {
 export class AccountDialogComponent implements AfterViewInit {
   protected readonly account = inject(AccountService);
   protected readonly billing = inject(BillingService);
+  private readonly http = inject(HttpClient);
+  /** Whether this account may read the reports of wrong figures (the server decides): shows the link to /admin/reports. */
+  protected readonly admin = signal(false);
+  private readonly adminCheck = effect(() => {
+    if (!this.account.user()) {
+      untracked(() => this.admin.set(false));
+      return;
+    }
+    this.http.get<{ admin: boolean }>(`${FEEDBACK_API_URL}/admin/me`, { withCredentials: true }).subscribe({
+      next: (r) => this.admin.set(r.admin === true),
+      error: () => this.admin.set(false),
+    });
+  });
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   private readonly site = inject(SiteLangService);

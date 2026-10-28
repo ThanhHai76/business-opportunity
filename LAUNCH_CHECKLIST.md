@@ -34,7 +34,7 @@ Cập nhật lần cuối: 23/10/2026. Đánh dấu `[x]` khi xong. Hướng d�
 - [ ] Bật CSP (chính sách nội dung) sau khi thử kỹ vì bản đồ và font tải từ nhiều nguồn.
 - [ ] Thử trên Safari, iPhone và điện thoại Android thật (mới thử bằng Chrome và giả lập).
 - [ ] Đo tải của một máy chủ nhỏ.
-- [x] Trang **giải thích điểm** bằng lời thường (`/giai-thich-diem`, song ngữ, 27/10/2026): ba loại điểm, cách tính, điều điểm số không nói. *Khi đổi công thức hoặc trọng số ở máy chủ, sửa `score-guide.i18n.ts` cho khớp.*
+- [x] Trang **giải thích điểm** bằng lời thường (`/giai-thich-diem`, song ngữ, 27/10/2026): ba loại điểm, cách tính, điều điểm số không nói. *Khi đổi công thức hoặc trọng số ở máy chủ, sửa `score-guide.i18n.ts` và `score-help.component.ts` cho khớp.* Có dấu **?** cạnh điểm ở Mở gì ở đâu, Điểm đáng sống và Chấm điểm bất động sản.
 - [x] Trang riêng cho 126 phường/xã (`/phuong-xa/<tên>`, có trong sitemap và có ảnh xem trước riêng, 27/10/2026). *47 đơn vị nằm ngoài khu vực dữ liệu OSM chỉ có số liệu chính thức, chưa có điểm cơ hội.*
 - [x] Ảnh xem trước khi dán link: mỗi trang công cụ có tiêu đề, mô tả, link chuẩn và thẻ chia sẻ riêng (`frontend/scripts/route-meta.mjs`, 26/10/2026). *Chưa thử dán link thật vào Facebook/Zalo (cần địa chỉ công khai); ảnh xem trước vẫn dùng chung một ảnh `og-image.png`.*
 - [x] Trang chủ có phần "Bạn đang cần gì?" dẫn người mới tới đúng công cụ (26/10/2026).

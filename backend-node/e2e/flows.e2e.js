@@ -238,11 +238,10 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     await page.type('.wardfind input', 'cau giay');
     await page.click('.wardfind button');
     await page.waitFor(`location.pathname === '/phuong-xa' && document.querySelectorAll('.wd__card').length === 1`, 'the list already narrowed to Cầu Giấy');
-    // From the top bar: the entry sits in the "Khám phá Hà Nội" group.
-    await page.goto(site.origin + '/career');
-    await page.clickText('.group-btn', 'Khám phá Hà Nội');
-    await page.clickText('.group-item', 'Phường/xã của Hà Nội');
-    await page.waitFor(`location.pathname === '/phuong-xa'`, 'the directory from the top bar');
+    // From the footer of the home page.
+    await page.goto(site.origin + '/');
+    await page.clickText('.ll a', 'Phường/xã');
+    await page.waitFor(`location.pathname === '/phuong-xa'`, 'the directory from the footer');
     await fresh('/phuong-xa');
     await page.waitFor(`document.querySelectorAll('.wd__card').length === 126`, 'the 126 units');
     await page.type('input[type=search]', 'cau giay');
@@ -273,6 +272,25 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     assert.equal(await page.evaluate('document.title'), 'Điểm số nghĩa là gì? · Hanoi Century Vista');
   });
 
+  it('the "?" next to a score in each of the three tools opens a short answer and leads to its section of the guide', async () => {
+    const cases = [
+      ['/opportunity-map', '.op-h app-score-help', 'opportunity'],
+      ['/living-score/area/phuong-van-mieu-quoc-tu-giam', 'h2.ls-section-title app-score-help', 'living'],
+      ['/property-intelligence/map?ward=phuong-cau-giay', '.score__text app-score-help', 'property'],
+    ];
+    for (const [pathname, host, topic] of cases) {
+      await fresh(pathname);
+      await page.waitFor(`!!document.querySelector(${JSON.stringify(host + ' .sh__btn')})`, `the "?" on ${pathname}`);
+      await page.click(host + ' .sh__btn');
+      await page.waitFor(`!!document.querySelector(${JSON.stringify(host + ' .sh__pop')})`, 'the short answer');
+      assert.match(await page.text(host + ' .sh__pop'), /0-100/);
+      await page.click(host + ' .sh__pop a');
+      await page.waitFor(`location.pathname === '/giai-thich-diem' && location.hash === '#${topic}'`, `the guide at #${topic}`);
+      // The section is in view (the page scrolled to it).
+      await page.waitFor(`(() => { const r = document.getElementById('${topic}')?.getBoundingClientRect(); return !!r && r.top >= 0 && r.top < window.innerHeight; })()`, `the "${topic}" section scrolled into view`);
+    }
+  });
+
   it('reports of wrong figures: sent by a visitor, read and sorted by the administrator, closed to others', async () => {
     const message = `Số dân của phường này khác danh sách chính thức (${Date.now()}).`;
     await fresh('/');
@@ -285,11 +303,21 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     await signUpByApi(`khach${++n}-${Date.now()}@example.com`);
     await page.goto(site.origin + '/admin/reports');
     await page.waitFor(`/không có quyền/.test(document.querySelector('.ar')?.textContent ?? '')`, 'the refusal');
+    // ...who is not shown the link in the account menu either.
+    await page.goto(site.origin + '/');
+    await page.click('.account-btn');
+    await page.waitFor(`!!document.querySelector('.ad__plan, .ad__form')`, 'the account menu');
+    await page.waitFor(`true`);
+    assert.equal(await page.evaluate(`!!document.querySelector('.ad a[href="/admin/reports"]')`), false);
 
     // The administrator sees the report and marks it fixed; the server keeps it.
     await fresh('/');
     await signUpByApi(site.adminEmail);
-    await page.goto(site.origin + '/admin/reports');
+    await page.goto(site.origin + '/');
+    await page.click('.account-btn');
+    await page.waitFor(`!!document.querySelector('.ad a[href="/admin/reports"]')`, 'the admin link in the account menu');
+    await page.click('.ad a[href="/admin/reports"]');
+    await page.waitFor(`location.pathname === '/admin/reports'`, 'the admin page from the account menu');
     await page.waitFor(`[...document.querySelectorAll('.ar__item')].some((i) => i.textContent.includes(${JSON.stringify(message)}))`, 'the report in the list');
     await page.evaluate(`[...document.querySelectorAll('.ar__item')].find((i) => i.textContent.includes(${JSON.stringify(message)})).querySelectorAll('.ar__actions button')[2].click()`);
     await page.waitFor(`[...document.querySelectorAll('.ar__item')].find((i) => i.textContent.includes(${JSON.stringify(message)}))?.dataset.status === 'fixed'`, 'the report to be marked fixed');

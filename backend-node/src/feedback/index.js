@@ -12,6 +12,7 @@
  * The person who runs the site reads them at /admin/reports (the page of the app), through:
  *   GET   /admin/reports?status=new|checked|fixed|rejected&limit=N   → { reports: [...] }
  *   PATCH /admin/reports/:id   { status }                              → { ok: true }
+ *   GET   /admin/me                                                    → { admin: boolean }  (never an error: the account menu asks it to show or hide the link)
  * Only a signed-in account whose email is verified and is listed in ADMIN_EMAILS (comma separated) may call them:
  * 401 when not signed in, 403 for anyone else (and for everyone while ADMIN_EMAILS is empty).
  *
@@ -103,12 +104,22 @@ function createFeedback({ accounts, rateLimits = {}, adminEmails = process.env.A
     }),
   );
 
+  const isAdmin = (user) => Boolean(user?.emailVerifiedAt) && admins.has(String(user.email).toLowerCase());
+
   /** The signed-in, verified administrator; throws 401 or 403. */
   async function requireAdmin(req, res) {
     const user = accounts.enabled ? await accounts.userOf(req, res) : null;
     if (!user) throw new AccountError(401, 'not_signed_in', 'Hãy đăng nhập.');
-    if (!user.emailVerifiedAt || !admins.has(String(user.email).toLowerCase())) throw new AccountError(403, 'forbidden', 'Tài khoản này không có quyền xem báo cáo.');
+    if (!isAdmin(user)) throw new AccountError(403, 'forbidden', 'Tài khoản này không có quyền xem báo cáo.');
   }
+
+  router.get(
+    '/admin/me',
+    wrap(async (req, res) => {
+      const user = accounts.enabled ? await accounts.userOf(req, res) : null;
+      res.set('Cache-Control', 'no-store').json({ admin: isAdmin(user) });
+    }),
+  );
 
   router.get(
     '/admin/reports',

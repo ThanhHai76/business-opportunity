@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EMPTY, catchError, map, switchMap, tap } from 'rxjs';
 import { CriterionBarComponent } from '../../components/criterion-bar/criterion-bar.component';
+import { ScoreHelpComponent } from '../../../components/score-help/score-help.component';
 import { IconComponent } from '../../components/icon/icon.component';
 import { ScoreRingComponent } from '../../components/score-ring/score-ring.component';
 import { StateMessageComponent } from '../../components/state-message/state-message.component';
@@ -19,6 +20,7 @@ import { PreferencesService } from '../../services/preferences.service';
   selector: 'app-area-detail',
   standalone: true,
   imports: [
+    ScoreHelpComponent,
     RouterLink,
     CriterionBarComponent,
     IconComponent,

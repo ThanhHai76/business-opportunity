@@ -82,7 +82,7 @@
         </header>
 
         <section class="ls-card block">
-          <h2 class="ls-section-title">{{ t().detail.breakdown }}</h2>
+          <h2 class="ls-section-title">{{ t().detail.breakdown }}<app-score-help topic="living" /></h2>
           <p class="block__lead">{{ t().detail.breakdownLead(a.dataInfo.areaCount) }}</p>
           <div class="bars">
             @for (row of a.breakdown; track row.criterion) {

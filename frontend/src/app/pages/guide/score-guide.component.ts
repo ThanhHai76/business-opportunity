@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SiteLangService } from '../../services/site-lang.service';
 import { GUIDE_TEXT } from './score-guide.i18n';
 
@@ -90,6 +91,15 @@ import { GUIDE_TEXT } from './score-guide.i18n';
 export class ScoreGuideComponent {
   private readonly site = inject(SiteLangService);
   protected readonly tx = computed(() => GUIDE_TEXT[this.site.lang()]);
+
+  constructor() {
+    // /giai-thich-diem#living (from the "?" next to a score) opens at that section, once it is drawn.
+    inject(ActivatedRoute)
+      .fragment.pipe(takeUntilDestroyed())
+      .subscribe((id) => {
+        if (id) setTimeout(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }));
+      });
+  }
 
   /** The links of the contents go to the section without changing the address (the router owns it). */
   protected jump(event: Event, id: string): void {

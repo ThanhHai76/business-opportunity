@@ -125,6 +125,12 @@ describe('Reports of wrong figures', () => {
       assert.equal((await (await signUp('khac@example.com', false))('GET', '/api/feedback/admin/reports')).status, 403);
     });
 
+    it('tells the account menu whether to show the link, without ever failing', async () => {
+      assert.deepEqual((await browser()('GET', '/api/feedback/admin/me')).body, { admin: false });
+      assert.deepEqual((await (await signUp('thuong2@example.com', true))('GET', '/api/feedback/admin/me')).body, { admin: false });
+      assert.deepEqual((await admin('GET', '/api/feedback/admin/me')).body, { admin: true });
+    });
+
     it('lists the reports, newest first, filters them by status and records a decision', async () => {
       const all = await admin('GET', '/api/feedback/admin/reports');
       assert.equal(all.status, 200);

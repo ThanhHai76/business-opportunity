@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { ScoreHelpComponent } from '../components/score-help/score-help.component';
 import { EMPTY, catchError, of, switchMap, tap } from 'rxjs';
 import { IconComponent } from '../living-score/components/icon/icon.component';
 import { ThemeService } from '../services/theme.service';
@@ -55,7 +56,7 @@ function initialLang(): Lang {
 @Component({
   selector: 'app-opportunity',
   standalone: true,
-  imports: [OpMapComponent, IconComponent, RouterLink, OpFeasibilityComponent, OpRadarComponent, OpBuyComponent, AiQuotaComponent, ReportIssueComponent],
+  imports: [ScoreHelpComponent, OpMapComponent, IconComponent, RouterLink, OpFeasibilityComponent, OpRadarComponent, OpBuyComponent, AiQuotaComponent, ReportIssueComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './opportunity.component.html',
   styleUrl: './opportunity.component.css',

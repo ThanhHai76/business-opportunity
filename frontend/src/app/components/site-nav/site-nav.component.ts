@@ -84,7 +84,7 @@ export class SiteNavComponent {
     const tabs = this.tabs();
     const g = this.nx().groups;
     return [
-      { id: 'explore', ...g.explore, tabs: [tabs[0], tabs[1], { path: '/phuong-xa', ...this.nx().wards, key: 'live' }] },
+      { id: 'explore', ...g.explore, tabs: [tabs[0], tabs[1]] },
       { id: 'biz', ...g.biz, tabs: [tabs[4], tabs[5]] },
       { id: 'property', ...g.property, tabs: [tabs[3], tabs[2]] },
     ];

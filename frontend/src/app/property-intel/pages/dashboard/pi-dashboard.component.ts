@@ -8,6 +8,7 @@ import { PiQualityComponent } from '../../components/pi-quality.component';
 import { SourceQuality, estimateCount, qualityText } from '../../components/pi-quality.view';
 import { PiAiPanelComponent } from '../../components/pi-ai-panel.component';
 import { LAND_STOPS, PiAreaMapComponent } from '../../components/pi-area-map.component';
+import { ScoreHelpComponent } from '../../../components/score-help/score-help.component';
 import { PiCompareComponent } from '../../components/pi-compare.component';
 import { PiDistancePipe, PiNumPipe, areaPoints, formatInt, formatNum, linePoints } from '../../pi-format';
 import { PiText } from '../../pi-i18n';
@@ -43,7 +44,7 @@ const LENSES: Lens[] = ['potential', 'connectivity', 'infrastructure', 'landPric
 @Component({
   selector: 'pi-dashboard',
   standalone: true,
-  imports: [RouterLink, PiAreaMapComponent, PiAiPanelComponent, PiCompareComponent, PiNumPipe, PiDistancePipe, PiQualityComponent],
+  imports: [ScoreHelpComponent, RouterLink, PiAreaMapComponent, PiAiPanelComponent, PiCompareComponent, PiNumPipe, PiDistancePipe, PiQualityComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pi-dashboard.component.html',
   styleUrl: './pi-dashboard.component.css',

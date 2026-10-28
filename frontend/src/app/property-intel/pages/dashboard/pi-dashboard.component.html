@@ -306,7 +306,7 @@
               <div class="score__num"><strong>{{ scoreView()?.score ?? d.score }}</strong><span>/100</span></div>
             </div>
             <div class="score__text">
-              <strong>{{ tx.ward.score }}</strong>
+              <strong>{{ tx.ward.score }}<app-score-help topic="property" /></strong>
               <p>
                 {{ tx.ward.rank(scoreView()?.rank ?? d.rank, d.total) }}
                 @if (scoreView()?.custom) {

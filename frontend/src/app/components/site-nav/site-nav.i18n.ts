@@ -7,7 +7,6 @@ export interface NavText {
   brandAria: string;
   chooseTool: string;
   tools: Record<ToolKey, { label: string; short: string; hint: string }>;
-  wards: { label: string; short: string; hint: string };
   groups: Record<'explore' | 'biz' | 'property', { label: string; hint: string }>;
   upgrade: string;
   premium: string;
@@ -48,7 +47,6 @@ export const NAV_TEXT: Record<SiteLang, NavText> = {
       biz: { label: 'Mở gì ở đâu', short: 'Mở gì ở đâu', hint: 'Phường nào nên mở gì, có lời không — dữ liệu OSM' },
       career: { label: 'La bàn nghề nghiệp', short: 'Nghề nghiệp', hint: 'Hướng nghề theo cách Hà Nội thay đổi, có nguồn' },
     },
-    wards: { label: 'Phường/xã của Hà Nội', short: 'Phường/xã', hint: 'Dân số, diện tích, ga metro của 126 phường/xã' },
     groups: {
       explore: { label: 'Khám phá Hà Nội', hint: 'Lịch sử, quy hoạch, tương lai' },
       biz: { label: 'Kinh doanh và việc làm', hint: 'Mở quán, tìm hướng nghề nghiệp' },
@@ -91,7 +89,6 @@ export const NAV_TEXT: Record<SiteLang, NavText> = {
       biz: { label: 'Business Opportunity Map', short: 'What to open', hint: 'Which ward suits which business, and does it pay — OSM data' },
       career: { label: 'Hanoi Career Compass', short: 'Careers', hint: 'Career paths as Hanoi changes, with sources' },
     },
-    wards: { label: 'Hanoi wards and communes', short: 'Wards', hint: 'Population, area and metro for all 126 wards and communes' },
     groups: {
       explore: { label: 'Explore Hanoi', hint: 'History, planning, the future' },
       biz: { label: 'Business and jobs', hint: 'Open a shop, find a career path' },

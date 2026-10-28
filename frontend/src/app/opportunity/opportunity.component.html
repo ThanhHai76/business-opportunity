@@ -129,7 +129,7 @@
       }
       <p class="op-plan__note">{{ t().plan.note }} {{ t().risk.note }}</p>
     }
-    <h2 class="op-h">{{ selectedType() ? t().rankingTitle(selectedType()!.name) : t().rankingAll }}</h2>
+    <h2 class="op-h">{{ selectedType() ? t().rankingTitle(selectedType()!.name) : t().rankingAll }}<app-score-help topic="opportunity" /></h2>
     @if (error(); as message) {
       <p class="op-error">{{ message }} <button type="button" class="op-link" (click)="retry()">{{ t().retry }}</button></p>
     }
