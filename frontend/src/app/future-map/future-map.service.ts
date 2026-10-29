@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, shareReplay, throwError } from 'rxjs';
 import { FUTURE_MAP_API_URL } from '../config';
-import { Answer, CompareResult, CorridorDetail, HubDetail, Lang, Question, RegionData, Scenario, Timeline } from './future-map.models';
+import { Answer, CompareResult, CorridorDetail, HubDetail, Lang, Outlook, Question, RegionData, Scenario, Timeline } from './future-map.models';
 
 /** Message shown to the user when a request fails (never the raw HTTP error). */
 export function describeError(error: unknown, lang: Lang = 'vi'): string {
@@ -42,6 +42,11 @@ export class FutureMapService {
 
   timeline(lang: Lang): Observable<Timeline> {
     return this.cached('/timeline', { lang });
+  }
+
+  /** What the plan says in words: viewpoint, the goal of each milestone, topics (each with sources). */
+  outlook(lang: Lang): Observable<Outlook> {
+    return this.cached('/outlook', { lang });
   }
 
   questions(lang: Lang): Observable<{ questions: Question[] }> {

@@ -32,6 +32,7 @@ import {
   Lang,
   LayerKey,
   MapView,
+  Outlook,
   Question,
   RegionData,
   Scenario,
@@ -62,8 +63,8 @@ const LAYERS: readonly LayerDef[] = [
 const ALL_LAYERS: ReadonlySet<LayerKey> = new Set(LAYERS.map((l) => l.key));
 const STATUSES: readonly Status[] = ['operating', 'construction', 'plan'];
 
-/** Concentric rings drawn on each timeline orb: one more ring for every step towards 2065. */
-const RING_SETS: ReadonlyArray<readonly number[]> = [[6], [6, 11], [6, 11, 16], [6, 11, 16, 19]];
+/** Concentric rings drawn on each timeline orb: one more ring for every step towards 2085. */
+const RING_SETS: ReadonlyArray<readonly number[]> = [[6], [6, 11], [6, 11, 16], [6, 11, 16, 19], [6, 11, 16, 19, 22]];
 
 const PLAY_INTERVAL_MS = 3400;
 const DEFAULT_YEAR = 2035;
@@ -150,6 +151,10 @@ export class FutureMapComponent {
   protected readonly compareError = signal<string | null>(null);
 
   protected readonly askOpen = signal(false);
+
+  protected readonly outlookOpen = signal(false);
+  protected readonly outlook = signal<Outlook | null>(null);
+  protected readonly outlookError = signal<string | null>(null);
   protected readonly questions = signal<Question[]>([]);
   protected readonly answer = signal<Answer | null>(null);
   protected readonly askedId = signal<string | null>(null);
@@ -336,6 +341,7 @@ export class FutureMapComponent {
     this.compare.set(null);
     if (this.askOpen()) this.loadQuestions();
     if (this.compareOpen()) this.loadCompare(this.compareYears());
+    if (this.outlookOpen()) this.loadOutlook();
   }
 
   // ------------------------------------------------------------- figures
@@ -426,6 +432,7 @@ export class FutureMapComponent {
   @HostListener('document:keydown.escape')
   protected onEscape(): void {
     if (this.compareOpen()) this.compareOpen.set(false);
+    else if (this.outlookOpen()) this.outlookOpen.set(false);
     else if (this.corridorSlug()) this.closeCorridor();
     else if (this.askOpen()) this.closeAsk();
     else if (this.sourcesOpen()) this.sourcesOpen.set(false);
@@ -512,6 +519,29 @@ export class FutureMapComponent {
     const slugs = this.answer()?.highlights ?? [];
     return this.hubList().filter((h) => slugs.includes(h.slug));
   });
+
+  // ------------------------------------------------------------- what the plan says
+  protected openOutlook(): void {
+    this.outlookOpen.set(true);
+    this.loadOutlook();
+  }
+
+  private loadOutlook(): void {
+    this.outlookError.set(null);
+    this.api
+      .outlook(this.lang())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => this.outlook.set(result),
+        error: (e: unknown) => this.outlookError.set(describeError(e, this.lang())),
+      });
+  }
+
+  /** The sources of a statement as links, from the ones the panel received. */
+  protected outlookSources(ids: readonly string[]): SourceRef[] {
+    const all = this.outlook()?.sources ?? {};
+    return [...new Set(ids)].filter((id) => all[id]).map((id) => ({ id, ...all[id] }));
+  }
 
   // ------------------------------------------------------------- compare
   protected openCompare(): void {

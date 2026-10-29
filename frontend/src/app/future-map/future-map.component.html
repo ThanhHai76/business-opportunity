@@ -328,6 +328,10 @@
         <span class="fm-tools__icon"><ls-icon name="scale" [size]="18" /></span>
         <span>{{ t().compareTool }}<small>{{ t().compareToolSub }}</small></span>
       </button>
+      <button type="button" (click)="openOutlook()">
+        <span class="fm-tools__icon"><ls-icon name="file" [size]="18" /></span>
+        <span>{{ t().outlookTool }}<small>{{ t().outlookToolSub }}</small></span>
+      </button>
       <button type="button" (click)="toggle3d()" [class.is-on]="mode3d()">
         <span class="fm-tools__icon"><ls-icon name="cube" [size]="18" /></span>
         <span>{{ t().tool3d }}<small>{{ mode3d() ? t().tool3dOn : t().tool3dOff }}</small></span>
@@ -447,6 +451,82 @@
       </div>
     }
   </footer>
+
+  <!-- What the plan says in words -->
+  @if (outlookOpen()) {
+    <div class="fm-modal" (click)="outlookOpen.set(false)">
+      <div class="fm-dialog fm-dialog--outlook fm-glass" role="dialog" aria-modal="true" aria-labelledby="fm-outlook-title" (click)="$event.stopPropagation()">
+        <div class="fm-panel-head">
+          <h2 id="fm-outlook-title">{{ t().outlookTitle }}</h2>
+          <button type="button" class="fm-x" (click)="outlookOpen.set(false)" [attr.aria-label]="t().close"><ls-icon name="x" [size]="16" /></button>
+        </div>
+        @if (outlookError(); as message) {
+          <p class="fm-error" role="alert">{{ message }}</p>
+        }
+        @if (outlook(); as o) {
+          <section class="fm-outlook__block">
+            <h3>{{ t().outlookViewpoint }}</h3>
+            <ul class="fm-outlook__list">
+              @for (v of o.viewpoint; track v.id) {
+                <li>
+                  {{ v.text }}
+                  <span class="fm-outlook__src">
+                    @for (src of outlookSources(v.sources); track src.id; let last = $last) {
+                      <a [attr.href]="src.url || null" target="_blank" rel="noopener noreferrer" [title]="src.title">{{ src.publisher }}</a>{{ last ? '' : ' · ' }}
+                    }
+                  </span>
+                </li>
+              }
+            </ul>
+          </section>
+
+          <section class="fm-outlook__block">
+            <h3>{{ t().outlookMilestones }}</h3>
+            <ol class="fm-outlook__steps">
+              @for (m of o.milestones; track m.year) {
+                <li>
+                  <strong class="fm-outlook__year">{{ m.year }}</strong>
+                  <div>
+                    <p>{{ m.goal }}</p>
+                    @if (m.grdp) {
+                      <p class="fm-outlook__grdp">{{ m.grdp }}</p>
+                    }
+                    <span class="fm-outlook__src">
+                      @for (src of outlookSources(m.goalSources.concat(m.grdpSources)); track src.id; let last = $last) {
+                        <a [attr.href]="src.url || null" target="_blank" rel="noopener noreferrer" [title]="src.title">{{ src.publisher }}</a>{{ last ? '' : ' · ' }}
+                      }
+                    </span>
+                  </div>
+                </li>
+              }
+            </ol>
+          </section>
+
+          <section class="fm-outlook__block">
+            <h3>{{ t().outlookTopics }}</h3>
+            @for (topic of o.topics; track topic.id) {
+              <h4>{{ topic.title }}</h4>
+              <ul class="fm-outlook__list">
+                @for (item of topic.items; track item.text) {
+                  <li>
+                    {{ item.text }}
+                    <span class="fm-outlook__src">
+                      @for (src of outlookSources(item.sources); track src.id; let last = $last) {
+                        <a [attr.href]="src.url || null" target="_blank" rel="noopener noreferrer" [title]="src.title">{{ src.publisher }}</a>{{ last ? '' : ' · ' }}
+                      }
+                    </span>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+          <p class="fm-dialog__note">{{ o.note }}</p>
+        } @else if (!outlookError()) {
+          <div class="fm-hubcard__loading"><span class="fm-spinner" aria-hidden="true"></span> {{ t().loadingShort }}</div>
+        }
+      </div>
+    </div>
+  }
 
   <!-- Compare milestones -->
   @if (compareOpen()) {

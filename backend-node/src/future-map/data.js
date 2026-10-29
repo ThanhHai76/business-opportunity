@@ -33,6 +33,36 @@ const SOURCES = {
     publisher: 'Quỹ Đầu tư phát triển TP Hà Nội',
     url: 'https://quydautuphattrien.hanoi.gov.vn/ban-tin/ha-noi-dinh-huong-9-cuc-phat-trien-565.html',
   },
+  qd2512Gov: {
+    title: 'Quyết định 2512/QĐ-UBND: nội dung chính của Quy hoạch tổng thể Thủ đô Hà Nội tầm nhìn 100 năm (15/5/2026)',
+    publisher: 'Báo điện tử Chính phủ (xaydungchinhsach.chinhphu.vn)',
+    url: 'https://xaydungchinhsach.chinhphu.vn/toan-van-quyet-dinh-so-2512-qd-ubnd-phe-duyet-quy-hoach-tong-the-thu-do-ha-noi-tam-nhin-100-nam-119260515164719871.htm',
+  },
+  qd2512Targets: {
+    title: 'Hà Nội phê duyệt Quy hoạch tổng thể Thủ đô tầm nhìn 100 năm (14/5/2026)',
+    publisher: 'Tạp chí Thị trường Tài chính Tiền tệ',
+    url: 'https://thitruongtaichinhtiente.vn/ha-noi-phe-duyet-quy-hoach-tong-the-thu-do-tam-nhin-100-nam-82905.html',
+  },
+  qd2512Congthuong: {
+    title: 'Hà Nội phê duyệt Quy hoạch tổng thể Thủ đô tầm nhìn 100 năm (15/5/2026)',
+    publisher: 'Tạp chí Công Thương',
+    url: 'https://tapchicongthuong.vn/ha-noi-phe-duyet-quy-hoach-tong-the-thu-do-tam-nhin-100-nam-517747.htm',
+  },
+  qd2512NhanDan: {
+    title: 'Hà Nội công bố Quy hoạch tổng thể Thủ đô tầm nhìn 100 năm (29/6/2026)',
+    publisher: 'Báo Nhân Dân',
+    url: 'https://nhandan.vn/ha-noi-cong-bo-quy-hoach-tong-the-thu-do-tam-nhin-100-nam-post972153.html',
+  },
+  qd2512PhapLuat: {
+    title: 'Xây dựng tương lai từ tầm nhìn trăm năm: Hà Nội bước vào kỷ nguyên vươn mình (29/6/2026)',
+    publisher: 'Báo Pháp Luật Việt Nam',
+    url: 'https://doanhnhan.baophapluat.vn/xay-dung-tuong-lai-tu-tam-nhin-tram-nam-ha-noi-buoc-vao-ky-nguyen-vuon-minh-df75c721.html',
+  },
+  qd2512Grdp: {
+    title: 'Hà Nội hướng tới thành phố toàn cầu, quy mô GRDP năm 2065 khoảng 1.920 tỷ USD',
+    publisher: 'Mekong ASEAN',
+    url: 'https://mekongasean.vn/ha-noi-huong-toi-thanh-pho-toan-cau-quy-mo-grdp-nam-2065-khoang-1920-ty-usd-52938.html',
+  },
   qd2512Population: {
     title: 'Hà Nội thông qua quy hoạch 100 năm (14/5/2026)',
     publisher: 'VnExpress',
@@ -135,6 +165,14 @@ const YEARS = [
     headline: { vi: 'Tầm nhìn: thành phố toàn cầu, phát triển cao và bền vững', en: 'Vision: a global city, highly and sustainably developed' },
     population: { min: 17, max: 19, note: { vi: 'dự báo; khống chế tối đa không quá 20 triệu', en: 'forecast; capped at 20 million' }, sources: ['qd2512Population'] },
     railKm: { value: 979, note: { vi: 'mạng lưới theo quy hoạch (979 km)', en: 'network in the plan (979 km)' }, sources: ['qd2512Rail'] },
+  },
+  {
+    year: 2085,
+    kind: 'vision',
+    label: { vi: 'Tầm nhìn 2085', en: '2085 vision' },
+    headline: { vi: 'Tầm nhìn: siêu đô thị bền vững, dân số giữ ổn định', en: 'Vision: a sustainable megacity with a stable population' },
+    population: { min: 17, max: 20, note: { vi: 'giữ ổn định giai đoạn 2066–2085, tối đa khoảng 20 triệu', en: 'kept stable in 2066–2085, at most about 20 million' }, sources: ['qd2512Targets', 'qd2512Grdp'] },
+    railKm: { value: 979, note: { vi: 'mạng lưới theo quy hoạch (979 km); các nguồn chưa nêu thêm sau 2065', en: 'network in the plan (979 km); the sources add nothing after 2065' }, sources: ['qd2512Rail'] },
   },
 ];
 const YEAR_VALUES = YEARS.map((y) => y.year);

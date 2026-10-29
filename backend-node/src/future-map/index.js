@@ -2,7 +2,8 @@
 /**
  * Hanoi Future Map API — mounted by server.js at /api/future-map. Every GET takes `lang=vi|en` (default vi).
  *
- *   GET  /timeline                      the plan milestones (2026 today, 2035, 2045, 2065) with headline figures
+ *   GET  /timeline                      the plan milestones (2026 today, 2035, 2045, 2065, 2085) with headline figures
+ *   GET  /outlook                       what the plan says in words: viewpoint, goal of each milestone, topics (each with sources)
  *   GET  /scenario?year=2035            every map layer for one milestone (GeoJSON), figures and their sources
  *   GET  /hubs/:slug?year=2035          one development pole: role, area, related lines and axes, sources
  *   GET  /compare?years=2026,2035,2065  figures side by side + change between the first and last milestone
@@ -91,6 +92,10 @@ function createFutureMap(options = {}) {
 
   router.get('/timeline', (req, res) => {
     res.json(scenarios.getTimeline(langOf(req.query.lang)));
+  });
+
+  router.get('/outlook', (req, res) => {
+    res.json(scenarios.getOutlook(langOf(req.query.lang)));
   });
 
   router.get('/scenario', (req, res) => {

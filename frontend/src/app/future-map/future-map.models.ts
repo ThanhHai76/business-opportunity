@@ -117,6 +117,15 @@ export interface CompareResult {
   note: string;
 }
 
+/** What the plan says in words: GET /outlook (backend-node src/future-map/outlook.js). Every statement lists its source ids. */
+export interface Outlook {
+  viewpoint: { id: string; text: string; sources: string[] }[];
+  milestones: { year: number; goal: string; goalSources: string[]; grdp: string | null; grdpSources: string[] }[];
+  topics: { id: string; title: string; items: { text: string; sources: string[] }[] }[];
+  sources: Record<string, Source>;
+  note: string;
+}
+
 export interface Question {
   id: string;
   text: string;

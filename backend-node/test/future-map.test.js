@@ -8,7 +8,7 @@ const { MockAnswerer } = require('../src/future-map/ai');
 const R = require('../src/future-map/region');
 
 const FM = '/api/future-map';
-const YEARS = [2026, 2035, 2045, 2065];
+const YEARS = [2026, 2035, 2045, 2065, 2085];
 
 describe('Hanoi Future Map data', () => {
   it('cites a known source for every map object and every figure', () => {
@@ -107,6 +107,36 @@ describe('Hanoi Future Map API', () => {
     assert.equal(body.years[2].stats.railKm, 979);
     assert.match(body.note, /không thay thế bản vẽ quy hoạch chính thức/);
     assert.ok(body.sources.qd2512.url.startsWith('https://'));
+  });
+
+  it('says in words what the plan sets: every statement has at least two known sources, in both languages', async () => {
+    for (const lang of ['vi', 'en']) {
+      const { status, body } = await get(`/outlook?lang=${lang}`);
+      assert.equal(status, 200);
+      const statements = [
+        ...body.viewpoint.map((v) => ({ text: v.text, sources: v.sources })),
+        ...body.milestones.map((m) => ({ text: m.goal, sources: m.goalSources })),
+        ...body.milestones.filter((m) => m.grdp).map((m) => ({ text: m.grdp, sources: m.grdpSources })),
+        ...body.topics.flatMap((t) => t.items),
+      ];
+      assert.ok(statements.length >= 10);
+      for (const item of statements) {
+        assert.ok(item.text.length > 10);
+        assert.ok(item.sources.length >= 2, `fewer than two sources: ${item.text}`);
+        for (const id of item.sources) assert.ok(body.sources[id]?.url.startsWith('https://'), `unknown source ${id}`);
+      }
+      // The milestones are the ones of the timeline, and nothing is said of a year the map does not have.
+      assert.deepEqual(body.milestones.map((m) => m.year), YEARS.slice(1));
+      assert.match(body.milestones.find((m) => m.year === 2045).grdp, lang === 'vi' ? /640 tỷ USD/ : /USD 640 billion/);
+      assert.deepEqual(body.topics.map((t) => t.id), ['heritage', 'economy']);
+    }
+  });
+
+  it('has a 2085 milestone with a stable population of at most 20 million', async () => {
+    const { body } = await get('/scenario?year=2085');
+    assert.equal(body.kind, 'vision');
+    assert.equal(body.stats.population.max, 20);
+    assert.equal(body.layers.hubs.features.length, 9);
   });
 
   it('returns every layer as valid GeoJSON inside the Hanoi area, in both languages', async () => {

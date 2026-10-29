@@ -27,7 +27,7 @@ const TOPICS = [
   ['population', ['dan so', 'trieu nguoi', 'population', 'people']],
   ['axes', ['truc', 'axis', 'axes', 'corridor']],
   ['poles', ['cuc', 'pole', 'do thi ve tinh', 'satellite', 'thanh pho truc thuoc']],
-  ['year-summary', ['quy hoach', 'plan', '2035', '2045', '2065', 'tuong lai', 'future']],
+  ['year-summary', ['quy hoach', 'plan', '2035', '2045', '2065', '2085', 'tuong lai', 'future']],
 ];
 
 class MockAnswerer {

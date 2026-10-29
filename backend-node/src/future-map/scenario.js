@@ -7,6 +7,7 @@ const { badRequest, notFound } = require('../living-score/common/http');
 const { bufferLine, circleLine, circleRing, distanceKm, lineLengthKm } = require('./geo');
 const D = require('./data');
 const R = require('./region');
+const O = require('./outlook');
 
 /** Plan sources (data.js) and Capital Region sources (region.js) share one id space. */
 const ALL_SOURCES = { ...D.SOURCES, ...R.REGION_SOURCES };
@@ -232,6 +233,43 @@ function getTimeline(langValue) {
     center: D.CENTER,
     sources: D.SOURCES,
     note: L(D.NOTE, lang),
+  };
+}
+
+/** What the plan says in words (outlook.js), each statement with the sources it was read in. */
+function getOutlook(langValue) {
+  const lang = requireLang(langValue);
+  const ids = new Set();
+  const take = (sources) => {
+    sources.forEach((id) => ids.add(id));
+    return sources;
+  };
+  const outlook = {
+    lang,
+    viewpoint: O.VIEWPOINT.map((v) => ({ id: v.id, text: L(v.text, lang), sources: take(v.sources) })),
+    milestones: O.MILESTONES.map((m) => ({
+      year: m.year,
+      goal: L(m.goal, lang),
+      goalSources: take(m.goalSources),
+      grdp: m.grdp ? L(m.grdp, lang) : null,
+      grdpSources: take(m.grdpSources),
+    })),
+    topics: O.TOPICS.map((t) => ({
+      id: t.id,
+      title: L(t.title, lang),
+      items: t.items.map((i) => ({ text: L(i.text, lang), sources: take(i.sources) })),
+    })),
+  };
+  return {
+    ...outlook,
+    sources: Object.fromEntries(sourceList([...ids]).map(({ id, ...src }) => [id, src])),
+    note: L(
+      {
+        vi: 'Tóm tắt từ báo chí và cổng thông tin chính thức; chỉ giữ những điều có ít nhất hai nguồn. Toàn văn Quyết định 2512/QĐ-UBND mới là căn cứ cuối cùng.',
+        en: 'A summary from the press and official portals, keeping only what at least two sources agree on. The full text of Decision 2512/QĐ-UBND is the final reference.',
+      },
+      lang,
+    ),
   };
 }
 
@@ -575,4 +613,4 @@ function getCorridor(slug, value, langValue) {
   };
 }
 
-module.exports = { getRegion, getCorridor, CORRIDOR_SLUGS: R.CORRIDORS.map((c) => c.slug), getScenario, getTimeline, getHub, compareYears, answerQuestion, questions, knowledge, sourceList, requireYear, requireLang, QUESTION_IDS, YEAR_VALUES: D.YEAR_VALUES, HUB_SLUGS: D.HUBS.map((h) => h.slug) };
+module.exports = { getOutlook, getRegion, getCorridor, CORRIDOR_SLUGS: R.CORRIDORS.map((c) => c.slug), getScenario, getTimeline, getHub, compareYears, answerQuestion, questions, knowledge, sourceList, requireYear, requireLang, QUESTION_IDS, YEAR_VALUES: D.YEAR_VALUES, HUB_SLUGS: D.HUBS.map((h) => h.slug) };
