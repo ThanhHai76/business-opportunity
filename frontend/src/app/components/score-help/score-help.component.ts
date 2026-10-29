@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { track } from '../../services/analytics';
 import { SiteLangService } from '../../services/site-lang.service';
 
 export type ScoreTopic = 'opportunity' | 'living' | 'property';
@@ -61,6 +62,7 @@ export class ScoreHelpComponent {
   protected toggle(event: Event): void {
     event.stopPropagation(); // the "?" sits inside headings and cards that react to clicks
     this.open.update((v) => !v);
+    if (this.open()) track('score_help', this.topic());
   }
 
   @HostListener('document:click', ['$event'])

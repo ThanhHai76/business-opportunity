@@ -29,6 +29,7 @@ export interface HomeText {
   eyebrow: string;
   title: string;
   sub: string;
+  heroSource: string;
   quickTitle: string;
   quickSub: string;
   quickTrust: string;
@@ -52,9 +53,10 @@ export interface HomeText {
 
 export const HOME_TEXT: Record<SiteLang, HomeText> = {
   vi: {
-    eyebrow: 'Năm công cụ · Ba nhóm · Một bản đồ khởi đầu',
-    title: 'Chọn cách bạn muốn khám phá thành phố',
-    sub: 'Từ cơ hội kinh doanh, hành trình xuyên thời gian đến việc chọn nơi an cư — năm công cụ tương tác dựng trên nền bản đồ đô thị, phục vụ năm mục đích rất khác nhau.',
+    eyebrow: 'Quy hoạch tổng thể Thủ đô Hà Nội tầm nhìn 100 năm · QĐ 2512/QĐ-UBND',
+    title: 'Hà Nội sắp đổi thay, bạn chuẩn bị gì từ hôm nay?',
+    sub: 'Quy hoạch 100 năm nghe thì lớn lao, nhưng rồi sẽ chạm tới từng con phố, từng phường. Ở đây bạn xem nó trên bản đồ, rồi dùng sáu công cụ để tính chuyện của mình: mở quán ở đâu, theo nghề nào, ở khu nào, mua nhà ở đâu, hay đơn giản là xem Hà Nội xưa và nay.',
+    heroSource: 'Dựa trên QĐ 2512, 1668 và 1569 · Số liệu đều có nguồn',
     quickTitle: 'Bạn đang cần gì?',
     quickSub: 'Chọn điều gần nhất với bạn, chúng tôi đưa bạn tới đúng công cụ. Không cần đăng nhập để bắt đầu.',
     wardTitle: 'Tra cứu phường/xã của bạn',
@@ -68,7 +70,7 @@ export const HOME_TEXT: Record<SiteLang, HomeText> = {
       { id: 'job', icon: '💼', want: 'Tôi muốn tìm hướng nghề hoặc việc làm', tool: 'La bàn nghề nghiệp · 5 câu hỏi, kế hoạch 30 ngày', path: '/career', accent: 'career' },
       { id: 'home', icon: '🏠', want: 'Tôi muốn chọn nơi sống', tool: 'Điểm đáng sống · hợp với điều bạn quan tâm', path: '/living-score', accent: 'live' },
       { id: 'invest', icon: '📈', want: 'Tôi cân nhắc mua nhà hoặc đầu tư', tool: 'Chấm điểm bất động sản · tiềm năng từng phường', path: '/property-intelligence', accent: 'property' },
-      { id: 'future', icon: '🛰️', want: 'Tôi muốn biết Hà Nội sẽ ra sao', tool: 'Hà Nội tương lai · quy hoạch đến 2065', path: '/future-map', accent: 'future' },
+      { id: 'future', icon: '🛰️', want: 'Tôi muốn biết Hà Nội sẽ ra sao', tool: 'Hà Nội tương lai · quy hoạch đến 2085', path: '/future-map', accent: 'future' },
       { id: 'past', icon: '🏛️', want: 'Tôi tò mò về Hà Nội xưa', tool: 'Hà Nội xưa và nay · kể chuyện theo từng nơi', path: '/time-machine', accent: 'time' },
     ],
     groups: {
@@ -94,9 +96,10 @@ export const HOME_TEXT: Record<SiteLang, HomeText> = {
     footer: 'Demo dự án bản đồ đô thị tương tác · © 2026',
   },
   en: {
-    eyebrow: 'Five tools · Three groups · One map to start',
-    title: 'Choose how you want to explore the city',
-    sub: 'From business opportunities and a journey through time to choosing where to live: five interactive tools built on an urban map, for five very different purposes.',
+    eyebrow: 'The Hanoi Capital master plan with a 100-year vision · Decision 2512/QĐ-UBND',
+    title: 'Hanoi is about to change. What will you do about it?',
+    sub: 'A 100-year plan sounds grand, but it will reach every street and ward. Here you can see it on a map, then use six tools to work out your own plans: where to open a shop, which career to follow, where to live, where to buy, or just how Hanoi looked then and now.',
+    heroSource: 'Based on Decisions 2512, 1668 and 1569 · Every figure has a source',
     quickTitle: 'What do you need?',
     quickSub: 'Pick what is closest to you and we will take you to the right tool. No sign-in needed to start.',
     wardTitle: 'Look up your ward or commune',
@@ -110,7 +113,7 @@ export const HOME_TEXT: Record<SiteLang, HomeText> = {
       { id: 'job', icon: '💼', want: 'I want to find a career path or a job', tool: 'Career Compass · 5 questions, a 30-day plan', path: '/career', accent: 'career' },
       { id: 'home', icon: '🏠', want: 'I want to choose where to live', tool: 'Living Score · fitted to what you care about', path: '/living-score', accent: 'live' },
       { id: 'invest', icon: '📈', want: 'I am thinking of buying a home or investing', tool: 'AI Property Intelligence · the potential of each ward', path: '/property-intelligence', accent: 'property' },
-      { id: 'future', icon: '🛰️', want: 'I want to know what Hanoi will look like', tool: 'Hanoi Future Map · the plan to 2065', path: '/future-map', accent: 'future' },
+      { id: 'future', icon: '🛰️', want: 'I want to know what Hanoi will look like', tool: 'Hanoi Future Map · the plan to 2085', path: '/future-map', accent: 'future' },
       { id: 'past', icon: '🏛️', want: 'I am curious about old Hanoi', tool: 'Hanoi Time Machine · stories place by place', path: '/time-machine', accent: 'time' },
     ],
     groups: {

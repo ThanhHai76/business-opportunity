@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { REPORTS_API_URL } from '../../config';
 import { LegalLinksComponent } from '../legal/legal-links.component';
 import { Subscription } from 'rxjs';
 import { AccountService, accountError } from '../../services/account.service';
@@ -136,6 +137,7 @@ const vndFormat = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
         <p class="pm__muted">
           {{ lang() === 'en' ? 'Detailed feasibility reports (36-month cash flow, sensitivity, PDF) are bought with credits right in the' : 'Báo cáo khả thi chi tiết (dòng tiền 36 tháng, độ nhạy, PDF) mua theo credit ngay trong' }}
           <a routerLink="/opportunity-map">{{ tx().reportsLink }}</a>.
+          <a [href]="sampleUrl" target="_blank" rel="noopener noreferrer">{{ lang() === 'en' ? 'See a sample report (free)' : 'Xem báo cáo mẫu (miễn phí)' }} ↗</a>
         </p>
       </section>
 
@@ -214,6 +216,8 @@ export class PremiumComponent {
 
   protected readonly premium = this.billing.premiumProducts;
   protected readonly packs = this.billing.aiProducts;
+  /** A real report for a plain café plan, free to open: lets a visitor see what the paid report holds. */
+  protected readonly sampleUrl = `${REPORTS_API_URL}/sample`;
   protected readonly limits = this.billing.aiLimits;
   protected readonly canBuy = computed(() => this.billing.enabled() && !!this.account.user());
 

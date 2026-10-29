@@ -116,6 +116,14 @@ main {
   font-size: 1.05rem;
 }
 
+.hero-source {
+  max-width: 60ch;
+  margin: 0.9rem 0 0;
+  color: var(--ink-dim);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 /* ---------- quick start: what do you need? ---------- */
 
 .intents {

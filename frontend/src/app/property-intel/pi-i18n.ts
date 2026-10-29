@@ -29,7 +29,7 @@ const vi = {
 
   hero: {
     kicker: 'AI PROPERTY INTELLIGENCE · HÀ NỘI',
-    title: 'Dữ liệu phía sau từng nơi bạn định mua.',
+    title: 'Hiểu rõ từng phường trước khi xuống tiền.',
     sub: 'Phường/xã nào ở Hà Nội đang có metro, cầu, Vành đai 4 và cực phát triển mới, giá đất Nhà nước ra sao, căn hộ quanh đó đang chào bán bao nhiêu.',
     askAria: 'Đặt câu hỏi cho AI bất động sản',
     ask: 'Hỏi AI bất động sản',
@@ -338,7 +338,7 @@ const en: PiText = {
 
   hero: {
     kicker: 'AI PROPERTY INTELLIGENCE · HANOI',
-    title: 'See the data behind every place you might buy.',
+    title: 'Know every ward before you put your money in.',
     sub: 'Which wards of Hanoi are getting metro, bridges, Ring Road 4 and new growth poles, what the official land price is, and what apartments nearby are asking.',
     askAria: 'Ask Property AI a question',
     ask: 'Ask Property AI',

@@ -8,6 +8,7 @@
  *   GET  /:id/print  the report as a printable page (the browser saves it as PDF); a Premium account with saved
  *                    details gets them on it (?brand=0: the standard page)
  *   GET/PUT/DELETE /brand  the broker details printed on the reports (Premium)
+ *   GET  /sample     the free sample of a report, printable, for anyone (no account, no credit)
  *
  * The server computes the report (src/reports/build.js) and stores it frozen: the page cannot change the figures,
  * and the report reads the same later. Input that cannot be reported on (unknown ward, no score) is refused before a
@@ -22,6 +23,17 @@ const { buildFeasibilityReport, reportTitle } = require('./build');
 const { printPage } = require('./print');
 
 const KIND = 'opportunity_feasibility';
+
+/**
+ * The free sample of the paid report: a real report, built from the same data and code, for a plain café plan in Phường
+ * Cầu Giấy (the defaults of the calculator, frontend/src/app/opportunity/op-feasibility.ts). Public, uses no credit.
+ */
+const SAMPLE_INPUT = {
+  type: 'cafe',
+  ward: 'phuong-cau-giay',
+  horizon: 'now',
+  assumptions: { basis: 'day', customers: 120, ticket: 45_000, daysOpen: 30, sizeM2: 60, rentPerM2: 350_000, cogsPct: 30, staff: 4, salary: 9_000_000, utilitiesPerM2: 115_000, otherPct: 4.3, setupPerM2: 5_400_000, depositMonths: 3, budget: 500_000_000, rampMonths: 6, rampStartPct: 50 },
+};
 const LISTED = 100;
 
 const n = (min, max) => z.number().finite().min(min).max(max);
@@ -68,7 +80,7 @@ const BrandSchema = z.strictObject({
 const brandView = (item) => (item ? BrandSchema.parse(item.payload) : null);
 
 /** @param options { accounts, premium? } premium: the gate (src/billing/premium-gate.js); open by default. */
-function createPaidReports({ accounts, premium = OPEN_GATE }) {
+function createPaidReports({ accounts, premium = OPEN_GATE, onEvent = null }) {
   const store = () => accounts.store;
   const brandOf = async (userId) => brandView((await store().listItems(userId, BRAND_KIND))[0]);
   const signedIn = signedInWith(accounts);
@@ -107,6 +119,22 @@ function createPaidReports({ accounts, premium = OPEN_GATE }) {
       res.json({ items: (await store().listPaidReports(req.user.id, LISTED)).map(listView) });
     }),
   );
+
+  // The free sample, built once (the data does not change while the server runs). Before /:id, like "brand".
+  let samplePage = null;
+  router.get('/sample', (req, res) => {
+    // A visitor to the API port during development is sent on to the page's own port.
+    const appUrl = process.env.APP_URL || (/^localhost:8000$/.test(req.get('host') ?? '') ? 'http://localhost:4200' : '');
+    const key = appUrl;
+    if (!samplePage || samplePage.key !== key) {
+      const content = buildFeasibilityReport(SAMPLE_INPUT);
+      const report = { id: 'sample', kind: KIND, title: reportTitle(content), createdAt: new Date().toISOString(), input: SAMPLE_INPUT, content };
+      samplePage = { key, html: printPage(report, { sample: true, appUrl }) };
+    }
+    onEvent?.('sample_report', 'opened');
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.type('html').send(samplePage.html);
+  });
 
   // The broker's details for the printed report (Premium). Before /:id, so "brand" is not read as a report id.
   router.get(

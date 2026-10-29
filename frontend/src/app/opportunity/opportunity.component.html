@@ -740,7 +740,7 @@
       <div class="op-upsell">
         <div>
           <strong>{{ t().buy.upsell.title }}</strong>
-          <p>{{ t().buy.upsell.text }}</p>
+          <p>{{ t().buy.upsell.text }} <a [href]="sampleUrl" target="_blank" rel="noopener noreferrer" (click)="$event.stopPropagation()">{{ t().buy.sample }}</a></p>
         </div>
         <button type="button" class="op-btn op-btn--primary" (click)="openFullReport()"><ls-icon name="download" [size]="14" /> {{ t().buy.open }}</button>
       </div>
@@ -780,6 +780,7 @@
               <li>{{ line }}</li>
             }
           </ul>
+          <a class="op-btn" [href]="sampleUrl" target="_blank" rel="noopener noreferrer">{{ t().buy.sample }} ↗</a>
         </section>
       </div>
       <app-op-buy id="op-buy" [t]="t().buy" [premiumText]="t().premium" [lang]="lang()" [request]="buyRequest()" (signIn)="signInToBuy()" />

@@ -49,7 +49,10 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
 
   /** Signs up (and, for the administrator, confirms the address, as the link of the email would) from the page itself. */
   async function signUpByApi(email) {
-    const res = await page.evaluate(`fetch('/api/account/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: ${JSON.stringify(email)}, password: ${JSON.stringify(PASSWORD)}, acceptTerms: true }) }).then((r) => r.json())`);
+    const post = (path, extra = '') => page.evaluate(`fetch('/api/account/${path}', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: ${JSON.stringify(email)}, password: ${JSON.stringify(PASSWORD)}${extra} }) }).then((r) => r.json())`);
+    let res = await post('register', ', acceptTerms: true');
+    // The administrator's account is made once and used by several flows.
+    if (res.code === 'email_taken') res = await post('login');
     assert.ok(res.user?.id, JSON.stringify(res));
     if (email === site.adminEmail) await site.store.updateUser(res.user.id, { emailVerifiedAt: new Date() });
   }
@@ -122,8 +125,9 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     // Sign out, then a wrong password, then the right one.
     await page.goto(`${site.origin}/`);
     await page.click('.account-btn');
-    await page.clickText('.ad__btn--primary', 'Đăng xuất');
-    await page.waitFor(`!document.querySelector('.ad__form') || true`);
+    await page.waitFor(`location.pathname === '/tai-khoan'`, 'the account page');
+    await page.clickText('.ap__hero .ap__btn', 'Đăng xuất');
+    await page.waitFor(`location.pathname === '/'`, 'the home page after signing out');
     assert.equal((await me()).user, null);
     await page.click('.account-btn').catch(() => {});
     await page.waitFor(`!!document.querySelector('input[name=email]')`, 'the sign-in form');
@@ -161,13 +165,12 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     await page.waitFor(`fetch('/api/account/career/plans').then((r) => r.json()).then((j) => (j.items ?? j.plans ?? []).length >= 1)`, 'the plan to reach the account', 20_000).catch(() => {});
 
     await page.click('.account-btn');
-    await page.waitFor(`!!document.querySelector('.ad__more')`, 'the account view');
-    await page.evaluate(`[...document.querySelectorAll('.ad__more')].find((d) => /Tải về dữ liệu/.test(d.textContent)).open = true`);
+    await page.waitFor(`!!document.querySelector('input[name=export]')`, 'the account page');
     await page.evaluate(`window.__file = null; const make = URL.createObjectURL; URL.createObjectURL = (blob) => { blob.text().then((t) => { window.__file = t; }); return make.call(URL, blob); };`);
     // A wrong password gives nothing.
     await page.type('input[name=export]', 'sai-mat-khau');
     await page.evaluate(`[...document.querySelectorAll('form')].find((f) => f.querySelector('[name=export]')).dispatchEvent(new Event('submit'))`);
-    await page.waitFor(`!!document.querySelector('.ad__error')`, 'the refusal');
+    await page.waitFor(`!!document.querySelector('.ap__error')`, 'the refusal');
     assert.equal(await page.evaluate('window.__file'), null);
     // The right one does.
     await page.type('input[name=export]', PASSWORD);
@@ -177,7 +180,7 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     assert.equal(data.format, 'hanoi-century-vista-export/1');
     assert.equal(data.account.email, email);
     assert.doesNotMatch(JSON.stringify(data), /scrypt\$|passwordHash/);
-    assert.match(await page.text('.ad__done'), /Đã tải tệp dữ liệu/);
+    assert.match(await page.text('.ap__done'), /Đã tải tệp dữ liệu/);
   });
 
   it('buying Premium with the mock gateway: the order is paid and the account becomes Premium', async () => {
@@ -206,7 +209,7 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     await fresh('/');
     assert.equal(await page.evaluate('document.documentElement.lang'), 'vi');
     await page.click('.lang-toggle');
-    await page.waitFor(`document.querySelector('h1')?.textContent === 'Choose how you want to explore the city'`, 'the English home page');
+    await page.waitFor(`document.querySelector('h1')?.textContent === 'Hanoi is about to change. What will you do about it?'`, 'the English home page');
     assert.equal(await page.evaluate('document.documentElement.lang'), 'en');
     assert.match(await page.text('.site-nav'), /Explore Hanoi/);
     // Remembered across pages and reloads: Premium, the Terms, a tool.
@@ -306,17 +309,17 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     // ...who is not shown the link in the account menu either.
     await page.goto(site.origin + '/');
     await page.click('.account-btn');
-    await page.waitFor(`!!document.querySelector('.ad__plan, .ad__form')`, 'the account menu');
+    await page.waitFor(`!!document.querySelector('.ap__card')`, 'the account page');
     await page.waitFor(`true`);
-    assert.equal(await page.evaluate(`!!document.querySelector('.ad a[href="/admin/reports"]')`), false);
+    assert.equal(await page.evaluate(`!!document.querySelector('.ap a[href="/admin/reports"]')`), false);
 
     // The administrator sees the report and marks it fixed; the server keeps it.
     await fresh('/');
     await signUpByApi(site.adminEmail);
     await page.goto(site.origin + '/');
     await page.click('.account-btn');
-    await page.waitFor(`!!document.querySelector('.ad a[href="/admin/reports"]')`, 'the admin link in the account menu');
-    await page.click('.ad a[href="/admin/reports"]');
+    await page.waitFor(`!!document.querySelector('.ap a[href="/admin/reports"]')`, 'the admin link on the account page');
+    await page.click('.ap a[href="/admin/reports"]');
     await page.waitFor(`location.pathname === '/admin/reports'`, 'the admin page from the account menu');
     await page.waitFor(`[...document.querySelectorAll('.ar__item')].some((i) => i.textContent.includes(${JSON.stringify(message)}))`, 'the report in the list');
     await page.evaluate(`[...document.querySelectorAll('.ar__item')].find((i) => i.textContent.includes(${JSON.stringify(message)})).querySelectorAll('.ar__actions button')[2].click()`);
@@ -357,6 +360,98 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     await page.type('app-password-field input', 'mat-khau-khac-789');
     await page.click('button[type=submit]');
     await page.waitFor(`!!document.querySelector('.al__err')`, 'the refusal of a used link');
+  });
+
+  it('statistics and the free sample report: pages and actions are counted, the administrator reads them, a visitor can open the sample', async () => {
+    // A visitor: home, a ward look-up from the box, the Premium page, then the sample report from its link.
+    await fresh('/');
+    await page.waitFor(`!!document.querySelector('.wardfind input')`, 'the look-up box');
+    await page.type('.wardfind input', 'cau giay');
+    await page.click('.wardfind button');
+    await page.waitFor(`location.pathname === '/phuong-xa'`, 'the list of wards');
+    await page.goto(site.origin + '/premium');
+    await page.waitFor(`!!document.querySelector('a[href$="/api/reports/sample"]')`, 'the link to the sample report on the Premium page');
+    await page.goto(site.origin + '/api/reports/sample', { app: false });
+    await page.waitFor(`/Đây là báo cáo mẫu/.test(document.body.textContent)`, 'the sample report');
+    assert.match(await page.text('body'), /Phường Cầu Giấy/);
+
+    // The administrator reads the counters in the page made for it.
+    await fresh('/');
+    await signUpByApi(site.adminEmail);
+    await page.goto(site.origin + '/admin/stats');
+    await page.waitFor(`[...document.querySelectorAll('.as__table td')].some((td) => td.textContent === '/premium')`, '/premium among the pages viewed');
+    const cards = await page.evaluate(`Object.fromEntries([...document.querySelectorAll('.as__cards li')].map((li) => [li.querySelector('span').textContent, Number(li.querySelector('strong').textContent.replace(/\\D/g, ''))]))`);
+    assert.ok(cards['Lượt xem trang'] >= 4, JSON.stringify(cards));
+    assert.ok(cards['Tra cứu phường/xã'] >= 1, JSON.stringify(cards));
+    assert.ok(cards['Mở báo cáo mẫu'] >= 1, JSON.stringify(cards));
+    // The money steps are counted by the server: the Premium purchase of an earlier flow left both.
+    assert.ok(cards['Bắt đầu thanh toán'] >= 1, JSON.stringify(cards));
+    assert.ok(cards['Thanh toán thành công'] >= 1, JSON.stringify(cards));
+    // Nothing about a visitor is kept: only day, event, key and count.
+    const rows = (await page.evaluate(`fetch('/api/analytics/admin/summary?days=7').then((r) => r.json())`)).rows;
+    assert.ok(rows.length > 0);
+    assert.ok(rows.every((r) => Object.keys(r).sort().join() === 'day,event,key,n'));
+    // The administrator's own pages are not counted.
+    assert.equal(rows.some((r) => r.event === 'page_view' && r.key.startsWith('/admin')), false);
+  });
+
+  it('future map: the plan reaches 2085, and the panel says in words what it sets, with sources', async () => {
+    await fresh('/future-map?year=2085');
+    await page.waitFor(`document.querySelectorAll('.fm-timeline button').length >= 5`, 'the five milestones, 2085 among them');
+    assert.match(await page.text('.fm h1'), /2085/);
+    await page.clickText('.fm-tools button', 'Quy hoạch nói gì');
+    await page.waitFor(`!!document.querySelector('.fm-outlook__steps')`, 'what the plan says');
+    const text = await page.text('.fm-dialog--outlook');
+    assert.match(text, /Văn hiến – Văn minh – Hiện đại – Hạnh phúc/);
+    assert.match(text, /GRDP khoảng 640 tỷ USD/);
+    assert.match(text, /Nội đô lịch sử/);
+    // Every statement leads to its sources.
+    const links = await page.evaluate(`[...document.querySelectorAll('.fm-dialog--outlook a[href^="https://"]')].length`);
+    assert.ok(links >= 20, 'sources linked: ' + links);
+  });
+
+  it('career-change calculator: the visitor’s own numbers give the cost and the payback, are kept, and a second option leads to Premium', async () => {
+    await fresh('/career?tab=switch');
+    await page.waitFor(`!!document.querySelector('.sw__form')`, 'the calculator');
+    assert.equal(await page.evaluate(`!!document.querySelector('.sw__table')`), false);
+    await page.clickText('.sw__actions button', 'Điền số ví dụ');
+    await page.waitFor(`!!document.querySelector('.sw__key')`, 'the result');
+    // The example (today 10, fees 6, 3 months of training + 2 looking at 2 a month, then 15) pays back after 15 months.
+    assert.match(await page.text('.sw__key'), /15 tháng/);
+    assert.match(await page.text('.sw__results'), /≈ 4,5 tháng chi tiêu/);
+    // The numbers are still there after a reload (kept in the browser).
+    await page.goto(site.origin + '/career?tab=switch');
+    await page.waitFor(`!!document.querySelector('.sw__key')`, 'the result after a reload');
+    assert.match(await page.text('.sw__key'), /15 tháng/);
+    // From a direction of the compass to the calculator, which names the first option after it.
+    await page.evaluate(`localStorage.removeItem('hcv.career.switch.v1'); true`);
+    await page.goto(site.origin + '/career');
+    for (const label of ['Đang thất nghiệp', 'kho, vận tải, giao nhận', 'Trung cấp, cao đẳng', 'Có từ một năm', 'Làm thuê']) await page.clickText('.cc__chips button', '^' + label + '$');
+    await page.waitFor(`!!document.querySelector('.cc__calcbtn')`, 'the results with their calculator button');
+    await page.click('.cc__calcbtn');
+    await page.waitFor(`!!document.querySelector('.sw__form') && document.querySelector('.sw__field--wide input').value.length > 3`, 'the calculator, with the direction as the name of the first option');
+    // The list of sources is folded.
+    await page.goto(site.origin + '/career');
+    await page.waitFor(`!!document.querySelector('details.cc__sources')`, 'the sources');
+    assert.equal(await page.evaluate(`document.querySelector('details.cc__sources').open`), false);
+    await page.goto(site.origin + '/career?tab=switch');
+    await page.waitFor(`!!document.querySelector('.sw__form')`, 'the calculator again');
+    // A sourced reference point is one click away and links to its source.
+    const refs = await page.evaluate(`[...document.querySelectorAll('.sw__refs a[href^="https://"]')].length`);
+    assert.ok(refs >= 5, 'reference links: ' + refs);
+    // A second option and the PDF are Premium: the visitor is shown what Premium gives.
+    await page.click('.sw__opt--add');
+    await page.waitFor(`!!document.querySelector('.pp')`, 'the Premium prompt');
+  });
+
+  it('a new page opens at its top: leaving the bottom of the home page by a link does not keep the scroll', async () => {
+    await fresh('/');
+    await page.waitFor(`!!document.querySelector('footer a[href="/premium"], footer a[href="/giai-thich-diem"]')`, 'a link in the footer');
+    await page.evaluate(`window.scrollTo(0, document.documentElement.scrollHeight); true`);
+    await page.waitFor(`window.scrollY > 300`, 'the page to be scrolled down');
+    await page.evaluate(`document.querySelector('footer a[href="/giai-thich-diem"], footer a[href="/premium"]').click(); true`);
+    await page.waitFor(`location.pathname !== '/'`, 'the other page');
+    await page.waitFor(`window.scrollY < 5`, 'the new page at its top');
   });
 
   it('left no uncaught error in the page', () => {

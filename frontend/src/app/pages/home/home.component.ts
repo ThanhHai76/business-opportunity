@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AccountService } from '../../services/account.service';
 import { BillingService } from '../../services/billing.service';
 import { SiteLangService } from '../../services/site-lang.service';
+import { track } from '../../services/analytics';
 import { LegalLinksComponent } from '../legal/legal-links.component';
 import { HeroSkylineComponent } from './hero-skyline.component';
 import { HOME_TEXT, ToolCard } from './home.i18n';
@@ -33,6 +34,7 @@ export class HomeComponent {
   /** Opens the list of wards and communes with the search already typed. */
   protected lookUp(q: string): void {
     const text = q.trim();
+    track('ward_lookup');
     void this.router.navigate(['/phuong-xa'], { queryParams: text ? { q: text } : {} });
   }
 

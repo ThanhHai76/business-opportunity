@@ -5,7 +5,7 @@ const path = require('node:path');
 const { conflict, paymentRequired } = require('./errors');
 
 // Applied in order on start: accounts and saved items, purchases and paid reports, then AI questions and Premium.
-const SCHEMAS = ['01-schema.sql', '02-billing.sql', '03-ai-premium.sql', '04-email-terms.sql', '05-broker-brand.sql', '06-career.sql', '07-data-reports.sql'].map((f) => path.join(__dirname, '..', '..', 'database', 'accounts', f));
+const SCHEMAS = ['01-schema.sql', '02-billing.sql', '03-ai-premium.sql', '04-email-terms.sql', '05-broker-brand.sql', '06-career.sql', '07-data-reports.sql', '08-analytics.sql'].map((f) => path.join(__dirname, '..', '..', 'database', 'accounts', f));
 
 const toUser = (r) => r && { id: r.id, email: r.email, displayName: r.display_name, createdAt: r.created_at, lastLoginAt: r.last_login_at, emailVerifiedAt: r.email_verified_at, termsAcceptedAt: r.terms_accepted_at };
 const toItem = (r) => ({ id: r.id, key: r.item_key, payload: r.payload, createdAt: r.created_at, updatedAt: r.updated_at });
@@ -168,6 +168,19 @@ class PostgresStore {
       aiUsage: usage.rows.map((r) => ({ tool: r.tool, source: r.source, usedAt: r.used_at })),
       dataReports: reports.rows.map((r) => ({ kind: r.kind, target: r.target, targetName: r.target_name, page: r.page, message: r.message, contact: r.contact, status: r.status, createdAt: r.created_at })),
     };
+  }
+
+  // ---------------------------------------------------------------- visit statistics (08-analytics.sql): counters only
+  async bumpAnalytics(day, event, key) {
+    await this.pool.query(
+      'INSERT INTO analytics_daily (day, event, key, n) VALUES ($1, $2, $3, 1) ON CONFLICT (day, event, key) DO UPDATE SET n = analytics_daily.n + 1',
+      [day, event, key],
+    );
+  }
+
+  async analyticsRows(sinceDay) {
+    const { rows } = await this.pool.query("SELECT to_char(day, 'YYYY-MM-DD') AS day, event, key, n FROM analytics_daily WHERE day >= $1 ORDER BY day, event, key", [sinceDay]);
+    return rows;
   }
 
   async listDataReports(limit = 50, status = null) {

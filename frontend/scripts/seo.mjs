@@ -15,7 +15,7 @@ if (existsSync(wardFile)) pages.push('phuong-xa', ...JSON.parse(readFileSync(war
 mkdirSync(publicDir, { recursive: true });
 writeFileSync(
   join(publicDir, 'robots.txt'),
-  `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin/\nDisallow: /reset-password\nDisallow: /verify-email\nDisallow: /forgot-password\n\nSitemap: ${site}/sitemap.xml\n`,
+  `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin/\nDisallow: /tai-khoan\nDisallow: /reset-password\nDisallow: /verify-email\nDisallow: /forgot-password\n\nSitemap: ${site}/sitemap.xml\n`,
 );
 writeFileSync(
   join(publicDir, 'sitemap.xml'),

@@ -79,7 +79,7 @@ theo điểm cơ hội của **12 ngành** (☕ cà phê, 🍜 ăn uống, 🏋�
 
 ## Điều hướng chung
 
-Cả năm công cụ (Bản đồ Cơ hội Kinh doanh, Hanoi Time Machine, Hanoi Living Score, Hanoi Future Map, AI Property Intelligence) dùng **một thanh điều hướng chung** `frontend/src/app/components/site-nav/`,
+Cả sáu công cụ (Bản đồ Cơ hội Kinh doanh, Hanoi Time Machine, Hanoi Living Score, Hanoi Future Map, AI Property Intelligence, La bàn nghề nghiệp) dùng **một thanh điều hướng chung** `frontend/src/app/components/site-nav/`,
 đặt trong `AppComponent`: logo "Hanoi Century Vista" (về Trang chủ) và sáu tab. Mỗi trang chỉ giữ thanh phụ riêng cho việc của nó
 (chọn thành phố / mục lục chương / Khám phá · So sánh · AI · Đã lưu · Cá nhân). Chiều cao thanh chung là biến CSS `--site-nav-h` (`styles.css`);
 trang chiếm cả khung nhìn phải trừ biến này thay vì dùng `100vh`.
@@ -110,7 +110,7 @@ project/
 │   ├── src/
 │   │   ├── opportunity/        # Bản đồ Cơ hội Kinh doanh (/api/opportunity/...) — phường/xã Hà Nội, dữ liệu OSM
 │   │   ├── living-score/       # Hanoi Living Score (/api/living-score/...) — xem mục bên dưới
-│   │   ├── future-map/         # Hanoi Future Map (/api/future-map/...) — quy hoạch có nguồn 2026-2065 + Vùng Thủ đô
+│   │   ├── future-map/         # Hanoi Future Map (/api/future-map/...) — quy hoạch có nguồn 2026-2085 + Vùng Thủ đô
 │   │   ├── property-intel/     # AI Property Intelligence (/api/property-intel/...) — phường/xã, giá đất 2026, thị trường, dự án
 │   │   ├── accounts/           # Tài khoản, phiên đăng nhập, báo cáo đã lưu (/api/account/...)
 │   │   ├── billing/            # Mua lượt báo cáo: gói, đơn hàng, webhook, cổng giả (/api/billing/...)
@@ -156,6 +156,10 @@ Trên localhost frontend gọi backend tại `http://localhost:8000`; khi deploy
 của trang** — nginx chuyển tiếp sang backend (`frontend/nginx.conf`). Cấu hình trong `frontend/src/app/config.ts`.
 
 **Trang riêng cho từng phường/xã** (`/phuong-xa` và `/phuong-xa/<tên>`, 126 đơn vị): số liệu chính thức (dân số 1/7/2025, diện tích, mật độ) cho mọi đơn vị; nơi bản đồ OSM đã phủ có thêm ga metro gần nhất, ngành có điểm cao nhất và nút "Báo sai số liệu"; đơn vị chưa phủ ghi rõ "chưa có dữ liệu bản đồ". Dữ liệu từ `GET /api/opportunity/directory`. Tiêu đề/mô tả/sitemap của 127 trang lấy từ `frontend/scripts/ward-pages.json`, tạo bằng `npm run data:wardpages` trong `backend-node/` (chạy lại mỗi khi đổi dữ liệu phường).
+
+**Thống kê truy cập tự lưu** (`backend-node/src/analytics`, bảng `analytics_daily` ở `database/accounts/08-analytics.sql`, trang **/admin/stats** cho quản trị): chỉ là bộ đếm theo (ngày, sự kiện, khóa); **không lưu IP, cookie hay tài khoản của người truy cập**, trình duyệt bật Do Not Track không được đếm, ngày tính theo giờ Việt Nam. Trang gửi: lượt xem từng trang (id phường được gộp thành `:slug`, đường dẫn lạ gộp vào `/other`, trang `/admin` không đếm), đăng ký, tra cứu phường/xã ở trang chủ, bấm dấu "?". Máy chủ tự đếm những gì không thể tin trang: **bắt đầu thanh toán**, **thanh toán thành công** (theo gói) và **mở báo cáo mẫu**. Trang /admin/stats hiện tổng, đường đi Premium → thanh toán (kèm tỷ lệ từng bước), lượt xem mỗi ngày và trang xem nhiều nhất. API `POST /api/analytics/event`, `GET /api/analytics/admin/summary?days=` (cùng ADMIN_EMAILS như trang báo cáo). Plausible vẫn là tùy chọn riêng (`ANALYTICS.domain` trong `config.ts`). Chính sách riêng tư đã có câu về "thống kê không cookie, không thông tin nhận dạng"; hãy đọc lại khi xử lý phần pháp lý.
+
+**Báo cáo mẫu miễn phí** (`GET /api/reports/sample`, trang in được, có biểu ngữ và chữ chìm "BẢN MẪU"): một báo cáo khả thi thật, dựng bằng đúng mã của bản trả phí, cho quán cà phê 60 m² ở Phường Cầu Giấy với giả định mặc định của máy tính lãi/lỗ. Ai cũng mở được, không tốn lượt. Có link ở hộp "Báo cáo đầy đủ" của Mở gì ở đâu và ở trang Premium, để khách thấy trả tiền được gì. Đổi ví dụ ở `SAMPLE_INPUT` (`src/reports/index.js`).
 
 **Giải thích điểm bằng lời thường** (`/giai-thich-diem`, song ngữ): điểm cơ hội (nhu cầu, cạnh tranh, công thức nhu cầu − 0,4 × cạnh tranh, nhãn "dữ liệu ít"), điểm đáng sống (năm tiêu chí và trọng số mặc định, các mức điểm) và điểm tiềm năng bất động sản (sáu tiêu chí, phần trăm mặc định), kèm điều điểm số không nói. Nội dung ở `frontend/src/app/pages/guide/score-guide.i18n.ts`; **khi đổi công thức hoặc trọng số ở máy chủ phải sửa trang này cho khớp** (test chỉ giữ hai ngôn ngữ cùng cấu trúc và công thức cơ hội). Có link từ hộp "Cách tính & nguồn", trang phường/xã và chân trang, và dấu **?** cạnh điểm ở cả ba công cụ (component `score-help`: câu trả lời ngắn, rồi link tới đúng mục, ví dụ `/giai-thich-diem#living`).
 
@@ -407,7 +411,9 @@ cd backend-node && npm test      # node --test: scoring, seed, recommendation en
 ## La bàn nghề nghiệp Hà Nội (`/career`)
 
 Định hướng việc làm cho người thất nghiệp, đổi nghề, sinh viên mới ra trường và người đang đi làm muốn tham khảo thị trường: 5 câu hỏi → các hướng nghề hợp nhất, kèm điều nguồn công khai nói về Hà Nội, kỹ năng, lộ trình, chính sách hỗ trợ (Luật Việc làm 2025) và kênh việc làm chính thống. **Không đăng tin tuyển dụng.**
-Trang chia 5 tab (có thể mở thẳng bằng `?tab=`: `paths`, `plan`, `market`, `map`, `support`): Hướng nghề của bạn (bảng hỏi và kết quả), Kế hoạch 30 ngày (kèm tiến độ trên tab), Thị trường, Bản đồ (tạo khi mở lần đầu và giữ nguyên ngành, nhà, vùng đã chọn khi đổi tab), Hỗ trợ và nơi tìm việc; phần Nguồn luôn nằm dưới cùng.
+Trang chia 6 tab (có thể mở thẳng bằng `?tab=`: `paths`, `plan`, `switch`, `market`, `map`, `support`): Hướng nghề của bạn (bảng hỏi và kết quả), Kế hoạch 30 ngày (kèm tiến độ trên tab), Thị trường, Bản đồ (tạo khi mở lần đầu và giữ nguyên ngành, nhà, vùng đã chọn khi đổi tab), Hỗ trợ và nơi tìm việc; phần Nguồn luôn nằm dưới cùng.
+**Bài toán đổi nghề** (tab `switch`, `career.switch.ts`): người dùng **tự nhập** thu nhập hiện tại, chi phí học, số tháng học và tìm việc, thu nhập tạm thời, thu nhập nghề mới, mức tăng, chi tiêu tối thiểu; công cụ tính tổng chi phí chuyển nghề, số tháng hoàn vốn, chênh lệch tích luỹ sau 12/24/36/60 tháng và số tiền cần có (ba trường hợp: thận trọng, theo số của bạn, thuận lợi). **Không có số liệu theo từng nghề** vì chưa có nguồn đáng tin cho Hà Nội; chỉ có các mốc tham khảo kèm nguồn và phạm vi (`SWITCH_REFERENCES`, tra tháng 10/2026; dự thảo hỗ trợ 100% học phí ghi rõ là dự thảo). Miễn phí: một hướng. Premium: so sánh tới 3 hướng và xuất PDF mang tên, liên hệ (`career.switch-print.ts`). Số nhập chỉ lưu trên trình duyệt (`hcv.career.switch.v1`). Khi có số thật từ trung tâm đào tạo hoặc doanh nghiệp, thêm vào `SWITCH_REFERENCES` cùng nguồn.
+
 **Báo sai số liệu**: mỗi phường và mỗi nguồn có nút gửi báo cáo (component `report-issue`, API `POST /api/feedback/data-report`, không cần tài khoản, giới hạn 5 báo cáo/giờ mỗi địa chỉ và 300/ngày cả trang, có ô bẫy bot). Lưu ở bảng `data_reports` (`database/accounts/07-data-reports.sql`); đọc ở trang **/admin/reports** (có mục "Quản trị: báo sai số liệu" trong hộp tài khoản, chỉ hiện với quản trị viên; đăng nhập bằng tài khoản đã xác minh email và nằm trong biến `ADMIN_EMAILS`; API `GET/PATCH /api/feedback/admin/reports`; mỗi báo cáo đánh dấu được Mới / Đã xem / Đã sửa / Không đúng) hoặc bằng `npm run reports:list`. Không có cơ sở dữ liệu thì báo cáo chỉ ghi vào log và bộ nhớ.
 
 **Hai ngôn ngữ**: tiếng Việt và tiếng Anh (nút đổi ở đầu trang, `?lang=en`, nhớ lựa chọn dùng chung khoá với Mở gì ở đâu, tiêu đề trang đổi theo). Con số, trích dẫn và liên kết nằm một chỗ ở `career.data.ts`; lời tiếng Anh ở `career.en.ts` (nội dung), `career.ui.ts` (chữ của trang và bản đồ), cùng tham số `lang` của `career.logic.ts`, `career.plan.ts`, `career.print.ts` (bản in PDF). Tên nguồn giữ nguyên tiếng Việt. Kiểm thử `career-en.spec.ts` bắt lỗi thiếu bản dịch, lệch con số/nguồn so với bản tiếng Việt và chữ tiếng Việt còn sót.
@@ -421,7 +427,7 @@ Xếp hạng bằng quy tắc minh bạch ở `career.logic.ts` (nền tảng 40
 
 ## Hanoi Future Map (`/future-map`, API `/api/future-map`)
 
-Bản đồ tương lai của Thủ đô theo các mốc của **Quy hoạch tổng thể Thủ đô tầm nhìn 100 năm**: **2026 (hiện trạng) → 2035 → 2045 → 2065**.
+Bản đồ tương lai của Thủ đô theo các mốc của **Quy hoạch tổng thể Thủ đô tầm nhìn 100 năm**: **2026 (hiện trạng) → 2035 → 2045 → 2065 → 2085**. Mục "Quy hoạch nói gì?" (`GET /outlook`, `src/future-map/outlook.js`) tóm tắt bằng lời quan điểm phát triển, mục tiêu từng mốc (kèm quy mô GRDP), nội đô lịch sử và kinh tế đổi mới sáng tạo; **chỉ giữ điều có ít nhất hai nguồn** (test kiểm tra), nên chưa có chỉ tiêu chỉ một nguồn nêu (GRDP bình quân đầu người, không gian ngầm, hạn chế cao tầng) cho đến khi đọc được toàn văn QĐ 2512.
 Kéo timeline (hoặc bấm ▶) để xem metro, vành đai, vùng TOD, không gian xanh, sân bay và **9 cực phát triển, 9 trục động lực** xuất hiện dần.
 
 **Hai phạm vi bản đồ** (nút "Hà Nội / Vùng Thủ đô"):
@@ -454,6 +460,7 @@ API (tiền tố `/api/future-map`, đều nhận `lang=vi|en`):
 | GET | `/region?year=2035` | Vùng Thủ đô: 6 hướng, mũi tên, hạ tầng vùng, nguồn |
 | GET | `/region/corridors/:slug?year=2035` | Một hướng: chức năng, điểm đáng chú ý, hạ tầng theo mốc, cực liên quan, thời gian lái xe |
 | GET | `/compare?years=2026,2035,2065` | So sánh 2–3 mốc |
+| GET | `/outlook` | Quan điểm, mục tiêu từng mốc, nội dung chính của quy hoạch — mỗi câu kèm nguồn |
 | GET | `/questions` | Câu hỏi gợi ý |
 | POST | `/ask` | `{ "question": "region-commute", "year": 2026 }` → trả lời bằng quy tắc |
 | POST | `/ask-ai` | `{ "question": "Bắc Ninh sẽ phát triển thế nào?", "year": 2035 }` → Claude hoặc trả lời tự động |

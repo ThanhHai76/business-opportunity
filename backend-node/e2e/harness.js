@@ -77,6 +77,7 @@ async function startSite() {
     aiMeter: { mode: 'off' },
     billing: { rateLimits: { checkout: 1000 } },
     feedback: { rateLimits: { perHour: 1000, perDay: 1000 }, adminEmails: ADMIN_EMAIL },
+    analytics: { adminEmails: ADMIN_EMAIL, rateLimits: { perMinute: 1000 } },
   }));
   return { origin, mailbox, store, adminEmail: ADMIN_EMAIL, close: () => new Promise((resolve) => server.close(resolve)) };
 }
@@ -130,10 +131,11 @@ async function startBrowser({ width = 1280, height = 900 } = {}) {
   const api = {
     errors,
     evaluate,
-    async goto(url) {
+    /** `app: false` for a page the server draws itself (a printable report): it is loaded when the document is complete. */
+    async goto(url, { app = true } = {}) {
       await send('Page.navigate', { url });
       // The first paint of the app: its root has content.
-      await api.waitFor(`document.readyState === 'complete' && (document.querySelector('app-root')?.children.length ?? 0) > 0`, 'the page to load');
+      await api.waitFor(app ? `document.readyState === 'complete' && (document.querySelector('app-root')?.children.length ?? 0) > 0` : `document.readyState === 'complete' && location.href !== 'about:blank'`, 'the page to load');
     },
     /** Polls an expression until it is truthy (the page is drawn by Angular, so there is always a moment of waiting). */
     async waitFor(expression, what = expression, timeout = 15_000) {

@@ -41,5 +41,8 @@ export const TIME_MACHINE_API_URL = `${API_BASE_URL}/api/time-machine`;
 // Public address of the site: canonical links, the sitemap and share tags. Keep in step with SITE_URL in index.html / scripts/seo.mjs.
 export const SITE_URL = 'https://hanoicenturyvista.com';
 
-// Cookieless statistics (Plausible-compatible). Leave `domain` empty to keep analytics off.
+// The site's own visit counters (no cookie, nothing about the visitor), under /api/analytics.
+export const ANALYTICS_API_URL = `${API_BASE_URL}/api/analytics`;
+
+// Optional cookieless statistics at a third party (Plausible-compatible). Leave `domain` empty to keep analytics off.
 export const ANALYTICS = { domain: '', script: 'https://plausible.io/js/script.js' };

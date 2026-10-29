@@ -29,6 +29,7 @@ const { createTimeMachine } = require('./src/time-machine');
 const { createAccounts } = require('./src/accounts');
 const { createBilling } = require('./src/billing');
 const { createPaidReports } = require('./src/reports');
+const { createAnalytics } = require('./src/analytics');
 const { createAiMeter } = require('./src/billing/ai-meter');
 const { createPremiumGate } = require('./src/billing/premium-gate');
 const { createMailer } = require('./src/mailer');
@@ -114,9 +115,13 @@ function createApp(options = {}) {
   app.use('/api/account', accounts.router);
 
   // Purchases (report credits, AI question packs, Premium) and the paid reports they buy; both need accounts.
-  const billing = createBilling({ accounts, isAllowedOrigin, meter, premium, ...options.billing });
+  const analytics = createAnalytics({ accounts, ...options.analytics });
+  const billing = createBilling({ accounts, isAllowedOrigin, meter, premium, onEvent: analytics.record, ...options.billing });
   app.use('/api/billing', billing.router);
-  app.use('/api/reports', createPaidReports({ accounts, premium }).router);
+  app.use('/api/reports', createPaidReports({ accounts, premium, onEvent: analytics.record }).router);
+
+  // Visit statistics: counters only, kept by the site itself (src/analytics).
+  app.use('/api/analytics', analytics.router);
 
   // Reports of wrong figures ("Báo sai số liệu"), kept in the accounts database when there is one.
   app.use('/api/feedback', createFeedback({ accounts, ...options.feedback }).router);

@@ -129,6 +129,19 @@ class MemoryStore {
     return { id: entry.id, createdAt: entry.createdAt };
   }
 
+  async bumpAnalytics(day, event, key) {
+    const counters = (this.analytics ??= new Map());
+    const id = JSON.stringify([day, event, key]);
+    counters.set(id, (counters.get(id) ?? 0) + 1);
+  }
+
+  async analyticsRows(sinceDay) {
+    return [...(this.analytics ?? new Map())]
+      .map(([id, n]) => ({ ...(([day, event, key]) => ({ day, event, key }))(JSON.parse(id)), n }))
+      .filter((r) => r.day >= sinceDay)
+      .sort((a, b) => a.day.localeCompare(b.day) || a.event.localeCompare(b.event) || a.key.localeCompare(b.key));
+  }
+
   async listDataReports(limit = 50, status = null) {
     return [...(this.dataReports ?? [])].reverse().filter((r) => !status || r.status === status).slice(0, limit);
   }

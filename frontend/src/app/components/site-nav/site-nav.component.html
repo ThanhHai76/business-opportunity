@@ -98,7 +98,7 @@
         type="button"
         class="icon-btn account-btn"
         [class.is-in]="!!account.user()"
-        (click)="account.dialogOpen.set(true)"
+        (click)="openAccount()"
         [attr.aria-label]="account.user() ? nx().accountOf(account.user()!.email) : nx().signIn"
         [title]="account.user() ? account.user()!.email : nx().signIn"
       >

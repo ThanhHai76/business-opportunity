@@ -24,6 +24,7 @@ const express = require('express');
 const { rateLimit } = require('express-rate-limit');
 const { z } = require('zod');
 const { AccountError, badRequest } = require('../accounts/errors');
+const { createAdminGate } = require('../accounts/admin');
 const { finishRouter, wrap } = require('../billing/common');
 const { WARD_BY_SLUG } = require('../opportunity/model');
 
@@ -57,12 +58,8 @@ const reportView = (r) => ({
   createdAt: new Date(r.createdAt ?? r.created_at).toISOString(),
 });
 
-function adminEmailsFrom(value) {
-  return new Set(String(value ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean));
-}
-
 function createFeedback({ accounts, rateLimits = {}, adminEmails = process.env.ADMIN_EMAILS } = {}) {
-  const admins = adminEmailsFrom(adminEmails);
+  const admin = createAdminGate(accounts, adminEmails);
   const memory = [];
   const router = express.Router();
   router.use(express.json({ limit: '16kb' }));
@@ -104,27 +101,17 @@ function createFeedback({ accounts, rateLimits = {}, adminEmails = process.env.A
     }),
   );
 
-  const isAdmin = (user) => Boolean(user?.emailVerifiedAt) && admins.has(String(user.email).toLowerCase());
-
-  /** The signed-in, verified administrator; throws 401 or 403. */
-  async function requireAdmin(req, res) {
-    const user = accounts.enabled ? await accounts.userOf(req, res) : null;
-    if (!user) throw new AccountError(401, 'not_signed_in', 'Hãy đăng nhập.');
-    if (!isAdmin(user)) throw new AccountError(403, 'forbidden', 'Tài khoản này không có quyền xem báo cáo.');
-  }
-
   router.get(
     '/admin/me',
     wrap(async (req, res) => {
-      const user = accounts.enabled ? await accounts.userOf(req, res) : null;
-      res.set('Cache-Control', 'no-store').json({ admin: isAdmin(user) });
+      res.set('Cache-Control', 'no-store').json({ admin: await admin.check(req, res) });
     }),
   );
 
   router.get(
     '/admin/reports',
     wrap(async (req, res) => {
-      await requireAdmin(req, res);
+      await admin.require(req, res);
       const status = typeof req.query.status === 'string' && req.query.status ? req.query.status : null;
       if (status && !STATUSES.includes(status)) throw badRequest('Trạng thái không hợp lệ.');
       const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
@@ -136,7 +123,7 @@ function createFeedback({ accounts, rateLimits = {}, adminEmails = process.env.A
   router.patch(
     '/admin/reports/:id',
     wrap(async (req, res) => {
-      await requireAdmin(req, res);
+      await admin.require(req, res);
       const parsed = z.strictObject({ status: z.enum(STATUSES) }).safeParse(req.body);
       if (!parsed.success || !UUID.test(req.params.id)) throw badRequest('Yêu cầu chưa hợp lệ.');
       if (!(await accounts.store.setDataReportStatus(req.params.id, parsed.data.status))) throw new AccountError(404, 'not_found', 'Không có báo cáo này.');

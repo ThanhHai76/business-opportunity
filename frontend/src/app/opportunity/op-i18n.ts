@@ -183,6 +183,7 @@ const vi = {
   },
   buy: {
     open: 'Báo cáo đầy đủ (PDF)',
+    sample: 'Xem báo cáo mẫu (miễn phí)',
     title: 'Báo cáo khả thi đầy đủ',
     intro: 'Máy chủ tính và lưu báo cáo cho ngành và phường này theo giả định hiện tại của bạn, để tải PDF bất cứ lúc nào.',
     freeTitle: 'Báo cáo cơ bản · miễn phí',
@@ -476,6 +477,7 @@ const en: OpText = {
   },
   buy: {
     open: 'Full report (PDF)',
+    sample: 'See a sample report (free)',
     title: 'Full feasibility report',
     intro: 'The server computes and keeps a report for this business type and ward on your current assumptions, to download as PDF any time.',
     freeTitle: 'Basic report · free',

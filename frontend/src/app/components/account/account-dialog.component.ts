@@ -1,37 +1,22 @@
-import { HttpClient } from '@angular/common/http';
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, effect, inject, signal, untracked } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
-import { FEEDBACK_API_URL } from '../../config';
 import { AccountService, accountError } from '../../services/account.service';
-import { BillingService } from '../../services/billing.service';
-import { LegalLinksComponent } from '../../pages/legal/legal-links.component';
 import { SiteLangService } from '../../services/site-lang.service';
 import { PasswordFieldComponent } from '../password-field/password-field.component';
 import { ACCOUNT_TEXT } from './account.i18n';
 
-type View = 'login' | 'register' | 'account';
-
-/** Hands a value to the browser as a downloaded .json file. */
-export function downloadJson(data: unknown, filename: string): void {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 10_000);
-}
+type View = 'login' | 'register';
 
 /**
- * Sign in / sign up, and — once signed in — the account: name, password, sign out, delete the account.
+ * Sign in / sign up. Once signed in it only points to the account page (/tai-khoan), where the account is managed,
+ * and keeps a sign-out button.
  * Shown by the site header while AccountService.dialogOpen() is true.
  */
 @Component({
   selector: 'app-account-dialog',
   standalone: true,
-  imports: [RouterLink, LegalLinksComponent, PasswordFieldComponent],
+  imports: [RouterLink, PasswordFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="ad-backdrop" (click)="close()"></div>
@@ -48,83 +33,7 @@ export function downloadJson(data: unknown, filename: string): void {
             <small>{{ u.email }}</small>
           }
         </p>
-        <p class="ad__note">{{ tx().noteSaved }}</p>
-        @if (account.mail() && !u.emailVerified) {
-          <div class="ad__verify" role="status">
-            <span>{{ tx().verifyNeeded }}</span>
-            <button type="button" class="ad__btn" (click)="resend()" [disabled]="busy()">{{ tx().resend }}</button>
-          </div>
-        }
-
-        @if (billing.enabled()) {
-          <div class="ad__plan">
-            @if (billing.ai(); as ai) {
-              <p>
-                <strong>{{ ai.premium ? 'Premium' : tx().planFree }}</strong>
-                @if (ai.premium && ai.premiumUntil) {
-                  <small>{{ tx().planUntil(day(ai.premiumUntil)) }}</small>
-                }
-              </p>
-              <p class="ad__hint">
-                {{ tx().aiToday(ai.premium ? ai.premiumLeft : null, ai.freeLeft, ai.storyFreeLeft, ai.aiCredits) }}
-              </p>
-            }
-            <a class="ad__btn" routerLink="/premium" (click)="close()">{{ billing.ai()?.premium ? tx().manage : tx().upgrade }}</a>
-          </div>
-        }
-
-        @if (admin()) {
-          <a class="ad__btn" routerLink="/admin/reports" (click)="close()">{{ tx().adminReports }}</a>
-        }
-
-        <form class="ad__form" (submit)="$event.preventDefault(); saveName()">
-          <label>
-            <span>{{ tx().displayName }}</span>
-            <input type="text" name="name" maxlength="80" autocomplete="nickname" [value]="u.displayName ?? ''" (input)="name.set($any($event.target).value)" />
-          </label>
-          <button type="submit" class="ad__btn" [disabled]="busy()">{{ tx().saveName }}</button>
-        </form>
-
-        <details class="ad__more">
-          <summary>{{ tx().changePassword }}</summary>
-          <form class="ad__form" (submit)="$event.preventDefault(); changePassword()">
-            <label>
-              <span>{{ tx().currentPassword }}</span>
-              <app-password-field name="current" autocomplete="current-password" (valueChange)="password.set($event)" />
-            </label>
-            <label>
-              <span>{{ tx().newPassword }}</span>
-              <app-password-field name="new" autocomplete="new-password" [minlength]="8" (valueChange)="newPassword.set($event)" />
-            </label>
-            <button type="submit" class="ad__btn" [disabled]="busy()">{{ tx().changePassword }}</button>
-            <small class="ad__hint">{{ tx().otherDevices }}</small>
-          </form>
-        </details>
-
-        <details class="ad__more">
-          <summary>{{ tx().exportTitle }}</summary>
-          <form class="ad__form" (submit)="$event.preventDefault(); exportData()">
-            <p class="ad__hint">{{ tx().exportHint }}</p>
-            <label>
-              <span>{{ tx().confirmPassword }}</span>
-              <app-password-field name="export" autocomplete="current-password" (valueChange)="password.set($event)" />
-            </label>
-            <button type="submit" class="ad__btn" [disabled]="busy()">{{ busy() ? tx().exportBusy : tx().exportButton }}</button>
-          </form>
-        </details>
-
-        <details class="ad__more ad__danger">
-          <summary>{{ tx().deleteTitle }}</summary>
-          <form class="ad__form" (submit)="$event.preventDefault(); deleteAccount()">
-            <p class="ad__hint">{{ tx().deleteHint }}</p>
-            <label>
-              <span>{{ tx().confirmPassword }}</span>
-              <app-password-field name="confirm" autocomplete="current-password" (valueChange)="password.set($event)" />
-            </label>
-            <button type="submit" class="ad__btn ad__btn--danger" [disabled]="busy()">{{ tx().deleteButton }}</button>
-          </form>
-        </details>
-
+        <a class="ad__btn" routerLink="/tai-khoan" (click)="close()">{{ tx().openAccount }}</a>
         <button type="button" class="ad__btn ad__btn--primary" (click)="logout()" [disabled]="busy()">{{ tx().signOut }}</button>
       } @else {
         <p class="ad__note">
@@ -226,25 +135,6 @@ export function downloadJson(data: unknown, filename: string): void {
       .ad__x:hover {
         background: var(--app-surface-2);
       }
-      .ad__plan {
-        display: grid;
-        gap: 6px;
-        padding: 12px;
-        border: 1px solid var(--app-line);
-        border-radius: 12px;
-        background: var(--app-time-soft);
-      }
-      .ad__plan p {
-        margin: 0;
-      }
-      .ad__plan small {
-        margin-left: 6px;
-        color: var(--app-ink-dim);
-      }
-      .ad__plan .ad__btn {
-        justify-self: start;
-        text-decoration: none;
-      }
       .ad__note,
       .ad__hint {
         margin: 0;
@@ -297,24 +187,9 @@ export function downloadJson(data: unknown, filename: string): void {
         background: var(--app-biz);
         color: #fff;
       }
-      .ad__btn--danger {
-        border-color: #dc2626;
-        color: #dc2626;
-      }
       .ad__btn:disabled {
         opacity: 0.6;
         cursor: progress;
-      }
-      .ad__more summary {
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 13px;
-      }
-      .ad__more[open] summary {
-        margin-bottom: 8px;
-      }
-      .ad__danger summary {
-        color: #dc2626;
       }
       .ad__switch {
         margin: 0;
@@ -330,8 +205,6 @@ export function downloadJson(data: unknown, filename: string): void {
         font-weight: 700;
         cursor: pointer;
       }
-      .ad__verify { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid #d97706; border-radius: 10px; background: color-mix(in srgb, #d97706 10%, transparent); font-size: 13px; }
-      .ad__verify .ad__btn { justify-self: start; }
       .ad__check { display: flex; gap: 8px; align-items: flex-start; font-weight: 500; }
       .ad__check input { margin-top: 3px; }
       .ad__check a, .ad__forgot { color: var(--app-biz); font-weight: 700; }
@@ -354,20 +227,6 @@ export function downloadJson(data: unknown, filename: string): void {
 })
 export class AccountDialogComponent implements AfterViewInit {
   protected readonly account = inject(AccountService);
-  protected readonly billing = inject(BillingService);
-  private readonly http = inject(HttpClient);
-  /** Whether this account may read the reports of wrong figures (the server decides): shows the link to /admin/reports. */
-  protected readonly admin = signal(false);
-  private readonly adminCheck = effect(() => {
-    if (!this.account.user()) {
-      untracked(() => this.admin.set(false));
-      return;
-    }
-    this.http.get<{ admin: boolean }>(`${FEEDBACK_API_URL}/admin/me`, { withCredentials: true }).subscribe({
-      next: (r) => this.admin.set(r.admin === true),
-      error: () => this.admin.set(false),
-    });
-  });
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   private readonly site = inject(SiteLangService);
@@ -376,26 +235,17 @@ export class AccountDialogComponent implements AfterViewInit {
   protected readonly view = signal<View>('login');
   protected readonly email = signal('');
   protected readonly password = signal('');
-  protected readonly newPassword = signal('');
   protected readonly name = signal('');
   protected readonly terms = signal(false);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly done = signal<string | null>(null);
 
-  constructor() {
-    this.name.set(this.account.user()?.displayName ?? '');
-  }
-
   ngAfterViewInit(): void {
     this.host.nativeElement.querySelector<HTMLInputElement>('input')?.focus();
   }
 
   @HostListener('document:keydown.escape')
-  protected day(iso: string): string {
-    return new Date(iso).toLocaleDateString(this.site.lang() === 'en' ? 'en-GB' : 'vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' });
-  }
-
   protected close(): void {
     this.account.dialogOpen.set(false);
   }
@@ -433,30 +283,6 @@ export class AccountDialogComponent implements AfterViewInit {
       if (registering && this.account.mail()) this.done.set(this.tx().doneRegistered(email));
       else this.close();
     });
-  }
-
-  protected resend(): void {
-    this.run(this.account.resendVerification(), () => this.done.set(this.tx().doneResent));
-  }
-
-  protected saveName(): void {
-    this.run(this.account.updateName(this.name()), () => this.done.set(this.tx().doneName));
-  }
-
-  protected changePassword(): void {
-    this.run(this.account.changePassword(this.password(), this.newPassword()), () => this.done.set(this.tx().donePassword));
-  }
-
-  protected exportData(): void {
-    this.run(this.account.exportData(this.password()), (data) => {
-      downloadJson(data, `hanoi-century-vista-du-lieu-${new Date().toISOString().slice(0, 10)}.json`);
-      this.done.set(this.tx().doneExport);
-    });
-  }
-
-  protected deleteAccount(): void {
-    if (!confirm(this.tx().confirmDelete)) return;
-    this.run(this.account.deleteAccount(this.password()), () => this.close());
   }
 
   protected logout(): void {

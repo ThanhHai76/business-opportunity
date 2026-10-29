@@ -3,6 +3,18 @@ import type { SiteLang } from '../../services/site-lang.service';
 /** The words of the sign-in / account dialog, in both languages. */
 export interface AccountText {
   titleAccount: string;
+  home: string;
+  sectionProfile: string;
+  sectionPlan: string;
+  sectionSecurity: string;
+  sectionData: string;
+  sectionAdmin: string;
+  openAccount: string;
+  verifiedBadge: string;
+  unverifiedBadge: string;
+  statAi: string;
+  statStory: string;
+  statBought: string;
   titleRegister: string;
   titleLogin: string;
   close: string;
@@ -14,6 +26,7 @@ export interface AccountText {
   aiToday: (premiumLeft: number | null, free: number, story: number, bought: number) => string;
   manage: string;
   adminReports: string;
+  adminStats: string;
   upgrade: string;
   displayName: string;
   saveName: string;
@@ -58,6 +71,18 @@ export interface AccountText {
 export const ACCOUNT_TEXT: Record<SiteLang, AccountText> = {
   vi: {
     titleAccount: 'Tài khoản',
+    home: 'Trang chủ',
+    sectionProfile: 'Hồ sơ',
+    sectionPlan: 'Gói và lượt dùng',
+    sectionSecurity: 'Bảo mật',
+    sectionData: 'Dữ liệu của bạn',
+    sectionAdmin: 'Quản trị',
+    openAccount: 'Mở trang tài khoản',
+    verifiedBadge: 'Email đã xác minh',
+    unverifiedBadge: 'Email chưa xác minh',
+    statAi: 'Lượt AI chuyên sâu hôm nay',
+    statStory: 'Hà Nội xưa và nay hôm nay',
+    statBought: 'Lượt đã mua',
     titleRegister: 'Tạo tài khoản',
     titleLogin: 'Đăng nhập',
     close: 'Đóng',
@@ -69,6 +94,7 @@ export const ACCOUNT_TEXT: Record<SiteLang, AccountText> = {
     aiToday: (premiumLeft, free, story, bought) => `Lượt AI chuyên sâu hôm nay: ${premiumLeft === null ? '' : `${premiumLeft} Premium + `}${free} miễn phí · Hà Nội xưa và nay: ${story} miễn phí · đã mua: ${bought}`,
     manage: 'Quản lý gói',
     adminReports: 'Quản trị: báo sai số liệu',
+    adminStats: 'Quản trị: thống kê truy cập',
     upgrade: 'Nâng cấp Premium',
     displayName: 'Tên hiển thị',
     saveName: 'Lưu tên',
@@ -111,6 +137,18 @@ export const ACCOUNT_TEXT: Record<SiteLang, AccountText> = {
   },
   en: {
     titleAccount: 'Account',
+    home: 'Home',
+    sectionProfile: 'Profile',
+    sectionPlan: 'Plan and usage',
+    sectionSecurity: 'Security',
+    sectionData: 'Your data',
+    sectionAdmin: 'Administration',
+    openAccount: 'Open the account page',
+    verifiedBadge: 'Email verified',
+    unverifiedBadge: 'Email not verified',
+    statAi: 'In-depth AI questions today',
+    statStory: 'Hanoi Time Machine today',
+    statBought: 'Bought',
     titleRegister: 'Create an account',
     titleLogin: 'Sign in',
     close: 'Close',
@@ -122,6 +160,7 @@ export const ACCOUNT_TEXT: Record<SiteLang, AccountText> = {
     aiToday: (premiumLeft, free, story, bought) => `In-depth AI questions today: ${premiumLeft === null ? '' : `${premiumLeft} Premium + `}${free} free · Hanoi Time Machine: ${story} free · bought: ${bought}`,
     manage: 'Manage plan',
     adminReports: 'Admin: data error reports',
+    adminStats: 'Admin: visit statistics',
     upgrade: 'Upgrade to Premium',
     displayName: 'Display name',
     saveName: 'Save name',

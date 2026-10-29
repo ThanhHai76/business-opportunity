@@ -87,9 +87,10 @@ function brandHeader(brand) {
 
 /**
  * @param report the stored report
- * @param options { brand?: the broker's details to print (Premium), canSwitch?: offer the other version in the toolbar }
+ * @param options { brand?: the broker's details to print (Premium), canSwitch?: offer the other version in the toolbar,
+ *                 sample?: the free sample (a banner and a watermark; `appUrl` is where "make yours" leads) }
  */
-function printPage(report, { brand = null, canSwitch = false } = {}) {
+function printPage(report, { brand = null, canSwitch = false, sample = false, appUrl = '' } = {}) {
   const c = report.content;
   const r = c.feasibility;
   const a = c.assumptions;
@@ -156,11 +157,15 @@ ul{margin:4px 0;padding-left:18px}
 .chart .axis text{fill:#5c574d;font-size:10.5px}
 footer{margin-top:24px;padding-top:10px;border-top:1px solid #ddd8cc}
 @media (max-width:640px){.page{padding:20px 16px}.two{grid-template-columns:1fr}}
+.page.is-sample{position:relative;overflow:hidden}
+.page.is-sample::before{content:"BẢN MẪU";position:absolute;top:42%;left:50%;transform:translate(-50%,-50%) rotate(-24deg);font-size:120px;font-weight:800;letter-spacing:.1em;color:#1f6f4a;opacity:.06;pointer-events:none;white-space:nowrap}
+.sample-banner{margin:0 0 18px;padding:12px 14px;border:1px solid #1f6f4a;border-radius:8px;background:#eef6f1}
+.sample-banner a{color:#1f6f4a;font-weight:700}
 @media print{body{background:#fff}.page{padding:0;max-width:none}.toolbar{display:none}h2{break-after:avoid}}
 </style></head><body>
 <div class="toolbar"><button type="button" onclick="window.print()">Lưu PDF / In</button><span>Trong hộp thoại in, chọn "Lưu dưới dạng PDF".</span>${canSwitch ? (brand ? '<a href="?brand=0">Xem bản chuẩn</a>' : '<a href="?brand=1">Xem bản có thông tin của bạn</a>') : ''}</div>
-<div class="page">
-<header>
+<div class="page${sample ? ' is-sample' : ''}">
+${sample ? `<div class="sample-banner"><strong>Đây là báo cáo mẫu.</strong> Nó dùng giả định mẫu (quán cà phê 60 m², Phường Cầu Giấy) để bạn xem trước nội dung và cách trình bày. Báo cáo của bạn dùng ngành, phường và giả định bạn chọn. <a href="${e(appUrl)}/opportunity-map">Làm báo cáo cho kế hoạch của bạn →</a></div>` : ''}<header>
   ${brand ? brandHeader(brand) : '<div class="brand">Hanoi Century Vista · Báo cáo khả thi kinh doanh</div>'}
   <h1>${e(c.type.icon)} ${e(c.type.name)} tại ${e(c.ward.name)}</h1>
   <div class="meta">Mốc: ${c.horizon === '2030' ? '2030 (có tín hiệu tăng trưởng)' : 'hiện tại'} · Tạo ngày ${e(date(c.generatedAt))} · Dữ liệu bản đồ ngày ${e(c.dataDate ? date(c.dataDate) : '—')} · Mã báo cáo ${e(report.id.slice(0, 8).toUpperCase())}</div>

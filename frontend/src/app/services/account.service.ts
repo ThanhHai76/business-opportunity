@@ -3,6 +3,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable, map, tap } from 'rxjs';
 import { ACCOUNT_API_URL } from '../config';
 import { ERROR_EN } from '../components/account/account.i18n';
+import { track } from './analytics';
 import { siteLangNow } from './site-lang.service';
 
 export interface AccountUser {
@@ -72,7 +73,7 @@ export class AccountService {
   register(email: string, password: string, displayName: string, acceptTerms = false): Observable<AccountUser> {
     return this.http
       .post<{ user: AccountUser }>(`${ACCOUNT_API_URL}/register`, { email, password, ...(displayName.trim() ? { displayName } : {}), ...(acceptTerms ? { acceptTerms: true } : {}) }, opts)
-      .pipe(map((r) => r.user), tap((u) => this.user.set(u)));
+      .pipe(map((r) => r.user), tap((u) => this.user.set(u)), tap(() => track('signup')));
   }
 
   login(email: string, password: string): Observable<AccountUser> {

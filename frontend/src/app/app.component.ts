@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { PremiumPromptComponent } from './components/premium-prompt/premium-prompt.component';
 import { SiteNavComponent } from './components/site-nav/site-nav.component';
 import { startAnalytics } from './services/analytics';
+import { startScrollToTop } from './services/scroll-top';
 import { SeoService } from './services/seo.service';
 
 @Component({
@@ -16,5 +17,6 @@ export class AppComponent {
   constructor() {
     inject(SeoService).start();
     startAnalytics();
+    startScrollToTop();
   }
 }

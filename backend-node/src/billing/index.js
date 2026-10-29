@@ -128,6 +128,7 @@ function createBilling(options) {
     const result = await store().markOrderPaid(paid.orderCode, { amountVnd: paid.amountVnd, providerRef: paid.reference, paidAt: new Date() });
     if (!result.order) console.warn(`[billing] payment for unknown order ${paid.orderCode} (${paid.amountVnd} VND, ${paid.reference})`);
     else if (result.mismatch) console.warn(`[billing] order ${paid.orderCode}: paid ${paid.amountVnd} VND, expected ${result.order.amountVnd} — not credited, check by hand`);
+    else if (result.credited) options.onEvent?.('order_paid', result.order.product);
     return result;
   }
 
@@ -190,6 +191,7 @@ function createBilling(options) {
         cancelUrl,
       });
       const saved = (await store().setOrderProviderRef(order.id, payment.providerRef)) ?? order;
+      options.onEvent?.('checkout_start', body.product);
       res.status(201).json({ order: orderView(saved), checkoutUrl: payment.checkoutUrl });
     }),
   );

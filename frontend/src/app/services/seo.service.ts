@@ -6,7 +6,7 @@ import { filter } from 'rxjs';
 import { SITE_URL } from '../config';
 
 const DEFAULT_DESCRIPTION =
-  'Hanoi Century Vista: mở gì ở đâu (bản đồ cơ hội kinh doanh), Hà Nội xưa và nay, điểm đáng sống, Hà Nội tương lai và chấm điểm bất động sản.';
+  'Hanoi Century Vista: mở gì ở đâu (bản đồ cơ hội kinh doanh), Hà Nội xưa và nay, điểm đáng sống, Hà Nội tương lai, chấm điểm bất động sản và la bàn nghề nghiệp: sáu công cụ theo Quy hoạch Thủ đô tầm nhìn 100 năm.';
 
 /** Description per route (first path segment). Anything not listed keeps the default. */
 export const ROUTE_DESCRIPTIONS: Record<string, string> = {
@@ -14,7 +14,7 @@ export const ROUTE_DESCRIPTIONS: Record<string, string> = {
   'opportunity-map': 'Mở gì ở đâu — bản đồ cơ hội kinh doanh Hà Nội: chấm điểm 79 phường/xã theo nhu cầu, cạnh tranh và rủi ro từ dữ liệu OpenStreetMap, kèm báo cáo và hỏi đáp AI.',
   'time-machine': 'Hà Nội xưa và nay (Hanoi Time Machine): xem các công trình Hà Nội qua từng thời kỳ, từ ảnh tư liệu xưa tới kịch bản tương lai, và hỏi AI kể chuyện dựa trên dữ liệu có nguồn.',
   'living-score': 'Điểm đáng sống (Living Score): điểm chất lượng sống của từng khu vực Hà Nội theo tiêu chí bạn chọn.',
-  'future-map': 'Hà Nội tương lai (Hanoi Future Map): các mốc quy hoạch Hà Nội giai đoạn 2026–2065 và Vùng Thủ đô, có nguồn trích dẫn.',
+  'future-map': 'Hà Nội tương lai (Hanoi Future Map): các mốc quy hoạch Hà Nội giai đoạn 2026–2085 và Vùng Thủ đô, có nguồn trích dẫn.',
   'property-intelligence': 'Chấm điểm bất động sản (AI Property Intelligence): giá đất, thị trường và dự án bất động sản Hà Nội, kèm nguồn, ngày dữ liệu và độ tin cậy.',
   career: 'La bàn nghề nghiệp Hà Nội: định hướng việc làm cho người thất nghiệp, đổi nghề, sinh viên mới ra trường và người đang đi làm muốn tham khảo thị trường, theo cách Hà Nội thay đổi, có nguồn trích dẫn.',
   'giai-thich-diem': 'Điểm số nghĩa là gì: giải thích bằng lời thường điểm cơ hội, điểm đáng sống và điểm tiềm năng bất động sản của Hanoi Century Vista, cách tính và giới hạn.',
@@ -26,7 +26,7 @@ export const ROUTE_DESCRIPTIONS: Record<string, string> = {
 };
 
 /** Pages with no value in search results (links from emails, password screens). */
-const NO_INDEX = new Set(['forgot-password', 'reset-password', 'verify-email', 'admin']);
+const NO_INDEX = new Set(['forgot-password', 'reset-password', 'verify-email', 'admin', 'tai-khoan']);
 
 /**
  * Keeps the description, canonical link, robots and Open Graph / Twitter tags in step with the route.

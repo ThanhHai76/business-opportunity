@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { REPORTS_API_URL } from '../config';
 import { ScoreHelpComponent } from '../components/score-help/score-help.component';
 import { EMPTY, catchError, of, switchMap, tap } from 'rxjs';
 import { IconComponent } from '../living-score/components/icon/icon.component';
@@ -104,6 +105,8 @@ export class OpportunityComponent {
   protected readonly answer = signal<AskAnswer | null>(null);
   protected readonly askError = signal<string | null>(null);
   protected readonly methodOpen = signal(false);
+  /** The free sample of the paid report (a real one, for a plain café plan). */
+  protected readonly sampleUrl = `${REPORTS_API_URL}/sample`;
   protected readonly reportOpen = signal(false);
   protected readonly feasStore = inject(FeasibilityStore);
   /** Feasibility of the business type in focus, on the user's assumptions (for the report). */

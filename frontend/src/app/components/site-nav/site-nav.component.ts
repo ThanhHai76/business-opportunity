@@ -29,7 +29,7 @@ interface SiteTab {
   key: 'biz' | 'time' | 'live' | 'future' | 'property' | 'career';
 }
 
-/** The five tools in three groups, so a newcomer sees who each is for before reading names. */
+/** The six tools in three groups, so a newcomer sees who each is for before reading names. */
 interface SiteGroup {
   id: string;
   label: string;
@@ -38,7 +38,7 @@ interface SiteGroup {
 }
 
 /**
- * Header shared by every page: brand (home link), the five tools in three groups, the account button and the light/dark switch.
+ * Header shared by every page: brand (home link), the six tools in three groups, the account button and the light/dark switch.
  * Wide screens: inline pill tabs. Narrow screens (<= 1100px): a menu button that opens a drop-down panel.
  */
 @Component({
@@ -163,6 +163,12 @@ export class SiteNavComponent {
     } catch {
       return false;
     }
+  }
+
+  /** Signed in: the account page. Signed out: the small sign-in dialog. */
+  protected openAccount(): void {
+    if (this.account.user()) void this.router.navigateByUrl('/tai-khoan');
+    else this.account.dialogOpen.set(true);
   }
 
   protected closeNudge(): void {
