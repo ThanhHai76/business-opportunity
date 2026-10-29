@@ -8,7 +8,7 @@ export interface CareerText {
   title: string;
   lead: string;
   tabsLabel: string;
-  tabs: { paths: string; plan: string; market: string; map: string; support: string };
+  tabs: { paths: string; plan: string; switch: string; market: string; map: string; support: string };
   aboutYou: string;
   q1: string;
   q2: string;
@@ -22,6 +22,8 @@ export interface CareerText {
   wardAria: string;
   seeResults: string;
   answerAll: string;
+  calcLink: string;
+  calcCost: string;
   redo: string;
   resultsTitle: string;
   resultsNote: string;
@@ -99,7 +101,7 @@ export const CAREER_TEXT: Record<CareerLang, CareerText> = {
     title: 'La bàn nghề nghiệp Hà Nội',
     lead: 'Dành cho người đang thất nghiệp, muốn đổi nghề, mới ra trường, và cả người đang đi làm muốn tham khảo thị trường việc làm. Trả lời 5 câu hỏi ngắn để thấy những hướng nghề hợp với bạn, gắn với cách Hà Nội đang thay đổi. Mỗi con số đều có nguồn.',
     tabsLabel: 'Các phần của trang',
-    tabs: { paths: 'Hướng nghề của bạn', plan: 'Kế hoạch 30 ngày', market: 'Thị trường', map: 'Bản đồ', support: 'Hỗ trợ và nơi tìm việc' },
+    tabs: { paths: 'Hướng nghề của bạn', plan: 'Kế hoạch 30 ngày', switch: 'Đổi nghề', market: 'Thị trường', map: 'Bản đồ', support: 'Hỗ trợ và nơi tìm việc' },
     aboutYou: 'Về bạn',
     q1: '1. Bạn đang ở hoàn cảnh nào?',
     q2: '2. Nghề hiện tại, nghề cũ hoặc ngành đã học của bạn?',
@@ -112,7 +114,9 @@ export const CAREER_TEXT: Record<CareerLang, CareerText> = {
     notChosen: 'Chưa chọn',
     wardAria: 'Phường hoặc xã bạn đang ở',
     seeResults: 'Xem hướng nghề của bạn ↓',
-    answerAll: 'Trả lời đủ 5 câu để xem kết quả. Câu trả lời chỉ lưu trên trình duyệt này.',
+    answerAll: 'Trả lời đủ 5 câu đầu để xem kết quả (câu 6 không bắt buộc). Câu trả lời chỉ lưu trên trình duyệt này.',
+    calcLink: 'Muốn biết đổi nghề tốn bao nhiêu và bao lâu hoàn vốn? Tính ở tab Đổi nghề →',
+    calcCost: 'Tính chi phí đổi sang hướng này',
     redo: 'Làm lại',
     resultsTitle: 'Hướng nghề gợi ý cho bạn',
     resultsNote: 'Xếp theo mức phù hợp với câu trả lời của bạn. Đây là gợi ý để bạn tìm hiểu thêm, không phải lời hứa có việc làm.',
@@ -190,7 +194,7 @@ export const CAREER_TEXT: Record<CareerLang, CareerText> = {
     title: 'Hanoi Career Compass',
     lead: 'For people who are unemployed, want to change careers or have just graduated, and also for people already working who want to look at the job market. Answer 5 short questions to see the career directions that suit you, tied to how Hanoi is changing. Every figure has a source.',
     tabsLabel: 'Sections of the page',
-    tabs: { paths: 'Your career paths', plan: '30-day plan', market: 'Job market', map: 'Map', support: 'Support and where to look' },
+    tabs: { paths: 'Your career paths', plan: '30-day plan', switch: 'Switching careers', market: 'Job market', map: 'Map', support: 'Support and where to look' },
     aboutYou: 'About you',
     q1: '1. What is your situation?',
     q2: '2. Your current or former job, or field of study?',
@@ -203,7 +207,9 @@ export const CAREER_TEXT: Record<CareerLang, CareerText> = {
     notChosen: 'Not chosen',
     wardAria: 'The ward or commune you live in',
     seeResults: 'See your career paths ↓',
-    answerAll: 'Answer all 5 questions to see the results. Your answers are kept only in this browser.',
+    answerAll: 'Answer the first 5 questions to see the results (question 6 is optional). Your answers are kept only in this browser.',
+    calcLink: 'Want to know what a change costs and when it pays back? Work it out in the Switching careers tab →',
+    calcCost: 'Work out the cost of switching to this',
     redo: 'Start over',
     resultsTitle: 'Career paths suggested for you',
     resultsNote: 'Ranked by how well they fit your answers. These are suggestions to explore, not a promise of a job.',

@@ -174,7 +174,7 @@ describe('Career compass in English: the page and the job map text', () => {
   });
 
   it('names the same tabs in both languages', () => {
-    expect(Object.keys(CAREER_TEXT.en.tabs)).toEqual(['paths', 'plan', 'market', 'map', 'support']);
+    expect(Object.keys(CAREER_TEXT.en.tabs)).toEqual(['paths', 'plan', 'switch', 'market', 'map', 'support']);
     expect(CAREER_TEXT.vi.tabs.map).toBe('Bản đồ');
   });
 });

@@ -9,6 +9,7 @@ import { DATA_DATE, DIRECTIONS, SOURCES, Background } from './career.data';
 import { TravelItems, WardPoint, commuteText, placementsFor } from './career.geo';
 import { CareerLang, channelsIn, contextIn, directionsIn, initialCareerLang, localeOf, policiesIn, signalsIn, sourceKindIn, sourceTitleIn } from './career.local';
 import { CAREER_TEXT } from './career.ui';
+import { CareerSwitchComponent } from './career-switch.component';
 import { JobMapSectionComponent } from './job-map-section.component';
 import { CareerStore, MAX_PLANS } from './career.store';
 import { ReportIssueComponent } from '../components/report-issue/report-issue.component';
@@ -23,8 +24,8 @@ import { BACKGROUND_LABEL, EMPTY_PROFILE, Profile, WEIGHTS, backgroundLabel, isC
 
 const SHOWN = 5;
 
-type TabId = 'paths' | 'plan' | 'market' | 'map' | 'support';
-const TABS: { id: TabId }[] = [{ id: 'paths' }, { id: 'plan' }, { id: 'market' }, { id: 'map' }, { id: 'support' }];
+type TabId = 'paths' | 'plan' | 'switch' | 'market' | 'map' | 'support';
+const TABS: { id: TabId }[] = [{ id: 'paths' }, { id: 'plan' }, { id: 'switch' }, { id: 'market' }, { id: 'map' }, { id: 'support' }];
 
 /** The tab in the address (?tab=map), so a link can open the page on it. */
 function initialTab(): TabId {
@@ -44,7 +45,7 @@ function initialTab(): TabId {
 @Component({
   selector: 'app-career',
   standalone: true,
-  imports: [RouterLink, JobMapSectionComponent, OpBrandComponent, ReportIssueComponent],
+  imports: [RouterLink, JobMapSectionComponent, OpBrandComponent, ReportIssueComponent, CareerSwitchComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="cc" [attr.lang]="lang()">
@@ -162,6 +163,7 @@ function initialTab(): TabId {
                 }
                 <button type="button" class="cc__link" (click)="goToMap()">{{ tx().seeMap }}</button>
               </p>
+              <p class="cc__note"><button type="button" class="cc__link" (click)="openSwitch('')">{{ tx().calcLink }}</button></p>
               <ol class="cc__list">
                 @for (r of shown(); track r.direction.id; let i = $index) {
                   <li class="cc__card" [class.is-low]="r.level === 'low'">
@@ -256,7 +258,10 @@ function initialTab(): TabId {
                         }
                       </p>
                     </details>
-                    <button type="button" class="cc__planbtn" [class.is-on]="hasPlan(r.direction.id)" (click)="choosePlan(r.direction.id)">{{ planLabel(r.direction.id) }}</button>
+                    <div class="cc__cta">
+                      <button type="button" class="cc__planbtn" [class.is-on]="hasPlan(r.direction.id)" (click)="choosePlan(r.direction.id)">{{ planLabel(r.direction.id) }}</button>
+                      <button type="button" class="cc__planbtn cc__calcbtn" (click)="openSwitch(r.direction.name)">{{ tx().calcCost }}</button>
+                    </div>
                   </li>
                 }
               </ol>
@@ -354,6 +359,13 @@ function initialTab(): TabId {
         </div>
       }
 
+      <!-- The career-change calculator -->
+      @if (tab() === 'switch') {
+        <div class="cc__panel" role="tabpanel" id="cc-panel-switch" aria-labelledby="cc-tab-switch" tabindex="0">
+          <app-career-switch [lang]="lang()" [suggestedName]="switchName()" />
+        </div>
+      }
+
       <!-- The market -->
       @if (tab() === 'market') {
         <div class="cc__panel" role="tabpanel" id="cc-panel-market" aria-labelledby="cc-tab-market" tabindex="0">
@@ -437,8 +449,8 @@ function initialTab(): TabId {
         </div>
       }
 
-      <section class="cc__sources" aria-labelledby="cc-sources">
-        <h2 id="cc-sources">{{ tx().sourcesTitle }}</h2>
+      <details class="cc__sources">
+        <summary><h2 id="cc-sources">{{ tx().sourcesTitle }} ({{ sources.length }})</h2></summary>
         <ol>
           @for (s of sources; track s.id) {
             <li>
@@ -449,7 +461,7 @@ function initialTab(): TabId {
           }
         </ol>
         <p class="cc__note">{{ tx().sourcesNote(dataDate) }} {{ tx().sourcesLang }}</p>
-      </section>
+      </details>
     </main>
   `,
   styles: `
@@ -562,6 +574,12 @@ function initialTab(): TabId {
     .cc__tasks input:checked + span { color: var(--app-ink-dim); text-decoration: line-through; }
     .cc__tasks a { color: var(--app-career); font-weight: 700; margin-left: 6px; }
     .cc__after { margin: 14px 0 6px; font-size: 14px; }
+    .cc__sources summary { cursor: pointer; }
+    .cc__sources summary h2 { display: inline; }
+    .cc__sources ol { margin-top: 12px; }
+    .cc__cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .cc__cta .cc__planbtn { margin-top: 0; }
+    .cc__calcbtn { border-color: var(--app-line); background: var(--app-surface); color: var(--app-ink); }
     .cc__planbtn { margin-top: 12px; padding: 9px 16px; min-height: 40px; border: 1px solid var(--app-career); border-radius: 999px; background: var(--app-career-soft); color: var(--app-career); font: inherit; font-weight: 700; cursor: pointer; }
     .cc__planbtn.is-on { background: var(--app-career); color: #fff; }
     .cc__places { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
@@ -603,6 +621,8 @@ export class CareerComponent {
   private readonly api = inject(PiApiService);
   protected readonly tabs = TABS;
   protected readonly tab = signal<TabId>(initialTab());
+  /** The direction the person came from to the calculator: it names the first option there. */
+  protected readonly switchName = signal('');
   /** The map is created when its tab is first opened and then kept, so what you chose on it stays. */
   protected readonly mapSeen = signal(initialTab() === 'map');
   private readonly store = inject(CareerStore);
@@ -805,6 +825,12 @@ export class CareerComponent {
     const tab = window.open(url, '_blank');
     if (!tab) this.exportMessage.set(this.tx().exportBlocked);
     setTimeout(() => URL.revokeObjectURL(url), 120_000);
+  }
+
+  /** From a direction (or the note under the results) to the career-change calculator. */
+  protected openSwitch(directionName: string): void {
+    this.switchName.set(directionName);
+    this.openTab('switch');
   }
 
   protected askPremium(feature: string): void {
