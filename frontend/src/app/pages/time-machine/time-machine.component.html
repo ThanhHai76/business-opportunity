@@ -329,7 +329,7 @@
         <div>
           <p class="tm-chapter-kicker" data-en="Time Lens · Best on a phone, on site">Time Lens · Dùng trên điện thoại, tại địa danh</p>
           <h2 class="tm-chapter-title" data-en="Hold the past up to today’s view">Đặt ảnh xưa lên khung cảnh hôm nay</h2>
-          <p class="tm-chapter-lede" data-en="Stand at a landmark and turn on the camera: the archive photo is laid semi-transparently over the camera view. Move until the old view lines up, then save your “Then vs Now” photo.">Đứng tại địa danh và bật camera: ảnh tư liệu được phủ mờ lên hình camera. Xoay máy cho đến khi khớp với góc chụp năm xưa, rồi lưu lại tấm ảnh “Xưa vs Nay”.</p>
+          <p class="tm-chapter-lede" data-en="Stand at a landmark and turn on the camera: the archive photo is laid semi-transparently over the camera view. Move until the old view lines up, then save your “Then vs Now” photo. No camera? Pick a photo of the place as it is today instead.">Đứng tại địa danh và bật camera: ảnh tư liệu được phủ mờ lên hình camera. Xoay máy cho đến khi khớp với góc chụp năm xưa, rồi lưu lại tấm ảnh “Xưa vs Nay”. Không có camera? Hãy chọn một tấm ảnh hiện nay của địa danh.</p>
         </div>
       </div>
 
@@ -337,9 +337,10 @@
         <div class="tm-lens">
           <div class="tm-lens-stage" id="tm-lensStage">
             <video id="tm-lensVideo" playsinline muted></video>
+            <img id="tm-lensUser" class="tm-lens-user" alt="" decoding="async">
             <img id="tm-lensPhoto" loading="lazy" alt="" decoding="async">
             <span class="tm-lens-year" id="tm-lensYear"></span>
-            <p class="tm-lens-hint" id="tm-lensHint" data-en="Turn on the camera to lay this photo over the real scene">Bật camera để chồng ảnh này lên khung cảnh thật</p>
+            <p class="tm-lens-hint" id="tm-lensHint">Bật camera để chồng ảnh này lên khung cảnh thật</p>
           </div>
           <label class="tm-lens-opacity">
             <span data-en="Today">Hôm nay</span>
@@ -359,13 +360,15 @@
             <button type="button" class="tm-btn tm-btn-primary" id="tm-lensCamera">Bật camera</button>
             <button type="button" class="tm-btn tm-btn-ghost" id="tm-lensCapture" disabled>Chụp &amp; lưu ảnh</button>
           </div>
+          <input type="file" id="tm-lensFile" accept="image/*" hidden>
+          <p class="tm-lens-mode" id="tm-lensMode" hidden></p>
           <p class="tm-lens-status" id="tm-lensStatus" role="status" aria-live="polite"></p>
           <ul class="tm-ar-copy-list">
             <li><span class="tm-n">01</span><div><h4 data-en="Find or pick the landmark">Tìm hoặc chọn địa danh</h4><p data-en="Press “Find the landmark near me” when you are in Hanoi, or pick one from the list.">Bấm “Tìm địa danh gần tôi” khi đang ở Hà Nội, hoặc chọn trong danh sách.</p></div></li>
             <li><span class="tm-n">02</span><div><h4 data-en="Turn on the camera and line it up">Bật camera và căn cho khớp</h4><p data-en="The archive photo is laid over the camera view. Step back or turn until the lines match; use the slider to fade between then and now.">Ảnh tư liệu phủ mờ lên hình camera. Lùi lại hoặc xoay máy cho đến khi các đường nét trùng nhau; kéo thanh trượt để chuyển giữa xưa và nay.</p></div></li>
             <li><span class="tm-n">03</span><div><h4 data-en="Save your Then vs Now photo">Lưu ảnh Xưa vs Nay</h4><p data-en="Capture the combined view — the picture carries the landmark’s name and the archive photo’s credit, ready to save or share.">Chụp lại khung hình đã chồng ảnh — tấm ảnh kèm tên địa danh và nguồn ảnh tư liệu, sẵn sàng để lưu hoặc chia sẻ.</p></div></li>
           </ul>
-          <p class="tm-lens-note" data-en="Lining up is done by hand — the page does not recognise buildings. The camera image and your location are only processed on your device and are never sent anywhere. Camera and location need your permission and an HTTPS page. On a computer, use the Then & Now slider in chapter 03.">Việc căn chỉnh là thủ công — trang không tự nhận diện công trình. Hình camera và vị trí chỉ được xử lý trên máy bạn, không gửi đi đâu. Camera và định vị cần bạn cho phép và trang phải chạy qua HTTPS. Trên máy tính, hãy dùng khung Xưa &amp; Nay ở chương 03.</p>
+          <p class="tm-lens-note" data-en="Lining up is done by hand — the page does not recognise buildings. The camera image and your location are only processed on your device and are never sent anywhere. Camera and location need your permission and an HTTPS page. A photo you pick stays on your device too.">Việc căn chỉnh là thủ công — trang không tự nhận diện công trình. Hình camera và vị trí chỉ được xử lý trên máy bạn, không gửi đi đâu. Camera và định vị cần bạn cho phép và trang phải chạy qua HTTPS. Ảnh bạn chọn cũng chỉ ở trên máy bạn.</p>
         </div>
       </div>
     </section>

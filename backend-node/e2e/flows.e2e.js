@@ -454,6 +454,27 @@ describe('End-to-end flows', { skip: why ?? false }, () => {
     await page.waitFor(`window.scrollY < 5`, 'the new page at its top');
   });
 
+  it('time lens without a camera: the button offers the visitor’s own photo, and the old one is laid over it', async () => {
+    await fresh('/time-machine');
+    await page.waitFor(`!!document.querySelector('#tm-lensCamera')`, 'the time lens');
+    // The test browser has no camera: asking for it ends in an offer to pick a photo of today.
+    await page.evaluate(`document.querySelector('#tm-lensCamera').click(); true`);
+    await page.waitFor(`/Chọn ảnh hiện nay/.test(document.querySelector('#tm-lensCamera').textContent)`, 'the button to offer a photo of the visitor’s own');
+    assert.equal(await page.evaluate(`document.querySelector('#tm-lensMode').hidden`), false);
+    assert.equal(await page.evaluate(`document.querySelector('#tm-lensCapture').disabled`), true);
+    // Pick a photo (made here, as a file chooser cannot be driven).
+    await page.evaluate(`(async () => {
+      const c = document.createElement('canvas'); c.width = 80; c.height = 60;
+      c.getContext('2d').fillRect(0, 0, 80, 60);
+      const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
+      const dt = new DataTransfer(); dt.items.add(new File([blob], 'today.png', { type: 'image/png' }));
+      const input = document.querySelector('#tm-lensFile'); input.files = dt.files; input.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
+    })()`);
+    await page.waitFor(`document.querySelector('#tm-lensStage').classList.contains('live') && !document.querySelector('#tm-lensCapture').disabled`, 'the stage to show the photo and the capture button to be ready');
+    assert.match(await page.text('#tm-lensCamera'), /Chọn ảnh khác/);
+  });
+
   it('left no uncaught error in the page', () => {
     assert.deepEqual(page.errors, []);
   });

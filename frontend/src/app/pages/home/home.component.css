@@ -88,8 +88,9 @@ main {
   z-index: 1;
   max-width: 760px;
   margin: 0 auto;
-  /* bottom room for the skyline: more on wide screens, where the picture is wider than tall */
-  padding: clamp(3.5rem, 9vh, 6rem) clamp(18px, 4vw, 48px) clamp(13rem, 26vw, 22rem);
+  /* bottom room for the skyline: the flag, its highest point, stands about 21% of the width above the bottom edge
+     (and about 40% of the height on a narrow screen), so the text must end above it */
+  padding: clamp(3.5rem, 9vh, 6rem) clamp(18px, 4vw, 48px) max(17rem, calc(21.5vw + 2rem));
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -117,8 +118,11 @@ main {
 }
 
 .hero-source {
+  /* under the picture, not on it, so it hides none of the skyline */
   max-width: 60ch;
-  margin: 0.9rem 0 0;
+  margin: calc(-1 * clamp(0.5rem, 2vh, 1.25rem)) auto 0;
+  padding: 0 clamp(18px, 4vw, 48px);
+  text-align: center;
   color: var(--ink-dim);
   font-size: 0.85rem;
   font-weight: 600;

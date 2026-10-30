@@ -53,10 +53,10 @@ export interface HomeText {
 
 export const HOME_TEXT: Record<SiteLang, HomeText> = {
   vi: {
-    eyebrow: 'Quy hoạch tổng thể Thủ đô Hà Nội tầm nhìn 100 năm · QĐ 2512/QĐ-UBND',
+    eyebrow: 'Quy hoạch tổng thể Thủ đô Hà Nội tầm nhìn 100 năm',
     title: 'Hà Nội sắp đổi thay, bạn chuẩn bị gì từ hôm nay?',
-    sub: 'Quy hoạch 100 năm nghe thì lớn lao, nhưng rồi sẽ chạm tới từng con phố, từng phường. Ở đây bạn xem nó trên bản đồ, rồi dùng sáu công cụ để tính chuyện của mình: mở quán ở đâu, theo nghề nào, ở khu nào, mua nhà ở đâu, hay đơn giản là xem Hà Nội xưa và nay.',
-    heroSource: 'Dựa trên QĐ 2512, 1668 và 1569 · Số liệu đều có nguồn',
+    sub: 'Xem quy hoạch trên bản đồ, rồi dùng sáu công cụ để tính chuyện mở quán, chọn nghề, chọn nơi ở.',
+    heroSource: 'Theo quy hoạch đã được phê duyệt · Số liệu đều có nguồn',
     quickTitle: 'Bạn đang cần gì?',
     quickSub: 'Chọn điều gần nhất với bạn, chúng tôi đưa bạn tới đúng công cụ. Không cần đăng nhập để bắt đầu.',
     wardTitle: 'Tra cứu phường/xã của bạn',
@@ -96,10 +96,10 @@ export const HOME_TEXT: Record<SiteLang, HomeText> = {
     footer: 'Demo dự án bản đồ đô thị tương tác · © 2026',
   },
   en: {
-    eyebrow: 'The Hanoi Capital master plan with a 100-year vision · Decision 2512/QĐ-UBND',
+    eyebrow: 'The Hanoi Capital master plan with a 100-year vision',
     title: 'Hanoi is about to change. What will you do about it?',
-    sub: 'A 100-year plan sounds grand, but it will reach every street and ward. Here you can see it on a map, then use six tools to work out your own plans: where to open a shop, which career to follow, where to live, where to buy, or just how Hanoi looked then and now.',
-    heroSource: 'Based on Decisions 2512, 1668 and 1569 · Every figure has a source',
+    sub: 'See the plan on the map, then use six tools to work out opening a shop, choosing a career and choosing where to live.',
+    heroSource: 'Based on the approved plans · Every figure has a source',
     quickTitle: 'What do you need?',
     quickSub: 'Pick what is closest to you and we will take you to the right tool. No sign-in needed to start.',
     wardTitle: 'Look up your ward or commune',

@@ -14,10 +14,15 @@ const formatDistance = (km: number): string => (km < 1 ? `${Math.max(10, Math.ro
 /**
  * Time Lens: the archive photo of a landmark laid semi-transparently over the phone's camera, so the visitor
  * can line up the old view with today's and save the result. Alignment is manual (no recognition); the
- * camera image and the location never leave the device.
+ * camera image and the location never leave the device. Where there is no camera (a computer, or a page without
+ * HTTPS) the visitor picks a photo of the place as it is today instead, and the old photo is laid over that.
  */
 export class TmLens {
   private stream: MediaStream | null = null;
+  /** The visitor's own photo of the place today, used when there is no camera. */
+  private photo: HTMLImageElement | null = null;
+  private photoUrl: string | null = null;
+  private cameraOk = true;
   private opacity = 0.5;
 
   constructor(
@@ -32,7 +37,17 @@ export class TmLens {
   init(): void {
     this.el<HTMLSelectElement>('tm-lensSelect')?.addEventListener('change', (e) => this.ctx.select((e.target as HTMLSelectElement).value));
     this.el('tm-lensLocate')?.addEventListener('click', () => this.locate());
-    this.el('tm-lensCamera')?.addEventListener('click', () => (this.stream ? this.stopCamera() : void this.startCamera()));
+    this.el('tm-lensCamera')?.addEventListener('click', () => {
+      if (!this.cameraOk) this.el<HTMLInputElement>('tm-lensFile')?.click();
+      else if (this.stream) this.stopCamera();
+      else void this.startCamera();
+    });
+    this.el<HTMLInputElement>('tm-lensFile')?.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      const file = input.files?.[0];
+      input.value = '';
+      if (file) this.usePhoto(file);
+    });
     this.el('tm-lensCapture')?.addEventListener('click', () => void this.capture());
     const slider = this.el<HTMLInputElement>('tm-lensOpacity');
     slider?.addEventListener('input', () => {
@@ -40,6 +55,23 @@ export class TmLens {
       this.el('tm-lensStage')?.style.setProperty('--lens-opacity', String(this.opacity));
     });
     this.refresh();
+    void this.detectCamera();
+  }
+
+  /** Whether this device can open a camera at all: a secure page, a browser with camera support, a video input. */
+  private async detectCamera(): Promise<void> {
+    let ok = window.isSecureContext && !!navigator.mediaDevices?.getUserMedia;
+    if (ok && navigator.mediaDevices.enumerateDevices) {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        // An empty list says nothing (some browsers list devices only after permission): only a list without any camera does.
+        if (devices.length > 0 && !devices.some((d) => d.kind === 'videoinput')) ok = false;
+      } catch {
+        // keep the guess
+      }
+    }
+    this.cameraOk = ok;
+    this.renderButtons();
   }
 
   /** Re-reads the selected landmark and the language. Called by the page on every render. */
@@ -74,22 +106,77 @@ export class TmLens {
 
   destroy(): void {
     this.stopCamera();
+    this.clearPhoto();
+  }
+
+  // ---------- Own photo (no camera) ----------
+
+  private clearPhoto(): void {
+    if (this.photoUrl) URL.revokeObjectURL(this.photoUrl);
+    this.photoUrl = null;
+    this.photo = null;
+    this.el<HTMLImageElement>('tm-lensUser')?.removeAttribute('src');
+  }
+
+  private usePhoto(file: File): void {
+    const { ctx } = this;
+    if (!file.type.startsWith('image/')) {
+      this.status(ctx.tr('Đây không phải là ảnh — hãy chọn một tệp ảnh (JPG, PNG…).', 'That is not an image — pick a picture file (JPG, PNG…).'));
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    const img = this.el<HTMLImageElement>('tm-lensUser');
+    if (!img) return;
+    img.onload = () => {
+      if (this.photoUrl && this.photoUrl !== url) URL.revokeObjectURL(this.photoUrl);
+      this.photoUrl = url;
+      this.photo = img;
+      this.status(ctx.tr('Kéo thanh trượt để chuyển giữa ảnh hôm nay và ảnh xưa. Hai tấm ảnh càng cùng góc chụp thì càng dễ so.', 'Drag the slider between your photo and the old one. The closer the two angles, the easier the comparison.'));
+      this.renderButtons();
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      this.status(ctx.tr('Không mở được ảnh này — hãy thử một tệp khác.', 'Could not open this picture — try another file.'));
+    };
+    img.src = url;
   }
 
   private renderButtons(): void {
     const { ctx } = this;
-    const live = !!this.stream;
+    const live = !!this.stream || !!this.photo;
     const camera = this.el('tm-lensCamera');
-    if (camera) camera.textContent = live ? ctx.tr('Tắt camera', 'Turn camera off') : ctx.tr('Bật camera', 'Turn camera on');
+    if (camera) {
+      camera.textContent = !this.cameraOk
+        ? this.photo
+          ? ctx.tr('Chọn ảnh khác', 'Pick another photo')
+          : ctx.tr('Chọn ảnh hiện nay của bạn', 'Pick your photo of today')
+        : this.stream
+          ? ctx.tr('Tắt camera', 'Turn camera off')
+          : ctx.tr('Bật camera', 'Turn camera on');
+    }
+    const mode = this.el('tm-lensMode');
+    if (mode) {
+      mode.hidden = this.cameraOk;
+      mode.textContent = ctx.tr(
+        'Thiết bị này không mở được camera (máy tính, hoặc trang chưa chạy HTTPS). Hãy chọn một tấm ảnh chụp địa danh hôm nay, ảnh tư liệu sẽ phủ lên đó.',
+        'This device cannot open a camera (a computer, or a page without HTTPS). Pick a photo of the place as it is today and the archive photo is laid over it.',
+      );
+    }
     const locate = this.el('tm-lensLocate');
     if (locate) locate.textContent = ctx.tr('Tìm địa danh gần tôi', 'Find the landmark near me');
     const capture = this.el<HTMLButtonElement>('tm-lensCapture');
     if (capture) {
       capture.textContent = ctx.tr('Chụp & lưu ảnh', 'Capture & save');
       capture.disabled = !live;
+      capture.title = live ? '' : this.cameraOk ? ctx.tr('Bật camera trước', 'Turn the camera on first') : ctx.tr('Chọn ảnh của bạn trước', 'Pick your photo first');
     }
     const hint = this.el('tm-lensHint');
-    if (hint) hint.hidden = live;
+    if (hint) {
+      hint.hidden = live;
+      hint.textContent = this.cameraOk
+        ? ctx.tr('Bật camera để chồng ảnh này lên khung cảnh thật', 'Turn on the camera to lay this photo over the real scene')
+        : ctx.tr('Chọn ảnh hiện nay của bạn để chồng ảnh này lên', 'Pick your photo of today to lay this photo over');
+    }
     this.el('tm-lensStage')?.classList.toggle('live', live);
   }
 
@@ -144,7 +231,8 @@ export class TmLens {
   private async startCamera(): Promise<void> {
     const { ctx } = this;
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-      this.status(ctx.tr('Camera chỉ dùng được khi trang chạy qua HTTPS, trên trình duyệt hỗ trợ camera.', 'The camera only works when the page is served over HTTPS, in a browser with camera support.'));
+      this.cameraOk = false;
+      this.renderButtons();
       return;
     }
     const video = this.el<HTMLVideoElement>('tm-lensVideo');
@@ -157,11 +245,12 @@ export class TmLens {
     } catch (error) {
       this.stopCamera();
       const name = error instanceof DOMException ? error.name : '';
+      if (name === 'NotFoundError' || name === 'OverconstrainedError') this.cameraOk = false; // the button now offers a photo of the visitor's own
       this.status(
         name === 'NotAllowedError'
           ? ctx.tr('Bạn chưa cho phép dùng camera.', 'Camera access was not allowed.')
           : name === 'NotFoundError' || name === 'OverconstrainedError'
-            ? ctx.tr('Không tìm thấy camera trên thiết bị này. Trên máy tính, hãy dùng khung Xưa & Nay ở chương 03.', 'No camera found on this device. On a computer, use the Then & Now slider in chapter 03.')
+            ? ctx.tr('Không tìm thấy camera trên thiết bị này — bạn có thể chọn một tấm ảnh hiện nay của địa danh.', 'No camera found on this device — you can pick a photo of the place as it is today.')
             : ctx.tr('Không mở được camera.', 'Could not open the camera.'),
       );
     }
@@ -192,7 +281,14 @@ export class TmLens {
     const img = this.el<HTMLImageElement>('tm-lensPhoto');
     const key = ctx.current();
     const then = ctx.thenPhoto(key);
-    if (!this.stream || !video || !img || !then || !video.videoWidth) return;
+    // The base picture: the camera, or the visitor's own photo.
+    const base: { source: CanvasImageSource; w: number; h: number } | null =
+      this.stream && video && video.videoWidth
+        ? { source: video, w: video.videoWidth, h: video.videoHeight }
+        : this.photo && this.photo.naturalWidth
+          ? { source: this.photo, w: this.photo.naturalWidth, h: this.photo.naturalHeight }
+          : null;
+    if (!base || !img || !then) return;
 
     const canvas = document.createElement('canvas');
     canvas.width = OUT_W;
@@ -205,7 +301,7 @@ export class TmLens {
     g.beginPath();
     g.rect(0, 0, OUT_W, OUT_H);
     g.clip();
-    this.drawFit(g, video, video.videoWidth, video.videoHeight, OUT_W, OUT_H, 'cover');
+    this.drawFit(g, base.source, base.w, base.h, OUT_W, OUT_H, 'cover');
     g.globalAlpha = this.opacity;
     this.drawFit(g, img, img.naturalWidth, img.naturalHeight, OUT_W, OUT_H, then.photo.fit ?? 'cover');
     g.restore();
