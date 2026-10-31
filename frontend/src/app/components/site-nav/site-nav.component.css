@@ -45,8 +45,8 @@ button:focus-visible {
 }
 
 .brand-mark {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   flex: none;
   color: var(--app-time);
 }
@@ -127,8 +127,8 @@ button:focus-visible {
 
 .nudge-x {
   flex: none;
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   border: 0;
   border-radius: 50%;
   background: transparent;
