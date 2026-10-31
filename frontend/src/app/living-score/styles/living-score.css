@@ -227,6 +227,8 @@
   max-width: 1120px;
   margin-inline: auto;
   padding: 28px max(16px, 3vw) 48px;
+  /* a page laid out as a grid must not grow wider than the screen for its widest child */
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .ls-root .ls-page--narrow {

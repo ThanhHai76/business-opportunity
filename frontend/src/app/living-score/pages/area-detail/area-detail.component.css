@@ -29,6 +29,7 @@
 
 .head {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
   box-shadow: var(--ls-shadow);
 }
@@ -261,9 +262,6 @@ h1 {
 }
 
 .foot {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   font-size: 12px;
   color: var(--ls-ink-faint);
 }

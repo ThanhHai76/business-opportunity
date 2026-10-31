@@ -95,6 +95,12 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       --hcv-windows-opacity: 0.9;
     }
     .hcv { display: block; width: 100%; height: 100%; }
+    /* On a narrow screen the picture is not stretched to the height of the hero (which would show only its middle): it keeps
+       its proportions, a little wider than the screen and sitting on the bottom edge, so more of the city shows. Above it
+       the hero shows the page colour, which is the sky's first colour. */
+    @media (max-width: 700px) {
+      .hcv { position: absolute; bottom: 0; left: 50%; width: 125%; height: auto; aspect-ratio: 1600 / 810; transform: translateX(-50%); }
+    }
     .hcv-sun { fill: var(--hcv-sun); }
     .hcv-stars { opacity: var(--hcv-stars-opacity); fill: var(--app-ink); }
     .hcv-star { animation: hcv-twinkle 6s ease-in-out infinite; }

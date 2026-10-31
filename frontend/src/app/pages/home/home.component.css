@@ -128,6 +128,13 @@ main {
   font-weight: 600;
 }
 
+/* On a narrow screen the picture keeps its proportions (see hero-skyline), so its flag stands lower: less room under the text. */
+@media (max-width: 700px) {
+  .hero {
+    padding-bottom: calc(27vw + 2rem);
+  }
+}
+
 /* ---------- quick start: what do you need? ---------- */
 
 .intents {
