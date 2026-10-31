@@ -57,7 +57,7 @@ type View = 'login' | 'register';
           @if (view() === 'register') {
             <label class="ad__check">
               <input type="checkbox" name="terms" required (change)="terms.set($any($event.target).checked)" />
-              <span>{{ tx().termsPre }}<a routerLink="/terms" (click)="close()">{{ tx().termsLink }}</a>{{ tx().termsAnd }}<a routerLink="/privacy" (click)="close()">{{ tx().privacyLink }}</a>{{ tx().termsPost }}</span>
+              <span>{{ tx().termsPre }}<a routerLink="/terms" target="_blank" rel="noopener">{{ tx().termsLink }}</a>{{ tx().termsAnd }}<a routerLink="/privacy" target="_blank" rel="noopener">{{ tx().privacyLink }}</a>{{ tx().termsPost }}</span>
             </label>
           }
           <button type="submit" class="ad__btn ad__btn--primary" [disabled]="busy()">
