@@ -36,6 +36,13 @@ const stars = Array.from({ length: 46 }, (_, i) => {
 const poles = [
   [90, 160], [250, 92], [400, 150], [330, 236], [800, -95], [1250, 330], [1290, 120], [1450, 170], [1530, 70],
 ];
+// A phone shows a narrow slice of the picture, where the planning network's arc would run through the heading:
+// there, a few egrets glide across the sky instead (the network is hidden, the birds shown; see the CSS).
+const birds = [
+  [-140, 1.7, 46, 0], [-122, 1.4, 62, -21], [-104, 1.1, 54, -38], [-134, 0.95, 70, -9],
+]
+  .map(([y, k, dur, delay]) => `<g class="hcv-bird" style="animation-duration: ${dur}s; animation-delay: ${delay}s"><path d="M380,${y} q7,-8 14,0 q7,-8 14,0" transform="translate(0 0) scale(${k})" transform-origin="394 ${y}"/></g>`)
+  .join('');
 const net =
   // left cluster, right cluster, and an arc above the heading joining them through the ninth pole
   `<polyline class="hcv-net" points="90,160 250,92 400,150 330,236"/>` +
@@ -166,18 +173,30 @@ const flagTower =
   `<rect x="748" y="366" width="24" height="61"/><rect x="742" y="355" width="36" height="12"/><rect x="752" y="340" width="16" height="16"/>` +
   `<rect x="759" y="300" width="2" height="42"/></g>` +
   `<rect class="hcv-flag-gate" x="752" y="488" width="16" height="19" rx="8"/>` +
-  `<path class="hcv-flag" d="M761,302 L793,309 L761,317 Z"/>`;
-// The small pavilion next to the metro: the gate of four arches, the square pavilion with its round windows, two tiers of curved eaves.
-const pavilion =
+  // The national flag: a red field with the yellow five-pointed star, waving a little (3 : 2, 42 x 28).
+  `<path class="hcv-flag" d="M761,302 C770,299 777,305 782,303 C789,300 796,305 803,302 L803,330 C796,333 789,328 782,331 C777,333 770,327 761,330 Z"/>` +
+  `<path class="hcv-flag-star" d="M782.0,307.4 L784.0,313.5 L790.4,313.5 L785.2,317.2 L787.2,323.3 L782.0,319.6 L776.8,323.3 L778.8,317.2 L773.6,313.5 L780.0,313.5 Z"/>`;
+// Chùa Một Cột (One Pillar Pagoda), next to the metro: a small square pagoda with two tiers of upturned eaves, carried by a single
+// stout pillar that stands in a lotus pond. Drawn in the solid style of the other landmarks, with the doorway and the lattice cut out.
+const onePillar =
+  // centred on a pier of the viaduct (x 590-597), so the pier reads as the pillar and not as a gate beside it
+  `<g transform="translate(33.5 0)">` +
   `<g class="hcv-landmark">` +
-  `<rect x="520" y="474" width="80" height="33"/>` +
-  `<rect x="538" y="440" width="44" height="30"/>` +
-  `<path d="M512,476 Q560,466 608,476 L600,470 Q560,461 520,470 Z"/>` +
-  `<path d="M530,442 Q560,431 590,442 L583,435 Q560,426 537,435 Z"/>` +
-  `<path d="M546,436 Q560,420 574,436 Z"/><rect x="559" y="414" width="2" height="9"/></g>` +
-  `<g class="hcv-gap">` +
-  [526, 545, 564, 583].map((x) => `<path d="M${x},507 V490 Q${x + 5.5},482 ${x + 11},490 V507 Z"/>`).join('') +
-  `<circle cx="551" cy="455" r="5"/><circle cx="569" cy="455" r="5"/></g>`;
+  // the pillar and its stone foot
+  `<rect x="555" y="468" width="10" height="38"/><rect x="551" y="499" width="18" height="7"/>` +
+  // the platform with its railing posts, the body, and two roofs with upturned corners
+  `<rect x="528" y="461" width="64" height="5"/>` +
+  [530, 540, 550, 570, 580, 590].map((x) => `<rect x="${x}" y="453" width="2" height="8"/>`).join('') +
+  `<rect x="528" y="452" width="64" height="2"/>` +
+  `<rect x="538" y="436" width="44" height="17"/>` +
+  `<path d="M520,438 Q526,444 532,440 Q560,431 588,440 Q594,444 600,438 Q596,447 588,446 L532,446 Q524,447 520,438 Z"/>` +
+  `<path d="M528,428 Q534,433 540,430 Q560,422 580,430 Q586,433 592,428 Q589,436 582,435 L538,435 Q531,436 528,428 Z"/>` +
+  `<rect x="559" y="418" width="2" height="9"/><circle cx="560" cy="416.5" r="2.2"/></g>` +
+  `<g class="hcv-gap"><path d="M554,453 V443 Q560,436 566,443 V453 Z"/><rect x="542" y="441" width="7" height="8"/><rect x="571" y="441" width="7" height="8"/></g>` +
+  // the lotus pond round the foot of the pillar
+  `<ellipse class="hcv-pond" cx="560" cy="504" rx="42" ry="4.2"/>` +
+  `<g class="hcv-green"><ellipse cx="528" cy="506" rx="7" ry="2"/><ellipse cx="540" cy="508" rx="5" ry="1.6"/><ellipse cx="582" cy="508" rx="6" ry="1.8"/><ellipse cx="593" cy="505.5" rx="5" ry="1.6"/></g>` +
+  `</g>`;
 
 // Văn Miếu's Khuê Văn Các (Temple of Literature), the same drawing as the site logo, scaled up and given heavier strokes so it sits with the
 // solid shapes around it: flame finial, horned upper roof, wide lower roof with curled tips, red body with the square window and its ring
@@ -326,6 +345,7 @@ const svg = `<svg class="hcv" viewBox="0 ${TOP} ${W} ${H - TOP}" preserveAspectR
   <circle cx="1180" cy="250" r="230" fill="url(#hcv-glow)"/>
   <circle class="hcv-sun" cx="1180" cy="250" r="58"/>
   <g class="hcv-plan">${net}</g>
+  <g class="hcv-birds">${birds}</g>
   <g class="hcv-far">${farTowers}</g>
   <g class="hcv-windows">${windows}</g>
   <g class="hcv-mid">${lowRise}</g>
@@ -333,7 +353,7 @@ const svg = `<svg class="hcv" viewBox="0 ${TOP} ${W} ${H - TOP}" preserveAspectR
   ${greenTower}
   ${metro}
   ${train}
-  ${pavilion}
+  ${onePillar}
   ${vanMieu}
   ${flagTower}
   ${mausoleum}
@@ -352,7 +372,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 /**
  * The home page's hero illustration: Hanoi looking towards its 100-year plan — the Red River with the Long Biên and
- * Nhật Tân bridges, the Flag Tower, Khuê Văn Các, Hồ Chí Minh Mausoleum, the Turtle Tower and the red Thê Húc Bridge on Hoàn Kiếm Lake, an elevated metro, the new centres, and the plan's 9 development
+ * Nhật Tân bridges, the Flag Tower, Chùa Một Cột, Khuê Văn Các, Hồ Chí Minh Mausoleum, the Turtle Tower and the red Thê Húc Bridge on Hoàn Kiếm Lake, an elevated metro, the new centres, and the plan's 9 development
  * poles as a constellation. Dawn in the light theme, night (stars, lit windows) in the dark one. Decorative only.
  */
 @Component({
@@ -372,6 +392,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       --hcv-landmark: #8c745c;
       --hcv-green: #86a873;
       --hcv-flag: #c8402f;
+      --hcv-star: #f6c744;
       --hcv-pav-red: #b5543f;
       --hcv-turtle: #a88f6e;
       --hcv-steel: #97705a;
@@ -395,6 +416,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       --hcv-landmark: #110f19;
       --hcv-green: #1d3a2d;
       --hcv-flag: #e0705f;
+      --hcv-star: #f3d065;
       --hcv-pav-red: #d46f5c;
       --hcv-turtle: #b08a52; /* lit up at night, as it is */
       --hcv-steel: #3d3448;
@@ -412,6 +434,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     .hcv-star { animation: hcv-twinkle 6s ease-in-out infinite; }
     .hcv-net { fill: none; stroke: var(--hcv-accent); stroke-width: 1.4; stroke-dasharray: 5 7; opacity: 0.55; animation: hcv-flow 40s linear infinite; }
     .hcv-net--thin { stroke-width: 1; opacity: 0.3; }
+    .hcv-birds { display: none; }
+    .hcv-bird { animation: hcv-glide 50s linear infinite; }
+    .hcv-bird path { fill: none; stroke: var(--app-ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: 0.5; }
     .hcv-pole { fill: var(--hcv-accent); }
     .hcv-pole-halo { fill: var(--hcv-accent); opacity: 0.18; }
     .hcv-far { fill: var(--hcv-far); }
@@ -423,7 +448,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     .hcv-landmark { fill: var(--hcv-landmark); }
     .hcv-gap, .hcv-flag-gate { fill: var(--hcv-sky-horizon); }
     .hcv-flag { fill: var(--hcv-flag); }
+    .hcv-flag-star { fill: var(--hcv-star); }
     .hcv-pav-red { fill: var(--hcv-pav-red); }
+    .hcv-pond { fill: var(--hcv-river); }
     .hcv-turtle { fill: var(--hcv-turtle); }
     .hcv-turtle-arch { fill: var(--hcv-river); }
     .hcv-islet { fill: var(--hcv-tree); }
@@ -446,6 +473,15 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     .hcv-cable-fill { fill: var(--hcv-landmark); }
     @keyframes hcv-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
     @keyframes hcv-flow { to { stroke-dashoffset: -480; } }
+    @keyframes hcv-glide {
+      from { transform: translate(0, 0); }
+      50% { transform: translate(480px, -9px); }
+      to { transform: translate(960px, 0); }
+    }
+    @media (max-width: 700px) {
+      .hcv-plan { display: none; }
+      .hcv-birds { display: block; }
+    }
     @keyframes hcv-train {
       0% { transform: translateX(0); opacity: 0; }
       6% { opacity: 1; }
@@ -453,7 +489,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       100% { transform: translateX(560px); opacity: 0; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .hcv-star, .hcv-net, .hcv-train { animation: none; }
+      .hcv-star, .hcv-net, .hcv-train, .hcv-bird { animation: none; }
     }
   \`,
 })

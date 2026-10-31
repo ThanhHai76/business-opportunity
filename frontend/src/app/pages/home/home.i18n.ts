@@ -26,6 +26,8 @@ export interface ToolCard {
 }
 
 export interface HomeText {
+  brand: string;
+  heroCta: string;
   eyebrow: string;
   title: string;
   sub: string;
@@ -53,10 +55,12 @@ export interface HomeText {
 
 export const HOME_TEXT: Record<SiteLang, HomeText> = {
   vi: {
+    brand: 'Hanoi Century Vista',
+    heroCta: 'Bạn đang cần gì?',
     eyebrow: 'Quy hoạch tổng thể Thủ đô Hà Nội tầm nhìn 100 năm',
     title: 'Hà Nội sắp đổi thay, bạn chuẩn bị gì từ hôm nay?',
     sub: 'Xem quy hoạch trên bản đồ, rồi dùng sáu công cụ để tính chuyện mở quán, chọn nghề, chọn nơi ở.',
-    heroSource: 'Theo quy hoạch đã được phê duyệt · Số liệu đều có nguồn',
+    heroSource: 'Theo quy hoạch được duyệt · Số liệu có nguồn',
     quickTitle: 'Bạn đang cần gì?',
     quickSub: 'Chọn điều gần nhất với bạn, chúng tôi đưa bạn tới đúng công cụ. Không cần đăng nhập để bắt đầu.',
     wardTitle: 'Tra cứu phường/xã của bạn',
@@ -79,7 +83,7 @@ export const HOME_TEXT: Record<SiteLang, HomeText> = {
       property: { title: 'Bất động sản', hint: 'Mua nhà, đầu tư, chọn nơi ở' },
     },
     cards: [
-      { id: 'future', path: '/future-map', icon: '🛰️', eyebrow: 'Tầm nhìn · Quy hoạch & tương lai', title: 'Hà Nội tương lai', desc: 'Quy hoạch Thủ đô trên bản đồ, từ hiện trạng 2026 đến tầm nhìn 2065: 9 cực phát triển, 9 trục động lực, metro đang chạy, đang thi công và theo quy hoạch — mỗi đối tượng ghi nguồn; hỏi đáp, so sánh các mốc.', meta: ['4 mốc · 9 cực phát triển · 9 lớp bản đồ · Việt/Anh', 'Theo QĐ 2512/QĐ-UBND, 1668 và 1569/QĐ-TTg — hình học là sơ đồ', 'Dành cho người quan tâm quy hoạch, nhà đầu tư, sinh viên đô thị'], cta: 'Khám phá Hà Nội tương lai' },
+      { id: 'future', path: '/future-map', icon: '🛰️', eyebrow: 'Tầm nhìn · Quy hoạch & tương lai', title: 'Hà Nội tương lai', desc: 'Quy hoạch Thủ đô trên bản đồ, từ hiện trạng 2026 đến tầm nhìn 2085: 9 cực phát triển, 9 trục động lực, metro đang chạy, đang thi công và theo quy hoạch — mỗi đối tượng ghi nguồn; hỏi đáp, so sánh các mốc.', meta: ['4 mốc · 9 cực phát triển · 9 lớp bản đồ · Việt/Anh', 'Theo QĐ 2512/QĐ-UBND, 1668 và 1569/QĐ-TTg — hình học là sơ đồ', 'Dành cho người quan tâm quy hoạch, nhà đầu tư, sinh viên đô thị'], cta: 'Khám phá Hà Nội tương lai' },
       { id: 'time', path: '/time-machine', icon: '🕰️', eyebrow: 'Trải nghiệm · Văn hoá & giáo dục', title: 'Hà Nội xưa và nay', desc: 'Chọn một địa danh, kéo timeline từ 1926 đến 2100, nghe AI kể chuyện lịch sử có nguồn xác thực — hoặc mở chế độ AR để đặt Hà Nội xưa và những kịch bản tương lai lên đúng khung cảnh bạn đang đứng.', meta: ['1926 → 2100 · 13 địa danh tiêu biểu', 'Historical Mode có nguồn · Future Mode gắn nhãn kịch bản', 'Dành cho du khách, trường học, bảo tàng'], cta: 'Bước vào cỗ máy thời gian' },
       { id: 'biz', path: '/opportunity-map', icon: '🗺️', eyebrow: 'B2B · Phân tích thị trường', title: 'Mở gì ở đâu', desc: 'Phường nào ở Hà Nội nên mở gì — hôm nay và 3–5 năm tới — và có lời không? Điểm cơ hội cho 12 ngành theo từng phường/xã mới (2025) từ dữ liệu OpenStreetMap, kèm máy tính khả thi (doanh thu, chi phí, hoàn vốn theo số của bạn), so sánh, hỏi AI và báo cáo.', meta: ['79 phường/xã · 12 ngành · mốc hiện tại và 2030 · tính khả thi', 'Chấm điểm minh bạch, mỗi điểm có số liệu và nguồn', 'Dành cho chủ shop, SME, F&B, chuỗi bán lẻ, nhà đầu tư'], cta: 'Tìm nơi mở cửa hàng' },
       { id: 'career', path: '/career', icon: '🧭', eyebrow: 'Người tìm việc · Định hướng nghề nghiệp', title: 'La bàn nghề nghiệp Hà Nội', desc: 'Trả lời 5 câu hỏi ngắn để thấy những hướng nghề hợp với bạn theo cách Hà Nội đang thay đổi: công nghệ cao, xây dựng, logistics, bán lẻ, du lịch, tài chính hoặc tự kinh doanh — kèm kỹ năng, lộ trình và nơi tìm việc chính thống.', meta: ['7 hướng nghề · số liệu thị trường lao động và quy hoạch có nguồn', 'Chính sách hỗ trợ người thất nghiệp theo Luật Việc làm 2025', 'Dành cho người thất nghiệp, đổi nghề, sinh viên mới ra trường và người đang đi làm muốn xem thị trường'], cta: 'Tìm hướng đi nghề nghiệp' },
@@ -96,10 +100,12 @@ export const HOME_TEXT: Record<SiteLang, HomeText> = {
     footer: 'Demo dự án bản đồ đô thị tương tác · © 2026',
   },
   en: {
+    brand: 'Hanoi Century Vista',
+    heroCta: 'What do you need?',
     eyebrow: 'The Hanoi Capital master plan with a 100-year vision',
     title: 'Hanoi is about to change. What will you do about it?',
     sub: 'See the plan on the map, then use six tools to work out opening a shop, choosing a career and choosing where to live.',
-    heroSource: 'Based on the approved plans · Every figure has a source',
+    heroSource: 'Based on approved plans · Figures have sources',
     quickTitle: 'What do you need?',
     quickSub: 'Pick what is closest to you and we will take you to the right tool. No sign-in needed to start.',
     wardTitle: 'Look up your ward or commune',
@@ -122,7 +128,7 @@ export const HOME_TEXT: Record<SiteLang, HomeText> = {
       property: { title: 'Real estate', hint: 'Buy a home, invest, choose where to live' },
     },
     cards: [
-      { id: 'future', path: '/future-map', icon: '🛰️', eyebrow: 'Vision · Planning & the future', title: 'Hanoi Future Map', desc: "The Capital's plan on a map, from the present in 2026 to the vision of 2065: 9 development poles, 9 growth axes, metro running, under construction and planned. Every object cites its source; ask questions and compare the milestones.", meta: ['4 milestones · 9 poles · 9 map layers · Vietnamese/English', 'Per Decisions 2512/QĐ-UBND, 1668 and 1569/QĐ-TTg; the geometry is a sketch', 'For anyone interested in planning, investors, urban-studies students'], cta: 'Explore the future of Hanoi' },
+      { id: 'future', path: '/future-map', icon: '🛰️', eyebrow: 'Vision · Planning & the future', title: 'Hanoi Future Map', desc: "The Capital's plan on a map, from the present in 2026 to the vision of 2085: 9 development poles, 9 growth axes, metro running, under construction and planned. Every object cites its source; ask questions and compare the milestones.", meta: ['4 milestones · 9 poles · 9 map layers · Vietnamese/English', 'Per Decisions 2512/QĐ-UBND, 1668 and 1569/QĐ-TTg; the geometry is a sketch', 'For anyone interested in planning, investors, urban-studies students'], cta: 'Explore the future of Hanoi' },
       { id: 'time', path: '/time-machine', icon: '🕰️', eyebrow: 'Experience · Culture & education', title: 'Hanoi Time Machine', desc: 'Pick a landmark, drag the timeline from 1926 to 2100 and hear the AI tell its history with real sources, or open AR to place old Hanoi and future scenarios in the very scene you are standing in.', meta: ['1926 → 2100 · 13 landmarks', 'Historical Mode is sourced · Future Mode labels each scenario', 'For visitors, schools, museums'], cta: 'Step into the time machine' },
       { id: 'biz', path: '/opportunity-map', icon: '🗺️', eyebrow: 'B2B · Market analysis', title: 'Business Opportunity Map', desc: 'Which ward of Hanoi should open what, today and in 3–5 years, and would it pay? Opportunity scores for 12 sectors in each new ward and commune (2025) from OpenStreetMap data, with a feasibility calculator (revenue, costs, payback from your own numbers), comparison, AI questions and reports.', meta: ['79 wards and communes · 12 sectors · today and 2030 · feasibility', 'Transparent scoring: every score has its figures and sources', 'For shop owners, SMEs, F&B, retail chains, investors'], cta: 'Find where to open a shop' },
       { id: 'career', path: '/career', icon: '🧭', eyebrow: 'Job seekers · Career guidance', title: 'Hanoi Career Compass', desc: 'Answer 5 short questions to see the career paths that suit you as Hanoi changes: high technology, construction, logistics, retail, tourism, finance or running your own business, with skills, a path and the official places to look for work.', meta: ['7 career paths · labour market and planning figures with sources', 'Support for the unemployed under the Employment Law 2025', 'For the unemployed, career changers, new graduates and people in work who want to see the market'], cta: 'Find your career path' },

@@ -3,14 +3,16 @@
     <div class="hero-wrap">
       <app-hero-skyline class="hero-art" />
       <section class="hero">
+        <span class="hero-brand">{{ tx().brand }}</span>
         <span class="eyebrow">{{ tx().eyebrow }}</span>
         <h1>{{ tx().title }}</h1>
         <p class="hero-sub">{{ tx().sub }}</p>
       </section>
+      <a class="hero-cta" href="#intents" (click)="toIntents($event)">{{ tx().heroCta }} <span aria-hidden="true">↓</span></a>
     </div>
-    <p class="hero-source">{{ tx().heroSource }}</p>
+    <p class="hero-source"><a routerLink="/giai-thich-diem">{{ tx().heroSource }}</a></p>
 
-    <section class="intents" aria-labelledby="intents-title">
+    <section class="intents" id="intents" aria-labelledby="intents-title">
       <h2 id="intents-title">{{ tx().quickTitle }}</h2>
       <p class="intents-sub">{{ tx().quickSub }}</p>
       <ul class="intents-list">

@@ -38,6 +38,13 @@ export class HomeComponent {
     void this.router.navigate(['/phuong-xa'], { queryParams: text ? { q: text } : {} });
   }
 
+  /** The hero's button: scrolls to "what do you need?" (smoothly, unless the visitor asks for less motion). */
+  protected toIntents(event: Event): void {
+    event.preventDefault();
+    const calm = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.getElementById('intents')?.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
+  }
+
   protected card(id: ToolCard['id']): ToolCard | undefined {
     return this.tx().cards.find((c) => c.id === id);
   }
