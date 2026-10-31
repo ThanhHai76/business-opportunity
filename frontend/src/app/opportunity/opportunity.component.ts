@@ -23,6 +23,7 @@ import { normalizeText } from '../utils/text';
 import { FeasibilityStore, RiskReason, computeFeasibility, planWards, riskOf } from './op-feasibility';
 import { ReportIssueComponent } from '../components/report-issue/report-issue.component';
 import { OpFeasibilityComponent } from './op-feasibility.component';
+import { OpRoadmapComponent } from './op-roadmap.component';
 import { MarketKey, MarketSort, marketCsv, marketRows, sortMarket } from './op-market';
 import { parseIdeaLocal } from './op-parse';
 import { AccountService } from '../services/account.service';
@@ -57,7 +58,7 @@ function initialLang(): Lang {
 @Component({
   selector: 'app-opportunity',
   standalone: true,
-  imports: [ScoreHelpComponent, OpMapComponent, IconComponent, RouterLink, OpFeasibilityComponent, OpRadarComponent, OpBuyComponent, AiQuotaComponent, ReportIssueComponent],
+  imports: [ScoreHelpComponent, OpMapComponent, IconComponent, RouterLink, OpFeasibilityComponent, OpRoadmapComponent, OpRadarComponent, OpBuyComponent, AiQuotaComponent, ReportIssueComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './opportunity.component.html',
   styleUrl: './opportunity.component.css',
@@ -219,6 +220,13 @@ export class OpportunityComponent {
 
   // ------------------------------------------------------------- competitors list
   protected readonly rivalsOpen = signal(false);
+  protected readonly roadmapOpen = signal(false);
+
+  /** Opens the opening roadmap and scrolls the panel to it. */
+  protected showRoadmap(): void {
+    this.roadmapOpen.set(true);
+    setTimeout(() => document.getElementById('op-roadmap')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }
   protected readonly rivals = signal<{ named: string[]; unnamed: number } | null>(null);
 
   protected readonly copied = signal(false);

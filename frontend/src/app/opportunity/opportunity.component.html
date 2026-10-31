@@ -264,6 +264,7 @@
                   <ls-icon [name]="inCompare(d.slug) ? 'check' : 'plus'" [size]="14" /> {{ inCompare(d.slug) ? t().compareAdded : t().compareAdd }}
                 </button>
                 <button type="button" class="op-btn" (click)="reportOpen.set(true)"><ls-icon name="chart" [size]="14" /> {{ t().report.open }}</button>
+                <button type="button" class="op-btn" (click)="showRoadmap()"><ls-icon name="map" [size]="14" /> {{ t().roadmapBtn }}</button>
                 <button type="button" class="op-btn op-btn--primary op-btn--full" (click)="openFullReport()"><ls-icon name="download" [size]="14" /> {{ t().buy.open }}</button>
               </div>
             </section>
@@ -291,6 +292,7 @@
             </details>
 
             <op-feasibility [type]="f.type" [typeName]="f.name" [competitors]="f.count" [factors]="wardFactors()" [text]="t()" [lang]="lang()" />
+            <op-roadmap id="op-roadmap" [(open)]="roadmapOpen" [type]="f.type" [typeName]="f.name" [wardSlug]="d.slug" [wardName]="d.name" [factors]="wardFactors()" [text]="t()" [lang]="lang()" [locked]="premiumLocked()" (upgrade)="askPremium(t().premium.roadmap)" />
           }
 
           <section>
