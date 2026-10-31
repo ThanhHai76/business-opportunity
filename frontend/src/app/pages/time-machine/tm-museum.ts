@@ -23,10 +23,7 @@ export class TmMuseum {
       (entries) => {
         if (!entries.some((e) => e.isIntersecting)) return;
         this.observer?.disconnect();
-        void import('qrcode').then((qr) => {
-          this.qr = qr;
-          this.refresh();
-        });
+        void this.load().then(() => this.refresh(), () => undefined);
       },
       { rootMargin: '400px 0px' },
     );
@@ -93,10 +90,22 @@ export class TmMuseum {
     return b;
   }
 
+  /**
+   * The qrcode library is CommonJS: in the production build its functions sit on the module's `default`, not on the
+   * namespace object (`toString` is then Object's, and every plaque stayed blank), so take `default` when there is one.
+   */
+  private async load(): Promise<typeof import('qrcode')> {
+    if (!this.qr) {
+      const mod = await import('qrcode');
+      this.qr = (mod as unknown as { default?: typeof mod }).default ?? mod;
+    }
+    return this.qr;
+  }
+
   /** SVG markup from the qrcode library (trusted output, safe to use as innerHTML). */
   private async svg(key: string): Promise<string> {
-    this.qr ??= await import('qrcode');
-    return this.qr.toString(this.ctx.landmarkUrl(key), { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#171009', light: '#ffffff' } });
+    const qr = await this.load();
+    return qr.toString(this.ctx.landmarkUrl(key), { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#171009', light: '#ffffff' } });
   }
 
   private async download(key: string): Promise<void> {
