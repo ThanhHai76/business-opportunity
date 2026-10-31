@@ -179,6 +179,12 @@ export class PiAreaMapComponent implements AfterViewInit, OnDestroy {
         minZoom: 8.5,
         maxZoom: 17,
         attributionControl: { compact: true },
+        // A touch screen where the map sits inside a scrolling page: one finger scrolls the page, two move the map
+        // (otherwise a finger that starts on the map can never scroll down to the charts under it).
+        cooperativeGestures: typeof matchMedia === 'function' && matchMedia('(max-width: 1280px) and (pointer: coarse)').matches,
+        locale: {
+          'CooperativeGesturesHandler.MobileHelpText': this.lang() === 'en' ? 'Use two fingers to move the map' : 'Dùng hai ngón tay để di chuyển bản đồ',
+        },
       });
       this.bindInteractions();
       this.loadBase();

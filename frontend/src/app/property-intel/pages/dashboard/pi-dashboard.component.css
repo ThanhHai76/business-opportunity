@@ -1178,6 +1178,21 @@
 
   .layers__close {
     display: block;
+    width: 36px;
+    height: 36px;
+    font-size: 26px;
+  }
+
+  /* The drawer scrolls: its header, with the close button, stays on top. */
+  .layers__head {
+    position: sticky;
+    top: -18px;
+    z-index: 3;
+    align-items: center;
+    margin: -18px -16px 0;
+    padding: 12px 16px;
+    background: var(--pi-panel);
+    border-bottom: 1px solid var(--pi-line);
   }
 
   .map__layers-btn {
