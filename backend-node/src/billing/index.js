@@ -24,6 +24,7 @@ const { PRODUCTS, STORY_TOOLS, grantsOf, productList } = require('./products');
 const { NO_METER, statusView, dayStartVn } = require('./ai-meter');
 const { createMockProvider } = require('./mock-provider');
 const { createPayosProvider } = require('./payos-provider');
+const { paymentReceivedMail } = require('../accounts/mails');
 const { wrap, signedInWith, finishRouter, escapeHtml, UUID } = require('./common');
 
 const ORDER_MINUTES = 30;
@@ -128,8 +129,36 @@ function createBilling(options) {
     const result = await store().markOrderPaid(paid.orderCode, { amountVnd: paid.amountVnd, providerRef: paid.reference, paidAt: new Date() });
     if (!result.order) console.warn(`[billing] payment for unknown order ${paid.orderCode} (${paid.amountVnd} VND, ${paid.reference})`);
     else if (result.mismatch) console.warn(`[billing] order ${paid.orderCode}: paid ${paid.amountVnd} VND, expected ${result.order.amountVnd} — not credited, check by hand`);
-    else if (result.credited) options.onEvent?.('order_paid', result.order.product);
+    else if (result.credited) {
+      options.onEvent?.('order_paid', result.order.product);
+      void sendReceipt(result.order);
+    }
     return result;
+  }
+
+  /** Emails the buyer that the payment arrived: once per order (only the call that credits it gets here), never blocking it. */
+  async function sendReceipt(order) {
+    try {
+      if (!accounts.mailEnabled || !order.userId) return;
+      const user = await store().getUser(order.userId);
+      if (!user?.email) return;
+      const appUrl = accounts.appUrl;
+      await accounts.mailer.send({
+        to: user.email,
+        ...paymentReceivedMail({
+          name: user.displayName ?? user.name,
+          productName: PRODUCTS[order.product]?.name.vi ?? order.product,
+          amountVnd: order.amountVnd,
+          orderCode: order.orderCode,
+          paidAt: order.paidAt ?? new Date(),
+          grants: order.grants ?? { reportCredits: order.credits },
+          accountLink: `${appUrl}/tai-khoan`,
+          refundLink: `${appUrl}/refund`,
+        }),
+      });
+    } catch (error) {
+      console.error(`[billing] could not send the payment email for order ${order.orderCode}: ${error.message}`);
+    }
   }
 
   const checkoutLimiter = rateLimit({

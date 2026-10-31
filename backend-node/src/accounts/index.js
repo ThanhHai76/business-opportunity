@@ -639,6 +639,13 @@ function createAccounts(options = {}) {
     get mailEnabled() {
       return mailEnabled();
     },
+    /** For other modules: the mailer and the site's public address (links in the emails). Mail works when `mailEnabled`. */
+    get mailer() {
+      return mailer;
+    },
+    get appUrl() {
+      return appUrl;
+    },
     /** A verified address is needed to buy (billing asks). */
     get requireVerifiedEmail() {
       return requireVerifiedEmail();

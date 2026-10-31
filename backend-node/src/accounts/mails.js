@@ -56,4 +56,36 @@ function resetPasswordMail({ link, name, minutes }) {
   };
 }
 
-module.exports = { verifyEmailMail, resetPasswordMail };
+const vnd = (n) => `${Number(n).toLocaleString('vi-VN')}đ`;
+
+/** What an order added to the account, in words ("3 báo cáo khả thi, 30 lượt hỏi AI chuyên sâu, 30 ngày Premium"). */
+function grantsText(g = {}) {
+  const parts = [];
+  if (g.reportCredits > 0) parts.push(`${g.reportCredits} lượt báo cáo khả thi`);
+  if (g.aiCredits > 0) parts.push(`${g.aiCredits} lượt hỏi AI chuyên sâu`);
+  if (g.premiumDays > 0) parts.push(`${g.premiumDays} ngày Premium`);
+  return parts.join(', ');
+}
+
+/** Sent once, when a payment has been received and the order credited. */
+function paymentReceivedMail({ name, productName, amountVnd, orderCode, paidAt, grants, accountLink, refundLink }) {
+  const when = new Date(paidAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+  const added = grantsText(grants);
+  return {
+    subject: `Đã nhận thanh toán ${vnd(amountVnd)} — Hanoi Century Vista`,
+    ...layout(
+      greet(name),
+      [
+        `Chúng tôi đã nhận thanh toán ${vnd(amountVnd)} cho "${productName}". Cảm ơn bạn.`,
+        `Mã đơn: ${orderCode} · Thời gian: ${when} (giờ Việt Nam).`,
+        ...(added ? [`Đã cộng vào tài khoản: ${added}.`] : []),
+        `Cần hỗ trợ hoặc hoàn tiền? Xem chính sách tại ${refundLink}.`,
+      ],
+      accountLink,
+      'Xem tài khoản của tôi',
+      'Đây là email tự động xác nhận thanh toán. Nếu bạn không thực hiện giao dịch này, hãy liên hệ với chúng tôi ngay.',
+    ),
+  };
+}
+
+module.exports = { verifyEmailMail, resetPasswordMail, paymentReceivedMail };
