@@ -15,7 +15,7 @@ import {
   untracked,
 } from '@angular/core';
 import * as maplibregl from 'maplibre-gl';
-import { CorridorSummary, CorridorTheme, FC, HubProps, LayerKey, MapView, RegionData, Scenario } from './future-map.models';
+import { CorridorSummary, CorridorTheme, FC, HubProps, HubTag, LayerKey, MapView, RegionData, Scenario } from './future-map.models';
 
 /**
  * OpenFreeMap vector base maps (OpenStreetMap data, no API key; attribution comes with the tiles).
@@ -538,6 +538,8 @@ export class FutureMapCanvasComponent implements AfterViewInit, OnDestroy {
   /** Fly to a hub; the token lets the same hub be requested twice. */
   readonly flyTarget = input<{ slug: string; token: number } | null>(null);
   readonly hubSelect = output<string>();
+  /** Show only the poles with this theme (the others are dimmed and their areas hidden); null = all. */
+  readonly poleTag = input<HubTag | null>(null);
   /** 'region' switches to the Capital Region: corridor arrows, regional infrastructure and province labels. */
   readonly view = input<MapView>('city');
   readonly region = input<RegionData | null>(null);
@@ -585,6 +587,7 @@ export class FutureMapCanvasComponent implements AfterViewInit, OnDestroy {
     effect(() => {
       const selected = this.selectedSlug();
       const highlights = this.highlights();
+      this.poleTag();
       if (!this.ready()) return;
       untracked(() => this.applySelection(selected, highlights));
     });
@@ -951,9 +954,17 @@ export class FutureMapCanvasComponent implements AfterViewInit, OnDestroy {
     if (!map) return;
     const slugs = [...new Set([...(selected ? [selected] : []), ...highlights])];
     if (map.getLayer('zones-selected')) map.setFilter('zones-selected', ['in', ['get', 'slug'], ['literal', slugs]]);
+    // A theme filter: the poles without it are dimmed and their areas leave the map.
+    const tag = this.poleTag();
+    const themed = tag
+      ? new Set((this.scenario()?.layers.hubs.features ?? []).map((f) => f.properties as unknown as HubProps).filter((h) => h.tags.includes(tag)).map((h) => h.slug))
+      : null;
+    for (const id of ['zones-fill', 'zones-line', 'zones-3d']) {
+      if (map.getLayer(id)) map.setFilter(id, themed ? ['in', ['get', 'slug'], ['literal', [...themed]]] : null);
+    }
     this.hubMarkers.forEach(({ el }, slug) => {
       el.classList.toggle('is-selected', slug === selected);
-      el.classList.toggle('is-dim', highlights.length > 0 && !slugs.includes(slug));
+      el.classList.toggle('is-dim', (highlights.length > 0 && !slugs.includes(slug)) || (themed !== null && !themed.has(slug)));
     });
     this.scheduleLabels();
     // The hub card opens after this; place again once it is on screen.

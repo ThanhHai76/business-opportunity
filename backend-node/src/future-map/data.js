@@ -13,6 +13,7 @@
  */
 const { getSeedData } = require('../living-score/seed/seed-data');
 const { circleRing, bufferLine } = require('./geo');
+const osm = require('../living-score/data/osm-hanoi.json');
 
 const CENTER = [105.852, 21.028];
 
@@ -57,6 +58,16 @@ const SOURCES = {
     title: 'Xây dựng tương lai từ tầm nhìn trăm năm: Hà Nội bước vào kỷ nguyên vươn mình (29/6/2026)',
     publisher: 'Báo Pháp Luật Việt Nam',
     url: 'https://doanhnhan.baophapluat.vn/xay-dung-tuong-lai-tu-tam-nhin-tram-nam-ha-noi-buoc-vao-ky-nguyen-vuon-minh-df75c721.html',
+  },
+  plans81Lsvn: {
+    title: 'Hà Nội lập 81 quy hoạch cụ thể hóa Quy hoạch Thủ đô tầm nhìn 100 năm (1/9/2026)',
+    publisher: 'Luật sư Việt Nam (lsvn.vn)',
+    url: 'https://lsvn.vn/ha-noi-lap-81-quy-hoach-cu-the-hoa-quy-hoach-thu-do-tam-nhin-100-nam-a178163.html',
+  },
+  plans81Tckt: {
+    title: 'Hà Nội triển khai 81 quy hoạch cụ thể hóa Quy hoạch tổng thể Thủ đô (25/8/2026)',
+    publisher: 'Tạp chí Kinh tế - Tài chính',
+    url: 'https://tapchikinhtetaichinh.vn/ha-noi-trien-khai-81-quy-hoach-cu-the-hoa-quy-hoach-tong-the-thu-do-165451.html',
   },
   qd2512Grdp: {
     title: 'Hà Nội hướng tới thành phố toàn cầu, quy mô GRDP năm 2065 khoảng 1.920 tỷ USD',
@@ -336,6 +347,36 @@ const RED_RIVER = [
 const DUONG_RIVER = [[105.875, 21.065], [105.93, 21.075], [106.0, 21.09], [106.08, 21.1]];
 const WEST_LAKE = circleRing([105.822, 21.058], 1.5, { wobble: 0.12, phase: 0.6 });
 
+/**
+ * Real lakes and parks of Hanoi from the OpenStreetMap snapshot the Living Score uses (centre and area of each, `[lng, lat, m2, name]`),
+ * drawn as a circle of the same area: where they are and how big, not their outline (`schematic`). Only the larger named ones; West Lake
+ * has its own outline above, and channels and rivers are left out.
+ */
+const bigNamed = (list, minM2, accept) => {
+  const seen = new Set();
+  return [...list]
+    .filter(([, , area, name]) => name && area >= minM2 && accept(name))
+    .sort((a, b) => b[2] - a[2])
+    .filter(([, , , name]) => !seen.has(name) && seen.add(name));
+};
+const toEnglish = (name) => name.replace(/^Công [Vv]iên (.+)$/, '$1 Park').replace(/^Hồ (.+)$/, '$1 Lake');
+const osmShape = (item, i) => {
+  const [lng, lat, area, name] = item;
+  return { name: { vi: name, en: toEnglish(name) }, polygon: [circleRing([lng, lat], Math.max(0.12, Math.sqrt(area / Math.PI) / 1000), { wobble: 0.08, phase: i })] };
+};
+const OSM_LAKES = bigNamed(osm.lakes, 200_000, (n) => !/^(Kênh|Sông|Mương|Hồ Tây$)/.test(n))
+  .concat(osm.lakes.filter(([, , , name]) => name === 'Hồ Hoàn Kiếm'))
+  .map((item, i) => ({ kind: 'lake', year: 2026, status: 'operating', schematic: true, sources: ['osm'], ...osmShape(item, i) }));
+const GREEN_MANUAL = ['Công viên Yên Sở'];
+const OSM_PARKS = bigNamed(osm.parks, 120_000, (n) => /^Công [Vv]iên /.test(n) && !GREEN_MANUAL.includes(n)).map((item, i) => ({
+  kind: 'park',
+  year: 2026,
+  status: 'operating',
+  schematic: true,
+  sources: ['osm'],
+  ...osmShape(item, i + 3),
+}));
+
 const GREEN_AREAS = [
   { kind: 'park', year: 2026, status: 'operating', sources: ['osm'], name: { vi: 'Vườn quốc gia Ba Vì', en: 'Ba Vì National Park' }, polygon: [circleRing([105.38, 21.07], 7, { wobble: 0.12, phase: 0.3 })] },
   { kind: 'park', year: 2026, status: 'operating', sources: ['osm'], name: { vi: 'Công viên Yên Sở', en: 'Yên Sở Park' }, polygon: [circleRing([105.865, 20.96], 1.8, { wobble: 0.1, phase: 1.1 })] },
@@ -357,6 +398,7 @@ const GREEN_AREAS = [
     name: { vi: 'Hành lang xanh, nêm xanh ngăn cách các đô thị (sơ đồ)', en: 'Green corridors and wedges between the towns (schematic)' },
     polygon: [circleRing(CENTER, 27, { wobble: 0.07, phase: 0.4 }), circleRing(CENTER, 20, { wobble: 0.07, phase: 0.4 }).reverse()],
   },
+  ...OSM_PARKS,
 ];
 
 // ---------------------------------------------------------------- airports
@@ -400,6 +442,7 @@ module.exports = {
   RED_RIVER,
   DUONG_RIVER,
   WEST_LAKE,
+  OSM_LAKES,
   GREEN_AREAS,
   AIRPORTS,
   AXES,

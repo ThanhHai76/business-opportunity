@@ -128,7 +128,7 @@ describe('Hanoi Future Map API', () => {
       // The milestones are the ones of the timeline, and nothing is said of a year the map does not have.
       assert.deepEqual(body.milestones.map((m) => m.year), YEARS.slice(1));
       assert.match(body.milestones.find((m) => m.year === 2045).grdp, lang === 'vi' ? /640 tỷ USD/ : /USD 640 billion/);
-      assert.deepEqual(body.topics.map((t) => t.id), ['heritage', 'economy']);
+      assert.deepEqual(body.topics.map((t) => t.id), ['heritage', 'underground', 'green', 'economy']);
     }
   });
 

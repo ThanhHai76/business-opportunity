@@ -29,6 +29,7 @@ import {
   CorridorTheme,
   HubDetail,
   HubProps,
+  HubTag,
   Lang,
   LayerKey,
   MapView,
@@ -62,6 +63,8 @@ const LAYERS: readonly LayerDef[] = [
 ];
 const ALL_LAYERS: ReadonlySet<LayerKey> = new Set(LAYERS.map((l) => l.key));
 const STATUSES: readonly Status[] = ['operating', 'construction', 'plan'];
+/** The themes of the development poles, in the order of the filter chips. */
+const POLE_TAGS: readonly HubTag[] = ['innovation', 'green', 'heritage', 'metro', 'airport', 'logistics'];
 
 /** Concentric rings drawn on each timeline orb: one more ring for every step towards 2085. */
 const RING_SETS: ReadonlyArray<readonly number[]> = [[6], [6, 11], [6, 11, 16], [6, 11, 16, 19], [6, 11, 16, 19, 22]];
@@ -136,6 +139,16 @@ export class FutureMapComponent {
   protected readonly selectedSlug = signal<string | null>(null);
   protected readonly hub = signal<HubDetail | null>(null);
   protected readonly highlights = signal<string[]>([]);
+  /** The theme the poles are filtered by (null = all nine). */
+  protected readonly poleTag = signal<HubTag | null>(null);
+  /** The themes the poles carry, with how many poles each (only those shown for this milestone). */
+  protected readonly poleTags = computed(() => {
+    const counts = new Map<HubTag, number>();
+    for (const f of this.scenario()?.layers.hubs.features ?? []) {
+      for (const tag of (f.properties as unknown as HubProps).tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    }
+    return POLE_TAGS.filter((tag) => counts.has(tag)).map((tag) => ({ tag, count: counts.get(tag) ?? 0 }));
+  });
 
   protected readonly playing = signal(false);
   private timer?: ReturnType<typeof setInterval>;
@@ -493,6 +506,10 @@ export class FutureMapComponent {
     this.corridorSlug.set(null);
     this.view.set('city');
     this.selectHub(slug);
+  }
+
+  protected togglePoleTag(tag: HubTag): void {
+    this.poleTag.update((current) => (current === tag ? null : tag));
   }
 
   protected toggleTheme(theme: CorridorTheme): void {

@@ -99,6 +99,14 @@ const VI = {
     axes: 'Trục động lực',
   } as Record<LayerKey, string>,
   tag: { metro: 'Metro', green: 'Xanh', airport: 'Sân bay', logistics: 'Logistics', innovation: 'Đổi mới sáng tạo', heritage: 'Di sản' } as Record<string, string>,
+  poleThemesTitle: 'Cực phát triển theo chủ đề',
+  poleThemesAll: 'Tất cả',
+  underground: {
+    name: 'Không gian ngầm',
+    badge: 'Chưa có vị trí',
+    note: 'Thành phố đang lập quy hoạch không gian ngầm (Kế hoạch 331/KH-UBND); vị trí chưa được công bố nên bản đồ chưa vẽ.',
+    see: 'Xem phần quy hoạch nói gì',
+  },
   region: {
     viewCity: 'Hà Nội',
     viewRegion: 'Vùng Thủ đô',
@@ -232,6 +240,14 @@ const EN: Dict = {
     axes: 'Dynamic axes',
   },
   tag: { metro: 'Metro', green: 'Green', airport: 'Airport', logistics: 'Logistics', innovation: 'Innovation', heritage: 'Heritage' },
+  poleThemesTitle: 'Development poles by theme',
+  poleThemesAll: 'All',
+  underground: {
+    name: 'Underground space',
+    badge: 'No location yet',
+    note: 'The city is preparing its underground-space plan (Plan 331/KH-UBND); no locations have been published, so the map does not draw it.',
+    see: 'See what the plan says',
+  },
   region: {
     viewCity: 'Hanoi',
     viewRegion: 'Capital Region',

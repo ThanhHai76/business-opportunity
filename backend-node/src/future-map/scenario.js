@@ -163,6 +163,8 @@ function buildLayers(year, lang) {
     feature({ type: 'LineString', coordinates: D.RED_RIVER }, { name: lang === 'en' ? 'Red River' : 'Sông Hồng', kind: 'river' }),
     feature({ type: 'LineString', coordinates: D.DUONG_RIVER }, { name: lang === 'en' ? 'Đuống River' : 'Sông Đuống', kind: 'river' }),
     feature({ type: 'Polygon', coordinates: [D.WEST_LAKE] }, { name: lang === 'en' ? 'West Lake' : 'Hồ Tây', kind: 'lake' }),
+    // The larger named lakes (OpenStreetMap): each a circle of the lake's own area, so where it is and how big, not its outline.
+    ...D.OSM_LAKES.map((w) => feature({ type: 'Polygon', coordinates: w.polygon }, { name: L(w.name, lang), kind: 'lake', schematic: true, sources: w.sources })),
   ]);
 
   const airports = fc(

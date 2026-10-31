@@ -26,7 +26,7 @@ export const OPPORTUNITY_API_URL = `${API_BASE_URL}/api/opportunity`;
 // Hanoi Living Score lives in the same backend-node server, under /api/living-score.
 export const LIVING_SCORE_API_URL = `${API_BASE_URL}/api/living-score`;
 
-// Hanoi Future Map: sourced plan milestones 2026-2065 and the Capital Region, served by the same backend-node server.
+// Hanoi Future Map: sourced plan milestones 2026-2085 and the Capital Region, served by the same backend-node server.
 export const FUTURE_MAP_API_URL = `${API_BASE_URL}/api/future-map`;
 
 // AI Property Intelligence: area + project intelligence (sample data), served by backend-node.

@@ -40,7 +40,7 @@ export const NAV_TEXT: Record<SiteLang, NavText> = {
     brandAria: 'Hanoi Century Vista — trang chủ',
     chooseTool: 'Chọn công cụ',
     tools: {
-      future: { label: 'Hà Nội tương lai', short: 'Tương lai', hint: 'Quy hoạch Thủ đô 2026 → 2065, có nguồn' },
+      future: { label: 'Hà Nội tương lai', short: 'Tương lai', hint: 'Quy hoạch Thủ đô 2026 → 2085, có nguồn' },
       time: { label: 'Hà Nội xưa và nay', short: 'Xưa và nay', hint: 'Du hành thời gian 1926 → 2100, có AR' },
       live: { label: 'Điểm đáng sống', short: 'Đáng sống', hint: 'Chấm điểm nơi an cư từ dữ liệu OpenStreetMap' },
       property: { label: 'Chấm điểm bất động sản', short: 'Điểm BĐS', hint: 'Tiềm năng 79 phường/xã: metro, hạ tầng, quy hoạch' },
@@ -82,7 +82,7 @@ export const NAV_TEXT: Record<SiteLang, NavText> = {
     brandAria: 'Hanoi Century Vista — home',
     chooseTool: 'Choose a tool',
     tools: {
-      future: { label: 'Hanoi Future Map', short: 'Future', hint: 'The Capital plan 2026 → 2065, with sources' },
+      future: { label: 'Hanoi Future Map', short: 'Future', hint: 'The Capital plan 2026 → 2085, with sources' },
       time: { label: 'Hanoi Time Machine', short: 'Then & now', hint: 'Time travel 1926 → 2100, with AR' },
       live: { label: 'Living Score', short: 'Livability', hint: 'Where to live, scored from OpenStreetMap data' },
       property: { label: 'AI Property Intelligence', short: 'Property', hint: 'The potential of 79 wards: metro, infrastructure, planning' },

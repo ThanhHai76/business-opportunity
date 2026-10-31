@@ -7,6 +7,7 @@
     [mode3d]="mode3d()"
     [selectedSlug]="selectedSlug()"
     [highlights]="highlights()"
+    [poleTag]="poleTag()"
     [viewToken]="viewToken()"
     [flyTarget]="flyTarget()"
     [view]="view()"
@@ -265,6 +266,26 @@
 
   <!-- Layers + quick tools -->
   <aside class="fm-side" [class.is-open]="layersOpen()">
+    <!-- Quick tools stay first so the panels below can grow without pushing them out of sight -->
+    <section class="fm-tools fm-glass" aria-labelledby="fm-tools-title">
+      <h2 id="fm-tools-title" class="fm-panel-head__title">{{ t().toolsTitle }}</h2>
+      <button type="button" (click)="openCompare()">
+        <span class="fm-tools__icon"><ls-icon name="scale" [size]="18" /></span>
+        <span>{{ t().compareTool }}<small>{{ t().compareToolSub }}</small></span>
+      </button>
+      <button type="button" (click)="openOutlook()">
+        <span class="fm-tools__icon"><ls-icon name="file" [size]="18" /></span>
+        <span>{{ t().outlookTool }}<small>{{ t().outlookToolSub }}</small></span>
+      </button>
+      <button type="button" (click)="toggle3d()" [class.is-on]="mode3d()">
+        <span class="fm-tools__icon"><ls-icon name="cube" [size]="18" /></span>
+        <span>{{ t().tool3d }}<small>{{ mode3d() ? t().tool3dOn : t().tool3dOff }}</small></span>
+      </button>
+      <button type="button" (click)="openAsk()">
+        <span class="fm-tools__icon fm-tools__icon--accent"><ls-icon name="message" [size]="18" /></span>
+        <span>{{ t().askTool }}<small>{{ t().askToolSub }}</small></span>
+      </button>
+    </section>
     @if (view() === 'region' && region(); as r) {
       <section class="fm-layers fm-glass fm-themes" aria-labelledby="fm-themes-title">
         <div class="fm-panel-head">
@@ -313,6 +334,13 @@
             </label>
           </li>
         }
+        <!-- Underground space: no position has been published yet, so there is nothing to draw; the row says so and points to the sourced text. -->
+        <li class="fm-layers__empty">
+          <span class="fm-swatch" style="--c: #8b5cf6" aria-hidden="true"></span>
+          <span class="fm-layers__name">{{ t().underground.name }}</span>
+          <span class="fm-layers__badge">{{ t().underground.badge }}</span>
+          <p>{{ t().underground.note }} <button type="button" class="fm-link" (click)="openOutlook()">{{ t().underground.see }}</button></p>
+        </li>
       </ul>
       <div class="fm-legend">
         <span class="fm-legend__title">{{ t().legendTitle }}</span>
@@ -320,26 +348,6 @@
           <span class="fm-legend__item" [attr.data-status]="s"><i aria-hidden="true"></i>{{ t().statusLabel[s] }}</span>
         }
       </div>
-    </section>
-
-    <section class="fm-tools fm-glass" aria-labelledby="fm-tools-title">
-      <h2 id="fm-tools-title" class="fm-panel-head__title">{{ t().toolsTitle }}</h2>
-      <button type="button" (click)="openCompare()">
-        <span class="fm-tools__icon"><ls-icon name="scale" [size]="18" /></span>
-        <span>{{ t().compareTool }}<small>{{ t().compareToolSub }}</small></span>
-      </button>
-      <button type="button" (click)="openOutlook()">
-        <span class="fm-tools__icon"><ls-icon name="file" [size]="18" /></span>
-        <span>{{ t().outlookTool }}<small>{{ t().outlookToolSub }}</small></span>
-      </button>
-      <button type="button" (click)="toggle3d()" [class.is-on]="mode3d()">
-        <span class="fm-tools__icon"><ls-icon name="cube" [size]="18" /></span>
-        <span>{{ t().tool3d }}<small>{{ mode3d() ? t().tool3dOn : t().tool3dOff }}</small></span>
-      </button>
-      <button type="button" (click)="openAsk()">
-        <span class="fm-tools__icon fm-tools__icon--accent"><ls-icon name="message" [size]="18" /></span>
-        <span>{{ t().askTool }}<small>{{ t().askToolSub }}</small></span>
-      </button>
     </section>
   </aside>
 
@@ -359,7 +367,8 @@
       <button type="button" class="fm-rail__layers" (click)="layersOpen.set(!layersOpen())" [class.is-on]="layersOpen()" [attr.aria-expanded]="layersOpen()" [attr.aria-label]="t().layersBtn" [title]="t().layersTitle"><ls-icon name="layers" [size]="18" /></button>
     </div>
 
-    <!-- Jump to a development pole -->
+    <!-- Find a development pole: jump by name, or keep only the poles of one theme -->
+    <div class="fm-find">
     <div class="fm-search fm-glass">
       <ls-icon name="search" [size]="17" />
       <input
@@ -383,6 +392,15 @@
           }
         </ul>
       }
+    </div>
+    @if (view() === 'city' && poleTags().length) {
+      <div class="fm-poletags" role="group" [attr.aria-label]="t().poleThemesTitle">
+        <button type="button" class="fm-glass" [class.is-on]="!poleTag()" [attr.aria-pressed]="!poleTag()" (click)="poleTag.set(null)">{{ t().poleThemesAll }}</button>
+        @for (p of poleTags(); track p.tag) {
+          <button type="button" class="fm-glass" [class.is-on]="poleTag() === p.tag" [attr.aria-pressed]="poleTag() === p.tag" (click)="togglePoleTag(p.tag)">{{ t().tag[p.tag] }} · {{ p.count }}</button>
+        }
+      </div>
+    }
     </div>
 
     @if (timeline(); as tl) {

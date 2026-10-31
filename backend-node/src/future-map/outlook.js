@@ -1,12 +1,13 @@
 'use strict';
 /**
  * What the 100-year plan (QĐ 2512/QĐ-UBND, 13/5/2026) says in words, beside the map: its viewpoint, the goal of each
- * milestone and two topics (the historic centre, the economy). Shown by the "Quy hoạch nói gì" panel.
+ * milestone and its topics (the historic centre, underground space, green space, economy and technology). Shown by
+ * the "Quy hoạch nói gì" panel.
  *
  * Only statements found in at least two of the sources listed in data.js are kept, and each item lists the ids of those
  * sources. A figure found in one source only is left out (the GRDP per person, the share of the digital economy, the
- * underground-space targets): the full text of the decision was not available when this was written, so the rule is
- * "two readings agree". Text is bilingual ({ vi, en }).
+ * share of underground space in the centre, a "top 10 happiest capitals" rank): the full text of the decision was not
+ * available when this was written, so the rule is "two readings agree". Text is bilingual ({ vi, en }).
  */
 
 const VIEWPOINT = [
@@ -94,8 +95,48 @@ const TOPICS = [
       },
       {
         text: {
-          vi: 'Giảm mật độ xây dựng ở khu vực trung tâm, ưu tiên đất cho công viên và cây xanh.',
-          en: 'Reduce building density in the central area and give priority to land for parks and greenery.',
+          vi: 'Tái cấu trúc khu vực nội đô lịch sử, ưu tiên bảo tồn các không gian có giá trị đặc thù.',
+          en: 'Restructure the historic centre, giving priority to conserving spaces of special value.',
+        },
+        sources: ['qd2512Gov', 'qd2512Congthuong'],
+      },
+    ],
+  },
+  {
+    id: 'underground',
+    title: { vi: 'Không gian ngầm và giao thông công cộng', en: 'Underground space and public transport' },
+    items: [
+      {
+        text: {
+          vi: 'Khai thác không gian ngầm gắn với các tuyến metro, và tích hợp các khu tái thiết với giao thông công cộng theo mô hình TOD.',
+          en: 'Use underground space together with the metro lines, and tie redevelopment areas closely to public transport (TOD).',
+        },
+        sources: ['qd2512Gov', 'qd2512Congthuong'],
+      },
+      {
+        text: {
+          vi: 'Đang lập quy hoạch: Kế hoạch số 331/KH-UBND (24/8/2026) giao lập 81 quy hoạch, gồm 63 quy hoạch phân khu đô thị, 13 quy hoạch phân khu chức năng và 5 quy hoạch không gian ngầm cùng hạ tầng kỹ thuật chuyên ngành. Chưa công bố vị trí cụ thể.',
+          en: 'Plans being prepared: Plan No. 331/KH-UBND (24/8/2026) calls for 81 plans: 63 urban sub-zone plans, 13 functional-zone plans and 5 plans for underground space and specialised technical infrastructure. No locations have been published yet.',
+        },
+        sources: ['plans81Lsvn', 'plans81Tckt'],
+      },
+    ],
+  },
+  {
+    id: 'green',
+    title: { vi: 'Không gian xanh và sinh thái', en: 'Green space and ecology' },
+    items: [
+      {
+        text: {
+          vi: 'Sông Hồng là trục cảnh quan sinh thái – văn hoá chủ đạo của Thủ đô.',
+          en: 'The Red River is the main ecological and cultural landscape axis of the Capital.',
+        },
+        sources: ['qd2512Gov', 'qd2512NhanDan'],
+      },
+      {
+        text: {
+          vi: 'Giảm mật độ xây dựng ở khu vực trung tâm, ưu tiên đất cho công viên, cây xanh và không gian công cộng.',
+          en: 'Reduce building density in the central area and give priority to land for parks, greenery and public space.',
         },
         sources: ['qd2512Congthuong', 'qd2512Gov'],
       },
@@ -103,7 +144,7 @@ const TOPICS = [
   },
   {
     id: 'economy',
-    title: { vi: 'Kinh tế và đổi mới sáng tạo', en: 'Economy and innovation' },
+    title: { vi: 'Kinh tế, công nghệ và đổi mới sáng tạo', en: 'Economy, technology and innovation' },
     items: [
       {
         text: {
@@ -116,6 +157,13 @@ const TOPICS = [
         text: {
           vi: 'Ưu tiên thu hút đầu tư vào chip bán dẫn, trí tuệ nhân tạo, logistics và công nghệ số.',
           en: 'Priority for investment in semiconductors, artificial intelligence, logistics and digital technology.',
+        },
+        sources: ['qd2512Gov', 'qd2512NhanDan'],
+      },
+      {
+        text: {
+          vi: 'Đổi mới cách quản trị Thủ đô dựa trên dữ liệu lớn và trí tuệ nhân tạo, hướng tới đô thị thông minh – xanh – bền vững.',
+          en: 'Change how the Capital is run, based on big data and artificial intelligence, towards a smart, green and sustainable city.',
         },
         sources: ['qd2512Gov', 'qd2512NhanDan'],
       },
