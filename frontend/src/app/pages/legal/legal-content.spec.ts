@@ -14,7 +14,9 @@ describe('legal pages', () => {
     const privacy = JSON.stringify(legalDoc('privacy'));
     expect(privacy).toContain('Anthropic');
     expect(privacy).toContain('cổng thanh toán');
-    expect(privacy).toContain('13/2023/NĐ-CP');
+    expect(privacy).toContain('PayOS');
+    expect(privacy).toContain('Cloudflare');
+    expect(privacy).toContain('Luật Bảo vệ dữ liệu cá nhân');
   });
 
   it('flags operator details that are still placeholders', () => {
