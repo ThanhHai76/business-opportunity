@@ -39,6 +39,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   <rect class="hcv-landmark" x="430" y="452" width="740" height="6" rx="2"/><rect class="hcv-landmark" x="450" y="456" width="7" height="49"/><rect class="hcv-landmark" x="520" y="456" width="7" height="49"/><rect class="hcv-landmark" x="590" y="456" width="7" height="49"/><rect class="hcv-landmark" x="660" y="456" width="7" height="49"/><rect class="hcv-landmark" x="730" y="456" width="7" height="49"/><rect class="hcv-landmark" x="800" y="456" width="7" height="49"/><rect class="hcv-landmark" x="870" y="456" width="7" height="49"/><rect class="hcv-landmark" x="940" y="456" width="7" height="49"/><rect class="hcv-landmark" x="1010" y="456" width="7" height="49"/><rect class="hcv-landmark" x="1080" y="456" width="7" height="49"/><rect class="hcv-landmark" x="1150" y="456" width="7" height="49"/>
   <g class="hcv-train"><rect x="440" y="437" width="44" height="14" rx="5"/><rect class="hcv-train-win" x="446" y="440" width="32" height="4" rx="2"/><rect x="487" y="437" width="44" height="14" rx="5"/><rect class="hcv-train-win" x="493" y="440" width="32" height="4" rx="2"/><rect x="534" y="437" width="44" height="14" rx="5"/><rect class="hcv-train-win" x="540" y="440" width="32" height="4" rx="2"/></g>
   <g class="hcv-landmark"><rect x="520" y="474" width="80" height="33"/><rect x="538" y="440" width="44" height="30"/><path d="M512,476 Q560,466 608,476 L600,470 Q560,461 520,470 Z"/><path d="M530,442 Q560,431 590,442 L583,435 Q560,426 537,435 Z"/><path d="M546,436 Q560,420 574,436 Z"/><rect x="559" y="414" width="2" height="9"/></g><g class="hcv-gap"><path d="M526,507 V490 Q531.5,482 537,490 V507 Z"/><path d="M545,507 V490 Q550.5,482 556,490 V507 Z"/><path d="M564,507 V490 Q569.5,482 575,490 V507 Z"/><path d="M583,507 V490 Q588.5,482 594,490 V507 Z"/><circle cx="551" cy="455" r="5"/><circle cx="569" cy="455" r="5"/></g>
+  <g transform="translate(982 409) scale(3)"><g transform="translate(0 -4.7)"><path class="hcv-landmark" d="M16 .1 C16.9 1.2 17.7 2 17.2 3.2 L14.8 3.2 C14.3 2 15.1 1.2 16 .1Z"/><circle class="hcv-landmark" cx="16" cy="2.9" r="1"/><path class="hcv-landmark" d="M9.4 .8 C10.3 2.8 12.6 3.7 16 3.8 C19.4 3.7 21.7 2.8 22.6 .8 C22.8 2.6 23.6 4.2 24.9 5.2 H7.1 C8.4 4.2 9.2 2.6 9.4 .8Z"/><path class="hcv-landmark" fill="none" stroke-width="1" stroke-linecap="round" d="M7.1 4.8 C5.9 5.1 5 4.3 5.2 3.3 C5.4 2.6 6.3 2.8 6.2 3.5 M24.9 4.8 C26.1 5.1 27 4.3 26.8 3.3 C26.6 2.6 25.7 2.8 25.8 3.5" style="stroke: var(--hcv-landmark)"/><path class="hcv-landmark" opacity=".75" d="M7.2 5.2 H24.8 L22.9 7 H9.1Z"/><path class="hcv-landmark" opacity=".9" d="M3.7 7.4 L9.1 8.2 V14.8 L7.5 14.8Z M28.3 7.4 L22.9 8.2 V14.8 L24.5 14.8Z"/><path class="hcv-landmark" d="M2.1 4.7 C2.6 7 4.8 7.6 7.6 6.6 H24.4 C27.2 7.6 29.4 7 29.9 4.7 C30.3 7.4 28 9.2 23.6 9.3 H8.4 C4 9.2 1.7 7.4 2.1 4.7Z"/><clipPath id="hcv-win"><rect x="12.4" y="9.8" width="7.2" height="6.5"/></clipPath><rect class="hcv-pav-red" x="9.1" y="8.8" width="13.8" height="8.8"/><rect class="hcv-gap" x="12.4" y="9.8" width="7.2" height="6.5"/><g clip-path="url(#hcv-win)" fill="none" style="stroke: var(--hcv-pav-red)"><circle cx="16" cy="13" r="2.4" stroke-width="1.1"/><path stroke-width=".8" d="M16 7.5 V10.2 M16 15.8 V18.3 M10 13 H13.6 M18.4 13 H22 M12 9.3 L14.1 11.2 M20 9.3 L17.9 11.2 M12 16.7 L14.1 14.8 M20 16.7 L17.9 14.8"/></g><g class="hcv-pav-red"><rect x="5.8" y="15.2" width="6.6" height="2.2" opacity=".85"/><rect x="19.6" y="15.2" width="6.6" height="2.2" opacity=".85"/><rect x="5.4" y="17.4" width="21.2" height="2" rx=".3"/></g></g><g class="hcv-landmark"><rect x="5.4" y="14.7" width="4.2" height="17.3"/><rect x="22.4" y="14.7" width="4.2" height="17.3"/><rect x="9.6" y="14.7" width="12.8" height="2" opacity=".8"/><rect x="9.6" y="16.7" width="2.6" height="14" opacity=".8"/><rect x="19.8" y="16.7" width="2.6" height="14" opacity=".8"/></g></g>
   <g class="hcv-landmark"><rect x="700" y="470" width="120" height="37"/><rect x="714" y="446" width="92" height="25"/><rect x="728" y="426" width="64" height="21"/><rect x="748" y="366" width="24" height="61"/><rect x="742" y="355" width="36" height="12"/><rect x="752" y="340" width="16" height="16"/><rect x="759" y="300" width="2" height="42"/></g><rect class="hcv-flag-gate" x="752" y="488" width="16" height="19" rx="8"/><path class="hcv-flag" d="M761,302 L793,309 L761,317 Z"/>
   <g class="hcv-landmark"><rect x="828" y="492" width="144" height="15"/><rect x="836" y="482" width="128" height="11"/><rect x="846" y="452" width="108" height="31"/><rect x="840" y="440" width="120" height="13"/><rect x="852" y="432" width="96" height="9"/><rect x="864" y="426" width="72" height="7"/></g><g class="hcv-gap"><rect x="852" y="455" width="6.4" height="27"/><rect x="864.6" y="455" width="6.4" height="27"/><rect x="877.2" y="455" width="6.4" height="27"/><rect x="889.8" y="455" width="6.4" height="27"/><rect x="902.4" y="455" width="6.4" height="27"/><rect x="915" y="455" width="6.4" height="27"/><rect x="927.6" y="455" width="6.4" height="27"/><rect x="940.2" y="455" width="6.4" height="27"/></g>
   <g class="hcv-tree"><circle cx="430" cy="502.4" r="9.7"/><circle cx="442.1" cy="502.9" r="14.8"/><circle cx="454.7" cy="501.8" r="8.3"/><circle cx="465.3" cy="501.2" r="8.8"/><circle cx="475.5" cy="502.2" r="11.2"/><circle cx="488.5" cy="499.3" r="11.4"/><circle cx="498.2" cy="499.8" r="12.2"/><circle cx="624.1" cy="499.5" r="9.9"/><circle cx="633.5" cy="503.9" r="12.5"/><circle cx="646.5" cy="504.4" r="7.6"/><circle cx="658.5" cy="503.1" r="7.3"/><circle cx="669" cy="501.4" r="8.6"/><circle cx="683.2" cy="504.5" r="7.9"/><circle cx="989.8" cy="500" r="7.1"/><circle cx="1004.9" cy="501.9" r="11.2"/><circle cx="1019" cy="503.5" r="13.6"/><circle cx="1030.1" cy="502.9" r="9"/><circle cx="1043.9" cy="502.6" r="9"/><circle cx="1059.7" cy="503.1" r="14"/><circle cx="1069.7" cy="503.8" r="7.7"/><circle cx="1083.2" cy="503.7" r="11.9"/><circle cx="1099.1" cy="501.7" r="12.8"/><circle cx="1111.2" cy="499.3" r="11.4"/><circle cx="1123.7" cy="499.5" r="9.9"/><circle cx="1137.5" cy="500.9" r="8.3"/><circle cx="1147" cy="504.6" r="13"/><circle cx="1156" cy="502.5" r="14"/><circle cx="1169.1" cy="502" r="8.7"/></g>
@@ -62,6 +63,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       --hcv-landmark: #8c745c;
       --hcv-green: #86a873;
       --hcv-flag: #c8402f;
+      --hcv-pav-red: #b5543f;
       --hcv-turtle: #a88f6e;
       --hcv-steel: #97705a;
       --hcv-cable: #b8a089;
@@ -84,6 +86,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       --hcv-landmark: #110f19;
       --hcv-green: #1d3a2d;
       --hcv-flag: #e0705f;
+      --hcv-pav-red: #d46f5c;
       --hcv-turtle: #b08a52; /* lit up at night, as it is */
       --hcv-steel: #3d3448;
       --hcv-cable: #4c4565;
@@ -95,12 +98,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       --hcv-windows-opacity: 0.9;
     }
     .hcv { display: block; width: 100%; height: 100%; }
-    /* On a narrow screen the picture is not stretched to the height of the hero (which would show only its middle): it keeps
-       its proportions, a little wider than the screen and sitting on the bottom edge, so more of the city shows. Above it
-       the hero shows the page colour, which is the sky's first colour. */
-    @media (max-width: 700px) {
-      .hcv { position: absolute; bottom: 0; left: 50%; width: 125%; height: auto; aspect-ratio: 1600 / 810; transform: translateX(-50%); }
-    }
     .hcv-sun { fill: var(--hcv-sun); }
     .hcv-stars { opacity: var(--hcv-stars-opacity); fill: var(--app-ink); }
     .hcv-star { animation: hcv-twinkle 6s ease-in-out infinite; }
@@ -117,6 +114,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     .hcv-landmark { fill: var(--hcv-landmark); }
     .hcv-gap, .hcv-flag-gate { fill: var(--hcv-sky-horizon); }
     .hcv-flag { fill: var(--hcv-flag); }
+    .hcv-pav-red { fill: var(--hcv-pav-red); }
     .hcv-turtle { fill: var(--hcv-turtle); }
     .hcv-turtle-arch { fill: var(--hcv-river); }
     .hcv-islet { fill: var(--hcv-tree); }

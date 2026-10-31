@@ -167,7 +167,7 @@ const flagTower =
   `<rect x="759" y="300" width="2" height="42"/></g>` +
   `<rect class="hcv-flag-gate" x="752" y="488" width="16" height="19" rx="8"/>` +
   `<path class="hcv-flag" d="M761,302 L793,309 L761,317 Z"/>`;
-// Khuê Văn Các: the gate of four arches, the square pavilion with its round windows, two tiers of curved eaves.
+// The small pavilion next to the metro: the gate of four arches, the square pavilion with its round windows, two tiers of curved eaves.
 const pavilion =
   `<g class="hcv-landmark">` +
   `<rect x="520" y="474" width="80" height="33"/>` +
@@ -178,6 +178,28 @@ const pavilion =
   `<g class="hcv-gap">` +
   [526, 545, 564, 583].map((x) => `<path d="M${x},507 V490 Q${x + 5.5},482 ${x + 11},490 V507 Z"/>`).join('') +
   `<circle cx="551" cy="455" r="5"/><circle cx="569" cy="455" r="5"/></g>`;
+
+// Văn Miếu's Khuê Văn Các (Temple of Literature), the same drawing as the site logo, scaled up and given heavier strokes so it sits with the
+// solid shapes around it: flame finial, horned upper roof, wide lower roof with curled tips, red body with the square window and its ring
+// of rays, solid railings, platform, tall stone pillars. Drawn in a 32 x 32 box; the top part is lifted (UP) so the platform clears the metro deck.
+const PAV = { scale: 3, cx: 1030, up: 4.7 };
+const vanMieu =
+  `<g transform="translate(${PAV.cx - 16 * PAV.scale} ${BANK - 32 * PAV.scale}) scale(${PAV.scale})">` +
+  `<g transform="translate(0 -${PAV.up})">` +
+  `<path class="hcv-landmark" d="M16 .1 C16.9 1.2 17.7 2 17.2 3.2 L14.8 3.2 C14.3 2 15.1 1.2 16 .1Z"/><circle class="hcv-landmark" cx="16" cy="2.9" r="1"/>` +
+  `<path class="hcv-landmark" d="M9.4 .8 C10.3 2.8 12.6 3.7 16 3.8 C19.4 3.7 21.7 2.8 22.6 .8 C22.8 2.6 23.6 4.2 24.9 5.2 H7.1 C8.4 4.2 9.2 2.6 9.4 .8Z"/>` +
+  `<path class="hcv-landmark" fill="none" stroke-width="1" stroke-linecap="round" d="M7.1 4.8 C5.9 5.1 5 4.3 5.2 3.3 C5.4 2.6 6.3 2.8 6.2 3.5 M24.9 4.8 C26.1 5.1 27 4.3 26.8 3.3 C26.6 2.6 25.7 2.8 25.8 3.5" style="stroke: var(--hcv-landmark)"/>` +
+  `<path class="hcv-landmark" opacity=".75" d="M7.2 5.2 H24.8 L22.9 7 H9.1Z"/>` +
+  `<path class="hcv-landmark" opacity=".9" d="M3.7 7.4 L9.1 8.2 V14.8 L7.5 14.8Z M28.3 7.4 L22.9 8.2 V14.8 L24.5 14.8Z"/>` +
+  `<path class="hcv-landmark" d="M2.1 4.7 C2.6 7 4.8 7.6 7.6 6.6 H24.4 C27.2 7.6 29.4 7 29.9 4.7 C30.3 7.4 28 9.2 23.6 9.3 H8.4 C4 9.2 1.7 7.4 2.1 4.7Z"/>` +
+  `<clipPath id="hcv-win"><rect x="12.4" y="9.8" width="7.2" height="6.5"/></clipPath>` +
+  `<rect class="hcv-pav-red" x="9.1" y="8.8" width="13.8" height="8.8"/><rect class="hcv-gap" x="12.4" y="9.8" width="7.2" height="6.5"/>` +
+  `<g clip-path="url(#hcv-win)" fill="none" style="stroke: var(--hcv-pav-red)"><circle cx="16" cy="13" r="2.4" stroke-width="1.1"/>` +
+  `<path stroke-width=".8" d="M16 7.5 V10.2 M16 15.8 V18.3 M10 13 H13.6 M18.4 13 H22 M12 9.3 L14.1 11.2 M20 9.3 L17.9 11.2 M12 16.7 L14.1 14.8 M20 16.7 L17.9 14.8"/></g>` +
+  `<g class="hcv-pav-red"><rect x="5.8" y="15.2" width="6.6" height="2.2" opacity=".85"/><rect x="19.6" y="15.2" width="6.6" height="2.2" opacity=".85"/>` +
+  `<rect x="5.4" y="17.4" width="21.2" height="2" rx=".3"/></g></g>` +
+  `<g class="hcv-landmark"><rect x="5.4" y="${19.4 - PAV.up}" width="4.2" height="${12.6 + PAV.up}"/><rect x="22.4" y="${19.4 - PAV.up}" width="4.2" height="${12.6 + PAV.up}"/>` +
+  `<rect x="9.6" y="${19.4 - PAV.up}" width="12.8" height="2" opacity=".8"/><rect x="9.6" y="${21.4 - PAV.up}" width="2.6" height="${9.3 + PAV.up}" opacity=".8"/><rect x="19.8" y="${21.4 - PAV.up}" width="2.6" height="${9.3 + PAV.up}" opacity=".8"/></g></g>`;
 
 // Hồ Chí Minh Mausoleum: the stepped granite base, the colonnade, the heavy flat roof in tiers.
 const mausoleum =
@@ -312,6 +334,7 @@ const svg = `<svg class="hcv" viewBox="0 ${TOP} ${W} ${H - TOP}" preserveAspectR
   ${metro}
   ${train}
   ${pavilion}
+  ${vanMieu}
   ${flagTower}
   ${mausoleum}
   <g class="hcv-tree">${trees}</g>
@@ -349,6 +372,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       --hcv-landmark: #8c745c;
       --hcv-green: #86a873;
       --hcv-flag: #c8402f;
+      --hcv-pav-red: #b5543f;
       --hcv-turtle: #a88f6e;
       --hcv-steel: #97705a;
       --hcv-cable: #b8a089;
@@ -371,6 +395,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       --hcv-landmark: #110f19;
       --hcv-green: #1d3a2d;
       --hcv-flag: #e0705f;
+      --hcv-pav-red: #d46f5c;
       --hcv-turtle: #b08a52; /* lit up at night, as it is */
       --hcv-steel: #3d3448;
       --hcv-cable: #4c4565;
@@ -398,6 +423,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     .hcv-landmark { fill: var(--hcv-landmark); }
     .hcv-gap, .hcv-flag-gate { fill: var(--hcv-sky-horizon); }
     .hcv-flag { fill: var(--hcv-flag); }
+    .hcv-pav-red { fill: var(--hcv-pav-red); }
     .hcv-turtle { fill: var(--hcv-turtle); }
     .hcv-turtle-arch { fill: var(--hcv-river); }
     .hcv-islet { fill: var(--hcv-tree); }
